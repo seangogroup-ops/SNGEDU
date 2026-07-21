@@ -137,11 +137,18 @@ aside{
 .side-item.dragging{opacity:.4;}
 .side-item.select-mode{cursor:pointer;}
 .chap-cb{width:auto;flex:0 0 auto;accent-color:var(--accent);margin:0;}
+.side-toolbar{display:flex;gap:6px;margin-bottom:8px;}
+.side-toolbar .side-add{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 4px;}
 .chap-bulk-bar{
-    display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;
-    padding:8px 10px;background:var(--navy-2);border-radius:8px;font-size:.78rem;color:#c7cce3;
+    display:flex;flex-direction:column;gap:8px;margin:0 0 8px;
+    padding:10px;background:var(--navy-2);border-radius:8px;font-size:.78rem;color:#c7cce3;
 }
-.btn-mini-danger{background:rgba(220,38,38,.85);color:#fff;padding:6px 10px;font-size:.75rem;border-radius:6px;}
+.chap-bulk-count{font-weight:600;}
+.chap-bulk-actions{display:flex;gap:6px;}
+.chap-bulk-actions .btn-mini-cancel,.chap-bulk-actions .btn-mini-danger{
+    flex:1;padding:8px 6px;font-size:.76rem;text-align:center;white-space:nowrap;border-radius:6px;
+}
+.btn-mini-danger{background:rgba(220,38,38,.85);color:#fff;}
 .btn-mini-danger:disabled{opacity:.4;cursor:not-allowed;}
 .drag-handle{color:#565e82;font-size:.85rem;letter-spacing:-1px;flex:0 0 auto;cursor:grab;padding-right:1px;}
 .menu-wrap{position:relative;flex:0 0 auto;}
@@ -349,16 +356,15 @@ textarea{resize:vertical;}
         </div>
 
         <div class="side-section">
-            <h4>Chương / đề
-                <span style="display:flex;gap:6px;">
-                    <button class="side-add" id="chapSelectModeBtn" onclick="toggleChapterSelectMode()">☑ Chọn nhiều</button>
-                    <button class="side-add" onclick="openChapterForm()">+ Thêm</button>
-                </span>
-            </h4>
+            <h4>Chương / đề</h4>
+            <div class="side-toolbar" id="chapToolbar">
+                <button class="side-add" onclick="openChapterForm()">+ Thêm</button>
+                <button class="side-add" onclick="toggleChapterSelectMode()">☑ Chọn nhiều</button>
+            </div>
             <div id="chapBulkBar" class="chap-bulk-bar hidden">
-                <span id="chapBulkCount">Đã chọn 0 mục</span>
-                <div style="display:flex;gap:6px;">
-                    <button class="btn-mini-cancel" style="padding:6px 10px;font-size:.75rem;" onclick="toggleChapterSelectMode()">Hủy</button>
+                <div class="chap-bulk-count" id="chapBulkCount">Đã chọn 0 mục</div>
+                <div class="chap-bulk-actions">
+                    <button class="btn-mini-cancel" onclick="toggleChapterSelectMode()">Hủy</button>
                     <button class="btn-mini-danger" id="chapBulkDeleteBtn" onclick="bulkDeleteChapters()" disabled>🗑️ Xóa đã chọn</button>
                 </div>
             </div>
@@ -825,7 +831,7 @@ let selectedChapterIds = new Set();
 function toggleChapterSelectMode(){
     chapterSelectMode = !chapterSelectMode;
     selectedChapterIds.clear();
-    document.getElementById('chapSelectModeBtn').textContent = chapterSelectMode ? '✕ Thoát chọn' : '☑ Chọn nhiều';
+    document.getElementById('chapToolbar').classList.toggle('hidden', chapterSelectMode);
     document.getElementById('chapBulkBar').classList.toggle('hidden', !chapterSelectMode);
     renderChapterList();
 }
@@ -854,7 +860,7 @@ function bulkDeleteChapters(){
             if (currentChapter && ids.includes(currentChapter.id)) currentChapter = null;
             chapterSelectMode = false;
             selectedChapterIds.clear();
-            document.getElementById('chapSelectModeBtn').textContent = '☑ Chọn nhiều';
+            document.getElementById('chapToolbar').classList.remove('hidden');
             document.getElementById('chapBulkBar').classList.add('hidden');
             loadChapters();
             loadQuestions();

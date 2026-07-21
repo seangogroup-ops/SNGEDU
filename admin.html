@@ -72,12 +72,17 @@ aside{
 }
 .side-list{display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto;}
 .side-item{
-    padding:8px 10px;border-radius:8px;font-size:.87rem;cursor:pointer;
-    display:flex;justify-content:space-between;align-items:center;gap:6px;color:var(--navy-text);
+    padding:9px 10px;border-radius:8px;font-size:.87rem;cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--navy-text);
 }
 .side-item:hover{background:var(--navy-2);}
 .side-item.active{background:var(--accent);color:#fff;font-weight:600;}
-.side-item .code{opacity:.65;font-size:.76rem;font-weight:400;}
+.side-item .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.side-item .code{
+    flex:0 0 auto;font-size:.68rem;font-weight:700;letter-spacing:.03em;
+    background:rgba(255,255,255,.1);color:#c3c9e6;padding:2px 7px;border-radius:5px;
+}
+.side-item.active .code{background:rgba(255,255,255,.28);color:#fff;}
 .side-add{
     background:transparent;border:1px dashed #454e72;color:#98a0c2;
     padding:5px 9px;font-size:.75rem;border-radius:6px;
@@ -90,13 +95,12 @@ aside{
 .mini-form .mini-actions button{flex:1;padding:6px;font-size:.78rem;}
 .btn-mini-save{background:var(--accent);color:#fff;}
 .btn-mini-cancel{background:#2b3355;color:#c7cce3;}
-.side-item-row{display:flex;align-items:center;gap:2px;}
+.side-item-row{display:flex;align-items:center;gap:4px;}
 .icon-x{
-    opacity:0;width:20px;height:20px;border-radius:6px;background:transparent;color:inherit;
-    display:flex;align-items:center;justify-content:center;font-size:.85rem;flex:0 0 auto;
+    opacity:.55;width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,.06);color:#e3a3a3;
+    display:flex;align-items:center;justify-content:center;font-size:.9rem;flex:0 0 auto;
 }
-.side-item:hover .icon-x{opacity:.7;}
-.icon-x:hover{opacity:1 !important;background:rgba(255,255,255,.15);}
+.icon-x:hover{opacity:1;background:rgba(220,38,38,.25);color:#ff9d9d;}
 .sidebar-foot{margin-top:auto;border-top:1px solid #2a3153;padding-top:14px;font-size:.8rem;}
 .sidebar-foot .email{color:#fff;font-weight:600;word-break:break-all;}
 .sidebar-foot button{width:100%;margin-top:10px;background:#2b3355;color:#dfe2f2;padding:8px;font-size:.82rem;}
@@ -345,7 +349,7 @@ function renderSubjectList(){
     box.innerHTML = subjects.map(s => `
         <div class="side-item-row">
             <div class="side-item ${currentSubject && currentSubject.id===s.id ? 'active' : ''}" style="flex:1;" onclick="selectSubject('${s.id}')">
-                <span>${escapeHtml(s.name)}</span><span class="code">${s.id}</span>
+                <span class="name">${escapeHtml(s.name)}</span><span class="code">${escapeHtml(s.id)}</span>
             </div>
             <button class="icon-x" title="Xóa môn học" onclick="deleteSubject('${s.id}')">✕</button>
         </div>
@@ -392,7 +396,7 @@ async function loadChapters(){
         box.innerHTML = chapters.map(ch => `
             <div class="side-item-row">
                 <div class="side-item ${currentChapter && currentChapter.chapter===ch.chapter ? 'active' : ''}" style="flex:1;" onclick='selectChapter(${JSON.stringify(ch.chapter)})'>
-                    <span>${escapeHtml(ch.label)}</span><span class="code">${escapeHtml(ch.chapter)}</span>
+                    <span class="name">${escapeHtml(ch.label)}</span><span class="code">${escapeHtml(ch.chapter)}</span>
                 </div>
                 <button class="icon-x" title="Xóa chương" onclick="deleteChapter(${ch.id})">✕</button>
             </div>

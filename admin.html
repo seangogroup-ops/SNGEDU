@@ -186,8 +186,10 @@ main{flex:1;padding:26px 34px 60px;max-width:1000px;}
 .btn-danger:hover{background:#fde3e3;}
 .btn-edit{background:#eef0f7;color:var(--accent-dark);padding:6px 12px;font-size:.8rem;}
 
-.q-item{border:1px solid var(--border);border-radius:10px;padding:15px;margin-bottom:10px;}
+.q-item{border:1px solid var(--border);border-radius:10px;padding:15px;margin-bottom:10px;cursor:grab;}
+.q-item.dragging{opacity:.4;}
 .q-item .q-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+.q-item .q-head .drag-handle{color:#b6bad0;font-size:.9rem;padding-top:1px;}
 .q-item b.qnum{color:var(--accent-dark);}
 .q-item .opt{padding:3px 0 3px 4px;font-size:.88rem;color:var(--text);}
 .q-item .opt.correct{color:var(--green);font-weight:700;}
@@ -345,7 +347,13 @@ textarea{resize:vertical;}
 
         <div id="tab-list" class="tab-panel">
             <div class="panel">
-                <h3>Câu hỏi trong đề đang chọn</h3>
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px;">
+                    <h3 style="margin:0;">Câu hỏi trong đề đang chọn</h3>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn-ghost" onclick="exportChapterFile()">⬇️ Xuất đề này (.txt)</button>
+                        <button class="btn-ghost" onclick="exportSubjectFile()">⬇️ Xuất cả môn (.txt)</button>
+                    </div>
+                </div>
                 <div id="qList"><div class="empty-state">Chọn một môn học và một chương/đề ở thanh bên trái để xem câu hỏi.</div></div>
             </div>
         </div>
@@ -354,6 +362,9 @@ textarea{resize:vertical;}
             <div class="panel">
                 <h3 id="singleFormTitle">Thêm 1 câu hỏi</h3>
                 <p class="hint">Câu hỏi sẽ được lưu vào môn và chương đang chọn ở thanh bên trái.</p>
+                <label>Số thứ tự (tùy chọn)</label>
+                <input type="number" id="qOrderNo" min="1" placeholder="Để trống = tự động xếp cuối danh sách" style="max-width:260px;">
+                <p class="hint" style="margin-top:4px;">Nhập số để chèn câu hỏi vào đúng vị trí đó (các câu phía sau sẽ tự dời xuống). Để trống thì câu mới sẽ được thêm vào cuối.</p>
                 <label>Nội dung câu hỏi</label>
                 <textarea id="qContent" rows="2" placeholder="Nhập nội dung câu hỏi..."></textarea>
                 <div id="optionsForm"></div>
@@ -673,7 +684,13 @@ async function loadChapters(){
     if (!chapters.length){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Môn này chưa có chương/đề nào.</div>`; }
     else {
         box.innerHTML = chapters.map(ch => `
-            <div class="side-item ${currentChapter && currentChapter.chapter===ch.chapter ? 'active' : ''}" onclick='selectChapter(${JSON.stringify(ch.chapter)})'>
+            <div class="side-item ${currentChapter && currentChapter.chapter===ch.chapter ? 'active' : ''}" draggable="true" data-chapter="${escapeHtml(ch.chapter)}"
+                 onclick='selectChapter(${JSON.stringify(ch.chapter)})'
+                 ondragstart="onChapterDragStart(event, ${JSON.stringify(ch.chapter)})"
+                 ondragover="onChapterDragOver(event)"
+                 ondrop="onChapterDrop(event, ${JSON.stringify(ch.chapter)})"
+                 ondragend="onChapterDragEnd(event)">
+                <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
                 <span class="name">${escapeHtml(ch.label)}</span>
                 <span class="right-cluster">
                     <span class="code">${escapeHtml(ch.chapter)}</span>
@@ -684,6 +701,61 @@ async function loadChapters(){
         `).join('');
     }
     updateContextBar();
+}
+let draggedChapterCode = null;
+function onChapterDragStart(e, code){
+    draggedChapterCode = code;
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.classList.add('dragging');
+}
+function onChapterDragOver(e){
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+function onChapterDragEnd(e){
+    e.currentTarget.classList.remove('dragging');
+}
+async function onChapterDrop(e, targetCode){
+    e.preventDefault();
+    if (!draggedChapterCode || draggedChapterCode === targetCode) return;
+
+    const fromIdx = chapters.findIndex(c => c.chapter === draggedChapterCode);
+    const toIdx = chapters.findIndex(c => c.chapter === targetCode);
+    if (fromIdx < 0 || toIdx < 0) return;
+
+    const reordered = chapters.slice();
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+
+    chapters = reordered;
+    renderChapterList(); // phản hồi ngay trên giao diện trước khi lưu
+
+    const results = await Promise.all(
+        reordered.map((c, i) => sb.from('chapters').update({ order_no: i }).eq('id', c.id))
+    );
+    const failed = results.find(r => r.error);
+    if (failed) showMsg('Lỗi lưu thứ tự: ' + failed.error.message, 'err');
+
+    loadChapters();
+}
+function renderChapterList(){
+    const box = document.getElementById('chapterList');
+    box.innerHTML = chapters.map(ch => `
+        <div class="side-item ${currentChapter && currentChapter.chapter===ch.chapter ? 'active' : ''}" draggable="true" data-chapter="${escapeHtml(ch.chapter)}"
+             onclick='selectChapter(${JSON.stringify(ch.chapter)})'
+             ondragstart="onChapterDragStart(event, ${JSON.stringify(ch.chapter)})"
+             ondragover="onChapterDragOver(event)"
+             ondrop="onChapterDrop(event, ${JSON.stringify(ch.chapter)})"
+             ondragend="onChapterDragEnd(event)">
+            <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
+            <span class="name">${escapeHtml(ch.label)}</span>
+            <span class="right-cluster">
+                <span class="code">${escapeHtml(ch.chapter)}</span>
+                <button class="icon-edit" title="Sửa chương/đề" onclick='event.stopPropagation(); editChapter(${ch.id})'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
+                <button class="icon-x" title="Xóa chương" onclick="event.stopPropagation(); deleteChapter(${ch.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg></button>
+            </span>
+        </div>
+    `).join('');
 }
 function selectChapter(code){
     currentChapter = chapters.find(c => c.chapter === code) || null;
@@ -776,6 +848,7 @@ function switchTab(name){
 }
 
 // ---------- QUESTIONS: LIST ----------
+let currentQuestions = [];
 async function loadQuestions(){
     const box = document.getElementById('qList');
     if (!currentSubject || !currentChapter){
@@ -789,11 +862,19 @@ async function loadQuestions(){
 
     refreshSubjectQuestionCount(currentSubject.id);
 
-    if (!data.length){ box.innerHTML = `<div class="empty-state">Chưa có câu hỏi nào trong đề này. Dùng tab "Thêm câu hỏi" hoặc "Dán nhiều câu hỏi" để bắt đầu.</div>`; return; }
-
-    box.innerHTML = data.map(q => `
-        <div class="q-item">
-            <div class="q-head"><div><b class="qnum">Câu ${q.order_no}.</b> ${escapeHtml(q.content)}</div></div>
+    currentQuestions = data || [];
+    if (!currentQuestions.length){ box.innerHTML = `<div class="empty-state">Chưa có câu hỏi nào trong đề này. Dùng tab "Thêm câu hỏi" hoặc "Dán nhiều câu hỏi" để bắt đầu.</div>`; return; }
+    renderQuestionList();
+}
+function renderQuestionList(){
+    const box = document.getElementById('qList');
+    box.innerHTML = currentQuestions.map(q => `
+        <div class="q-item" draggable="true" data-id="${q.id}"
+             ondragstart="onQuestionDragStart(event, ${q.id})"
+             ondragover="onQuestionDragOver(event)"
+             ondrop="onQuestionDrop(event, ${q.id})"
+             ondragend="onQuestionDragEnd(event)">
+            <div class="q-head"><div><span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span> <b class="qnum">Câu ${q.order_no}.</b> ${escapeHtml(q.content)}</div></div>
             ${q.options.map((o,i)=>`<div class="opt ${i===q.correct_idx?'correct':''}">${String.fromCharCode(65+i)}. ${escapeHtml(o)}</div>`).join('')}
             ${q.explanation ? `<div class="expl">💡 ${escapeHtml(q.explanation)}</div>` : ''}
             <div class="actions">
@@ -802,6 +883,43 @@ async function loadQuestions(){
             </div>
         </div>
     `).join('');
+}
+let draggedQuestionId = null;
+function onQuestionDragStart(e, id){
+    draggedQuestionId = id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.classList.add('dragging');
+}
+function onQuestionDragOver(e){
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+function onQuestionDragEnd(e){
+    e.currentTarget.classList.remove('dragging');
+}
+async function onQuestionDrop(e, targetId){
+    e.preventDefault();
+    if (!draggedQuestionId || draggedQuestionId === targetId) return;
+
+    const fromIdx = currentQuestions.findIndex(q => q.id === draggedQuestionId);
+    const toIdx = currentQuestions.findIndex(q => q.id === targetId);
+    if (fromIdx < 0 || toIdx < 0) return;
+
+    const reordered = currentQuestions.slice();
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+
+    reordered.forEach((q, i) => { q.order_no = i + 1; }); // cập nhật ngay để hiển thị số đúng
+    currentQuestions = reordered;
+    renderQuestionList(); // phản hồi ngay trên giao diện trước khi lưu
+
+    const results = await Promise.all(
+        reordered.map((q, i) => sb.from('questions').update({ order_no: i + 1 }).eq('id', q.id))
+    );
+    const failed = results.find(r => r.error);
+    if (failed) showMsg('Lỗi lưu thứ tự: ' + failed.error.message, 'err');
+
+    loadQuestions();
 }
 function deleteQuestion(id){
     showConfirm(
@@ -814,6 +932,66 @@ function deleteQuestion(id){
             loadQuestions();
         }
     );
+}
+
+// ---------- XUẤT FILE ----------
+// Chuyển 1 danh sách câu hỏi thành văn bản đúng định dạng dùng để nạp lại (tab "Dán nhiều câu hỏi")
+function questionsToText(questions){
+    const letters = ['A','B','C','D'];
+    return questions.map((q, i) => {
+        const num = i + 1;
+        const optLines = q.options.map((o, oi) => `${oi === q.correct_idx ? '*' : ''}${letters[oi]}. ${o}`).join('\n');
+        const gtLine = q.explanation ? `\n\nGt: ${q.explanation}` : '';
+        return `Câu ${num}: ${q.content}\n${optLines}${gtLine}`;
+    }).join('\n\n');
+}
+function slugifyFileName(str){
+    return String(str)
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // bỏ dấu tiếng Việt
+        .replace(/đ/gi, 'd')
+        .replace(/[^a-zA-Z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '') || 'export';
+}
+function downloadTextFile(filename, text){
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+function exportChapterFile(){
+    if (!currentSubject || !currentChapter) return showMsg('Chọn môn học và chương/đề trước.', 'err');
+    if (!currentQuestions.length) return showMsg('Đề này chưa có câu hỏi nào để xuất.', 'err');
+    const text = questionsToText(currentQuestions);
+    const filename = `${slugifyFileName(currentSubject.id)}_${slugifyFileName(currentChapter.label)}.txt`;
+    downloadTextFile(filename, text);
+    showMsg(`Đã xuất ${currentQuestions.length} câu hỏi ra file "${filename}".`, 'ok');
+}
+async function exportSubjectFile(){
+    if (!currentSubject) return showMsg('Chọn môn học trước.', 'err');
+    if (!chapters.length) return showMsg('Môn này chưa có chương/đề nào.', 'err');
+
+    const { data, error } = await sb.from('questions').select('*')
+        .eq('subject_id', currentSubject.id).order('chapter').order('order_no');
+    if (error) return showMsg('Lỗi tải câu hỏi: ' + error.message, 'err');
+    if (!data.length) return showMsg('Môn này chưa có câu hỏi nào để xuất.', 'err');
+
+    const chapterMap = {};
+    chapters.forEach(ch => { chapterMap[ch.chapter] = ch.label; });
+
+    const byChapter = {};
+    data.forEach(q => { (byChapter[q.chapter] = byChapter[q.chapter] || []).push(q); });
+
+    const parts = Object.keys(byChapter).map(chapCode => {
+        const label = chapterMap[chapCode] || chapCode;
+        return `===== ${label} =====\n\n` + questionsToText(byChapter[chapCode]);
+    });
+
+    const text = parts.join('\n\n\n');
+    const filename = `${slugifyFileName(currentSubject.id)}_toanbo.txt`;
+    downloadTextFile(filename, text);
+    showMsg(`Đã xuất ${data.length} câu hỏi (${Object.keys(byChapter).length} chương/đề) ra file "${filename}".`, 'ok');
 }
 
 // ---------- QUESTIONS: ADD / EDIT ----------
@@ -833,6 +1011,7 @@ function startEdit(q){
         if (s) selectSubject(s.id);
     }
     editingQuestionId = q.id;
+    document.getElementById('qOrderNo').value = q.order_no;
     document.getElementById('qContent').value = q.content;
     q.options.forEach((o,i)=>{ document.getElementById('opt'+i).value = o; });
     document.querySelector(`input[name=correctOpt][value="${q.correct_idx}"]`).checked = true;
@@ -844,12 +1023,41 @@ function startEdit(q){
 }
 function cancelEdit(){
     editingQuestionId = null;
+    document.getElementById('qOrderNo').value = '';
     document.getElementById('qContent').value = '';
     [0,1,2,3].forEach(i=>document.getElementById('opt'+i).value='');
     document.getElementById('qExplain').value = '';
     document.getElementById('singleFormTitle').innerText = 'Thêm 1 câu hỏi';
     document.getElementById('singleSaveBtn').innerText = 'Lưu câu hỏi';
     document.getElementById('cancelEditBtn').classList.add('hidden');
+}
+// Tính order_no cuối cùng cho câu đang lưu, đồng thời dời order_no các câu khác
+// nếu người dùng chỉ định 1 vị trí cụ thể (chèn vào giữa danh sách).
+async function shiftQuestionsForPosition(subjectId, chapterCode, desiredPosRaw, excludeId){
+    const { data: rows, error } = await sb.from('questions')
+        .select('id, order_no')
+        .eq('subject_id', subjectId).eq('chapter', chapterCode)
+        .order('order_no');
+    if (error) return { error };
+
+    const others = excludeId ? rows.filter(r => r.id !== excludeId) : rows;
+    const maxPos = others.length + 1;
+    let pos = parseInt(desiredPosRaw);
+    if (!pos || pos < 1) pos = maxPos;
+    if (pos > maxPos) pos = maxPos;
+
+    const updates = [];
+    others.forEach((r, i) => {
+        const newOrder = (i + 1) >= pos ? (i + 2) : (i + 1);
+        if (newOrder !== r.order_no) updates.push({ id: r.id, order_no: newOrder });
+    });
+
+    if (updates.length){
+        const results = await Promise.all(updates.map(u => sb.from('questions').update({ order_no: u.order_no }).eq('id', u.id)));
+        const failed = results.find(r => r.error);
+        if (failed) return { error: failed.error };
+    }
+    return { order_no: pos };
 }
 async function saveSingleQuestion(){
     if (!currentSubject || !currentChapter) return showMsg('Chọn môn học và chương/đề ở thanh bên trái trước.', 'err');
@@ -858,24 +1066,34 @@ async function saveSingleQuestion(){
     const options = [0,1,2,3].map(i => document.getElementById('opt'+i).value.trim());
     const correctIdx = parseInt(document.querySelector('input[name=correctOpt]:checked').value);
     const explanation = document.getElementById('qExplain').value.trim();
+    const orderNoRaw = document.getElementById('qOrderNo').value.trim();
     if (!content || options.some(o=>!o)) return showMsg('Điền đủ nội dung và 4 đáp án.', 'err');
 
     if (editingQuestionId){
+        const { order_no, error: shiftErr } = await shiftQuestionsForPosition(
+            currentSubject.id, currentChapter.chapter, orderNoRaw, editingQuestionId
+        );
+        if (shiftErr) return showMsg('Lỗi sắp xếp: ' + shiftErr.message, 'err');
+
         const { error } = await sb.from('questions').update({
-            content, options, correct_idx: correctIdx, explanation
+            content, options, correct_idx: correctIdx, explanation, order_no
         }).eq('id', editingQuestionId);
         if (error) return showMsg('Lỗi cập nhật: ' + error.message, 'err');
         showMsg('Đã cập nhật câu hỏi.', 'ok');
         cancelEdit();
     } else {
-        const { count } = await sb.from('questions').select('*', { count: 'exact', head: true })
-            .eq('subject_id', currentSubject.id).eq('chapter', currentChapter.chapter);
+        const { order_no, error: shiftErr } = await shiftQuestionsForPosition(
+            currentSubject.id, currentChapter.chapter, orderNoRaw, null
+        );
+        if (shiftErr) return showMsg('Lỗi sắp xếp: ' + shiftErr.message, 'err');
+
         const { error } = await sb.from('questions').insert({
-            subject_id: currentSubject.id, chapter: currentChapter.chapter, order_no: (count||0)+1,
+            subject_id: currentSubject.id, chapter: currentChapter.chapter, order_no,
             content, options, correct_idx: correctIdx, explanation
         });
         if (error) return showMsg('Lỗi lưu: ' + error.message, 'err');
         showMsg('Đã thêm câu hỏi.', 'ok');
+        document.getElementById('qOrderNo').value='';
         document.getElementById('qContent').value='';
         [0,1,2,3].forEach(i=>document.getElementById('opt'+i).value='');
         document.getElementById('qExplain').value='';

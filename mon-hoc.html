@@ -2,97 +2,349 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14151c" media="(prefers-color-scheme: dark)">
+<script>
+    try{
+        var savedTheme = localStorage.getItem('sng-theme');
+        if(savedTheme === 'dark' || savedTheme === 'light'){
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    }catch(e){}
+</script>
 <title>Chọn chương/đề · SNG EDU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
 <style>
-:root{
-    --bg:#f4f5f9;
-    --white:#ffffff;
-    --border:#e3e5ee;
-    --text:#1c2033;
-    --gray:#6b7185;
-    --accent:#4457e8;
-    --accent-dark:#333fc2;
-    --radius:12px;
-}
-*{box-sizing:border-box;}
-body{
-    margin:0;
-    font-family:-apple-system,"Segoe UI",Roboto,Inter,Arial,sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    -webkit-font-smoothing:antialiased;
-}
-.topbar{
-    background:var(--white);border-bottom:1px solid var(--border);
-    padding:16px 20px;display:flex;align-items:center;gap:12px;
-}
-.back-link{
-    color:var(--gray);text-decoration:none;font-size:.9rem;font-weight:600;
-    display:flex;align-items:center;gap:4px;
-}
-.back-link:hover{color:var(--accent);}
-main{max-width:760px;margin:0 auto;padding:28px 18px 60px;}
-h1{font-size:1.3rem;margin:0 0 4px;}
-.subtitle{color:var(--gray);font-size:.9rem;margin:0 0 24px;}
-.group-title{
-    font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
-    color:var(--gray);margin:22px 0 10px;
-}
-.chapter-list{display:flex;flex-direction:column;gap:10px;}
-.chapter-card{
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
-    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
-    padding:16px 18px;text-decoration:none;color:var(--text);
-    transition:border-color .12s, transform .12s;
-}
-.chapter-card:hover{border-color:var(--accent);transform:translateY(-1px);}
-.chapter-card .info .label{font-weight:700;font-size:1rem;margin-bottom:2px;}
-.chapter-card .info .note{color:var(--gray);font-size:.85rem;}
-.chapter-card .code{
-    flex:0 0 auto;font-size:.75rem;font-weight:700;letter-spacing:.02em;
-    background:#eef0f7;color:var(--accent-dark);padding:5px 10px;border-radius:6px;
-}
-.chapter-card .arrow{color:var(--gray);flex:0 0 auto;}
-.subject-list{display:flex;flex-direction:column;gap:10px;}
-.subject-card{
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
-    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
-    padding:16px 18px;text-decoration:none;color:var(--text);
-    transition:border-color .12s, transform .12s;
-}
-.subject-card:hover{border-color:var(--accent);transform:translateY(-1px);}
-.subject-card .label{font-weight:700;font-size:1rem;}
-.subject-card .code{
-    flex:0 0 auto;font-size:.75rem;font-weight:700;letter-spacing:.02em;
-    background:#eef0f7;color:var(--accent-dark);padding:5px 10px;border-radius:6px;
-}
-.subject-card .arrow{color:var(--gray);flex:0 0 auto;}
-.empty-state, .error-state{
-    text-align:center;padding:50px 20px;color:var(--gray);font-size:.92rem;
-    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
-}
-.error-state{color:#991b1b;}
-.loading{text-align:center;padding:50px 20px;color:var(--gray);font-size:.92rem;}
+    :root{
+        --bg:        #f5f7fb;
+        --card:      #ffffff;
+        --line:      #e8eaf1;
+        --ink:       #1f2433;
+        --ink-soft:  #6b7180;
+        --ink-mute:  #9aa0b1;
+        --green:     #17b26a;
+        --green-bg:  #e7f9f0;
+        --amber:     #f5a524;
+        --amber-bg:  #fef3e0;
+        --brand:     #4f6bff;
+        --brand-bg:  #eef1ff;
+        --accent:    #4f6bff;
+        --accent-bg: #eef1ff;
+        --shadow:    0 1px 2px rgba(20,22,40,.04), 0 8px 24px -12px rgba(20,22,40,.08);
+        --shadow-hov:0 4px 10px rgba(20,22,40,.05), 0 20px 40px -16px rgba(20,22,40,.16);
+    }
+    html[data-theme="dark"]{
+        --bg:        #14151c;
+        --card:      #1c1e28;
+        --line:      #2c2f3c;
+        --ink:       #f0f1f6;
+        --ink-soft:  #a2a7ba;
+        --ink-mute:  #6f7488;
+        --green:     #2ed392;
+        --green-bg:  #163a2c;
+        --amber:     #ffbd4a;
+        --amber-bg:  #3a2e12;
+        --brand:     #7b93ff;
+        --brand-bg:  #232a4d;
+        --shadow:    0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
+        --shadow-hov:0 4px 10px rgba(0,0,0,.25), 0 20px 40px -16px rgba(0,0,0,.6);
+    }
+    html{ transition: background .25s ease; }
+    *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+    body, header, .chapter-card, .hero-card, .report-banner, .state-card{
+        transition: background .25s ease, border-color .25s ease, color .25s ease, box-shadow .25s ease;
+    }
+    body{
+        background: var(--bg);
+        color: var(--ink);
+        font-family:'Be Vietnam Pro', sans-serif;
+        min-height:100vh;
+        line-height:1.6;
+    }
+    @media (prefers-reduced-motion: reduce){
+        *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+    }
+
+    /* ---------------- header ---------------- */
+    header{
+        background:var(--card); height:64px; display:flex; align-items:center; justify-content:space-between;
+        padding:0 clamp(14px, 4vw, 24px); border-bottom:1px solid var(--line);
+        padding-left:max(14px, env(safe-area-inset-left)); padding-right:max(14px, env(safe-area-inset-right));
+        position:fixed; top:0; width:100%; z-index:1000; gap:10px;
+    }
+    .header-left{ display:flex; align-items:center; gap:10px; min-width:0; flex-shrink:0; text-decoration:none; color:inherit; cursor:pointer; }
+    .header-left .mark{
+        width:32px; height:32px; border-radius:9px;
+        background:linear-gradient(135deg, var(--brand), #7b8fff);
+        display:flex; align-items:center; justify-content:center;
+        color:#fff; font-weight:800; font-size:.88rem; flex-shrink:0;
+    }
+    .header-left .name{ font-weight:800; font-size:.92rem; color:var(--ink); white-space:nowrap; }
+    .header-title{
+        font-weight:700; color:var(--ink); font-size:.98rem; text-align:center;
+        min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;
+    }
+    .header-title span{
+        display:block; font-size:.72rem; font-weight:500; color:var(--ink-mute); margin-top:1px;
+        overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .header-right{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+    .theme-toggle{
+        width:40px; height:40px; border-radius:50%;
+        border:1px solid var(--line); background:var(--card); cursor:pointer;
+        display:flex; align-items:center; justify-content:center;
+        color:var(--ink-soft); font-size:.9rem; flex-shrink:0;
+        transition:background .2s ease, color .2s ease, border-color .2s ease, transform .12s ease;
+    }
+    @media (hover:hover){ .theme-toggle:hover{ background:var(--brand-bg); color:var(--brand); } }
+    .theme-toggle:active{ transform:scale(.9); }
+    .theme-toggle .fa-sun{ display:none; }
+    html[data-theme="dark"] .theme-toggle .fa-sun{ display:inline; }
+    html[data-theme="dark"] .theme-toggle .fa-moon{ display:none; }
+
+    /* ---------------- wrap ---------------- */
+    .chapter-screen{
+        max-width:1180px; width:100%; margin:0 auto;
+        padding:88px clamp(16px, 4vw, 28px) 60px;
+        padding-left:max(clamp(16px, 4vw, 28px), env(safe-area-inset-left));
+        padding-right:max(clamp(16px, 4vw, 28px), env(safe-area-inset-right));
+        padding-bottom:max(60px, env(safe-area-inset-bottom));
+    }
+
+    /* ---------------- hero ---------------- */
+    .hero-card{
+        background: linear-gradient(135deg, var(--accent-bg) 0%, var(--card) 55%, var(--brand-bg) 100%);
+        border:1px solid var(--line);
+        border-radius:20px; padding:clamp(20px, 3.5vw, 30px); margin-bottom:clamp(20px, 3.5vw, 30px);
+        display:flex; align-items:center; gap:18px; justify-content:space-between; flex-wrap:wrap;
+        position:relative; overflow:hidden;
+    }
+    .hero-text{ flex:1; min-width:220px; }
+    .hero-eyebrow{
+        font-size:.76rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+        color:var(--accent); margin-bottom:8px;
+    }
+    .hero-card h1{ font-size:clamp(1.15rem, 1rem + 1.6vw, 1.6rem); font-weight:800; line-height:1.32; margin-bottom:8px; max-width:480px; }
+    .hero-card p{ color:var(--ink-soft); font-size:.9rem; max-width:460px; }
+    .hero-icon{
+        width:clamp(56px, 8vw, 88px); height:clamp(56px, 8vw, 88px); border-radius:22px; flex-shrink:0;
+        background:var(--accent-bg); color:var(--accent);
+        display:flex; align-items:center; justify-content:center; font-size:clamp(1.4rem, 3vw, 2.1rem);
+    }
+
+    /* ---------------- section heading ---------------- */
+    .section-label{
+        display:flex; align-items:center; gap:8px;
+        font-size:.78rem; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:.06em;
+        margin:clamp(24px, 4vw, 30px) 0 14px;
+    }
+    .section-label::before{
+        content:''; width:4px; height:14px; border-radius:3px; background:var(--accent); display:inline-block;
+    }
+    .section-label:first-of-type{ margin-top:0; }
+
+    /* ---------------- chapter cards ---------------- */
+    .chapter-list{ display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:clamp(12px, 2vw, 16px); }
+    .chapter-card{
+        background:var(--card); border:1px solid var(--line); border-radius:18px;
+        padding:18px 20px; text-decoration:none; color:var(--ink);
+        display:flex; flex-direction:column; gap:14px;
+        box-shadow:var(--shadow);
+        transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+        cursor:pointer; position:relative;
+        -webkit-tap-highlight-color:transparent;
+    }
+    @media (hover:hover){
+        .chapter-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-hov); border-color:#dfe2ee; }
+    }
+    .chapter-card:active{ transform:scale(.98); box-shadow:var(--shadow); }
+
+    .c-top{ display:flex; align-items:flex-start; justify-content:space-between; }
+    .icon-chip{
+        width:42px; height:42px; border-radius:12px; flex-shrink:0;
+        background:var(--accent-bg); color:var(--accent);
+        display:flex; align-items:center; justify-content:center; font-size:1.05rem;
+    }
+    .card-arrow{
+        width:26px; height:26px; border-radius:50%;
+        display:flex; align-items:center; justify-content:center;
+        background:#f2f3f8; color:var(--ink-mute); font-size:.7rem;
+        opacity:0; transform:translateX(-4px);
+        transition:opacity .2s ease, transform .2s ease, background .2s ease, color .2s ease;
+    }
+    html[data-theme="dark"] .card-arrow{ background:#262a38; }
+    @media (hover:hover){
+        .chapter-card:hover .card-arrow{ opacity:1; transform:translateX(0); background:var(--accent); color:#fff; }
+    }
+    @media (hover:none){
+        .card-arrow{ opacity:.55; transform:translateX(0); }
+    }
+
+    .c-name{ font-weight:700; font-size:.98rem; line-height:1.4; display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+    .c-note{ color:var(--ink-soft); font-size:.84rem; }
+    .c-count{ color:var(--ink-mute); font-size:.82rem; display:flex; align-items:center; gap:6px; }
+    .c-count i{ font-size:.76rem; }
+
+    .badge-new{
+        display:inline-flex; align-items:center; padding:2px 8px; font-size:9.5px; font-weight:800;
+        letter-spacing:.4px; text-transform:uppercase; color:#fff;
+        background:linear-gradient(135deg, #ff6b52, #e4372a); border-radius:999px;
+    }
+
+    /* ---------------- state cards (loading / error / empty) ---------------- */
+    .state-card{
+        background:var(--card); border:1px solid var(--line); border-radius:20px;
+        padding:50px 24px; text-align:center; color:var(--ink-soft); font-size:.92rem;
+    }
+    .state-card i{ font-size:1.6rem; color:var(--ink-mute); margin-bottom:12px; display:block; }
+    .state-card.is-error{ color:#c0392b; }
+    .state-card.is-error i{ color:var(--amber); }
+    .state-card a{ color:var(--accent); font-weight:700; text-decoration:none; }
+    .state-card a:hover{ text-decoration:underline; }
+
+    /* ---------------- report banner ---------------- */
+    .report-banner{
+        display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+        background:var(--amber-bg); border:1.5px solid var(--amber);
+        border-radius:20px; padding:13px 22px; margin:clamp(28px, 5vw, 36px) auto 0; width:fit-content; max-width:100%;
+        text-decoration:none; position:relative;
+        box-shadow:var(--shadow);
+        animation: bannerGlow 2s ease-in-out infinite;
+    }
+    @media (hover:hover){ .report-banner:hover{ transform:translateY(-1px) scale(1.015); box-shadow:var(--shadow-hov); } }
+    .report-banner:active{ transform:scale(.98); }
+    .report-banner .icon{ font-size:16px; flex-shrink:0; display:inline-block; animation: iconShake 1.8s ease-in-out infinite; }
+    .report-banner span:not(.icon):not(.arrow){
+        color:#8a5a06; font-size:12.5px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; text-align:center;
+    }
+    html[data-theme="dark"] .report-banner span:not(.icon):not(.arrow){ color:var(--amber); }
+    .report-banner span u{ text-decoration-thickness:2px; }
+    .report-banner .arrow{ font-size:15px; flex-shrink:0; animation: arrowNudge 1s ease-in-out infinite; }
+    @keyframes arrowNudge{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(4px); } }
+    @keyframes bannerGlow{
+        0%,100%{ box-shadow:var(--shadow), 0 0 0 0 rgba(245,165,36,.4); }
+        50%{ box-shadow:var(--shadow-hov), 0 0 0 9px rgba(245,165,36,0); }
+    }
+    @keyframes iconShake{
+        0%,60%,100%{ transform:rotate(0deg); }
+        65%{ transform:rotate(-14deg); } 75%{ transform:rotate(11deg); }
+        85%{ transform:rotate(-7deg); } 92%{ transform:rotate(4deg); }
+    }
+    @media (prefers-reduced-motion: reduce){
+        .report-banner, .report-banner .icon, .report-banner .arrow{ animation:none; }
+    }
+
+    footer{
+        text-align:center; color:var(--ink-mute); font-size:.8rem;
+        padding-top:26px; margin-top:34px; border-top:1px solid var(--line);
+    }
+
+    /* ---------------- responsive ---------------- */
+    @media (min-width: 1400px){
+        .chapter-screen{ max-width:1280px; }
+    }
+    @media (max-width: 900px){
+        .chapter-list{ grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); }
+    }
+    @media (max-width: 640px){
+        header{ height:58px; }
+        .chapter-screen{ padding-top:80px; }
+        .hero-card{ flex-direction:column; align-items:flex-start; text-align:left; gap:14px; }
+        .hero-icon{ align-self:flex-start; }
+        .hero-card h1, .hero-card p{ max-width:none; }
+        .header-title span{ display:none; }
+        .header-left .name{ display:none; }
+        .chapter-list{ grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; }
+        .chapter-card{ padding:16px; gap:12px; }
+        .c-name{ font-size:.92rem; }
+        .section-label{ font-size:.72rem; }
+        .report-banner{ padding:12px 18px; }
+        .report-banner span:not(.icon):not(.arrow){ font-size:11.5px; }
+    }
+    @media (max-width: 400px){
+        .chapter-screen{ padding-left:14px; padding-right:14px; }
+        .chapter-list{ grid-template-columns:1fr 1fr; gap:10px; }
+        .icon-chip{ width:38px; height:38px; font-size:.95rem; }
+        .hero-card h1{ font-size:1.1rem; }
+        .card-arrow{ display:none; }
+    }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-    <a href="index.html" class="back-link">← Trang chủ</a>
-</div>
+<header>
+    <a href="index.html" class="header-left">
+        <div class="mark">S</div>
+        <div class="name">SNG EDU</div>
+    </a>
+    <div class="header-title" id="headerTitle">Đang tải...</div>
+    <div class="header-right">
+        <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
+            <i class="fa-solid fa-moon"></i>
+            <i class="fa-solid fa-sun"></i>
+        </button>
+    </div>
+</header>
 
-<main>
-    <h1 id="subjectTitle">Đang tải môn học...</h1>
-    <p class="subtitle" id="subjectSubtitle"></p>
-    <div id="content"><div class="loading">Đang tải danh sách chương/đề...</div></div>
-</main>
+<div class="chapter-screen">
+
+    <div class="hero-card" id="heroCard" style="display:none;">
+        <div class="hero-text">
+            <div class="hero-eyebrow">Học phần</div>
+            <h1 id="heroTitle"></h1>
+            <p id="heroSubtitle">Chọn một chương/đề bên dưới để bắt đầu ôn tập — mỗi chương có bộ câu hỏi riêng, giải thích đáp án chi tiết.</p>
+        </div>
+        <div class="hero-icon" id="heroIcon"><i class="fa-solid fa-book-open"></i></div>
+    </div>
+
+    <div id="content"><div class="state-card"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải dữ liệu môn học...</div></div>
+
+    <a href="https://forms.gle/CMZj35G3BMGfo1AZ8" target="_blank" rel="noopener" class="report-banner">
+        <span class="icon">🔔</span>
+        <span>Gặp câu hỏi sai? <u>Click vào đây</u> góp ý giúp tôi!</span>
+        <span class="arrow">👉</span>
+    </a>
+
+    <footer>SNG © H.N.TấnHải · sngedu.site</footer>
+</div>
 
 <script>
 const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Bảng màu + icon xoay vòng cho từng môn học (chọn theo hash của mã môn, để mỗi môn luôn ra đúng 1 màu/1 icon cố định)
+const PALETTE = [
+    { icon:'fa-scale-balanced',   light:{c:'#e4572e', bg:'#ffece8'}, dark:{c:'#ff8161', bg:'#3a2018'} },
+    { icon:'fa-landmark',         light:{c:'#4f6bff', bg:'#eef1ff'}, dark:{c:'#7b93ff', bg:'#232a4d'} },
+    { icon:'fa-flask',            light:{c:'#17b26a', bg:'#e7f9f0'}, dark:{c:'#2ed392', bg:'#163a2c'} },
+    { icon:'fa-brain',            light:{c:'#9333ea', bg:'#f4ebfd'}, dark:{c:'#c084fc', bg:'#2e1f3d'} },
+    { icon:'fa-globe',            light:{c:'#0891b2', bg:'#e5f7fa'}, dark:{c:'#38bdf8', bg:'#0f2f38'} },
+    { icon:'fa-book-open',        light:{c:'#d97706', bg:'#fef3e0'}, dark:{c:'#ffbd4a', bg:'#3a2e12'} },
+    { icon:'fa-graduation-cap',   light:{c:'#db2777', bg:'#fdeaf3'}, dark:{c:'#f472b6', bg:'#3a1f2d'} },
+    { icon:'fa-chart-line',       light:{c:'#65a30d', bg:'#f1f8e5'}, dark:{c:'#a3e635', bg:'#25301a'} },
+];
+
+function hashStr(s){
+    let h = 0;
+    for (let i=0; i<s.length; i++){ h = (h*31 + s.charCodeAt(i)) | 0; }
+    return Math.abs(h);
+}
+
+let currentPalette = PALETTE[0];
+function applyPalette(theme){
+    const p = theme === 'dark' ? currentPalette.dark : currentPalette.light;
+    document.documentElement.style.setProperty('--accent', p.c);
+    document.documentElement.style.setProperty('--accent-bg', p.bg);
+}
 
 function getSubjectId(){
     const params = new URLSearchParams(window.location.search);
@@ -101,93 +353,113 @@ function getSubjectId(){
 function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
+function showState(html, isError){
+    document.getElementById('content').innerHTML = `<div class="state-card${isError ? ' is-error' : ''}">${html}</div>`;
+}
 
 async function loadPage(){
     const subjectId = getSubjectId();
-    const content = document.getElementById('content');
 
     if (!subjectId){
-        await loadSubjectPicker(content);
+        document.getElementById('headerTitle').innerText = 'Thiếu thông tin môn học';
+        showState(`<i class="fa-solid fa-circle-exclamation"></i>Không tìm thấy môn học trong đường dẫn.<br>Vui lòng quay lại <a href="index.html">trang chủ</a> và chọn lại môn học.`, true);
         return;
     }
 
     const { data: subject, error: subjectErr } = await sb.from('subjects').select('*').eq('id', subjectId).single();
-    if (subjectErr || !subject){
-        document.getElementById('subjectTitle').innerText = 'Không tìm thấy môn học';
-        content.innerHTML = `<div class="error-state">Môn học "${escapeHtml(subjectId)}" không tồn tại hoặc đã bị xóa.</div>`;
+
+    // Không tồn tại hoặc đã bị ẩn khỏi hệ thống -> coi như không tìm thấy, không tiết lộ thêm
+    if (subjectErr || !subject || subject.status === 'hidden'){
+        document.getElementById('headerTitle').innerText = 'Không tìm thấy môn học';
+        showState(`<i class="fa-solid fa-circle-exclamation"></i>Môn học này không tồn tại hoặc đã bị gỡ bỏ.<br>Vui lòng quay lại <a href="index.html">trang chủ</a> để chọn môn khác.`, true);
         return;
     }
 
-    document.getElementById('subjectTitle').innerText = subject.name;
-    document.getElementById('subjectSubtitle').innerText = 'Chọn một chương/đề để bắt đầu ôn tập';
+    // Cập nhật header + hero theo đúng môn học đang xem
+    document.title = `${subject.name} · SNG EDU`;
+    document.getElementById('headerTitle').innerHTML = `${escapeHtml(subject.name)}<span>Ôn tập trắc nghiệm</span>`;
+    document.getElementById('heroTitle').innerText = `Ôn tập trắc nghiệm ${subject.name}`;
+
+    const pIdx = hashStr(String(subject.id)) % PALETTE.length;
+    currentPalette = PALETTE[pIdx];
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    applyPalette(theme);
+    document.getElementById('heroIcon').innerHTML = `<i class="fa-solid ${currentPalette.icon}"></i>`;
+    document.getElementById('heroCard').style.display = '';
+
+    // Môn đang bảo trì / chưa cập nhật -> chặn truy cập chương, giải thích rõ lý do
+    if (subject.status === 'maintenance'){
+        showState(`<i class="fa-solid fa-screwdriver-wrench"></i>Môn học <b>${escapeHtml(subject.name)}</b> đang được bảo trì.<br>Vui lòng quay lại sau ít phút.`, true);
+        return;
+    }
+    if (subject.status === 'pending'){
+        showState(`<i class="fa-solid fa-hourglass-half"></i>Môn học <b>${escapeHtml(subject.name)}</b> chưa được cập nhật nội dung.<br>Vui lòng quay lại sau.`, true);
+        return;
+    }
 
     const { data: chapters, error: chapErr } = await sb.from('chapters')
         .select('*').eq('subject_id', subjectId).order('order_no');
 
     if (chapErr){
-        content.innerHTML = `<div class="error-state">Lỗi tải chương/đề: ${escapeHtml(chapErr.message)}</div>`;
+        showState(`<i class="fa-solid fa-triangle-exclamation"></i>Lỗi tải chương/đề: ${escapeHtml(chapErr.message)}`, true);
         return;
     }
 
     if (!chapters || !chapters.length){
-        content.innerHTML = `<div class="empty-state">Môn học này chưa có chương/đề nào. Vui lòng quay lại sau.</div>`;
+        showState(`<i class="fa-solid fa-inbox"></i>Môn học này chưa có chương/đề nào.<br>Vui lòng quay lại sau.`);
         return;
     }
 
+    // Đếm số câu hỏi theo từng chương (1 truy vấn duy nhất, gộp đếm ở phía client)
+    const counts = {};
+    const { data: qRows } = await sb.from('questions').select('chapter').eq('subject_id', subjectId);
+    (qRows || []).forEach(r => { counts[r.chapter] = (counts[r.chapter] || 0) + 1; });
+
+    // Gom nhóm chương theo group_name, giữ đúng thứ tự nhóm xuất hiện lần đầu trong dữ liệu
+    const groupOrder = [];
     const groups = {};
     chapters.forEach(ch => {
         const g = ch.group_name || 'Nội dung chính';
-        if (!groups[g]) groups[g] = [];
+        if (!groups[g]){ groups[g] = []; groupOrder.push(g); }
         groups[g].push(ch);
     });
 
     let html = '';
-    Object.keys(groups).forEach(groupName => {
-        html += `<div class="group-title">${escapeHtml(groupName)}</div>`;
+    groupOrder.forEach(groupName => {
+        html += `<div class="section-label">${escapeHtml(groupName)}</div>`;
         html += `<div class="chapter-list">`;
         groups[groupName].forEach(ch => {
             const href = `quiz-dynamic.html?subject=${encodeURIComponent(subjectId)}&chapter=${encodeURIComponent(ch.chapter)}`;
+            const n = counts[ch.chapter] || 0;
             html += `
                 <a class="chapter-card" href="${href}">
-                    <div class="info">
-                        <div class="label">${escapeHtml(ch.label)}</div>
-                        ${ch.note ? `<div class="note">${escapeHtml(ch.note)}</div>` : ''}
+                    <div class="c-top">
+                        <div class="icon-chip"><i class="fa-solid fa-list-check"></i></div>
+                        <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                     </div>
-                    <span class="code">${escapeHtml(ch.chapter)}</span>
-                    <span class="arrow">→</span>
+                    <div class="c-name">${escapeHtml(ch.label)}</div>
+                    ${ch.note ? `<div class="c-note">${escapeHtml(ch.note)}</div>` : ''}
+                    ${n ? `<div class="c-count"><i class="fa-regular fa-circle-question"></i> ${n} câu</div>` : ''}
                 </a>
             `;
         });
         html += `</div>`;
     });
 
-    content.innerHTML = html;
+    document.getElementById('content').innerHTML = html;
 }
 
-async function loadSubjectPicker(content){
-    document.getElementById('subjectTitle').innerText = 'Chọn môn học';
-    document.getElementById('subjectSubtitle').innerText = 'Bấm vào một môn học để xem các chương/đề';
-
-    const { data: subjects, error } = await sb.from('subjects').select('*').order('id');
-    if (error){
-        content.innerHTML = `<div class="error-state">Lỗi tải danh sách môn học: ${escapeHtml(error.message)}</div>`;
-        return;
-    }
-    if (!subjects || !subjects.length){
-        content.innerHTML = `<div class="empty-state">Chưa có môn học nào được thêm.</div>`;
-        return;
-    }
-
-    content.innerHTML = `<div class="subject-list">` + subjects.map(s => `
-        <a class="subject-card" href="mon-hoc.html?subject=${encodeURIComponent(s.id)}">
-            <div class="label">${escapeHtml(s.name)}</div>
-            <span class="code">${escapeHtml(s.id)}</span>
-            <span class="arrow">→</span>
-        </a>
-    `).join('') + `</div>`;
-}
+const themeBtn = document.getElementById('themeToggle');
+themeBtn.addEventListener('click', ()=>{
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem('sng-theme', next); }catch(e){}
+    applyPalette(next);
+});
 
 loadPage();
 </script>
+
 </body>
 </html>

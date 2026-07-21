@@ -310,9 +310,14 @@ textarea{resize:vertical;}
 }
 .merge-src-row input[type=number].merge-src-qty:disabled{background:var(--bg);color:var(--gray);opacity:.55;cursor:not-allowed;}
 .merge-src-row input[type=number].merge-src-qty:focus{outline:none;border-color:var(--accent);}
-.merge-select-all-row{display:flex;justify-content:flex-end;gap:14px;margin-bottom:6px;font-size:.78rem;}
+.merge-select-all-row{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:6px;font-size:.78rem;}
+.merge-select-all-row .msa-links{display:flex;gap:14px;}
 .merge-select-all-row a{color:var(--accent);cursor:pointer;text-decoration:none;font-weight:600;}
 .merge-select-all-row a:hover{text-decoration:underline;}
+.merge-total-badge{
+    flex:0 0 auto;background:#eef0ff;color:var(--accent);font-weight:700;font-size:.78rem;
+    padding:5px 10px;border-radius:20px;white-space:nowrap;
+}
 .merge-clear-row{
     display:flex;align-items:center;gap:8px;margin-top:14px;font-weight:500;
     text-transform:none;font-size:.85rem;color:var(--text);
@@ -514,9 +519,11 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
         <h4>🔀 Tổng hợp câu hỏi</h4>
         <p>Copy câu hỏi từ các chương được chọn vào đề <b id="mergeTargetLabel"></b>. Có thể chỉnh số lượng câu lấy từ mỗi chương. Câu hỏi ở chương nguồn vẫn được giữ nguyên, không bị xóa hay di chuyển.</p>
         <div class="merge-select-all-row">
-            <a onclick="mergeSetAll(true)">Chọn tất cả</a>
-            <a onclick="mergeSetAll(false)">Bỏ chọn tất cả</a>
-            <a onclick="mergeSetMaxQty()">Lấy tối đa</a>
+            <div class="msa-links">
+                <a onclick="mergeSetAll(true)">Chọn tất cả</a>
+                <a onclick="mergeSetAll(false)">Bỏ chọn tất cả</a>
+            </div>
+            <span class="merge-total-badge" id="mergeTotalBadge">Tổng: 0 câu</span>
         </div>
         <div class="merge-source-list" id="mergeSourceList"></div>
         <label class="merge-clear-row">
@@ -1143,6 +1150,8 @@ async function openMergeModal(){
         </label>
     `;
     }).join('');
+
+    mergeUpdateTotal();
 }
 // Giới hạn giá trị ô số lượng trong khoảng [0, số câu tối đa của chương đó]
 function mergeClampQty(input){
@@ -1151,6 +1160,7 @@ function mergeClampQty(input){
     if (isNaN(v) || v < 0) v = 0;
     if (v > max) v = max;
     input.value = v;
+    mergeUpdateTotal();
 }
 // Bật/tắt ô số lượng theo trạng thái checkbox tương ứng
 function onMergeSrcToggle(cb){
@@ -1160,22 +1170,35 @@ function onMergeSrcToggle(cb){
     const max = Number(cb.dataset.max) || 0;
     qty.disabled = !cb.checked || max === 0;
     if (cb.checked && Number(qty.value) === 0 && max > 0) qty.value = max;
+    mergeUpdateTotal();
 }
 // Chọn tất cả / bỏ chọn tất cả các chương nguồn (bỏ qua chương đã hết câu hỏi)
 function mergeSetAll(state){
     document.querySelectorAll('.merge-src-cb').forEach(cb => {
         if (cb.disabled) return;
         cb.checked = state;
-        onMergeSrcToggle(cb);
-    });
-}
-// Đưa số lượng của tất cả chương đang chọn về đúng số câu tối đa (lấy hết)
-function mergeSetMaxQty(){
-    document.querySelectorAll('.merge-src-row').forEach(row => {
-        const cb = row.querySelector('.merge-src-cb');
+        const row = cb.closest('.merge-src-row');
         const qty = row.querySelector('.merge-src-qty');
-        if (cb && cb.checked && qty) qty.value = qty.max;
+        const max = Number(cb.dataset.max) || 0;
+        if (qty){
+            qty.disabled = !cb.checked || max === 0;
+            if (cb.checked) qty.value = max;
+        }
     });
+    mergeUpdateTotal();
+}
+// Cộng tổng số câu hỏi sẽ được tổng hợp (theo các chương đang tick + số lượng đang nhập), hiển thị lên badge
+function mergeUpdateTotal(){
+    const badge = document.getElementById('mergeTotalBadge');
+    if (!badge) return;
+    let total = 0;
+    document.querySelectorAll('.merge-src-cb:checked').forEach(cb => {
+        const row = cb.closest('.merge-src-row');
+        const qty = row ? row.querySelector('.merge-src-qty') : null;
+        const v = qty ? parseInt(qty.value, 10) : 0;
+        total += (isNaN(v) ? 0 : v);
+    });
+    badge.textContent = `Tổng: ${total} câu`;
 }
 function closeMergeModal(){
     document.getElementById('mergeOverlay').classList.add('hidden');

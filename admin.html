@@ -267,6 +267,36 @@ textarea{resize:vertical;}
 .btn-confirm-cancel{background:#eef0f7;color:var(--text);}
 .btn-confirm-danger{background:var(--red);color:#fff;}
 .btn-confirm-danger:hover{background:#b91c1c;}
+
+/* ---------- MERGE (TỔNG HỢP) MODAL ---------- */
+#mergeOverlay{
+    position:fixed;inset:0;background:rgba(15,18,35,.55);backdrop-filter:blur(2px);
+    display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;
+}
+.merge-box{
+    background:var(--white);border-radius:14px;padding:26px;max-width:460px;width:100%;
+    box-shadow:0 20px 60px rgba(10,15,40,.35);
+}
+.merge-box h4{margin:0 0 8px;font-size:1.05rem;}
+.merge-box p{margin:0 0 14px;color:var(--gray);font-size:.86rem;line-height:1.55;}
+.merge-box p b{color:var(--text);}
+.merge-source-list{display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;}
+.merge-src-row{
+    display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:6px;font-size:.86rem;
+}
+.merge-src-row:hover{background:var(--bg);}
+.merge-src-row input[type=checkbox]{width:auto;flex:0 0 auto;accent-color:var(--accent);}
+.merge-src-row .msr-label{flex:1;min-width:0;}
+.merge-src-row .msr-group{color:var(--gray);font-weight:400;font-size:.78rem;}
+.merge-src-row .msr-count{flex:0 0 auto;color:var(--gray);font-weight:700;font-size:.78rem;}
+.merge-clear-row{
+    display:flex;align-items:center;gap:8px;margin-top:14px;font-weight:500;
+    text-transform:none;font-size:.85rem;color:var(--text);
+}
+.merge-clear-row input{width:auto;accent-color:var(--accent);}
+.merge-actions{display:flex;gap:10px;margin-top:20px;}
+.merge-actions button{flex:1;padding:11px;font-size:.9rem;}
+.btn-merge-cancel{background:#eef0f7;color:var(--text);}
 </style>
 </head>
 <body>
@@ -351,7 +381,10 @@ textarea{resize:vertical;}
             <div class="panel">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
                     <h3 style="margin:0;">Câu hỏi trong đề đang chọn</h3>
-                    <button class="btn-danger" id="deleteAllQBtn" onclick="deleteAllQuestions()">🗑️ Xóa tất cả câu hỏi trong đề này</button>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="btn-primary hidden" id="mergeQBtn" onclick="openMergeModal()" style="padding:6px 12px;font-size:.8rem;">🔀 Tổng hợp câu hỏi</button>
+                        <button class="btn-danger" id="deleteAllQBtn" onclick="deleteAllQuestions()">🗑️ Xóa tất cả câu hỏi trong đề này</button>
+                    </div>
                 </div>
                 <div id="qList"><div class="empty-state">Chọn một môn học và một chương/đề ở thanh bên trái để xem câu hỏi.</div></div>
             </div>
@@ -440,6 +473,23 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
     </div>
 </div>
 
+<!-- ================= MERGE (TỔNG HỢP) MODAL ================= -->
+<div id="mergeOverlay" class="hidden">
+    <div class="merge-box">
+        <h4>🔀 Tổng hợp câu hỏi</h4>
+        <p>Copy toàn bộ câu hỏi từ các chương được chọn vào đề <b id="mergeTargetLabel"></b>. Câu hỏi ở chương nguồn vẫn được giữ nguyên, không bị xóa hay di chuyển.</p>
+        <div class="merge-source-list" id="mergeSourceList"></div>
+        <label class="merge-clear-row">
+            <input type="checkbox" id="mergeClearFirst">
+            Xóa câu hỏi hiện có trong đề này trước khi tổng hợp (tránh trùng/cộng dồn)
+        </label>
+        <div class="merge-actions">
+            <button class="btn-merge-cancel" onclick="closeMergeModal()">Hủy</button>
+            <button class="btn-primary" id="mergeConfirmBtn" onclick="runMergeQuestions()">Tổng hợp ngay</button>
+        </div>
+    </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
@@ -497,6 +547,7 @@ function subjectStatusHtml(subjectId){
     return `<span class="status-badge ${meta.cls}">${meta.label}</span>`;
 }
 function updateContextBar(){
+    toggleMergeButton();
     const bar = document.getElementById('contextBar');
     if (!currentSubject){
         bar.innerHTML = `<span class="ctx-empty">👈 Chọn một môn học ở thanh bên trái để bắt đầu</span>`;
@@ -957,6 +1008,96 @@ function deleteQuestion(id){
         }
     );
 }
+// ---------- TỔNG HỢP CÂU HỎI (cho đề thuộc nhóm "Đề thi thử") ----------
+function toggleMergeButton(){
+    const btn = document.getElementById('mergeQBtn');
+    if (!btn) return;
+    const show = !!(currentChapter && currentChapter.group_name === 'Đề thi thử');
+    btn.classList.toggle('hidden', !show);
+}
+async function openMergeModal(){
+    if (!currentSubject || !currentChapter) return showMsg('Chọn môn học và đề thi thử ở thanh bên trái trước.', 'err');
+    const sources = chapters.filter(c => c.chapter !== currentChapter.chapter);
+    if (!sources.length) return showMsg('Môn học này chưa có chương nào khác để lấy câu hỏi.', 'err');
+
+    document.getElementById('mergeTargetLabel').textContent = currentChapter.label;
+    document.getElementById('mergeSourceList').innerHTML = `<div style="text-align:center;color:var(--gray);font-size:.85rem;padding:14px;">Đang tải số câu hỏi...</div>`;
+    document.getElementById('mergeClearFirst').checked = false;
+    document.getElementById('mergeOverlay').classList.remove('hidden');
+
+    const { data: allQ, error } = await sb.from('questions').select('chapter').eq('subject_id', currentSubject.id);
+    if (error){
+        document.getElementById('mergeSourceList').innerHTML = `<div style="color:var(--red);font-size:.85rem;padding:10px;">Lỗi tải dữ liệu: ${escapeHtml(error.message)}</div>`;
+        return;
+    }
+    const counts = {};
+    (allQ || []).forEach(r => { counts[r.chapter] = (counts[r.chapter] || 0) + 1; });
+
+    document.getElementById('mergeSourceList').innerHTML = sources.map(c => `
+        <label class="merge-src-row">
+            <input type="checkbox" class="merge-src-cb" value="${escapeHtml(c.chapter)}" ${c.group_name !== 'Đề thi thử' ? 'checked' : ''}>
+            <span class="msr-label">${escapeHtml(c.label)} <span class="msr-group">(${escapeHtml(c.group_name || 'Nội dung chính')})</span></span>
+            <span class="msr-count">${counts[c.chapter] || 0} câu</span>
+        </label>
+    `).join('');
+}
+function closeMergeModal(){
+    document.getElementById('mergeOverlay').classList.add('hidden');
+}
+async function runMergeQuestions(){
+    if (!currentSubject || !currentChapter) return;
+    const checked = Array.from(document.querySelectorAll('.merge-src-cb:checked')).map(cb => cb.value);
+    if (!checked.length) return showMsg('Chọn ít nhất 1 chương nguồn để tổng hợp.', 'err');
+
+    const btn = document.getElementById('mergeConfirmBtn');
+    const oldText = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Đang tổng hợp...';
+
+    if (document.getElementById('mergeClearFirst').checked){
+        const { error: delErr } = await sb.from('questions').delete()
+            .eq('subject_id', currentSubject.id).eq('chapter', currentChapter.chapter);
+        if (delErr){
+            btn.disabled = false; btn.textContent = oldText;
+            return showMsg('Lỗi xóa câu hỏi cũ: ' + delErr.message, 'err');
+        }
+    }
+
+    const { data: srcRows, error: srcErr } = await sb.from('questions')
+        .select('*').eq('subject_id', currentSubject.id).in('chapter', checked)
+        .order('chapter').order('order_no');
+    if (srcErr){
+        btn.disabled = false; btn.textContent = oldText;
+        return showMsg('Lỗi tải câu hỏi nguồn: ' + srcErr.message, 'err');
+    }
+    if (!srcRows || !srcRows.length){
+        btn.disabled = false; btn.textContent = oldText;
+        return showMsg('Các chương đã chọn chưa có câu hỏi nào.', 'err');
+    }
+
+    const { data: existing } = await sb.from('questions').select('order_no')
+        .eq('subject_id', currentSubject.id).eq('chapter', currentChapter.chapter)
+        .order('order_no', { ascending: false }).limit(1);
+    let nextOrder = existing && existing.length ? existing[0].order_no + 1 : 1;
+
+    const rowsToInsert = srcRows.map(r => ({
+        subject_id: currentSubject.id,
+        chapter: currentChapter.chapter,
+        order_no: nextOrder++,
+        content: r.content,
+        options: r.options,
+        correct_idx: r.correct_idx,
+        explanation: r.explanation
+    }));
+
+    const { error: insErr } = await sb.from('questions').insert(rowsToInsert);
+    btn.disabled = false; btn.textContent = oldText;
+    if (insErr) return showMsg('Lỗi tổng hợp: ' + insErr.message, 'err');
+
+    showMsg(`Đã tổng hợp ${rowsToInsert.length} câu hỏi vào đề "${currentChapter.label}".`, 'ok');
+    closeMergeModal();
+    loadQuestions();
+}
+
 function deleteAllQuestions(){
     if (!currentSubject || !currentChapter) return showMsg('Chọn môn học và chương/đề ở thanh bên trái trước.', 'err');
     const count = currentQuestions.length;

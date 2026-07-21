@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản trị câu hỏi - SNG EDU</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+    :root{--blue:#3258db;--bg:#f0f2f5;--white:#fff;--border:#e5e7eb;--gray:#6b7280;--red:#ef4444;--green:#22c55e;}
+    *{box-sizing:border-box;font-family:'Segoe UI',Roboto,Arial,sans-serif;}
+    body{margin:0;background:var(--bg);color:#111;}
+    header{background:var(--white);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+    header b{font-size:1.1rem;}
+    button{cursor:pointer;border:none;border-radius:8px;font-weight:600;padding:9px 16px;font-size:.9rem;}
+    .btn-primary{background:var(--blue);color:#fff;}
+    .btn-danger{background:var(--red);color:#fff;}
+    .btn-ghost{background:#eee;color:#333;}
+    .wrap{max-width:900px;margin:24px auto;padding:0 16px;}
+    .card{background:var(--white);border-radius:12px;padding:20px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    input,select,textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:.95rem;margin-top:4px;}
+    label{font-weight:600;font-size:.85rem;color:var(--gray);display:block;margin-top:12px;}
+    .row{display:flex;gap:12px;}
+    .row>div{flex:1;}
+    #loginBox{max-width:360px;margin:80px auto;text-align:center;}
+    #loginBox .card{text-align:left;}
+    .hidden{display:none !important;}
+    .q-item{border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
+    .q-item .opt{padding:4px 0;font-size:.9rem;}
+    .opt.correct{color:var(--green);font-weight:700;}
+    .q-item .actions{margin-top:10px;display:flex;gap:8px;}
+    .opt-row{display:flex;align-items:center;gap:8px;margin-top:6px;}
+    .opt-row input[type=radio]{width:auto;}
+    .opt-row input[type=text]{flex:1;}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;}
+    .toolbar>div{flex:1;min-width:140px;}
+    small.hint{color:var(--gray);display:block;margin-top:4px;}
+    .msg{padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.9rem;}
+    .msg.ok{background:#f0fdf4;color:#166534;}
+    .msg.err{background:#fef2f2;color:#991b1b;}
+</style>
+</head>
+<body>
+
+<div id="loginBox">
+    <h2>🔐 Đăng nhập Admin</h2>
+    <div class="card">
+        <label>Email</label>
+        <input id="loginEmail" type="email" placeholder="admin@example.com">
+        <label>Mật khẩu</label>
+        <input id="loginPass" type="password">
+        <button class="btn-primary" style="width:100%;margin-top:16px;" onclick="doLogin()">Đăng nhập</button>
+        <div id="loginMsg" style="margin-top:10px;color:var(--red);font-size:.9rem;"></div>
+    </div>
+</div>
+
+<div id="adminArea" class="hidden">
+<header>
+    <b>📚 Quản trị câu hỏi</b>
+    <button class="btn-ghost" onclick="doLogout()">Đăng xuất</button>
+</header>
+
+<div class="wrap">
+    <div id="msgBox"></div>
+
+    <div class="card">
+        <div class="toolbar">
+            <div>
+                <label>Môn học</label>
+                <select id="selSubject" onchange="onFilterChange()"></select>
+            </div>
+            <div>
+                <label>Mã đề / chương</label>
+                <input id="inpChapter" placeholder="vd: 1-40" onchange="loadQuestions()">
+            </div>
+            <div style="flex:0;">
+                <button class="btn-primary" onclick="loadQuestions()">Tải câu hỏi</button>
+            </div>
+        </div>
+        <details>
+            <summary style="cursor:pointer;color:var(--gray);font-size:.85rem;">+ Thêm môn học mới</summary>
+            <div class="row" style="margin-top:10px;">
+                <div><label>Mã môn (vd: TH)</label><input id="newSubjectId"></div>
+                <div><label>Tên môn</label><input id="newSubjectName"></div>
+            </div>
+            <button class="btn-ghost" style="margin-top:10px;" onclick="addSubject()">Lưu môn học</button>
+        </details>
+    </div>
+
+    <div class="card">
+        <h3>➕ Thêm 1 câu hỏi</h3>
+        <label>Nội dung câu hỏi</label>
+        <textarea id="qContent" rows="2"></textarea>
+        <div id="optionsForm"></div>
+        <label>Giải thích (tùy chọn)</label>
+        <textarea id="qExplain" rows="2"></textarea>
+        <button class="btn-primary" style="margin-top:14px;" onclick="addSingleQuestion()">Lưu câu hỏi</button>
+    </div>
+
+    <div class="card">
+        <h3>📋 Dán nhiều câu hỏi cùng lúc</h3>
+        <small class="hint">Dán đúng định dạng: <b>Câu 1: Nội dung...</b> / <b>A. đáp án</b> / đáp án đúng thêm dấu * phía trước (vd <b>*B. đáp án</b>) / dòng <b>Gt: giải thích</b> (không bắt buộc). Cách nhau 1 dòng trống giữa các câu.</small>
+        <textarea id="bulkText" rows="8" placeholder="Câu 1: Thủ đô của Việt Nam là?
+A. TP.HCM
+*B. Hà Nội
+C. Đà Nẵng
+D. Huế
+
+Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
+        <button class="btn-primary" style="margin-top:14px;" onclick="bulkImport()">Nạp tất cả</button>
+    </div>
+
+    <div class="card">
+        <h3>📖 Danh sách câu hỏi trong đề này</h3>
+        <div id="qList">Chưa tải câu hỏi.</div>
+    </div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentSubject = '', currentChapter = '';
+
+// ---------- AUTH ----------
+async function doLogin(){
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPass').value;
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error){ document.getElementById('loginMsg').innerText = 'Sai email hoặc mật khẩu.'; return; }
+    showAdmin();
+}
+async function doLogout(){
+    await sb.auth.signOut();
+    location.reload();
+}
+async function checkSession(){
+    const { data } = await sb.auth.getSession();
+    if (data.session) showAdmin();
+}
+function showAdmin(){
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('adminArea').classList.remove('hidden');
+    loadSubjects();
+}
+
+// ---------- SUBJECTS ----------
+async function loadSubjects(){
+    const { data, error } = await sb.from('subjects').select('*').order('id');
+    const sel = document.getElementById('selSubject');
+    sel.innerHTML = (data||[]).map(s=>`<option value="${s.id}">${s.id} — ${s.name}</option>`).join('');
+    if (data && data.length){ currentSubject = data[0].id; }
+    renderOptionForm();
+}
+async function addSubject(){
+    const id = document.getElementById('newSubjectId').value.trim();
+    const name = document.getElementById('newSubjectName').value.trim();
+    if (!id || !name) return showMsg('Nhập đủ mã môn và tên môn.', 'err');
+    const { error } = await sb.from('subjects').insert({ id, name });
+    if (error) return showMsg('Lỗi: ' + error.message, 'err');
+    showMsg('Đã thêm môn học.', 'ok');
+    document.getElementById('newSubjectId').value='';
+    document.getElementById('newSubjectName').value='';
+    loadSubjects();
+}
+function onFilterChange(){ currentSubject = document.getElementById('selSubject').value; }
+
+// ---------- LOAD QUESTIONS ----------
+async function loadQuestions(){
+    currentSubject = document.getElementById('selSubject').value;
+    currentChapter = document.getElementById('inpChapter').value.trim();
+    if (!currentSubject || !currentChapter) return showMsg('Chọn môn và nhập mã đề trước.', 'err');
+
+    const { data, error } = await sb.from('questions')
+        .select('*').eq('subject_id', currentSubject).eq('chapter', currentChapter)
+        .order('order_no');
+
+    if (error) return showMsg('Lỗi tải: ' + error.message, 'err');
+
+    const box = document.getElementById('qList');
+    if (!data.length){ box.innerHTML = '<p style="color:var(--gray)">Chưa có câu hỏi nào trong đề này.</p>'; return; }
+
+    box.innerHTML = data.map(q => `
+        <div class="q-item">
+            <b>Câu ${q.order_no}:</b> ${q.content}
+            ${q.options.map((o,i)=>`<div class="opt ${i===q.correct_idx?'correct':''}">${String.fromCharCode(65+i)}. ${o}</div>`).join('')}
+            ${q.explanation ? `<div style="margin-top:6px;font-size:.85rem;color:var(--gray)">Gt: ${q.explanation}</div>` : ''}
+            <div class="actions">
+                <button class="btn-danger" onclick="deleteQuestion(${q.id})">Xóa</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function deleteQuestion(id){
+    if (!confirm('Xóa câu hỏi này?')) return;
+    const { error } = await sb.from('questions').delete().eq('id', id);
+    if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
+    showMsg('Đã xóa câu hỏi.', 'ok');
+    loadQuestions();
+}
+
+// ---------- ADD SINGLE QUESTION ----------
+function renderOptionForm(){
+    const box = document.getElementById('optionsForm');
+    box.innerHTML = [0,1,2,3].map(i => `
+        <div class="opt-row">
+            <input type="radio" name="correctOpt" value="${i}" ${i===0?'checked':''}>
+            <input type="text" id="opt${i}" placeholder="Đáp án ${String.fromCharCode(65+i)}">
+        </div>
+    `).join('');
+}
+
+async function addSingleQuestion(){
+    currentSubject = document.getElementById('selSubject').value;
+    currentChapter = document.getElementById('inpChapter').value.trim();
+    if (!currentSubject || !currentChapter) return showMsg('Chọn môn và nhập mã đề trước khi thêm câu hỏi.', 'err');
+
+    const content = document.getElementById('qContent').value.trim();
+    const options = [0,1,2,3].map(i => document.getElementById('opt'+i).value.trim());
+    const correctIdx = parseInt(document.querySelector('input[name=correctOpt]:checked').value);
+    const explanation = document.getElementById('qExplain').value.trim();
+
+    if (!content || options.some(o=>!o)) return showMsg('Điền đủ nội dung và 4 đáp án.', 'err');
+
+    const { count } = await sb.from('questions').select('*', { count: 'exact', head: true })
+        .eq('subject_id', currentSubject).eq('chapter', currentChapter);
+
+    const { error } = await sb.from('questions').insert({
+        subject_id: currentSubject, chapter: currentChapter, order_no: (count||0)+1,
+        content, options, correct_idx: correctIdx, explanation
+    });
+    if (error) return showMsg('Lỗi lưu: ' + error.message, 'err');
+
+    showMsg('Đã thêm câu hỏi.', 'ok');
+    document.getElementById('qContent').value='';
+    [0,1,2,3].forEach(i=>document.getElementById('opt'+i).value='');
+    document.getElementById('qExplain').value='';
+    loadQuestions();
+}
+
+// ---------- BULK IMPORT ----------
+function parseBulkText(text){
+    const blocks = text.trim().split(/(?=Câu\s*\d+\s*:)/);
+    const out = [];
+    blocks.forEach(block=>{
+        if (!block.trim()) return;
+        const lines = block.trim().split('\n');
+        const header = lines[0];
+        const contentMatch = header.match(/Câu\s*\d+\s*:\s*(.*)/);
+        if (!contentMatch) return;
+        const content = contentMatch[1].trim();
+        const options = [];
+        let correctIdx = -1, explanation = '';
+        lines.slice(1).forEach(line=>{
+            const l = line.trim();
+            if (/^\*?[A-D]\./.test(l)){
+                if (l.startsWith('*')) correctIdx = options.length;
+                options.push(l.replace(/^\*/,'').replace(/^[A-D]\.\s*/,'').trim());
+            } else if (/^Gt\s*:/.test(l)){
+                explanation = l.replace(/^Gt\s*:/,'').trim();
+            }
+        });
+        if (content && options.length===4 && correctIdx>=0){
+            out.push({ content, options, correctIdx, explanation });
+        }
+    });
+    return out;
+}
+
+async function bulkImport(){
+    currentSubject = document.getElementById('selSubject').value;
+    currentChapter = document.getElementById('inpChapter').value.trim();
+    if (!currentSubject || !currentChapter) return showMsg('Chọn môn và nhập mã đề trước.', 'err');
+
+    const text = document.getElementById('bulkText').value;
+    const parsed = parseBulkText(text);
+    if (!parsed.length) return showMsg('Không đọc được câu hỏi nào, kiểm tra lại định dạng.', 'err');
+
+    const { count } = await sb.from('questions').select('*', { count: 'exact', head: true })
+        .eq('subject_id', currentSubject).eq('chapter', currentChapter);
+
+    const rows = parsed.map((q,i)=>({
+        subject_id: currentSubject, chapter: currentChapter, order_no: (count||0)+i+1,
+        content: q.content, options: q.options, correct_idx: q.correctIdx, explanation: q.explanation
+    }));
+
+    const { error } = await sb.from('questions').insert(rows);
+    if (error) return showMsg('Lỗi nạp: ' + error.message, 'err');
+
+    showMsg(`Đã nạp thành công ${rows.length} câu hỏi.`, 'ok');
+    document.getElementById('bulkText').value='';
+    loadQuestions();
+}
+
+function showMsg(text, type){
+    const box = document.getElementById('msgBox');
+    box.innerHTML = `<div class="msg ${type}">${text}</div>`;
+    setTimeout(()=>box.innerHTML='', 4000);
+}
+
+checkSession();
+</script>
+</body>
+</html>

@@ -94,12 +94,17 @@ aside{
 .status-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;}
 .status-dot.ready{background:#2ed392;}
 .status-dot.empty{background:#767ea0;}
+.status-dot.maintenance{background:#f5a524;}
+.status-dot.hidden{background:#dc2626;}
 .status-badge{
     flex:0 0 auto;font-size:.66rem;font-weight:700;letter-spacing:.02em;
     padding:2px 7px;border-radius:5px;white-space:nowrap;
 }
-.status-badge.ready{background:rgba(46,211,146,.16);color:#2ed392;}
-.status-badge.empty{background:rgba(118,126,160,.2);color:#aab0c6;}
+.status-badge.ready{background:rgba(46,211,146,.16);color:#16a34a;}
+.status-badge.empty{background:rgba(118,126,160,.15);color:var(--gray);}
+.status-badge.maintenance{background:rgba(180,83,9,.14);color:var(--amber);}
+.status-badge.hidden{background:rgba(220,38,38,.12);color:var(--red);}
+.context-bar .status-badge{margin-left:-2px;}
 .side-item.active .status-badge.ready{background:rgba(255,255,255,.25);color:#fff;}
 .side-item.active .status-badge.empty{background:rgba(255,255,255,.2);color:#fff;}
 .side-add{
@@ -235,6 +240,12 @@ textarea{resize:vertical;}
                 <div id="subjectFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm môn học</div>
                 <input id="newSubjectId" placeholder="Mã môn, vd: TH">
                 <input id="newSubjectName" placeholder="Tên đầy đủ, vd: Triết học">
+                <select id="newSubjectStatus">
+                    <option value="ready">🟢 Sẵn sàng</option>
+                    <option value="maintenance">🛠️ Bảo trì</option>
+                    <option value="pending">⚪ Chưa cập nhật</option>
+                    <option value="hidden">🚫 Ẩn (không hiện trang chủ)</option>
+                </select>
                 <div class="mini-actions">
                     <button class="btn-mini-save" onclick="addSubject()">Lưu</button>
                     <button class="btn-mini-cancel" onclick="closeSubjectForm()">Hủy</button>
@@ -378,6 +389,18 @@ function showAdmin(email){
 function toggleForm(id){
     document.getElementById(id).classList.toggle('show');
 }
+const STATUS_META = {
+    ready:       { label: '● Sẵn sàng',      cls: 'ready' },
+    maintenance: { label: '🛠️ Bảo trì',      cls: 'maintenance' },
+    pending:     { label: '○ Chưa cập nhật', cls: 'empty' },
+    hidden:      { label: '🚫 Đang ẩn',       cls: 'hidden' }
+};
+function subjectStatusHtml(subjectId){
+    const s = subjects.find(x => x.id === subjectId);
+    if (!s) return '';
+    const meta = STATUS_META[s.status || 'ready'] || STATUS_META.ready;
+    return `<span class="status-badge ${meta.cls}">${meta.label}</span>`;
+}
 function updateContextBar(){
     const bar = document.getElementById('contextBar');
     if (!currentSubject){
@@ -386,10 +409,12 @@ function updateContextBar(){
     }
     if (!currentChapter){
         bar.innerHTML = `<span class="ctx-label">Môn</span> <span class="ctx-value">${escapeHtml(currentSubject.name)}</span>
+            ${subjectStatusHtml(currentSubject.id)}
             <span class="ctx-sep">/</span> <span class="ctx-empty">👈 Chọn một chương/đề</span>`;
         return;
     }
     bar.innerHTML = `<span class="ctx-label">Môn</span> <span class="ctx-value">${escapeHtml(currentSubject.name)}</span>
+        ${subjectStatusHtml(currentSubject.id)}
         <span class="ctx-sep">/</span>
         <span class="ctx-label">Chương</span> <span class="ctx-value">${escapeHtml(currentChapter.label)}</span>`;
 }
@@ -416,28 +441,26 @@ async function loadSubjectQuestionCounts(){
         subjectQuestionCounts[s.id] = count || 0;
     }));
     renderSubjectList();
+    updateContextBar();
 }
 async function refreshSubjectQuestionCount(subjectId){
     const { count } = await sb.from('questions').select('*', { count:'exact', head:true }).eq('subject_id', subjectId);
     subjectQuestionCounts[subjectId] = count || 0;
     renderSubjectList();
+    updateContextBar();
 }
 function renderSubjectList(){
     const box = document.getElementById('subjectList');
     if (!subjects.length){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Chưa có môn học nào.</div>`; return; }
     box.innerHTML = subjects.map((s, idx) => {
-        const count = subjectQuestionCounts[s.id];
-        const isReady = (count || 0) > 0;
-        const statusHtml = count === undefined
-            ? ''
-            : `<span class="status-badge ${isReady ? 'ready' : 'empty'}" title="${isReady ? count + ' câu hỏi' : 'Chưa có câu hỏi nào'}">${isReady ? '● Sẵn sàng' : '○ Chưa cập nhật'}</span>`;
         const isFirst = idx === 0;
         const isLast = idx === subjects.length - 1;
+        const meta = STATUS_META[s.status || 'ready'] || STATUS_META.ready;
         return `
         <div class="side-item ${currentSubject && currentSubject.id===s.id ? 'active' : ''}" onclick="selectSubject('${s.id}')">
             <span class="name">${escapeHtml(s.name)}</span>
             <span class="right-cluster">
-                ${statusHtml}
+                <span class="status-dot ${meta.cls}" title="${meta.label.replace(/^[^\s]+\s/,'')}"></span>
                 <span class="code">${escapeHtml(s.id)}</span>
                 <button class="icon-edit" title="Di chuyển lên" ${isFirst ? 'disabled style="opacity:.3;cursor:default;"' : ''} onclick="event.stopPropagation(); moveSubject('${s.id}', -1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg></button>
                 <button class="icon-edit" title="Di chuyển xuống" ${isLast ? 'disabled style="opacity:.3;cursor:default;"' : ''} onclick="event.stopPropagation(); moveSubject('${s.id}', 1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M19 12l-7 7-7-7"></path></svg></button>
@@ -480,6 +503,7 @@ function openSubjectForm(){
     document.getElementById('subjectFormTitle').innerText = 'Thêm môn học';
     document.getElementById('newSubjectId').value = '';
     document.getElementById('newSubjectName').value = '';
+    document.getElementById('newSubjectStatus').value = 'ready';
     document.getElementById('newSubjectId').disabled = false;
     document.getElementById('subjectForm').classList.add('show');
 }
@@ -496,21 +520,23 @@ function editSubject(id){
     document.getElementById('newSubjectId').value = s.id;
     document.getElementById('newSubjectId').disabled = true; // mã môn không đổi vì được dùng làm khóa liên kết chương/câu hỏi
     document.getElementById('newSubjectName').value = s.name;
+    document.getElementById('newSubjectStatus').value = s.status || 'ready';
     document.getElementById('subjectForm').classList.add('show');
     document.getElementById('newSubjectName').focus();
 }
 async function addSubject(){
     const id = document.getElementById('newSubjectId').value.trim().toUpperCase();
     const name = document.getElementById('newSubjectName').value.trim();
+    const status = document.getElementById('newSubjectStatus').value;
     if (!id || !name) return showMsg('Nhập đủ mã môn và tên môn.', 'err');
 
     if (editingSubjectId){
-        const { error } = await sb.from('subjects').update({ name }).eq('id', editingSubjectId);
+        const { error } = await sb.from('subjects').update({ name, status }).eq('id', editingSubjectId);
         if (error) return showMsg('Lỗi cập nhật: ' + error.message, 'err');
         showMsg('Đã cập nhật môn học "' + name + '".', 'ok');
     } else {
         const maxOrder = subjects.reduce((max, s) => Math.max(max, s.order_no || 0), 0);
-        const { error } = await sb.from('subjects').insert({ id, name, order_no: maxOrder + 1 });
+        const { error } = await sb.from('subjects').insert({ id, name, order_no: maxOrder + 1, status });
         if (error) return showMsg('Lỗi: ' + error.message, 'err');
         showMsg('Đã thêm môn học "' + name + '".', 'ok');
     }

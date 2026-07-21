@@ -55,6 +55,20 @@ h1{font-size:1.3rem;margin:0 0 4px;}
     background:#eef0f7;color:var(--accent-dark);padding:5px 10px;border-radius:6px;
 }
 .chapter-card .arrow{color:var(--gray);flex:0 0 auto;}
+.subject-list{display:flex;flex-direction:column;gap:10px;}
+.subject-card{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 18px;text-decoration:none;color:var(--text);
+    transition:border-color .12s, transform .12s;
+}
+.subject-card:hover{border-color:var(--accent);transform:translateY(-1px);}
+.subject-card .label{font-weight:700;font-size:1rem;}
+.subject-card .code{
+    flex:0 0 auto;font-size:.75rem;font-weight:700;letter-spacing:.02em;
+    background:#eef0f7;color:var(--accent-dark);padding:5px 10px;border-radius:6px;
+}
+.subject-card .arrow{color:var(--gray);flex:0 0 auto;}
 .empty-state, .error-state{
     text-align:center;padding:50px 20px;color:var(--gray);font-size:.92rem;
     background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
@@ -93,8 +107,7 @@ async function loadPage(){
     const content = document.getElementById('content');
 
     if (!subjectId){
-        document.getElementById('subjectTitle').innerText = 'Thiếu thông tin môn học';
-        content.innerHTML = `<div class="error-state">Không tìm thấy môn học trong đường dẫn. Vui lòng quay lại trang chủ và chọn lại môn học.</div>`;
+        await loadSubjectPicker(content);
         return;
     }
 
@@ -149,6 +162,29 @@ async function loadPage(){
     });
 
     content.innerHTML = html;
+}
+
+async function loadSubjectPicker(content){
+    document.getElementById('subjectTitle').innerText = 'Chọn môn học';
+    document.getElementById('subjectSubtitle').innerText = 'Bấm vào một môn học để xem các chương/đề';
+
+    const { data: subjects, error } = await sb.from('subjects').select('*').order('id');
+    if (error){
+        content.innerHTML = `<div class="error-state">Lỗi tải danh sách môn học: ${escapeHtml(error.message)}</div>`;
+        return;
+    }
+    if (!subjects || !subjects.length){
+        content.innerHTML = `<div class="empty-state">Chưa có môn học nào được thêm.</div>`;
+        return;
+    }
+
+    content.innerHTML = `<div class="subject-list">` + subjects.map(s => `
+        <a class="subject-card" href="mon-hoc.html?subject=${encodeURIComponent(s.id)}">
+            <div class="label">${escapeHtml(s.name)}</div>
+            <span class="code">${escapeHtml(s.id)}</span>
+            <span class="arrow">→</span>
+        </a>
+    `).join('') + `</div>`;
 }
 
 loadPage();

@@ -138,7 +138,7 @@ aside{
 .drag-handle{color:#565e82;font-size:.85rem;letter-spacing:-1px;flex:0 0 auto;cursor:grab;padding-right:1px;}
 .menu-wrap{position:relative;flex:0 0 auto;}
 .menu-drop{
-    position:fixed;z-index:2000;min-width:110px;
+    position:absolute;top:26px;right:0;z-index:20;min-width:110px;
     background:#1c2340;border:1px solid #3a4266;border-radius:8px;
     box-shadow:0 8px 24px rgba(0,0,0,.35);overflow:hidden;
 }
@@ -201,6 +201,23 @@ main{flex:1;padding:26px 34px 60px;max-width:1000px;}
 
 .empty-state{text-align:center;padding:40px 20px;color:var(--gray);font-size:.88rem;}
 textarea{resize:vertical;}
+.file-drop{
+    position:relative;border:1.5px dashed var(--border);border-radius:10px;padding:18px;
+    text-align:center;background:var(--bg);transition:.15s;
+}
+.file-drop.dragover{border-color:var(--accent);background:#eef0ff;}
+.file-drop input[type=file]{
+    position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;
+}
+.file-drop-text{font-size:.85rem;color:var(--text);line-height:1.5;pointer-events:none;}
+.file-list{margin-top:8px;display:flex;flex-direction:column;gap:4px;}
+.file-list .file-row{
+    display:flex;justify-content:space-between;gap:8px;font-size:.82rem;
+    padding:6px 10px;border-radius:6px;background:var(--bg);
+}
+.file-list .file-row .fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.file-list .file-row .fcount.ok{color:var(--green);font-weight:600;}
+.file-list .file-row .fcount.err{color:var(--red);font-weight:600;}
 ::-webkit-scrollbar{width:8px;}
 ::-webkit-scrollbar-thumb{background:#3a4266;border-radius:4px;}
 
@@ -334,20 +351,32 @@ textarea{resize:vertical;}
                     đánh dấu đáp án đúng bằng dấu * phía trước (vd <b>*B. đáp án</b>), dòng <b>Gt: giải thích</b> không bắt buộc.
                     Mỗi câu cách nhau 1 dòng trống.
                 </p>
+
+                <label>Hoặc tải lên file (.html, .htm, .txt) — chọn được nhiều file cùng lúc</label>
+                <div class="file-drop" id="fileDrop">
+                    <input type="file" id="bulkFileInput" accept=".html,.htm,.txt,.md" multiple onchange="handleBulkFiles(this.files)">
+                    <div class="file-drop-text">
+                        📂 Bấm để chọn file, hoặc kéo-thả file vào đây<br>
+                        <span style="font-weight:400;color:var(--gray);">Tự động nhận diện và trích câu hỏi/đáp án từ file quiz .html (dạng rawData) hoặc file .txt/.md theo đúng định dạng ở trên.</span>
+                    </div>
+                </div>
+                <div id="fileReadSummary" class="hint" style="margin-top:8px;"></div>
+
+                <label style="margin-top:16px;">Nội dung đã trích (xem lại / chỉnh sửa trước khi nạp)</label>
                 <textarea id="bulkText" rows="10" placeholder="Câu 1: Thủ đô của Việt Nam là?
 A. TP.HCM
 *B. Hà Nội
 C. Đà Nẵng
 D. Huế
 Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
-                <button class="btn-primary" style="margin-top:14px;" onclick="bulkImport()">Nạp tất cả</button>
+                <div style="display:flex;gap:10px;align-items:center;margin-top:14px;">
+                    <button class="btn-primary" onclick="bulkImport()">Nạp tất cả</button>
+                    <button class="btn-ghost" onclick="clearBulkText()">Xóa nội dung</button>
+                </div>
             </div>
         </div>
     </main>
 </div>
-
-<!-- Menu tùy chọn (Sửa/Xóa) dùng chung cho mọi môn học, định vị bằng JS để không bị vùng cuộn cắt -->
-<div id="globalSubjectMenu" class="menu-drop hidden"></div>
 
 <!-- ================= CONFIRM MODAL ================= -->
 <div id="confirmOverlay" class="hidden">
@@ -484,7 +513,11 @@ function renderSubjectList(){
                 <span class="status-dot ${meta.cls}" title="${meta.label.replace(/^[^\s]+\s/,'')}"></span>
                 <span class="code">${escapeHtml(s.id)}</span>
                 <span class="menu-wrap">
-                    <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleSubjectMenu(event, '${s.id}')"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+                    <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleSubjectMenu('${s.id}')"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+                    <div class="menu-drop hidden" id="menu-${s.id}">
+                        <button onclick="event.stopPropagation(); closeAllSubjectMenus(); editSubject('${s.id}')">✏️ Sửa</button>
+                        <button onclick="event.stopPropagation(); closeAllSubjectMenus(); deleteSubject('${s.id}')">🗑️ Xóa</button>
+                    </div>
                 </span>
             </span>
         </div>
@@ -527,38 +560,16 @@ async function onSubjectDrop(e, targetId){
 
     loadSubjects();
 }
-let openSubjectMenuId = null;
-function toggleSubjectMenu(e, id){
-    const menu = document.getElementById('globalSubjectMenu');
-
-    if (openSubjectMenuId === id){
-        closeAllSubjectMenus();
-        return;
-    }
-
-    menu.innerHTML = `
-        <button onclick="event.stopPropagation(); closeAllSubjectMenus(); editSubject('${id}')">✏️ Sửa</button>
-        <button onclick="event.stopPropagation(); closeAllSubjectMenus(); deleteSubject('${id}')">🗑️ Xóa</button>
-    `;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const menuWidth = 110;
-    let left = rect.right - menuWidth;
-    if (left < 8) left = 8;
-    if (left + menuWidth > window.innerWidth - 8) left = window.innerWidth - menuWidth - 8;
-
-    menu.style.left = left + 'px';
-    menu.style.top = (rect.bottom + 4) + 'px';
-    menu.classList.remove('hidden');
-    openSubjectMenuId = id;
+function toggleSubjectMenu(id){
+    closeAllSubjectMenus(id);
+    document.getElementById('menu-' + id).classList.toggle('hidden');
 }
-function closeAllSubjectMenus(){
-    document.getElementById('globalSubjectMenu').classList.add('hidden');
-    openSubjectMenuId = null;
+function closeAllSubjectMenus(exceptId){
+    document.querySelectorAll('.menu-drop').forEach(el => {
+        if (!exceptId || el.id !== 'menu-' + exceptId) el.classList.add('hidden');
+    });
 }
 document.addEventListener('click', () => closeAllSubjectMenus());
-window.addEventListener('scroll', () => closeAllSubjectMenus(), true);
-window.addEventListener('resize', () => closeAllSubjectMenus());
 function selectSubject(id){
     currentSubject = subjects.find(s => s.id === id) || null;
     currentChapter = null;
@@ -848,6 +859,101 @@ async function saveSingleQuestion(){
     switchTab('list');
     loadQuestions();
 }
+
+// ---------- BULK IMPORT: FILE UPLOAD ----------
+// Tìm khối văn bản chứa danh sách câu hỏi bên trong 1 file .html
+// (ưu tiên biến dạng `const rawData = `...`;` hay bất kỳ template string nào chứa nhiều "Câu N:")
+function extractQuestionTextFromHtml(html){
+    const templateLiterals = [...html.matchAll(/`([\s\S]*?)`/g)].map(m => m[1]);
+    let best = '', bestCount = 0;
+    templateLiterals.forEach(t => {
+        const count = (t.match(/Câu\s*\d+\s*:/g) || []).length;
+        if (count > bestCount){ bestCount = count; best = t; }
+    });
+    if (bestCount > 0) return best.trim();
+
+    // dự phòng: nếu không tìm thấy template literal nào, thử lấy toàn bộ text hiển thị của trang
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    const plain = (bodyMatch ? bodyMatch[1] : html).replace(/<[^>]+>/g, '\n');
+    return plain.trim();
+}
+function readFileAsText(file){
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(file, 'UTF-8');
+    });
+}
+async function handleBulkFiles(fileList){
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+
+    const summaryBox = document.getElementById('fileReadSummary');
+    summaryBox.innerHTML = `<div class="file-list" id="fileListBox"></div>`;
+    const listBox = document.getElementById('fileListBox');
+
+    const extractedParts = [];
+    let totalOk = 0, totalFiles = 0;
+
+    for (const file of files){
+        totalFiles++;
+        const row = document.createElement('div');
+        row.className = 'file-row';
+        row.innerHTML = `<span class="fname">${escapeHtml(file.name)}</span><span class="fcount">Đang đọc...</span>`;
+        listBox.appendChild(row);
+
+        try {
+            const raw = await readFileAsText(file);
+            const isHtml = /\.html?$/i.test(file.name) || /<html/i.test(raw);
+            const text = isHtml ? extractQuestionTextFromHtml(raw) : raw;
+            const parsed = parseBulkText(text);
+
+            if (parsed.length){
+                extractedParts.push(text.trim());
+                totalOk += parsed.length;
+                row.querySelector('.fcount').outerHTML = `<span class="fcount ok">✓ ${parsed.length} câu</span>`;
+            } else {
+                row.querySelector('.fcount').outerHTML = `<span class="fcount err">✗ không đọc được câu nào</span>`;
+            }
+        } catch (err) {
+            row.querySelector('.fcount').outerHTML = `<span class="fcount err">✗ lỗi đọc file</span>`;
+        }
+    }
+
+    if (extractedParts.length){
+        const ta = document.getElementById('bulkText');
+        const existing = ta.value.trim();
+        const combined = extractedParts.join('\n\n');
+        ta.value = existing ? (existing + '\n\n' + combined) : combined;
+        showMsg(`Đã trích ${totalOk} câu hỏi từ ${extractedParts.length}/${totalFiles} file. Kiểm tra lại nội dung bên dưới rồi bấm "Nạp tất cả".`, 'ok');
+    } else {
+        showMsg('Không trích được câu hỏi nào từ file đã chọn. Kiểm tra lại định dạng file.', 'err');
+    }
+
+    document.getElementById('bulkFileInput').value = ''; // cho phép chọn lại cùng file lần sau
+}
+function clearBulkText(){
+    document.getElementById('bulkText').value = '';
+    document.getElementById('fileReadSummary').innerHTML = '';
+}
+// Hỗ trợ kéo-thả file vào vùng chọn
+(function initFileDrop(){
+    document.addEventListener('DOMContentLoaded', () => {
+        const zone = document.getElementById('fileDrop');
+        if (!zone) return;
+        ['dragenter','dragover'].forEach(evt => zone.addEventListener(evt, e => {
+            e.preventDefault(); zone.classList.add('dragover');
+        }));
+        ['dragleave','drop'].forEach(evt => zone.addEventListener(evt, e => {
+            e.preventDefault(); zone.classList.remove('dragover');
+        }));
+        zone.addEventListener('drop', e => {
+            const dt = e.dataTransfer;
+            if (dt && dt.files && dt.files.length) handleBulkFiles(dt.files);
+        });
+    });
+})();
 
 // ---------- BULK IMPORT ----------
 function parseBulkText(text){

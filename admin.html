@@ -91,6 +91,17 @@ aside{
     background:rgba(255,255,255,.1);color:#c3c9e6;padding:2px 7px;border-radius:5px;
 }
 .side-item.active .code{background:rgba(255,255,255,.28);color:#fff;}
+.status-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;}
+.status-dot.ready{background:#2ed392;}
+.status-dot.empty{background:#767ea0;}
+.status-badge{
+    flex:0 0 auto;font-size:.66rem;font-weight:700;letter-spacing:.02em;
+    padding:2px 7px;border-radius:5px;white-space:nowrap;
+}
+.status-badge.ready{background:rgba(46,211,146,.16);color:#2ed392;}
+.status-badge.empty{background:rgba(118,126,160,.2);color:#aab0c6;}
+.side-item.active .status-badge.ready{background:rgba(255,255,255,.25);color:#fff;}
+.side-item.active .status-badge.empty{background:rgba(255,255,255,.2);color:#fff;}
 .side-add{
     background:transparent;border:1px dashed #454e72;color:#98a0c2;
     padding:5px 9px;font-size:.75rem;border-radius:6px;
@@ -329,6 +340,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let subjects = [];
+let subjectQuestionCounts = {}; // { subject_id: số câu hỏi }
 let chapters = [];
 let currentSubject = null;   // {id, name}
 let currentChapter = null;   // {chapter, label}
@@ -384,7 +396,7 @@ function updateContextBar(){
 
 // ---------- SUBJECTS ----------
 async function loadSubjects(){
-    const { data, error } = await sb.from('subjects').select('*').order('id');
+    const { data, error } = await sb.from('subjects').select('*').order('order_no', { ascending: true, nullsFirst: false }).order('id');
     if (error) return showMsg('Lỗi tải môn học: ' + error.message, 'err');
     subjects = data || [];
 
@@ -396,20 +408,64 @@ async function loadSubjects(){
     }
     renderSubjectList();
     loadChapters();
+    loadSubjectQuestionCounts();
+}
+async function loadSubjectQuestionCounts(){
+    await Promise.all(subjects.map(async s => {
+        const { count } = await sb.from('questions').select('*', { count:'exact', head:true }).eq('subject_id', s.id);
+        subjectQuestionCounts[s.id] = count || 0;
+    }));
+    renderSubjectList();
+}
+async function refreshSubjectQuestionCount(subjectId){
+    const { count } = await sb.from('questions').select('*', { count:'exact', head:true }).eq('subject_id', subjectId);
+    subjectQuestionCounts[subjectId] = count || 0;
+    renderSubjectList();
 }
 function renderSubjectList(){
     const box = document.getElementById('subjectList');
     if (!subjects.length){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Chưa có môn học nào.</div>`; return; }
-    box.innerHTML = subjects.map(s => `
+    box.innerHTML = subjects.map((s, idx) => {
+        const count = subjectQuestionCounts[s.id];
+        const isReady = (count || 0) > 0;
+        const statusHtml = count === undefined
+            ? ''
+            : `<span class="status-badge ${isReady ? 'ready' : 'empty'}" title="${isReady ? count + ' câu hỏi' : 'Chưa có câu hỏi nào'}">${isReady ? '● Sẵn sàng' : '○ Chưa cập nhật'}</span>`;
+        const isFirst = idx === 0;
+        const isLast = idx === subjects.length - 1;
+        return `
         <div class="side-item ${currentSubject && currentSubject.id===s.id ? 'active' : ''}" onclick="selectSubject('${s.id}')">
             <span class="name">${escapeHtml(s.name)}</span>
             <span class="right-cluster">
+                ${statusHtml}
                 <span class="code">${escapeHtml(s.id)}</span>
+                <button class="icon-edit" title="Di chuyển lên" ${isFirst ? 'disabled style="opacity:.3;cursor:default;"' : ''} onclick="event.stopPropagation(); moveSubject('${s.id}', -1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg></button>
+                <button class="icon-edit" title="Di chuyển xuống" ${isLast ? 'disabled style="opacity:.3;cursor:default;"' : ''} onclick="event.stopPropagation(); moveSubject('${s.id}', 1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M19 12l-7 7-7-7"></path></svg></button>
                 <button class="icon-edit" title="Sửa tên môn học" onclick="event.stopPropagation(); editSubject('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
                 <button class="icon-x" title="Xóa môn học" onclick="event.stopPropagation(); deleteSubject('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg></button>
             </span>
         </div>
-    `).join('');
+    `;
+    }).join('');
+}
+async function moveSubject(id, direction){
+    const idx = subjects.findIndex(s => s.id === id);
+    const swapIdx = idx + direction;
+    if (idx < 0 || swapIdx < 0 || swapIdx >= subjects.length) return;
+
+    const a = subjects[idx];
+    const b = subjects[swapIdx];
+    // Đảm bảo mọi môn đều có order_no hợp lệ trước khi hoán đổi (môn cũ có thể chưa có giá trị)
+    const orderA = a.order_no != null ? a.order_no : idx + 1;
+    const orderB = b.order_no != null ? b.order_no : swapIdx + 1;
+
+    const [{ error: err1 }, { error: err2 }] = await Promise.all([
+        sb.from('subjects').update({ order_no: orderB }).eq('id', a.id),
+        sb.from('subjects').update({ order_no: orderA }).eq('id', b.id)
+    ]);
+    if (err1 || err2) return showMsg('Lỗi sắp xếp: ' + ((err1 || err2).message), 'err');
+
+    loadSubjects();
 }
 function selectSubject(id){
     currentSubject = subjects.find(s => s.id === id) || null;
@@ -453,7 +509,8 @@ async function addSubject(){
         if (error) return showMsg('Lỗi cập nhật: ' + error.message, 'err');
         showMsg('Đã cập nhật môn học "' + name + '".', 'ok');
     } else {
-        const { error } = await sb.from('subjects').insert({ id, name });
+        const maxOrder = subjects.reduce((max, s) => Math.max(max, s.order_no || 0), 0);
+        const { error } = await sb.from('subjects').insert({ id, name, order_no: maxOrder + 1 });
         if (error) return showMsg('Lỗi: ' + error.message, 'err');
         showMsg('Đã thêm môn học "' + name + '".', 'ok');
     }
@@ -599,6 +656,8 @@ async function loadQuestions(){
         .select('*').eq('subject_id', currentSubject.id).eq('chapter', currentChapter.chapter)
         .order('order_no');
     if (error){ box.innerHTML = `<div class="empty-state">Lỗi tải: ${escapeHtml(error.message)}</div>`; return; }
+
+    refreshSubjectQuestionCount(currentSubject.id);
 
     if (!data.length){ box.innerHTML = `<div class="empty-state">Chưa có câu hỏi nào trong đề này. Dùng tab "Thêm câu hỏi" hoặc "Dán nhiều câu hỏi" để bắt đầu.</div>`; return; }
 

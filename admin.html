@@ -174,10 +174,28 @@ main{flex:1;padding:26px 34px 60px;max-width:1000px;}
 .row{display:flex;gap:12px;flex-wrap:wrap;}
 .row>div{flex:1;min-width:180px;}
 
-.opt-row{display:flex;align-items:center;gap:8px;margin-top:7px;}
-.opt-row input[type=radio]{width:auto;accent-color:var(--accent);}
-.opt-row input[type=text]{flex:1;}
-.opt-letter{width:22px;font-weight:700;color:var(--gray);font-size:.85rem;}
+.opt-row{
+    display:flex;align-items:center;gap:12px;margin-top:10px;
+    padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;
+    background:var(--white);transition:border-color .15s,background .15s;
+}
+.opt-row:hover{border-color:#c7cbe6;}
+.opt-row:focus-within{border-color:var(--accent);}
+.opt-row.correct{border-color:var(--green);background:var(--green-bg);}
+.opt-row input[type=radio]{width:19px;height:19px;flex:0 0 auto;accent-color:var(--green);cursor:pointer;margin:0;}
+.opt-row input[type=text]{flex:1;border:none;background:transparent;padding:7px 2px;font-size:.92rem;}
+.opt-row input[type=text]:focus{outline:none;border-color:transparent;box-shadow:none;}
+.opt-letter{
+    width:28px;height:28px;border-radius:8px;flex:0 0 auto;
+    background:var(--bg);color:var(--gray);font-weight:700;font-size:.82rem;
+    display:flex;align-items:center;justify-content:center;
+}
+.opt-row.correct .opt-letter{background:var(--green);color:#fff;}
+.correct-tag{
+    flex:0 0 auto;font-size:.7rem;font-weight:700;color:var(--green);
+    background:rgba(22,163,74,.12);padding:3px 9px;border-radius:6px;white-space:nowrap;
+}
+.opt-hint{color:var(--gray);font-size:.78rem;margin:12px 0 0;line-height:1.5;}
 
 .btn-primary{background:var(--accent);color:#fff;padding:10px 18px;font-size:.9rem;}
 .btn-primary:hover{background:var(--accent-dark);}
@@ -343,17 +361,12 @@ textarea{resize:vertical;}
             <button class="tab active" data-tab="list" onclick="switchTab('list')">📖 Danh sách câu hỏi</button>
             <button class="tab" data-tab="single" onclick="switchTab('single')">➕ Thêm câu hỏi</button>
             <button class="tab" data-tab="bulk" onclick="switchTab('bulk')">📋 Dán nhiều câu hỏi</button>
+            <button class="tab" data-tab="export" onclick="switchTab('export')">⬇️ Xuất file</button>
         </div>
 
         <div id="tab-list" class="tab-panel">
             <div class="panel">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px;">
-                    <h3 style="margin:0;">Câu hỏi trong đề đang chọn</h3>
-                    <div style="display:flex;gap:8px;">
-                        <button class="btn-ghost" onclick="exportChapterFile()">⬇️ Xuất đề này (.txt)</button>
-                        <button class="btn-ghost" onclick="exportSubjectFile()">⬇️ Xuất cả môn (.txt)</button>
-                    </div>
-                </div>
+                <h3 style="margin:0 0 4px;">Câu hỏi trong đề đang chọn</h3>
                 <div id="qList"><div class="empty-state">Chọn một môn học và một chương/đề ở thanh bên trái để xem câu hỏi.</div></div>
             </div>
         </div>
@@ -367,6 +380,8 @@ textarea{resize:vertical;}
                 <p class="hint" style="margin-top:4px;">Nhập số để chèn câu hỏi vào đúng vị trí đó (các câu phía sau sẽ tự dời xuống). Để trống thì câu mới sẽ được thêm vào cuối.</p>
                 <label>Nội dung câu hỏi</label>
                 <textarea id="qContent" rows="2" placeholder="Nhập nội dung câu hỏi..."></textarea>
+                <label>Đáp án</label>
+                <p class="opt-hint" style="margin:-6px 0 4px;">Bấm nút tròn cạnh đáp án đúng — thẻ tương ứng sẽ tự chuyển sang màu xanh.</p>
                 <div id="optionsForm"></div>
                 <label>Giải thích (tùy chọn)</label>
                 <textarea id="qExplain" rows="2" placeholder="Giải thích vì sao đáp án đúng..."></textarea>
@@ -407,6 +422,17 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
                 <div style="display:flex;gap:10px;align-items:center;margin-top:18px;">
                     <button class="btn-primary" onclick="bulkImport()">Nạp tất cả</button>
                     <button class="btn-ghost" onclick="clearBulkText()">Xóa nội dung</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-export" class="tab-panel hidden">
+            <div class="panel">
+                <h3>Xuất câu hỏi ra file (.txt)</h3>
+                <p class="hint">Tải câu hỏi về máy dưới dạng file văn bản, dùng để lưu trữ, chia sẻ hoặc nạp lại qua tab "Dán nhiều câu hỏi".</p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+                    <button class="btn-ghost" onclick="exportChapterFile()">⬇️ Xuất đề đang chọn (.txt)</button>
+                    <button class="btn-ghost" onclick="exportSubjectFile()">⬇️ Xuất cả môn học (.txt)</button>
                 </div>
             </div>
         </div>
@@ -998,12 +1024,21 @@ async function exportSubjectFile(){
 function renderOptionForm(){
     const box = document.getElementById('optionsForm');
     box.innerHTML = [0,1,2,3].map(i => `
-        <div class="opt-row">
+        <div class="opt-row${i===0?' correct':''}" id="optRow${i}">
             <span class="opt-letter">${String.fromCharCode(65+i)}</span>
-            <input type="radio" name="correctOpt" value="${i}" ${i===0?'checked':''}>
+            <input type="radio" name="correctOpt" value="${i}" ${i===0?'checked':''} onchange="markCorrectOption(${i})">
             <input type="text" id="opt${i}" placeholder="Đáp án ${String.fromCharCode(65+i)}">
+            <span class="correct-tag${i===0?'':' hidden'}" id="tag${i}">✓ Đúng</span>
         </div>
     `).join('');
+}
+function markCorrectOption(idx){
+    [0,1,2,3].forEach(i=>{
+        const row = document.getElementById('optRow'+i);
+        const tag = document.getElementById('tag'+i);
+        if (i===idx){ row.classList.add('correct'); tag.classList.remove('hidden'); }
+        else { row.classList.remove('correct'); tag.classList.add('hidden'); }
+    });
 }
 function startEdit(q){
     if (!currentSubject || currentSubject.id !== q.subject_id){
@@ -1015,6 +1050,7 @@ function startEdit(q){
     document.getElementById('qContent').value = q.content;
     q.options.forEach((o,i)=>{ document.getElementById('opt'+i).value = o; });
     document.querySelector(`input[name=correctOpt][value="${q.correct_idx}"]`).checked = true;
+    markCorrectOption(q.correct_idx);
     document.getElementById('qExplain').value = q.explanation || '';
     document.getElementById('singleFormTitle').innerText = 'Sửa câu ' + q.order_no;
     document.getElementById('singleSaveBtn').innerText = 'Cập nhật câu hỏi';
@@ -1026,6 +1062,8 @@ function cancelEdit(){
     document.getElementById('qOrderNo').value = '';
     document.getElementById('qContent').value = '';
     [0,1,2,3].forEach(i=>document.getElementById('opt'+i).value='');
+    document.querySelector('input[name=correctOpt][value="0"]').checked = true;
+    markCorrectOption(0);
     document.getElementById('qExplain').value = '';
     document.getElementById('singleFormTitle').innerText = 'Thêm 1 câu hỏi';
     document.getElementById('singleSaveBtn').innerText = 'Lưu câu hỏi';

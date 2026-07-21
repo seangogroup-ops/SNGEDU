@@ -138,7 +138,7 @@ aside{
 .drag-handle{color:#565e82;font-size:.85rem;letter-spacing:-1px;flex:0 0 auto;cursor:grab;padding-right:1px;}
 .menu-wrap{position:relative;flex:0 0 auto;}
 .menu-drop{
-    position:absolute;top:26px;right:0;z-index:20;min-width:110px;
+    position:fixed;z-index:2000;min-width:110px;
     background:#1c2340;border:1px solid #3a4266;border-radius:8px;
     box-shadow:0 8px 24px rgba(0,0,0,.35);overflow:hidden;
 }
@@ -174,27 +174,10 @@ main{flex:1;padding:26px 34px 60px;max-width:1000px;}
 .row{display:flex;gap:12px;flex-wrap:wrap;}
 .row>div{flex:1;min-width:180px;}
 
-.opt-row{
-    display:flex;align-items:center;gap:12px;margin-top:10px;
-    padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;
-    background:var(--white);transition:border-color .15s,background .15s;
-}
-.opt-row:hover{border-color:#c7cbe6;}
-.opt-row:focus-within{border-color:var(--accent);}
-.opt-row.correct{border-color:var(--green);background:var(--green-bg);}
-.opt-row input[type=radio]{width:19px;height:19px;flex:0 0 auto;accent-color:var(--green);cursor:pointer;margin:0;}
-.opt-row input[type=text]{flex:1;border:none;background:transparent;padding:7px 2px;font-size:.92rem;}
-.opt-row input[type=text]:focus{outline:none;border-color:transparent;box-shadow:none;}
-.opt-letter{
-    width:28px;height:28px;border-radius:8px;flex:0 0 auto;
-    background:var(--bg);color:var(--gray);font-weight:700;font-size:.82rem;
-    display:flex;align-items:center;justify-content:center;
-}
-.opt-row.correct .opt-letter{background:var(--green);color:#fff;}
-.correct-tag{
-    flex:0 0 auto;font-size:.7rem;font-weight:700;color:var(--green);
-    background:rgba(22,163,74,.12);padding:3px 9px;border-radius:6px;white-space:nowrap;
-}
+.opt-row{display:flex;align-items:center;gap:8px;margin-top:7px;}
+.opt-row input[type=radio]{width:auto;accent-color:var(--accent);}
+.opt-row input[type=text]{flex:1;}
+.opt-letter{width:22px;font-weight:700;color:var(--gray);font-size:.85rem;}
 .opt-hint{color:var(--gray);font-size:.78rem;margin:12px 0 0;line-height:1.5;}
 
 .btn-primary{background:var(--accent);color:#fff;padding:10px 18px;font-size:.9rem;}
@@ -376,7 +359,7 @@ textarea{resize:vertical;}
                 <h3 id="singleFormTitle">Thêm 1 câu hỏi</h3>
                 <p class="hint">Câu hỏi sẽ được lưu vào môn và chương đang chọn ở thanh bên trái.</p>
                 <label>Số thứ tự (tùy chọn)</label>
-                <input type="number" id="qOrderNo" min="1" placeholder="Để trống = tự động xếp cuối danh sách" style="max-width:260px;">
+                <input type="number" id="qOrderNo" min="1" placeholder="Để trống = tự động xếp cuối danh sách">
                 <p class="hint" style="margin-top:4px;">Nhập số để chèn câu hỏi vào đúng vị trí đó (các câu phía sau sẽ tự dời xuống). Để trống thì câu mới sẽ được thêm vào cuối.</p>
                 <label>Nội dung câu hỏi</label>
                 <textarea id="qContent" rows="2" placeholder="Nhập nội dung câu hỏi..."></textarea>
@@ -574,7 +557,7 @@ function renderSubjectList(){
                 <span class="status-dot ${meta.cls}" title="${meta.label.replace(/^[^\s]+\s/,'')}"></span>
                 <span class="code">${escapeHtml(s.id)}</span>
                 <span class="menu-wrap">
-                    <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleSubjectMenu('${s.id}')"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+                    <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleSubjectMenu('${s.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
                     <div class="menu-drop hidden" id="menu-${s.id}">
                         <button onclick="event.stopPropagation(); closeAllSubjectMenus(); editSubject('${s.id}')">✏️ Sửa</button>
                         <button onclick="event.stopPropagation(); closeAllSubjectMenus(); deleteSubject('${s.id}')">🗑️ Xóa</button>
@@ -621,9 +604,17 @@ async function onSubjectDrop(e, targetId){
 
     loadSubjects();
 }
-function toggleSubjectMenu(id){
-    closeAllSubjectMenus(id);
-    document.getElementById('menu-' + id).classList.toggle('hidden');
+function toggleSubjectMenu(id, btn){
+    const menu = document.getElementById('menu-' + id);
+    const wasHidden = menu.classList.contains('hidden');
+    closeAllSubjectMenus();
+    if (wasHidden && btn){
+        const rect = btn.getBoundingClientRect();
+        menu.style.top = (rect.bottom + 4) + 'px';
+        menu.style.left = 'auto';
+        menu.style.right = (window.innerWidth - rect.right) + 'px';
+        menu.classList.remove('hidden');
+    }
 }
 function closeAllSubjectMenus(exceptId){
     document.querySelectorAll('.menu-drop').forEach(el => {
@@ -631,6 +622,8 @@ function closeAllSubjectMenus(exceptId){
     });
 }
 document.addEventListener('click', () => closeAllSubjectMenus());
+document.getElementById('subjectList').addEventListener('scroll', () => closeAllSubjectMenus());
+window.addEventListener('resize', () => closeAllSubjectMenus());
 function selectSubject(id){
     currentSubject = subjects.find(s => s.id === id) || null;
     currentChapter = null;
@@ -1024,21 +1017,12 @@ async function exportSubjectFile(){
 function renderOptionForm(){
     const box = document.getElementById('optionsForm');
     box.innerHTML = [0,1,2,3].map(i => `
-        <div class="opt-row${i===0?' correct':''}" id="optRow${i}">
+        <div class="opt-row">
             <span class="opt-letter">${String.fromCharCode(65+i)}</span>
-            <input type="radio" name="correctOpt" value="${i}" ${i===0?'checked':''} onchange="markCorrectOption(${i})">
+            <input type="radio" name="correctOpt" value="${i}" ${i===0?'checked':''}>
             <input type="text" id="opt${i}" placeholder="Đáp án ${String.fromCharCode(65+i)}">
-            <span class="correct-tag${i===0?'':' hidden'}" id="tag${i}">✓ Đúng</span>
         </div>
     `).join('');
-}
-function markCorrectOption(idx){
-    [0,1,2,3].forEach(i=>{
-        const row = document.getElementById('optRow'+i);
-        const tag = document.getElementById('tag'+i);
-        if (i===idx){ row.classList.add('correct'); tag.classList.remove('hidden'); }
-        else { row.classList.remove('correct'); tag.classList.add('hidden'); }
-    });
 }
 function startEdit(q){
     if (!currentSubject || currentSubject.id !== q.subject_id){
@@ -1050,7 +1034,6 @@ function startEdit(q){
     document.getElementById('qContent').value = q.content;
     q.options.forEach((o,i)=>{ document.getElementById('opt'+i).value = o; });
     document.querySelector(`input[name=correctOpt][value="${q.correct_idx}"]`).checked = true;
-    markCorrectOption(q.correct_idx);
     document.getElementById('qExplain').value = q.explanation || '';
     document.getElementById('singleFormTitle').innerText = 'Sửa câu ' + q.order_no;
     document.getElementById('singleSaveBtn').innerText = 'Cập nhật câu hỏi';
@@ -1063,7 +1046,6 @@ function cancelEdit(){
     document.getElementById('qContent').value = '';
     [0,1,2,3].forEach(i=>document.getElementById('opt'+i).value='');
     document.querySelector('input[name=correctOpt][value="0"]').checked = true;
-    markCorrectOption(0);
     document.getElementById('qExplain').value = '';
     document.getElementById('singleFormTitle').innerText = 'Thêm 1 câu hỏi';
     document.getElementById('singleSaveBtn').innerText = 'Lưu câu hỏi';

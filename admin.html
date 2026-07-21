@@ -99,20 +99,24 @@ aside{
 .mini-form{display:none;flex-direction:column;gap:6px;margin-top:8px;padding:10px;background:var(--navy-2);border-radius:8px;}
 .mini-form.show{display:flex;}
 .mini-form input,.mini-form select{background:#1c2340;border-color:#3a4266;color:#fff;font-size:.82rem;padding:7px 9px;}
+.mini-form input:disabled{background:#161b30;color:#767ea0;cursor:not-allowed;}
 .mini-form .mini-actions{display:flex;gap:6px;margin-top:2px;}
 .mini-form .mini-actions button{flex:1;padding:6px;font-size:.78rem;}
 .btn-mini-save{background:var(--accent);color:#fff;}
 .btn-mini-cancel{background:#2b3355;color:#c7cce3;}
 .side-item-row{display:block;}
-.icon-x{
-    width:22px;height:22px;border-radius:6px;background:rgba(220,38,38,.16);color:#e8a3a3;
+.icon-x,.icon-edit{
+    width:22px;height:22px;border-radius:6px;
     display:flex;align-items:center;justify-content:center;flex:0 0 auto;
     border:none;padding:0;
 }
-.icon-x svg{width:12px;height:12px;display:block;}
+.icon-x{background:rgba(220,38,38,.16);color:#e8a3a3;}
+.icon-edit{background:rgba(68,87,232,.18);color:#aab4f5;}
+.icon-x svg,.icon-edit svg{width:12px;height:12px;display:block;}
 .icon-x:hover{background:rgba(220,38,38,.35);color:#ffb3b3;}
-.side-item.active .icon-x{background:rgba(255,255,255,.2);color:#fff;}
-.side-item.active .icon-x:hover{background:rgba(255,255,255,.35);}
+.icon-edit:hover{background:rgba(68,87,232,.4);color:#dbe0ff;}
+.side-item.active .icon-x,.side-item.active .icon-edit{background:rgba(255,255,255,.2);color:#fff;}
+.side-item.active .icon-x:hover,.side-item.active .icon-edit:hover{background:rgba(255,255,255,.35);}
 .sidebar-foot{margin-top:auto;border-top:1px solid #2a3153;padding-top:14px;font-size:.8rem;}
 .sidebar-foot .email{color:#fff;font-weight:600;word-break:break-all;}
 .sidebar-foot button{width:100%;margin-top:10px;background:#2b3355;color:#dfe2f2;padding:8px;font-size:.82rem;}
@@ -214,22 +218,24 @@ textarea{resize:vertical;}
         <div class="brand"><span class="dot"></span> SNG EDU · Admin</div>
 
         <div class="side-section">
-            <h4>Môn học <button class="side-add" onclick="toggleForm('subjectForm')">+ Thêm</button></h4>
+            <h4>Môn học <button class="side-add" onclick="openSubjectForm()">+ Thêm</button></h4>
             <div id="subjectList" class="side-list"></div>
             <div id="subjectForm" class="mini-form">
+                <div id="subjectFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm môn học</div>
                 <input id="newSubjectId" placeholder="Mã môn, vd: TH">
                 <input id="newSubjectName" placeholder="Tên đầy đủ, vd: Triết học">
                 <div class="mini-actions">
                     <button class="btn-mini-save" onclick="addSubject()">Lưu</button>
-                    <button class="btn-mini-cancel" onclick="toggleForm('subjectForm')">Hủy</button>
+                    <button class="btn-mini-cancel" onclick="closeSubjectForm()">Hủy</button>
                 </div>
             </div>
         </div>
 
         <div class="side-section">
-            <h4>Chương / đề <button class="side-add" onclick="toggleForm('chapterForm')">+ Thêm</button></h4>
+            <h4>Chương / đề <button class="side-add" onclick="openChapterForm()">+ Thêm</button></h4>
             <div id="chapterList" class="side-list"></div>
             <div id="chapterForm" class="mini-form">
+                <div id="chapterFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm chương/đề</div>
                 <input id="newChapCode" placeholder="Mã chương, vd: 1-40">
                 <input id="newChapLabel" placeholder="Tên hiển thị, vd: Câu 1 – 40">
                 <input id="newChapNote" placeholder="Ghi chú (tùy chọn)">
@@ -240,7 +246,7 @@ textarea{resize:vertical;}
                 </select>
                 <div class="mini-actions">
                     <button class="btn-mini-save" onclick="addChapter()">Lưu</button>
-                    <button class="btn-mini-cancel" onclick="toggleForm('chapterForm')">Hủy</button>
+                    <button class="btn-mini-cancel" onclick="closeChapterForm()">Hủy</button>
                 </div>
             </div>
         </div>
@@ -327,6 +333,8 @@ let chapters = [];
 let currentSubject = null;   // {id, name}
 let currentChapter = null;   // {chapter, label}
 let editingQuestionId = null;
+let editingSubjectId = null;
+let editingChapterId = null;
 
 // ---------- AUTH ----------
 async function doLogin(){
@@ -397,6 +405,7 @@ function renderSubjectList(){
             <span class="name">${escapeHtml(s.name)}</span>
             <span class="right-cluster">
                 <span class="code">${escapeHtml(s.id)}</span>
+                <button class="icon-edit" title="Sửa tên môn học" onclick="event.stopPropagation(); editSubject('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
                 <button class="icon-x" title="Xóa môn học" onclick="event.stopPropagation(); deleteSubject('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg></button>
             </span>
         </div>
@@ -410,16 +419,45 @@ function selectSubject(id){
     loadChapters();
     loadQuestions();
 }
+function openSubjectForm(){
+    editingSubjectId = null;
+    document.getElementById('subjectFormTitle').innerText = 'Thêm môn học';
+    document.getElementById('newSubjectId').value = '';
+    document.getElementById('newSubjectName').value = '';
+    document.getElementById('newSubjectId').disabled = false;
+    document.getElementById('subjectForm').classList.add('show');
+}
+function closeSubjectForm(){
+    editingSubjectId = null;
+    document.getElementById('newSubjectId').disabled = false;
+    document.getElementById('subjectForm').classList.remove('show');
+}
+function editSubject(id){
+    const s = subjects.find(x => x.id === id);
+    if (!s) return;
+    editingSubjectId = id;
+    document.getElementById('subjectFormTitle').innerText = 'Sửa môn học';
+    document.getElementById('newSubjectId').value = s.id;
+    document.getElementById('newSubjectId').disabled = true; // mã môn không đổi vì được dùng làm khóa liên kết chương/câu hỏi
+    document.getElementById('newSubjectName').value = s.name;
+    document.getElementById('subjectForm').classList.add('show');
+    document.getElementById('newSubjectName').focus();
+}
 async function addSubject(){
     const id = document.getElementById('newSubjectId').value.trim().toUpperCase();
     const name = document.getElementById('newSubjectName').value.trim();
     if (!id || !name) return showMsg('Nhập đủ mã môn và tên môn.', 'err');
-    const { error } = await sb.from('subjects').insert({ id, name });
-    if (error) return showMsg('Lỗi: ' + error.message, 'err');
-    showMsg('Đã thêm môn học "' + name + '".', 'ok');
-    document.getElementById('newSubjectId').value = '';
-    document.getElementById('newSubjectName').value = '';
-    document.getElementById('subjectForm').classList.remove('show');
+
+    if (editingSubjectId){
+        const { error } = await sb.from('subjects').update({ name }).eq('id', editingSubjectId);
+        if (error) return showMsg('Lỗi cập nhật: ' + error.message, 'err');
+        showMsg('Đã cập nhật môn học "' + name + '".', 'ok');
+    } else {
+        const { error } = await sb.from('subjects').insert({ id, name });
+        if (error) return showMsg('Lỗi: ' + error.message, 'err');
+        showMsg('Đã thêm môn học "' + name + '".', 'ok');
+    }
+    closeSubjectForm();
     loadSubjects();
 }
 function deleteSubject(id){
@@ -452,6 +490,7 @@ async function loadChapters(){
                 <span class="name">${escapeHtml(ch.label)}</span>
                 <span class="right-cluster">
                     <span class="code">${escapeHtml(ch.chapter)}</span>
+                    <button class="icon-edit" title="Sửa chương/đề" onclick='event.stopPropagation(); editChapter(${ch.id})'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
                     <button class="icon-x" title="Xóa chương" onclick="event.stopPropagation(); deleteChapter(${ch.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg></button>
                 </span>
             </div>
@@ -467,6 +506,35 @@ function selectChapter(code){
     updateContextBar();
     loadQuestions();
 }
+function openChapterForm(){
+    if (!currentSubject) return showMsg('Chọn môn học trước.', 'err');
+    editingChapterId = null;
+    document.getElementById('chapterFormTitle').innerText = 'Thêm chương/đề';
+    document.getElementById('newChapCode').value = '';
+    document.getElementById('newChapLabel').value = '';
+    document.getElementById('newChapNote').value = '';
+    document.getElementById('newChapGroup').value = 'Nội dung chính';
+    document.getElementById('newChapCode').disabled = false;
+    document.getElementById('chapterForm').classList.add('show');
+}
+function closeChapterForm(){
+    editingChapterId = null;
+    document.getElementById('newChapCode').disabled = false;
+    document.getElementById('chapterForm').classList.remove('show');
+}
+function editChapter(id){
+    const ch = chapters.find(c => c.id === id);
+    if (!ch) return;
+    editingChapterId = id;
+    document.getElementById('chapterFormTitle').innerText = 'Sửa chương/đề';
+    document.getElementById('newChapCode').value = ch.chapter;
+    document.getElementById('newChapCode').disabled = true; // mã chương không đổi vì được dùng làm khóa liên kết câu hỏi
+    document.getElementById('newChapLabel').value = ch.label;
+    document.getElementById('newChapNote').value = ch.note || '';
+    document.getElementById('newChapGroup').value = ch.group_name || 'Nội dung chính';
+    document.getElementById('chapterForm').classList.add('show');
+    document.getElementById('newChapLabel').focus();
+}
 async function addChapter(){
     if (!currentSubject) return showMsg('Chọn môn học trước.', 'err');
     const chapter = document.getElementById('newChapCode').value.trim();
@@ -474,6 +542,15 @@ async function addChapter(){
     const note = document.getElementById('newChapNote').value.trim();
     const group_name = document.getElementById('newChapGroup').value;
     if (!chapter || !label) return showMsg('Nhập đủ mã chương và tên hiển thị.', 'err');
+
+    if (editingChapterId){
+        const { error } = await sb.from('chapters').update({ label, note, group_name }).eq('id', editingChapterId);
+        if (error) return showMsg('Lỗi cập nhật: ' + error.message, 'err');
+        showMsg('Đã cập nhật chương "' + label + '".', 'ok');
+        closeChapterForm();
+        loadChapters();
+        return;
+    }
 
     const { data: existing } = await sb.from('chapters').select('order_no')
         .eq('subject_id', currentSubject.id).order('order_no', { ascending: false }).limit(1);
@@ -484,10 +561,7 @@ async function addChapter(){
     });
     if (error) return showMsg('Lỗi: ' + error.message, 'err');
     showMsg('Đã thêm chương "' + label + '".', 'ok');
-    document.getElementById('newChapCode').value = '';
-    document.getElementById('newChapLabel').value = '';
-    document.getElementById('newChapNote').value = '';
-    document.getElementById('chapterForm').classList.remove('show');
+    closeChapterForm();
     loadChapters();
 }
 function deleteChapter(id){

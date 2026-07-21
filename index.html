@@ -731,40 +731,31 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Vị trí/icon/màu thiết kế sẵn cho từng môn theo đúng mã (id) dùng trong Supabase.
-    // Môn nào chưa có trong bảng subjects sẽ tự hiện ở dạng "Sắp ra mắt".
-    const SUBJECT_SLOTS = [
-        { id:'PLDC',  title:'Pháp luật đại cương',          icon:'fa-scale-balanced', color:'#0068ff',      bg:'#e8f3ff' },
-        { id:'TH',    title:'Triết học Mác – Lênin',         icon:'fa-brain',          color:'#7c5cfc',      bg:'#f1ecff' },
-        { id:'KTCT',  title:'Kinh tế chính trị Mác – Lênin', icon:'fa-coins',          color:'var(--green)', bg:'var(--green-bg)' },
-        { id:'CNXH',  title:'Chủ nghĩa xã hội khoa học',     icon:'fa-people-group',   color:'#e4572e',      bg:'#fdece3' },
-        { id:'LSD',   title:'Lịch sử Đảng Cộng sản',         icon:'fa-landmark',       color:'#946b1f',      bg:'#fbf1de' },
-        { id:'TTHCM', title:'Tư tưởng Hồ Chí Minh',          icon:'fa-star',           color:'#c2185b',      bg:'#fde8f0' }
-    ];
-    // Bảng màu dự phòng cho môn mới thêm ở admin nhưng chưa có vị trí thiết kế riêng
-    const EXTRA_PALETTE = [
-        { icon:'fa-book-open',    color:'#0891b2', bg:'#e3f6fb' },
+    // Icon/màu riêng cho các mã môn quen thuộc (chỉ để đẹp hơn, KHÔNG bắt buộc phải tồn tại).
+    // Môn có mã không nằm trong danh sách này vẫn hiện bình thường, chỉ lấy icon/màu xoay vòng ở PALETTE bên dưới.
+    const ICON_BY_ID = {
+        PLDC:  { icon:'fa-scale-balanced', color:'#0068ff',      bg:'#e8f3ff' },
+        TH:    { icon:'fa-brain',          color:'#7c5cfc',      bg:'#f1ecff' },
+        KTCT:  { icon:'fa-coins',          color:'var(--green)', bg:'var(--green-bg)' },
+        CNXH:  { icon:'fa-people-group',   color:'#e4572e',      bg:'#fdece3' },
+        LSD:   { icon:'fa-landmark',       color:'#946b1f',      bg:'#fbf1de' },
+        TTHCM: { icon:'fa-star',           color:'#c2185b',      bg:'#fde8f0' }
+    };
+    // Bảng màu xoay vòng cho mọi môn khác (bất kể thêm bao nhiêu môn mới ở admin)
+    const PALETTE = [
+        { icon:'fa-book-open',      color:'#0891b2', bg:'#e3f6fb' },
         { icon:'fa-graduation-cap', color:'#9333ea', bg:'#f4e9fd' },
-        { icon:'fa-flask',        color:'#ca8a04', bg:'#fdf3d8' }
+        { icon:'fa-flask',          color:'#ca8a04', bg:'#fdf3d8' },
+        { icon:'fa-bookmark',       color:'#059669', bg:'#e2f7ec' },
+        { icon:'fa-lightbulb',      color:'#d97706', bg:'#fef3e0' },
+        { icon:'fa-layer-group',    color:'#dc2626', bg:'#fde8e8' }
     ];
+    function styleForSubject(subject, idx){
+        return ICON_BY_ID[subject.id] || PALETTE[idx % PALETTE.length];
+    }
 
     function escapeHtmlHome(s){
         return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-    }
-    function lockedCardHtml(slot, num){
-        return `
-            <a class="card locked" href="#" data-locked="true" data-subject="${slot.id.toLowerCase()}" data-subject-name="${escapeHtmlHome(slot.title)}">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip" style="background:${slot.bg}; color:${slot.color}"><i class="fa-solid ${slot.icon}"></i></div>
-                    <div class="num-tag">${String(num).padStart(2,'0')}</div>
-                </div>
-                <div class="card-title">${escapeHtmlHome(slot.title)}</div>
-                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
-                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
-                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
-            </a>
-        `;
     }
     function readyCardHtml(subject, style, num){
         return `
@@ -797,33 +788,28 @@
             return;
         }
 
-        const subjectMap = {};
-        (dbSubjects || []).forEach(s => subjectMap[s.id] = s);
-        const usedIds = new Set();
-        let num = 1;
-        let html = '';
+        if (!dbSubjects || !dbSubjects.length){
+            const emptyHtml = `<div class="empty-state"><div class="empty-icon" style="background:var(--brand-bg); color:var(--brand)"><i class="fa-solid fa-book"></i></div><div class="empty-title">Chưa có học phần nào</div><div class="empty-sub">Vào trang admin để thêm môn học đầu tiên.</div></div>`;
+            homeGrid.innerHTML = emptyHtml;
+            quizGrid.innerHTML = emptyHtml;
+            if (homeCountEl) homeCountEl.textContent = '0 học phần';
+            if (quizCountEl) quizCountEl.textContent = '0 học phần';
+            return;
+        }
 
-        SUBJECT_SLOTS.forEach(slot => {
-            const s = subjectMap[slot.id];
-            usedIds.add(slot.id);
-            html += s ? readyCardHtml(s, slot, num) : lockedCardHtml(slot, num);
-            num++;
-        });
-        (dbSubjects || []).forEach(s => {
-            if (usedIds.has(s.id)) return;
-            const style = EXTRA_PALETTE[(num - SUBJECT_SLOTS.length - 1) % EXTRA_PALETTE.length];
-            html += readyCardHtml(s, style, num);
-            num++;
+        let html = '';
+        dbSubjects.forEach((s, idx) => {
+            const style = styleForSubject(s, idx);
+            html += readyCardHtml(s, style, idx + 1);
         });
 
         homeGrid.innerHTML = html;
         quizGrid.innerHTML = html;
-        const totalLabel = (num - 1) + ' học phần';
+        const totalLabel = dbSubjects.length + ' học phần';
         if (homeCountEl) homeCountEl.textContent = totalLabel;
         if (quizCountEl) quizCountEl.textContent = totalLabel;
 
-        bindLockedCards();
-        loadQuestionCounts(dbSubjects || []);
+        loadQuestionCounts(dbSubjects);
     }
 
     async function loadQuestionCounts(dbSubjects){

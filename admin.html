@@ -349,7 +349,10 @@ textarea{resize:vertical;}
 
         <div id="tab-list" class="tab-panel">
             <div class="panel">
-                <h3 style="margin:0 0 4px;">Câu hỏi trong đề đang chọn</h3>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+                    <h3 style="margin:0;">Câu hỏi trong đề đang chọn</h3>
+                    <button class="btn-danger" id="deleteAllQBtn" onclick="deleteAllQuestions()">🗑️ Xóa tất cả câu hỏi trong đề này</button>
+                </div>
                 <div id="qList"><div class="empty-state">Chọn một môn học và một chương/đề ở thanh bên trái để xem câu hỏi.</div></div>
             </div>
         </div>
@@ -402,9 +405,10 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
                 </div>
                 <div id="fileReadSummary"></div>
 
-                <div style="display:flex;gap:10px;align-items:center;margin-top:18px;">
+                <div style="display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap;">
                     <button class="btn-primary" onclick="bulkImport()">Nạp tất cả</button>
                     <button class="btn-ghost" onclick="clearBulkText()">Xóa nội dung</button>
+                    <button class="btn-danger" onclick="deleteAllQuestions()">🗑️ Xóa hết câu hỏi cũ trong đề này (trước khi nạp lại)</button>
                 </div>
             </div>
         </div>
@@ -948,6 +952,22 @@ function deleteQuestion(id){
             const { error } = await sb.from('questions').delete().eq('id', id);
             if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
             showMsg('Đã xóa câu hỏi.', 'ok');
+            loadQuestions();
+        }
+    );
+}
+function deleteAllQuestions(){
+    if (!currentSubject || !currentChapter) return showMsg('Chọn môn học và chương/đề ở thanh bên trái trước.', 'err');
+    const count = currentQuestions.length;
+    if (!count) return showMsg('Đề này chưa có câu hỏi nào.', 'err');
+    showConfirm(
+        'Xóa TẤT CẢ câu hỏi trong đề này?',
+        `Toàn bộ ${count} câu hỏi trong đề "${escapeHtml(currentChapter.label || currentChapter.chapter)}" sẽ bị xóa vĩnh viễn. Không thể hoàn tác. Dùng cách này trước khi dán/nạp lại để tránh bị trùng hoặc cộng dồn số thứ tự.`,
+        async () => {
+            const { error } = await sb.from('questions').delete()
+                .eq('subject_id', currentSubject.id).eq('chapter', currentChapter.chapter);
+            if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
+            showMsg(`Đã xóa toàn bộ ${count} câu hỏi trong đề này.`, 'ok');
             loadQuestions();
         }
     );

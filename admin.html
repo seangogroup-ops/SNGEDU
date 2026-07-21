@@ -60,10 +60,17 @@ label{font-weight:600;font-size:.78rem;color:var(--gray);display:block;margin:10
 
 /* ---------- SHELL ---------- */
 #shell{display:flex;min-height:100vh;}
+@media (max-width: 720px){
+    #shell{flex-direction:column;}
+    aside{width:100%;flex:0 0 auto;}
+    main{padding:20px 16px 50px;}
+}
 aside{
     width:280px;flex:0 0 280px;background:var(--navy);color:var(--navy-text);
     padding:20px 16px;display:flex;flex-direction:column;gap:22px;
+    box-sizing:border-box;overflow-x:hidden;
 }
+.side-item .name{flex-shrink:1;min-width:0;}
 .brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:700;font-size:1.02rem;padding:0 4px;}
 .brand span.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block;}
 .side-section h4{
@@ -95,12 +102,13 @@ aside{
 .mini-form .mini-actions button{flex:1;padding:6px;font-size:.78rem;}
 .btn-mini-save{background:var(--accent);color:#fff;}
 .btn-mini-cancel{background:#2b3355;color:#c7cce3;}
-.side-item-row{display:flex;align-items:center;gap:4px;}
+.side-item-row{display:flex;align-items:center;gap:6px;padding-right:2px;}
 .icon-x{
-    opacity:.55;width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,.06);color:#e3a3a3;
-    display:flex;align-items:center;justify-content:center;font-size:.9rem;flex:0 0 auto;
+    opacity:1;width:34px;height:34px;border-radius:8px;background:rgba(220,38,38,.18);color:#ff8b8b;
+    display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex:0 0 auto;
+    border:1px solid rgba(220,38,38,.3);
 }
-.icon-x:hover{opacity:1;background:rgba(220,38,38,.25);color:#ff9d9d;}
+.icon-x:hover{background:rgba(220,38,38,.35);color:#ffb3b3;border-color:rgba(220,38,38,.5);}
 .sidebar-foot{margin-top:auto;border-top:1px solid #2a3153;padding-top:14px;font-size:.8rem;}
 .sidebar-foot .email{color:#fff;font-weight:600;word-break:break-all;}
 .sidebar-foot button{width:100%;margin-top:10px;background:#2b3355;color:#dfe2f2;padding:8px;font-size:.82rem;}
@@ -157,6 +165,27 @@ main{flex:1;padding:26px 34px 60px;max-width:1000px;}
 textarea{resize:vertical;}
 ::-webkit-scrollbar{width:8px;}
 ::-webkit-scrollbar-thumb{background:#3a4266;border-radius:4px;}
+
+/* ---------- CONFIRM MODAL ---------- */
+#confirmOverlay{
+    position:fixed;inset:0;background:rgba(15,18,35,.55);backdrop-filter:blur(2px);
+    display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;
+}
+.confirm-box{
+    background:var(--white);border-radius:14px;padding:26px;max-width:380px;width:100%;
+    box-shadow:0 20px 60px rgba(10,15,40,.35);
+}
+.confirm-box .confirm-icon{
+    width:44px;height:44px;border-radius:50%;background:var(--red-bg);color:var(--red);
+    display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:14px;
+}
+.confirm-box h4{margin:0 0 8px;font-size:1.05rem;}
+.confirm-box p{margin:0;color:var(--gray);font-size:.88rem;line-height:1.55;}
+.confirm-box .confirm-actions{display:flex;gap:10px;margin-top:20px;}
+.confirm-box .confirm-actions button{flex:1;padding:11px;font-size:.9rem;}
+.btn-confirm-cancel{background:#eef0f7;color:var(--text);}
+.btn-confirm-danger{background:var(--red);color:#fff;}
+.btn-confirm-danger:hover{background:#b91c1c;}
 </style>
 </head>
 <body>
@@ -271,6 +300,19 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
     </main>
 </div>
 
+<!-- ================= CONFIRM MODAL ================= -->
+<div id="confirmOverlay" class="hidden">
+    <div class="confirm-box">
+        <div class="confirm-icon">⚠️</div>
+        <h4 id="confirmTitle">Xác nhận xóa</h4>
+        <p id="confirmMessage"></p>
+        <div class="confirm-actions">
+            <button class="btn-confirm-cancel" onclick="closeConfirm()">Hủy</button>
+            <button class="btn-confirm-danger" id="confirmDangerBtn">Xóa</button>
+        </div>
+    </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
@@ -351,7 +393,7 @@ function renderSubjectList(){
             <div class="side-item ${currentSubject && currentSubject.id===s.id ? 'active' : ''}" style="flex:1;" onclick="selectSubject('${s.id}')">
                 <span class="name">${escapeHtml(s.name)}</span><span class="code">${escapeHtml(s.id)}</span>
             </div>
-            <button class="icon-x" title="Xóa môn học" onclick="deleteSubject('${s.id}')">✕</button>
+            <button class="icon-x" title="Xóa môn học" onclick="deleteSubject('${s.id}')">🗑️</button>
         </div>
     `).join('');
 }
@@ -375,13 +417,20 @@ async function addSubject(){
     document.getElementById('subjectForm').classList.remove('show');
     loadSubjects();
 }
-async function deleteSubject(id){
-    if (!confirm('Xóa môn học này? Toàn bộ chương và câu hỏi bên trong cũng sẽ bị xóa. Không thể hoàn tác.')) return;
-    const { error } = await sb.from('subjects').delete().eq('id', id);
-    if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
-    if (currentSubject && currentSubject.id === id) currentSubject = null;
-    showMsg('Đã xóa môn học.', 'ok');
-    loadSubjects();
+function deleteSubject(id){
+    const s = subjects.find(x => x.id === id);
+    const name = s ? s.name : id;
+    showConfirm(
+        'Xóa môn học?',
+        `Xóa môn "${name}"? Toàn bộ chương và câu hỏi bên trong môn này cũng sẽ bị xóa vĩnh viễn. Không thể hoàn tác.`,
+        async () => {
+            const { error } = await sb.from('subjects').delete().eq('id', id);
+            if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
+            if (currentSubject && currentSubject.id === id) currentSubject = null;
+            showMsg('Đã xóa môn học.', 'ok');
+            loadSubjects();
+        }
+    );
 }
 
 // ---------- CHAPTERS ----------
@@ -398,7 +447,7 @@ async function loadChapters(){
                 <div class="side-item ${currentChapter && currentChapter.chapter===ch.chapter ? 'active' : ''}" style="flex:1;" onclick='selectChapter(${JSON.stringify(ch.chapter)})'>
                     <span class="name">${escapeHtml(ch.label)}</span><span class="code">${escapeHtml(ch.chapter)}</span>
                 </div>
-                <button class="icon-x" title="Xóa chương" onclick="deleteChapter(${ch.id})">✕</button>
+                <button class="icon-x" title="Xóa chương" onclick="deleteChapter(${ch.id})">🗑️</button>
             </div>
         `).join('');
     }
@@ -435,14 +484,21 @@ async function addChapter(){
     document.getElementById('chapterForm').classList.remove('show');
     loadChapters();
 }
-async function deleteChapter(id){
-    if (!confirm('Xóa chương/đề này? Câu hỏi bên trong sẽ KHÔNG bị xóa nhưng sẽ không còn hiển thị theo chương này.')) return;
-    const { error } = await sb.from('chapters').delete().eq('id', id);
-    if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
-    showMsg('Đã xóa chương.', 'ok');
-    if (currentChapter && chapters.find(c=>c.id===id && c.chapter===currentChapter.chapter)) currentChapter = null;
-    loadChapters();
-    loadQuestions();
+function deleteChapter(id){
+    const ch = chapters.find(c => c.id === id);
+    const label = ch ? ch.label : '';
+    showConfirm(
+        'Xóa chương/đề?',
+        `Xóa chương "${label}"? Câu hỏi bên trong sẽ KHÔNG bị xóa nhưng sẽ không còn hiển thị theo chương này.`,
+        async () => {
+            const { error } = await sb.from('chapters').delete().eq('id', id);
+            if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
+            showMsg('Đã xóa chương.', 'ok');
+            if (currentChapter && ch && ch.chapter === currentChapter.chapter) currentChapter = null;
+            loadChapters();
+            loadQuestions();
+        }
+    );
 }
 
 // ---------- TABS ----------
@@ -478,12 +534,17 @@ async function loadQuestions(){
         </div>
     `).join('');
 }
-async function deleteQuestion(id){
-    if (!confirm('Xóa câu hỏi này?')) return;
-    const { error } = await sb.from('questions').delete().eq('id', id);
-    if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
-    showMsg('Đã xóa câu hỏi.', 'ok');
-    loadQuestions();
+function deleteQuestion(id){
+    showConfirm(
+        'Xóa câu hỏi?',
+        'Câu hỏi này sẽ bị xóa vĩnh viễn. Không thể hoàn tác.',
+        async () => {
+            const { error } = await sb.from('questions').delete().eq('id', id);
+            if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
+            showMsg('Đã xóa câu hỏi.', 'ok');
+            loadQuestions();
+        }
+    );
 }
 
 // ---------- QUESTIONS: ADD / EDIT ----------
@@ -604,6 +665,20 @@ async function bulkImport(){
     document.getElementById('bulkText').value='';
     switchTab('list');
     loadQuestions();
+}
+
+// ---------- CONFIRM MODAL ----------
+function showConfirm(title, message, onConfirm){
+    document.getElementById('confirmTitle').innerText = title;
+    document.getElementById('confirmMessage').innerText = message;
+    document.getElementById('confirmOverlay').classList.remove('hidden');
+    const btn = document.getElementById('confirmDangerBtn');
+    const newBtn = btn.cloneNode(true); // clear previous listeners
+    btn.parentNode.replaceChild(newBtn, btn);
+    newBtn.addEventListener('click', () => { closeConfirm(); onConfirm(); });
+}
+function closeConfirm(){
+    document.getElementById('confirmOverlay').classList.add('hidden');
 }
 
 // ---------- UTIL ----------

@@ -79,12 +79,13 @@ aside{
 }
 .side-list{display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto;}
 .side-item{
-    padding:9px 10px;border-radius:8px;font-size:.87rem;cursor:pointer;
-    display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--navy-text);
+    padding:9px 8px 9px 10px;border-radius:8px;font-size:.87rem;cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;gap:6px;color:var(--navy-text);
 }
 .side-item:hover{background:var(--navy-2);}
 .side-item.active{background:var(--accent);color:#fff;font-weight:600;}
 .side-item .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.side-item .right-cluster{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
 .side-item .code{
     flex:0 0 auto;font-size:.68rem;font-weight:700;letter-spacing:.03em;
     background:rgba(255,255,255,.1);color:#c3c9e6;padding:2px 7px;border-radius:5px;
@@ -102,14 +103,16 @@ aside{
 .mini-form .mini-actions button{flex:1;padding:6px;font-size:.78rem;}
 .btn-mini-save{background:var(--accent);color:#fff;}
 .btn-mini-cancel{background:#2b3355;color:#c7cce3;}
-.side-item-row{display:flex;align-items:center;gap:6px;}
+.side-item-row{display:block;}
 .icon-x{
-    width:30px;height:30px;border-radius:8px;background:rgba(220,38,38,.14);color:#e57373;
+    width:22px;height:22px;border-radius:6px;background:rgba(220,38,38,.16);color:#e8a3a3;
     display:flex;align-items:center;justify-content:center;flex:0 0 auto;
-    border:1px solid rgba(220,38,38,.25);padding:0;
+    border:none;padding:0;
 }
-.icon-x svg{width:15px;height:15px;display:block;}
-.icon-x:hover{background:rgba(220,38,38,.3);color:#ffb3b3;border-color:rgba(220,38,38,.45);}
+.icon-x svg{width:12px;height:12px;display:block;}
+.icon-x:hover{background:rgba(220,38,38,.35);color:#ffb3b3;}
+.side-item.active .icon-x{background:rgba(255,255,255,.2);color:#fff;}
+.side-item.active .icon-x:hover{background:rgba(255,255,255,.35);}
 .sidebar-foot{margin-top:auto;border-top:1px solid #2a3153;padding-top:14px;font-size:.8rem;}
 .sidebar-foot .email{color:#fff;font-weight:600;word-break:break-all;}
 .sidebar-foot button{width:100%;margin-top:10px;background:#2b3355;color:#dfe2f2;padding:8px;font-size:.82rem;}
@@ -390,11 +393,12 @@ function renderSubjectList(){
     const box = document.getElementById('subjectList');
     if (!subjects.length){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Chưa có môn học nào.</div>`; return; }
     box.innerHTML = subjects.map(s => `
-        <div class="side-item-row">
-            <div class="side-item ${currentSubject && currentSubject.id===s.id ? 'active' : ''}" style="flex:1;" onclick="selectSubject('${s.id}')">
-                <span class="name">${escapeHtml(s.name)}</span><span class="code">${escapeHtml(s.id)}</span>
-            </div>
-            <button class="icon-x" title="Xóa môn học" onclick="deleteSubject('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg></button>
+        <div class="side-item ${currentSubject && currentSubject.id===s.id ? 'active' : ''}" onclick="selectSubject('${s.id}')">
+            <span class="name">${escapeHtml(s.name)}</span>
+            <span class="right-cluster">
+                <span class="code">${escapeHtml(s.id)}</span>
+                <button class="icon-x" title="Xóa môn học" onclick="event.stopPropagation(); deleteSubject('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg></button>
+            </span>
         </div>
     `).join('');
 }
@@ -444,11 +448,12 @@ async function loadChapters(){
     if (!chapters.length){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Môn này chưa có chương/đề nào.</div>`; }
     else {
         box.innerHTML = chapters.map(ch => `
-            <div class="side-item-row">
-                <div class="side-item ${currentChapter && currentChapter.chapter===ch.chapter ? 'active' : ''}" style="flex:1;" onclick='selectChapter(${JSON.stringify(ch.chapter)})'>
-                    <span class="name">${escapeHtml(ch.label)}</span><span class="code">${escapeHtml(ch.chapter)}</span>
-                </div>
-                <button class="icon-x" title="Xóa chương" onclick="deleteChapter(${ch.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg></button>
+            <div class="side-item ${currentChapter && currentChapter.chapter===ch.chapter ? 'active' : ''}" onclick='selectChapter(${JSON.stringify(ch.chapter)})'>
+                <span class="name">${escapeHtml(ch.label)}</span>
+                <span class="right-cluster">
+                    <span class="code">${escapeHtml(ch.chapter)}</span>
+                    <button class="icon-x" title="Xóa chương" onclick="event.stopPropagation(); deleteChapter(${ch.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg></button>
+                </span>
             </div>
         `).join('');
     }

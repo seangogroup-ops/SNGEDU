@@ -199,6 +199,26 @@
         background:linear-gradient(135deg, #ff6b52, #e4372a); border-radius:999px;
     }
 
+    /* ---------------- section label riêng cho "Đề thi thử" ---------------- */
+    .section-label.is-exam{ color:#2ed392; }
+    .section-label.is-exam::before{ background:#2ed392; }
+
+    /* ---------------- thẻ "Đề thi thử" — style riêng, khác thẻ chương thường ---------------- */
+    .chapter-card.exam-card{
+        background:linear-gradient(160deg, #163a2c 0%, #10281f 100%);
+        border:1.5px dashed #2ed392; color:#e8fdf4;
+    }
+    @media (hover:hover){
+        .chapter-card.exam-card:hover{ border-color:#4ee6a8; transform:translateY(-4px); }
+    }
+    .chapter-card.exam-card .c-note,
+    .chapter-card.exam-card .c-count{ color:#a9e8cd; }
+    .exam-icon-chip{ background:rgba(46,211,146,.16); color:#4ee6a8; }
+    .chapter-card.exam-card .card-arrow{ background:rgba(255,255,255,.12); color:#c9fbe4; }
+    @media (hover:hover){
+        .chapter-card.exam-card:hover .card-arrow{ background:#2ed392; color:#0e1a15; }
+    }
+
     /* ---------------- state cards (loading / error / empty) ---------------- */
     .state-card{
         background:var(--card); border:1px solid var(--line); border-radius:20px;
@@ -321,6 +341,10 @@ const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Chương thuộc nhóm này sẽ mở giao diện làm bài thi (quiz-exam.html) thay vì
+// giao diện ôn tập thường (quiz-dynamic.html)
+const EXAM_GROUP = 'Đề thi thử';
+
 // Bảng màu + icon xoay vòng cho từng môn học (chọn theo hash của mã môn, để mỗi môn luôn ra đúng 1 màu/1 icon cố định)
 const PALETTE = [
     { icon:'fa-scale-balanced',   light:{c:'#e4572e', bg:'#ffece8'}, dark:{c:'#ff8161', bg:'#3a2018'} },
@@ -352,6 +376,11 @@ function getSubjectId(){
 }
 function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function parseNoteMinutes(note){
+    if (!note) return null;
+    const m = String(note).match(/(\d+)\s*ph/i);
+    return m ? parseInt(m[1], 10) : null;
 }
 function showState(html, isError){
     document.getElementById('content').innerHTML = `<div class="state-card${isError ? ' is-error' : ''}">${html}</div>`;
@@ -415,7 +444,8 @@ async function loadPage(){
     const { data: qRows } = await sb.from('questions').select('chapter').eq('subject_id', subjectId);
     (qRows || []).forEach(r => { counts[r.chapter] = (counts[r.chapter] || 0) + 1; });
 
-    // Gom nhóm chương theo group_name, giữ đúng thứ tự nhóm xuất hiện lần đầu trong dữ liệu
+    // Gom nhóm chương theo group_name, giữ đúng thứ tự nhóm xuất hiện lần đầu trong dữ liệu.
+    // Nhóm "Đề thi thử" vẫn nằm trong cùng lưới chương, chỉ khác style thẻ + trỏ sang quiz-exam.html
     const groupOrder = [];
     const groups = {};
     chapters.forEach(ch => {
@@ -426,11 +456,28 @@ async function loadPage(){
 
     let html = '';
     groupOrder.forEach(groupName => {
-        html += `<div class="section-label">${escapeHtml(groupName)}</div>`;
+        const isExamGroup = groupName === EXAM_GROUP;
+        html += `<div class="section-label${isExamGroup ? ' is-exam' : ''}">${escapeHtml(groupName)}</div>`;
         html += `<div class="chapter-list">`;
         groups[groupName].forEach(ch => {
-            const href = `quiz-dynamic.html?subject=${encodeURIComponent(subjectId)}&chapter=${encodeURIComponent(ch.chapter)}`;
+            const targetPage = isExamGroup ? 'quiz-exam.html' : 'quiz-dynamic.html';
+            const href = `${targetPage}?subject=${encodeURIComponent(subjectId)}&chapter=${encodeURIComponent(ch.chapter)}`;
             const n = counts[ch.chapter] || 0;
+            if (isExamGroup){
+                const mins = parseNoteMinutes(ch.note) || Math.max(15, Math.round(n * 1.5));
+                html += `
+                    <a class="chapter-card exam-card" href="${href}">
+                        <div class="c-top">
+                            <div class="icon-chip exam-icon-chip"><i class="fa-solid fa-dice"></i></div>
+                            <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                        <div class="c-name">${escapeHtml(ch.label)}</div>
+                        ${ch.note ? `<div class="c-note"><i class="fa-solid fa-tag"></i> ${escapeHtml(ch.note)}</div>` : ''}
+                        <div class="c-count"><i class="fa-regular fa-circle-question"></i> ${n} câu · <i class="fa-regular fa-clock"></i> ${mins} phút</div>
+                    </a>
+                `;
+                return;
+            }
             html += `
                 <a class="chapter-card" href="${href}">
                     <div class="c-top">

@@ -404,6 +404,7 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
                     <div class="file-drop-sub">Tự động nhận diện và trích câu hỏi/đáp án từ file quiz .html (kể cả file nhiều chương gộp chung) hoặc file .txt/.md theo đúng định dạng ở trên. Nội dung trích được sẽ tự động thêm vào ô phía trên.</div>
                 </div>
                 <div id="fileReadSummary"></div>
+                <div id="detectedGroupsBox"></div>
 
                 <div style="display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap;">
                     <button class="btn-primary" onclick="bulkImport()">Nạp tất cả</button>
@@ -1160,6 +1161,33 @@ function extractQuestionTextFromHtml(html){
     const plain = (bodyMatch ? bodyMatch[1] : html).replace(/<[^>]+>/g, '\n');
     return plain.trim();
 }
+// Nhận diện dạng "đề thi thử nhiều chương" cụ thể: const database = [ {name:"...", content:`...`}, ... ]
+// Trả về từng chương riêng biệt (tên + nội dung + số câu) thay vì gộp chung 1 khối.
+function extractMultiChapterGroups(html){
+    const re = /name:\s*["'](.*?)["']\s*,\s*content:\s*`([\s\S]*?)`/g;
+    const out = [];
+    let m;
+    while ((m = re.exec(html))){
+        const name = m[1].trim();
+        const text = m[2].trim();
+        const count = (text.match(/Câu\s*\d+\s*:/g) || []).length;
+        if (count > 0) out.push({ name, text, count });
+    }
+    return out;
+}
+// Chuyển tên chương thành mã chương an toàn (bỏ dấu, khoảng trắng -> gạch dưới)
+function slugifyChapterCode(str){
+    const map = {'à':'a','á':'a','ạ':'a','ả':'a','ã':'a','â':'a','ầ':'a','ấ':'a','ậ':'a','ẩ':'a','ẫ':'a','ă':'a','ằ':'a','ắ':'a','ặ':'a','ẳ':'a','ẵ':'a','è':'e','é':'e','ẹ':'e','ẻ':'e','ẽ':'e','ê':'e','ề':'e','ế':'e','ệ':'e','ể':'e','ễ':'e','ì':'i','í':'i','ị':'i','ỉ':'i','ĩ':'i','ò':'o','ó':'o','ọ':'o','ỏ':'o','õ':'o','ô':'o','ồ':'o','ố':'o','ộ':'o','ổ':'o','ỗ':'o','ơ':'o','ờ':'o','ớ':'o','ợ':'o','ở':'o','ỡ':'o','ù':'u','ú':'u','ụ':'u','ủ':'u','ũ':'u','ư':'u','ừ':'u','ứ':'u','ự':'u','ử':'u','ữ':'u','ỳ':'y','ý':'y','ỵ':'y','ỷ':'y','ỹ':'y','đ':'d'};
+    let s = str.toLowerCase().split('').map(ch => map[ch] || ch).join('');
+    s = s.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    return s.slice(0, 40) || ('de_' + Date.now());
+}
+function ensureUniqueChapterCode(code, existingCodes){
+    let c = code, i = 2;
+    while (existingCodes.has(c)){ c = code + '_' + i; i++; }
+    existingCodes.add(c);
+    return c;
+}
 function readFileAsText(file){
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1168,6 +1196,7 @@ function readFileAsText(file){
         reader.readAsText(file, 'UTF-8');
     });
 }
+let detectedGroups = [];
 async function handleBulkFiles(fileList){
     const files = Array.from(fileList || []);
     if (!files.length) return;
@@ -1177,7 +1206,7 @@ async function handleBulkFiles(fileList){
     const listBox = document.getElementById('fileListBox');
 
     const extractedParts = [];
-    let totalOk = 0, totalFiles = 0;
+    let totalOk = 0, totalFiles = 0, totalGroupsFound = 0;
 
     for (const file of files){
         totalFiles++;
@@ -1189,6 +1218,22 @@ async function handleBulkFiles(fileList){
         try {
             const raw = await readFileAsText(file);
             const isHtml = /\.html?$/i.test(file.name) || /<html/i.test(raw);
+            const groups = isHtml ? extractMultiChapterGroups(raw) : [];
+
+            if (groups.length > 1){
+                // File dạng "đề thi thử nhiều chương" -> tách riêng từng chương, KHÔNG gộp vào ô dán văn bản
+                groups.forEach(g => {
+                    detectedGroups.push({
+                        id: 'g' + (detectedGroups.length + 1) + '_' + Date.now(),
+                        label: g.name, text: g.text, count: g.count, checked: true
+                    });
+                });
+                totalGroupsFound += groups.length;
+                const totalQ = groups.reduce((s,g)=>s+g.count,0);
+                row.querySelector('.fcount').outerHTML = `<span class="fcount ok">✓ ${groups.length} chương, ${totalQ} câu (xem bên dưới)</span>`;
+                continue;
+            }
+
             const text = isHtml ? extractQuestionTextFromHtml(raw) : raw;
             const parsed = parseBulkText(text);
 
@@ -1204,17 +1249,100 @@ async function handleBulkFiles(fileList){
         }
     }
 
+    if (totalGroupsFound) renderDetectedGroups();
+
     if (extractedParts.length){
         const ta = document.getElementById('bulkText');
         const existing = ta.value.trim();
         const combined = extractedParts.join('\n\n');
         ta.value = existing ? (existing + '\n\n' + combined) : combined;
         showMsg(`Đã trích ${totalOk} câu hỏi từ ${extractedParts.length}/${totalFiles} file. Kiểm tra lại nội dung bên dưới rồi bấm "Nạp tất cả".`, 'ok');
+    } else if (totalGroupsFound){
+        showMsg(`Đã phát hiện ${totalGroupsFound} chương trong file. Chọn và bấm "Tạo chương & nạp tất cả" bên dưới.`, 'ok');
     } else {
         showMsg('Không trích được câu hỏi nào từ file đã chọn. Kiểm tra lại định dạng file.', 'err');
     }
 
     document.getElementById('bulkFileInput').value = ''; // cho phép chọn lại cùng file lần sau
+}
+function toggleDetectedGroup(id, checked){
+    const g = detectedGroups.find(x => x.id === id);
+    if (g) g.checked = checked;
+}
+function renameDetectedGroup(id, value){
+    const g = detectedGroups.find(x => x.id === id);
+    if (g) g.label = value;
+}
+function clearDetectedGroups(){
+    detectedGroups = [];
+    const box = document.getElementById('detectedGroupsBox');
+    if (box) box.innerHTML = '';
+}
+function renderDetectedGroups(){
+    const box = document.getElementById('detectedGroupsBox');
+    if (!box) return;
+    if (!detectedGroups.length){ box.innerHTML = ''; return; }
+    const totalQ = detectedGroups.reduce((s,g)=>s+g.count,0);
+    box.innerHTML = `
+        <div class="callout" style="margin-top:16px;">
+            📚 <b>Phát hiện đề thi nhiều chương</b> — ${detectedGroups.length} chương, tổng ${totalQ} câu.
+            Mỗi chương bên dưới sẽ được <b>tự tạo thành 1 chương/đề mới</b> trong danh sách bên trái và nạp đúng số câu tương ứng, không bị gộp chung hay đè số thứ tự lên nhau. Bỏ tick những chương bạn không muốn nạp, có thể sửa tên hiển thị trước khi nạp.
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+            ${detectedGroups.map(g => `
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #2a2f45;border-radius:8px;">
+                    <input type="checkbox" ${g.checked ? 'checked' : ''} onchange="toggleDetectedGroup('${g.id}', this.checked)">
+                    <input type="text" value="${escapeHtml(g.label)}" oninput="renameDetectedGroup('${g.id}', this.value)" style="flex:1;">
+                    <span style="font-size:.8rem;color:#9aa0b8;white-space:nowrap;">${g.count} câu</span>
+                </div>
+            `).join('')}
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+            <button class="btn-primary" onclick="importDetectedGroups()">📥 Tạo chương & nạp tất cả đã chọn</button>
+            <button class="btn-ghost" onclick="clearDetectedGroups()">Hủy</button>
+        </div>
+    `;
+}
+async function importDetectedGroups(){
+    if (!currentSubject) return showMsg('Chọn môn học ở thanh bên trái trước.', 'err');
+    const selected = detectedGroups.filter(g => g.checked);
+    if (!selected.length) return showMsg('Chưa chọn chương nào để nạp.', 'err');
+
+    const existingCodes = new Set(chapters.map(c => c.chapter));
+    let totalChaptersCreated = 0, totalQuestionsAdded = 0;
+    showMsg('Đang tạo chương và nạp câu hỏi, vui lòng đợi...', 'ok');
+
+    for (const g of selected){
+        const parsed = parseBulkText(g.text);
+        if (!parsed.length) continue;
+
+        const code = ensureUniqueChapterCode(slugifyChapterCode(g.label), existingCodes);
+
+        const { data: existingOrder } = await sb.from('chapters').select('order_no')
+            .eq('subject_id', currentSubject.id).order('order_no', { ascending: false }).limit(1);
+        const nextOrder = existingOrder && existingOrder.length ? existingOrder[0].order_no + 1 : 0;
+
+        const { error: chErr } = await sb.from('chapters').insert({
+            subject_id: currentSubject.id, chapter: code, label: g.label, note: '', group_name: 'Nội dung chính', order_no: nextOrder
+        });
+        if (chErr){ showMsg(`Lỗi tạo chương "${g.label}": ` + chErr.message, 'err'); continue; }
+
+        const rows = parsed.map((q, i) => ({
+            subject_id: currentSubject.id, chapter: code, order_no: i + 1,
+            content: q.content, options: q.options, correct_idx: q.correctIdx, explanation: q.explanation
+        }));
+        const { error: qErr } = await sb.from('questions').insert(rows);
+        if (qErr){ showMsg(`Lỗi nạp câu hỏi cho "${g.label}": ` + qErr.message, 'err'); continue; }
+
+        totalChaptersCreated++;
+        totalQuestionsAdded += rows.length;
+    }
+
+    showMsg(`Đã tạo ${totalChaptersCreated} chương mới và nạp tổng cộng ${totalQuestionsAdded} câu hỏi.`, 'ok');
+    clearDetectedGroups();
+    document.getElementById('fileReadSummary').innerHTML = '';
+    loadChapters();
+    loadQuestions();
 }
 function clearBulkText(){
     document.getElementById('bulkText').value = '';
@@ -1241,6 +1369,7 @@ function clearBulkText(){
 // ---------- BULK IMPORT ----------
 function parseBulkText(text){
     const blocks = text.trim().split(/(?=Câu\s*\d+\s*:)/);
+    const letters = ['A','B','C','D'];
     const out = [];
     blocks.forEach(block=>{
         if (!block.trim()) return;
@@ -1249,18 +1378,23 @@ function parseBulkText(text){
         const contentMatch = header.match(/Câu\s*\d+\s*:\s*(.*)/);
         if (!contentMatch) return;
         const content = contentMatch[1].trim();
-        const options = [];
+        // Ghi đáp án theo đúng chữ cái (A/B/C/D) thay vì theo thứ tự xuất hiện dòng —
+        // nếu 1 chữ cái bị lặp dòng (lỗi dữ liệu hay gặp), dòng lặp sẽ ghi đè chứ không tạo thêm 1 "đáp án thứ 5" khiến câu bị loại bỏ.
+        const optsByLetter = {};
         let correctIdx = -1, explanation = '';
         lines.slice(1).forEach(line=>{
             const l = line.trim();
-            if (/^\*?[A-D]\./.test(l)){
-                if (l.startsWith('*')) correctIdx = options.length;
-                options.push(l.replace(/^\*/,'').replace(/^[A-D]\.\s*/,'').trim());
+            const m = l.match(/^(\*?)([A-D])\.\s*(.*)$/);
+            if (m){
+                const idx = letters.indexOf(m[2]);
+                optsByLetter[idx] = m[3].trim();
+                if (m[1] === '*') correctIdx = idx;
             } else if (/^Gt\s*:/.test(l)){
                 explanation = l.replace(/^Gt\s*:/,'').trim();
             }
         });
-        if (content && options.length===4 && correctIdx>=0){
+        const options = letters.map((_, i) => optsByLetter[i]);
+        if (content && options.every(o => o !== undefined && o !== '') && correctIdx>=0){
             out.push({ content, options, correctIdx, explanation });
         }
     });

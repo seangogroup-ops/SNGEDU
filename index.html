@@ -779,7 +779,7 @@
         const homeCountEl = document.getElementById('homeSubjectCount');
         const quizCountEl = document.getElementById('quizSubjectCount');
 
-        const { data: dbSubjects, error } = await sb.from('subjects').select('*').order('id');
+        const { data: dbSubjects, error } = await sb.from('subjects').select('*').order('order_no', { ascending: true, nullsFirst: false }).order('id');
 
         if (error){
             const errHtml = `<div class="empty-state"><div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="empty-title">Không tải được danh sách môn học</div><div class="empty-sub">${escapeHtmlHome(error.message)}</div></div>`;

@@ -289,21 +289,30 @@ textarea{resize:vertical;}
     display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;
 }
 .merge-box{
-    background:var(--white);border-radius:14px;padding:26px;max-width:460px;width:100%;
+    background:var(--white);border-radius:14px;padding:26px;max-width:520px;width:100%;
     box-shadow:0 20px 60px rgba(10,15,40,.35);
 }
 .merge-box h4{margin:0 0 8px;font-size:1.05rem;}
 .merge-box p{margin:0 0 14px;color:var(--gray);font-size:.86rem;line-height:1.55;}
 .merge-box p b{color:var(--text);}
-.merge-source-list{display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;}
+.merge-source-list{display:flex;flex-direction:column;gap:4px;max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;}
 .merge-src-row{
-    display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:6px;font-size:.86rem;
+    display:flex;align-items:center;gap:8px;padding:8px 6px;border-radius:6px;font-size:.86rem;
 }
 .merge-src-row:hover{background:var(--bg);}
 .merge-src-row input[type=checkbox]{width:auto;flex:0 0 auto;accent-color:var(--accent);}
 .merge-src-row .msr-label{flex:1;min-width:0;}
 .merge-src-row .msr-group{color:var(--gray);font-weight:400;font-size:.78rem;}
-.merge-src-row .msr-count{flex:0 0 auto;color:var(--gray);font-weight:700;font-size:.78rem;}
+.merge-src-row .msr-count{flex:0 0 auto;color:var(--gray);font-weight:700;font-size:.78rem;white-space:nowrap;}
+.merge-src-row input[type=number].merge-src-qty{
+    width:54px;flex:0 0 auto;text-align:center;padding:4px 2px;border:1px solid var(--border);
+    border-radius:6px;font-size:.82rem;color:var(--text);-moz-appearance:textfield;
+}
+.merge-src-row input[type=number].merge-src-qty:disabled{background:var(--bg);color:var(--gray);opacity:.55;cursor:not-allowed;}
+.merge-src-row input[type=number].merge-src-qty:focus{outline:none;border-color:var(--accent);}
+.merge-select-all-row{display:flex;justify-content:flex-end;gap:14px;margin-bottom:6px;font-size:.78rem;}
+.merge-select-all-row a{color:var(--accent);cursor:pointer;text-decoration:none;font-weight:600;}
+.merge-select-all-row a:hover{text-decoration:underline;}
 .merge-clear-row{
     display:flex;align-items:center;gap:8px;margin-top:14px;font-weight:500;
     text-transform:none;font-size:.85rem;color:var(--text);
@@ -503,7 +512,12 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
 <div id="mergeOverlay" class="hidden">
     <div class="merge-box">
         <h4>🔀 Tổng hợp câu hỏi</h4>
-        <p>Copy toàn bộ câu hỏi từ các chương được chọn vào đề <b id="mergeTargetLabel"></b>. Câu hỏi ở chương nguồn vẫn được giữ nguyên, không bị xóa hay di chuyển.</p>
+        <p>Copy câu hỏi từ các chương được chọn vào đề <b id="mergeTargetLabel"></b>. Có thể chỉnh số lượng câu lấy từ mỗi chương. Câu hỏi ở chương nguồn vẫn được giữ nguyên, không bị xóa hay di chuyển.</p>
+        <div class="merge-select-all-row">
+            <a onclick="mergeSetAll(true)">Chọn tất cả</a>
+            <a onclick="mergeSetAll(false)">Bỏ chọn tất cả</a>
+            <a onclick="mergeSetMaxQty()">Lấy tối đa</a>
+        </div>
         <div class="merge-source-list" id="mergeSourceList"></div>
         <label class="merge-clear-row">
             <input type="checkbox" id="mergeClearFirst">
@@ -1091,29 +1105,98 @@ async function openMergeModal(){
     document.getElementById('mergeClearFirst').checked = false;
     document.getElementById('mergeOverlay').classList.remove('hidden');
 
-    const { data: allQ, error } = await sb.from('questions').select('chapter').eq('subject_id', currentSubject.id);
-    if (error){
+    // FIX: trước đây lấy toàn bộ câu hỏi của cả môn học về rồi đếm ở client (select('chapter')
+    // không giới hạn số dòng). Với môn học có nhiều câu hỏi, Supabase mặc định chỉ trả về tối đa
+    // 1000 dòng/request nên nhiều chương bị đếm hụt/về 0 dù thực tế có câu hỏi.
+    // -> Đổi sang đếm CHÍNH XÁC riêng từng chương bằng count('exact', head:true), chạy song song.
+    let counts = {};
+    try {
+        const countResults = await Promise.all(sources.map(c =>
+            sb.from('questions')
+              .select('id', { count: 'exact', head: true })
+              .eq('subject_id', currentSubject.id)
+              .eq('chapter', c.chapter)
+        ));
+        sources.forEach((c, i) => {
+            const r = countResults[i];
+            if (r.error) throw r.error;
+            counts[c.chapter] = r.count || 0;
+        });
+    } catch (error){
         document.getElementById('mergeSourceList').innerHTML = `<div style="color:var(--red);font-size:.85rem;padding:10px;">Lỗi tải dữ liệu: ${escapeHtml(error.message)}</div>`;
         return;
     }
-    const counts = {};
-    (allQ || []).forEach(r => { counts[r.chapter] = (counts[r.chapter] || 0) + 1; });
 
-    document.getElementById('mergeSourceList').innerHTML = sources.map(c => `
+    document.getElementById('mergeSourceList').innerHTML = sources.map(c => {
+        const cnt = counts[c.chapter] || 0;
+        const checked = c.group_name !== 'Đề thi thử' && cnt > 0;
+        const disabled = cnt === 0;
+        return `
         <label class="merge-src-row">
-            <input type="checkbox" class="merge-src-cb" value="${escapeHtml(c.chapter)}" ${c.group_name !== 'Đề thi thử' ? 'checked' : ''}>
+            <input type="checkbox" class="merge-src-cb" value="${escapeHtml(c.chapter)}" data-max="${cnt}"
+                   ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} onchange="onMergeSrcToggle(this)">
             <span class="msr-label">${escapeHtml(c.label)} <span class="msr-group">(${escapeHtml(c.group_name || 'Nội dung chính')})</span></span>
-            <span class="msr-count">${counts[c.chapter] || 0} câu</span>
+            <input type="number" class="merge-src-qty" min="0" max="${cnt}" value="${cnt}"
+                   ${(!checked || disabled) ? 'disabled' : ''} title="Số câu lấy từ chương này"
+                   oninput="mergeClampQty(this)">
+            <span class="msr-count">/ ${cnt} câu</span>
         </label>
-    `).join('');
+    `;
+    }).join('');
+}
+// Giới hạn giá trị ô số lượng trong khoảng [0, số câu tối đa của chương đó]
+function mergeClampQty(input){
+    const max = Number(input.max) || 0;
+    let v = parseInt(input.value, 10);
+    if (isNaN(v) || v < 0) v = 0;
+    if (v > max) v = max;
+    input.value = v;
+}
+// Bật/tắt ô số lượng theo trạng thái checkbox tương ứng
+function onMergeSrcToggle(cb){
+    const row = cb.closest('.merge-src-row');
+    const qty = row.querySelector('.merge-src-qty');
+    if (!qty) return;
+    const max = Number(cb.dataset.max) || 0;
+    qty.disabled = !cb.checked || max === 0;
+    if (cb.checked && Number(qty.value) === 0 && max > 0) qty.value = max;
+}
+// Chọn tất cả / bỏ chọn tất cả các chương nguồn (bỏ qua chương đã hết câu hỏi)
+function mergeSetAll(state){
+    document.querySelectorAll('.merge-src-cb').forEach(cb => {
+        if (cb.disabled) return;
+        cb.checked = state;
+        onMergeSrcToggle(cb);
+    });
+}
+// Đưa số lượng của tất cả chương đang chọn về đúng số câu tối đa (lấy hết)
+function mergeSetMaxQty(){
+    document.querySelectorAll('.merge-src-row').forEach(row => {
+        const cb = row.querySelector('.merge-src-cb');
+        const qty = row.querySelector('.merge-src-qty');
+        if (cb && cb.checked && qty) qty.value = qty.max;
+    });
 }
 function closeMergeModal(){
     document.getElementById('mergeOverlay').classList.add('hidden');
 }
 async function runMergeQuestions(){
     if (!currentSubject || !currentChapter) return;
-    const checked = Array.from(document.querySelectorAll('.merge-src-cb:checked')).map(cb => cb.value);
-    if (!checked.length) return showMsg('Chọn ít nhất 1 chương nguồn để tổng hợp.', 'err');
+    const checkedBoxes = Array.from(document.querySelectorAll('.merge-src-cb:checked'));
+    if (!checkedBoxes.length) return showMsg('Chọn ít nhất 1 chương nguồn để tổng hợp.', 'err');
+
+    // Lấy số lượng câu hỏi muốn lấy từ MỖI chương (theo ô số lượng người dùng nhập)
+    const selections = checkedBoxes.map(cb => {
+        const row = cb.closest('.merge-src-row');
+        const qtyInput = row ? row.querySelector('.merge-src-qty') : null;
+        const max = Number(cb.dataset.max) || 0;
+        let qty = qtyInput ? parseInt(qtyInput.value, 10) : max;
+        if (isNaN(qty) || qty < 0) qty = 0;
+        if (qty > max) qty = max;
+        return { chapter: cb.value, qty };
+    }).filter(s => s.qty > 0);
+
+    if (!selections.length) return showMsg('Số lượng câu hỏi cần lấy phải lớn hơn 0.', 'err');
 
     const btn = document.getElementById('mergeConfirmBtn');
     const oldText = btn.textContent;
@@ -1128,16 +1211,27 @@ async function runMergeQuestions(){
         }
     }
 
-    const { data: srcRows, error: srcErr } = await sb.from('questions')
-        .select('*').eq('subject_id', currentSubject.id).in('chapter', checked)
-        .order('chapter').order('order_no');
-    if (srcErr){
+    // Lấy câu hỏi nguồn theo ĐÚNG số lượng đã chọn cho từng chương (mỗi chương 1 truy vấn riêng,
+    // sắp theo order_no và limit theo số lượng để không bị dính giới hạn dòng của Supabase)
+    let srcRows = [];
+    try {
+        const results = await Promise.all(selections.map(s =>
+            sb.from('questions').select('*')
+              .eq('subject_id', currentSubject.id).eq('chapter', s.chapter)
+              .order('order_no').limit(s.qty)
+        ));
+        results.forEach(r => {
+            if (r.error) throw r.error;
+            srcRows.push(...(r.data || []));
+        });
+    } catch (srcErr){
         btn.disabled = false; btn.textContent = oldText;
         return showMsg('Lỗi tải câu hỏi nguồn: ' + srcErr.message, 'err');
     }
-    if (!srcRows || !srcRows.length){
+
+    if (!srcRows.length){
         btn.disabled = false; btn.textContent = oldText;
-        return showMsg('Các chương đã chọn chưa có câu hỏi nào.', 'err');
+        return showMsg('Không có câu hỏi nào được lấy theo số lượng đã chọn.', 'err');
     }
 
     const { data: existing } = await sb.from('questions').select('order_no')

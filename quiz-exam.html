@@ -38,9 +38,12 @@
             font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px}
         .btn-submit:hover{background:#2347c5}
 
-        .info-bar{max-width:1200px;margin:70px auto 0;padding:12px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-        .stat-badge{background:#eef2ff;color:var(--blue);padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:6px}
-        .stat-badge.time{background:#fef3e0;color:#d97706}
+        .settings-bar{max-width:1200px;margin:70px auto 0;padding:12px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+        .sg{display:flex;align-items:center;gap:8px;background:#fff;padding:8px 14px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+        .sg label{font-size:.85rem;color:var(--text-gray);font-weight:500;white-space:nowrap}
+        .sg select,.sg input[type=number]{border:1px solid #e5e7eb;border-radius:6px;padding:5px 8px;font-size:.9rem;color:var(--text-main);background:#fff}
+        .sg input[type=number]{width:65px}
+        .stat-badge{background:#eef2ff;color:var(--blue);padding:4px 12px;border-radius:20px;font-size:.85rem;font-weight:600}
 
         .layout{display:flex;max-width:1200px;margin:10px auto 40px;padding:0 20px;gap:25px}
         .q-col{flex:1;display:flex;flex-direction:column;gap:20px;min-width:0}
@@ -104,7 +107,7 @@
     <div class="h-left">
         <a class="back-link" href="#" id="backLink"><i class="fa-solid fa-arrow-left"></i></a>
         <span class="h-title" id="h-title"><i class="fa-solid fa-file-signature"></i> Đang tải...</span>
-        <button class="btn-new" onclick="restartExam()"><i class="fa-solid fa-rotate-right"></i> Làm lại</button>
+        <button class="btn-new" onclick="reloadExam()"><i class="fa-solid fa-shuffle"></i> Đề mới</button>
     </div>
     <div class="h-right">
         <div class="timer" id="timer-wrap"><i class="fa-regular fa-clock"></i> <span id="timer-disp">60:00</span></div>
@@ -112,9 +115,16 @@
     </div>
 </header>
 
-<div class="info-bar" id="infoBar" style="display:none;">
-    <div class="stat-badge"><i class="fa-solid fa-list-check"></i> <span id="stat-count">0</span> câu</div>
-    <div class="stat-badge time"><i class="fa-regular fa-clock"></i> <span id="stat-time">0</span> phút làm bài</div>
+<div class="settings-bar" id="settingsBar" style="display:none;">
+    <div class="sg">
+        <label><i class="fa-solid fa-list-check"></i> Số câu:</label>
+        <select id="sel-num"></select>
+    </div>
+    <div class="sg">
+        <label><i class="fa-regular fa-clock"></i> Thời gian:</label>
+        <input type="number" id="sel-time" value="60" min="5" max="300"> phút
+    </div>
+    <div class="stat-badge" id="stat-badge">0 câu trong NHCH</div>
 </div>
 
 <div id="loadingArea"><div class="state-msg"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải đề thi...</div></div>
@@ -147,7 +157,7 @@
         </div>
         <p id="r-text" style="color:var(--text-gray);margin-bottom:20px;font-size:.9rem"></p>
         <div class="modal-btns">
-            <button class="btn-new" style="flex:1;justify-content:center;padding:11px" onclick="restartExam()"><i class="fa-solid fa-rotate-right"></i> Làm lại</button>
+            <button class="btn-new" style="flex:1;justify-content:center;padding:11px" onclick="reloadExam()"><i class="fa-solid fa-shuffle"></i> Đề mới</button>
             <button class="btn-submit" style="flex:1;justify-content:center;padding:11px" onclick="closeModal()"><i class="fa-solid fa-eye"></i> Xem đáp án</button>
         </div>
     </div>
@@ -167,12 +177,12 @@ function escapeHtml(s){
 }
 function showState(html){
     document.getElementById('loadingArea').innerHTML = `<div class="state-msg">${html}</div>`;
-    document.getElementById('infoBar').style.display = 'none';
+    document.getElementById('settingsBar').style.display = 'none';
     document.getElementById('mainLayout').style.display = 'none';
 }
 function shuffle(a){ for (let i=a.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
-let baseQuestions = [];   // dữ liệu gốc lấy từ Supabase, không đổi giữa các lần làm lại
+let baseQuestions = [];   // dữ liệu gốc lấy từ Supabase, không đổi giữa các lần tạo đề mới
 let exam = [];             // bản đã xáo cho lượt làm hiện tại
 let submitted = false, timeLeft = 3600, timerID = null, answered = 0, examMinutes = 60;
 
@@ -214,23 +224,41 @@ async function init(){
         q: r.content, opts: r.options, ci: r.correct_idx, ex: r.explanation || ''
     }));
 
-    // Thời gian làm bài: ưu tiên số phút ghi trong ghi chú của chương (vd "60 phút"),
+    // Thời gian làm bài mặc định: ưu tiên số phút ghi trong ghi chú của chương (vd "60 phút"),
     // nếu không có thì ước lượng ~1.5 phút/câu, tối thiểu 15 phút.
     examMinutes = parseNoteMinutes(chapRow.note) || Math.max(15, Math.round(baseQuestions.length * 1.5));
 
-    document.getElementById('stat-count').textContent = baseQuestions.length;
-    document.getElementById('stat-time').textContent = examMinutes;
-    document.getElementById('infoBar').style.display = 'flex';
+    setupSettingsBar();
+    document.getElementById('settingsBar').style.display = 'flex';
     document.getElementById('mainLayout').style.display = 'flex';
     document.getElementById('loadingArea').innerHTML = '';
 
-    startExam();
+    generateExam();
 }
 
 function parseNoteMinutes(note){
     if (!note) return null;
     const m = String(note).match(/(\d+)\s*ph/i);
     return m ? parseInt(m[1], 10) : null;
+}
+
+// Xây danh sách lựa chọn "Số câu" và giá trị mặc định "Thời gian" dựa trên NHCH thực tế
+function setupSettingsBar(){
+    const total = baseQuestions.length;
+    const selNum = document.getElementById('sel-num');
+    const candidates = [10, 20, 30, 40, 60, 80, 100];
+    let opts = candidates.filter(n => n < total);
+    opts.push(total);
+    selNum.innerHTML = opts.map(n =>
+        `<option value="${n}"${n===total ? ' selected' : ''}>${n === total ? 'Tất cả' : n + ' câu'} (${n} câu)</option>`
+    ).join('');
+    // nếu có nhiều lựa chọn, mặc định chọn mốc gần 40 câu (hoặc tất cả nếu ít hơn)
+    if (opts.length > 1){
+        const preferred = opts.includes(40) ? 40 : total;
+        selNum.value = preferred;
+    }
+    document.getElementById('sel-time').value = examMinutes;
+    document.getElementById('stat-badge').textContent = total + ' câu trong NHCH';
 }
 
 function shuffleOptions(q){
@@ -241,13 +269,17 @@ function shuffleOptions(q){
     return { q: q.q, opts, ci, ex: q.ex };
 }
 
-function startExam(){
+function generateExam(){
+    const n = Math.min(+document.getElementById('sel-num').value || baseQuestions.length, baseQuestions.length);
+    const mins = +document.getElementById('sel-time').value || examMinutes;
+
     let pool = baseQuestions.slice();
     shuffle(pool);
-    exam = pool.map(shuffleOptions);
+    exam = pool.slice(0, n).map(shuffleOptions);
+
     submitted = false; answered = 0;
     clearInterval(timerID);
-    timeLeft = examMinutes * 60;
+    timeLeft = mins * 60;
     updateTimerDisp();
     document.getElementById('timer-wrap').classList.remove('warn');
     timerID = setInterval(() => {
@@ -332,10 +364,10 @@ function submitExam(){
 }
 
 function closeModal(){ document.getElementById('modal').classList.remove('open'); window.scrollTo({top:0, behavior:'smooth'}); }
-function restartExam(){
-    if (submitted || confirm('Làm lại sẽ mất kết quả hiện tại. Tiếp tục?')){
+function reloadExam(){
+    if (submitted || confirm('Tạo đề mới sẽ mất kết quả hiện tại. Tiếp tục?')){
         document.getElementById('modal').classList.remove('open');
-        startExam();
+        generateExam();
         window.scrollTo({top:0, behavior:'smooth'});
     }
 }

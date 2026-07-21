@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-J2P8ECB8TL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-J2P8ECB8TL');
+</script>
+<script>
+    try{
+        var savedTheme = localStorage.getItem('sng-theme');
+        if(savedTheme === 'dark' || savedTheme === 'light'){
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+            // Chưa từng chọn thủ công -> theo giao diện hệ thống
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    }catch(e){}
+</script>
+<title>SNG EDU — Không gian tri thức cộng đồng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    :root{
+        --bg:        #f5f7fb;
+        --card:      #ffffff;
+        --line:      #e8eaf1;
+        --ink:       #1f2433;
+        --ink-soft:  #6b7180;
+        --ink-mute:  #9aa0b1;
+        --green:     #17b26a;
+        --green-bg:  #e7f9f0;
+        --amber:     #f5a524;
+        --amber-bg:  #fef3e0;
+        --brand:     #4f6bff;
+        --brand-bg:  #eef1ff;
+        --shadow:    0 1px 2px rgba(20,22,40,.04), 0 8px 24px -12px rgba(20,22,40,.08);
+        --shadow-hov:0 4px 10px rgba(20,22,40,.05), 0 20px 40px -16px rgba(20,22,40,.16);
+    }
+    html[data-theme="dark"]{
+        --bg:        #14151c;
+        --card:      #1c1e28;
+        --line:      #2c2f3c;
+        --ink:       #f0f1f6;
+        --ink-soft:  #a2a7ba;
+        --ink-mute:  #6f7488;
+        --green:     #2ed392;
+        --green-bg:  #163a2c;
+        --amber:     #ffbd4a;
+        --amber-bg:  #3a2e12;
+        --brand:     #7b93ff;
+        --brand-bg:  #232a4d;
+        --shadow:    0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
+        --shadow-hov:0 4px 10px rgba(0,0,0,.25), 0 20px 40px -16px rgba(0,0,0,.6);
+    }
+    html{ transition: background .25s ease; }
+    body, .sidebar, .topbar, .card, .stat, .quick-tile, .empty-state, .hero-card{
+        transition: background .25s ease, border-color .25s ease, color .25s ease, box-shadow .25s ease;
+    }
+    *{ margin:0; padding:0; box-sizing:border-box; }
+    body{
+        background: var(--bg);
+        color: var(--ink);
+        font-family:'Be Vietnam Pro', sans-serif;
+        min-height:100vh;
+    }
+    @media (prefers-reduced-motion: reduce){
+        *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+    }
+
+    /* ---------------- layout shell ---------------- */
+    .shell{ display:flex; min-height:100vh; }
+
+    /* ---------------- sidebar ---------------- */
+    .sidebar{
+        width:230px; flex-shrink:0;
+        background:var(--card); border-right:1px solid var(--line);
+        display:flex; flex-direction:column;
+        position:sticky; top:0; height:100vh;
+    }
+    .side-logo{ display:flex; align-items:center; gap:10px; padding:22px 20px 18px; }
+    .side-logo .mark{
+        width:34px; height:34px; border-radius:10px;
+        background:linear-gradient(135deg, var(--brand), #7b8fff);
+        display:flex; align-items:center; justify-content:center;
+        color:#fff; font-weight:800; font-size:.95rem;
+    }
+    .side-logo .name{ font-weight:800; font-size:1rem; }
+
+    .side-nav{ flex:1; padding:6px 12px; display:flex; flex-direction:column; gap:2px; }
+    .side-link{
+        display:flex; align-items:center; gap:12px;
+        padding:11px 12px; border-radius:12px;
+        color:var(--ink-soft); text-decoration:none; font-weight:600; font-size:.9rem;
+        cursor:pointer; transition:background .18s ease, color .18s ease;
+    }
+    .side-link i{ width:18px; text-align:center; font-size:.95rem; }
+    .side-link:hover{ background:#f2f3f8; color:var(--ink); }
+    .side-link.active{ background:var(--brand-bg); color:var(--brand); }
+
+    .side-foot{ padding:14px 12px 18px; border-top:1px solid var(--line); }
+    .side-user{
+        display:flex; align-items:center; gap:10px;
+        padding:10px 10px; border-radius:12px; cursor:pointer;
+        transition:background .18s ease;
+    }
+    .side-user:hover{ background:#f2f3f8; }
+    .side-avatar{
+        width:36px; height:36px; border-radius:50%;
+        background:linear-gradient(135deg, #ffb37a, #ff7a9c);
+        display:flex; align-items:center; justify-content:center;
+        color:#fff; font-weight:800; font-size:.85rem; flex-shrink:0;
+    }
+    .side-user .u-name{ font-size:.86rem; font-weight:700; line-height:1.3; }
+    .side-user .u-sub{ font-size:.74rem; color:var(--ink-mute); }
+
+    .main{ flex:1; min-width:0; display:flex; flex-direction:column; min-height:100vh; }
+
+    /* ---------------- topbar ---------------- */
+    .topbar{
+        display:flex; align-items:center; justify-content:space-between;
+        padding:18px 32px; background:var(--card); border-bottom:1px solid var(--line);
+        position:sticky; top:0; z-index:10;
+    }
+    .topbar-title{ font-weight:700; font-size:1.02rem; }
+    .topbar-title span{ color:var(--ink-mute); font-weight:500; font-size:.82rem; display:block; margin-top:-2px; }
+    .topbar-right{ display:flex; align-items:center; gap:14px; }
+    .topbar .avatar-btn{
+        width:38px; height:38px; border-radius:50%;
+        background:linear-gradient(135deg, #ffb37a, #ff7a9c);
+        display:flex; align-items:center; justify-content:center;
+        color:#fff; font-weight:800; font-size:.88rem; cursor:pointer; flex-shrink:0;
+        border:2px solid var(--card); box-shadow:0 0 0 1px var(--line);
+        position:relative;
+    }
+    .avatar-btn .online-dot, .side-avatar .online-dot{
+        position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:50%;
+        background:var(--green); border:2px solid var(--card);
+    }
+    .side-avatar{ position:relative; }
+
+    .theme-toggle{
+        width:38px; height:38px; border-radius:50%;
+        border:1px solid var(--line); background:var(--card); cursor:pointer;
+        display:flex; align-items:center; justify-content:center;
+        color:var(--ink-soft); font-size:.92rem;
+        transition:background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .theme-toggle:hover{ background:var(--brand-bg); color:var(--brand); }
+    .theme-toggle .fa-sun{ display:none; }
+    html[data-theme="dark"] .theme-toggle .fa-sun{ display:inline; }
+    html[data-theme="dark"] .theme-toggle .fa-moon{ display:none; }
+    .topbar .pill{
+        display:flex; align-items:center; gap:8px;
+        background:var(--green-bg); color:var(--green);
+        font-weight:600; font-size:.82rem;
+        padding:8px 14px; border-radius:999px;
+    }
+
+    .wrap{ max-width:1180px; width:100%; margin:0 auto; padding:36px 28px 60px; flex:1; display:flex; flex-direction:column; }
+
+    /* ---------------- hero row ---------------- */
+    .hero{
+        display:grid; grid-template-columns: 1fr; gap:20px;
+        margin-bottom:34px;
+    }
+    .hero-card{
+        background: linear-gradient(120deg, #eef1ff 0%, #f7f4ff 55%, #eefaf3 100%);
+        border:1px solid var(--line);
+        border-radius:24px; padding:38px 40px;
+        display:flex; align-items:center; gap:32px;
+        position:relative; overflow:hidden;
+    }
+    .hero-card::before{
+        content:''; position:absolute; top:-60px; right:-60px; width:220px; height:220px; border-radius:50%;
+        background:radial-gradient(circle, rgba(79,107,255,.14) 0%, rgba(79,107,255,0) 70%);
+    }
+    html[data-theme="dark"] .hero-card{
+        background: linear-gradient(120deg, #1d2140 0%, #201c38 55%, #142a22 100%);
+    }
+    html[data-theme="dark"] .hero-card::before{
+        background:radial-gradient(circle, rgba(123,147,255,.18) 0%, rgba(123,147,255,0) 70%);
+    }
+    .hero-text{ flex:1; min-width:0; position:relative; z-index:1; }
+    .hero-illustration{ flex-shrink:0; width:172px; height:172px; filter:drop-shadow(0 14px 22px rgba(30,25,60,.14)); position:relative; z-index:1; }
+    .hero-eyebrow{
+        display:inline-flex; align-items:center; gap:7px;
+        font-size:.74rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+        color:var(--brand); margin-bottom:14px;
+        background:rgba(79,107,255,.09); padding:6px 14px 6px 10px; border-radius:999px;
+    }
+    .hero-eyebrow::before{ content:''; width:6px; height:6px; border-radius:50%; background:var(--brand); flex-shrink:0; }
+    .hero-card h1{ font-size:2rem; font-weight:800; line-height:1.24; margin-bottom:12px; max-width:460px; letter-spacing:-.01em; }
+    .hero-card p{ color:var(--ink-soft); font-size:.94rem; line-height:1.65; max-width:430px; margin-bottom:20px; }
+
+    .avatar-group{
+        display:inline-flex; align-items:center; gap:10px;
+        background:var(--card); border:1px solid var(--line); border-radius:999px;
+        padding:6px 16px 6px 6px; box-shadow:var(--shadow);
+    }
+    .avatar-stack{ display:flex; }
+    .avatar-stack .mini-avt{
+        width:28px; height:28px; border-radius:50%; border:2px solid var(--card);
+        display:flex; align-items:center; justify-content:center; color:#fff; font-size:.68rem; font-weight:800;
+        margin-left:-8px;
+    }
+    .avatar-stack .mini-avt:first-child{ margin-left:0; }
+    .avatar-group .ag-text{ font-size:.78rem; color:var(--ink-soft); font-weight:500; }
+    .avatar-group .ag-text b{ color:var(--ink); font-weight:700; }
+
+    .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .stat{
+        background:var(--card); border:1px solid var(--line); border-radius:16px;
+        padding:18px; display:flex; flex-direction:column; justify-content:center; align-items:center;
+        box-shadow: var(--shadow);
+    }
+    .stat .num{ font-size:1.6rem; font-weight:800; }
+    .stat .num.brand{ color:var(--brand); }
+    .stat .num.green{ color:var(--green); }
+    .stat .num.amber{ color:var(--amber); }
+    .stat .lbl{ font-size:.78rem; color:var(--ink-mute); margin-top:2px; text-align:center; }
+
+    /* ---------------- quick access tiles ---------------- */
+    .quick-grid{ display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; margin-bottom:34px; }
+    .quick-tile{
+        background:var(--card); border:1px solid var(--line); border-radius:16px;
+        padding:16px; display:flex; align-items:center; gap:12px;
+        cursor:pointer; box-shadow:var(--shadow);
+        transition:transform .2s ease, box-shadow .2s ease;
+    }
+    .quick-tile:hover{ transform:translateY(-3px); box-shadow:var(--shadow-hov); }
+    .q-icon{
+        width:40px; height:40px; border-radius:11px; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center; font-size:1.05rem;
+    }
+    .q-title{ font-size:.88rem; font-weight:700; }
+    .q-sub{ font-size:.74rem; color:var(--ink-mute); margin-top:1px; }
+    .q-arrow{ margin-left:auto; color:var(--ink-mute); font-size:.8rem; }
+
+    /* ---------------- empty state ---------------- */
+    .empty-state{
+        background:var(--card); border:1px dashed var(--line); border-radius:18px;
+        padding:60px 24px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px;
+    }
+    .empty-state.small{ padding:32px 20px; }
+    .empty-icon{
+        width:56px; height:56px; border-radius:16px;
+        display:flex; align-items:center; justify-content:center; font-size:1.4rem; margin-bottom:8px;
+    }
+    .empty-state.small .empty-icon{ width:46px; height:46px; font-size:1.15rem; }
+    .empty-title{ font-weight:700; font-size:1.05rem; }
+    .empty-sub{ color:var(--ink-mute); font-size:.88rem; max-width:340px; }
+    .empty-cta{
+        margin-top:14px; border:none; cursor:pointer;
+        background:var(--brand); color:#fff; font-family:inherit; font-weight:600; font-size:.86rem;
+        padding:11px 20px; border-radius:12px; display:inline-flex; align-items:center; gap:8px;
+        transition:filter .2s ease;
+    }
+    .empty-cta:hover{ filter:brightness(1.08); }
+
+    /* ---------------- filter pills ---------------- */
+    .pill-row{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px; }
+    .filter-pill{
+        border:1.5px solid var(--line); background:var(--card); color:var(--ink-soft);
+        font-family:inherit; font-weight:700; font-size:.86rem;
+        padding:10px 20px; border-radius:999px; cursor:pointer;
+        transition:background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .filter-pill:hover{ border-color:var(--green); color:var(--green); }
+    .filter-pill.active{
+        background:linear-gradient(135deg, var(--green), #12925a);
+        border-color:transparent; color:#fff;
+    }
+
+    /* ---------------- document categories ---------------- */
+    .doc-cat{ margin-bottom:22px; }
+    .doc-cat-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .doc-cat-name{ display:flex; align-items:center; gap:8px; font-weight:700; font-size:.94rem; }
+    .doc-count{ font-size:.78rem; color:var(--ink-mute); }
+
+    /* ---------------- section heading ---------------- */
+    .sec-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; }
+    .sec-head h2{ font-size:1.15rem; font-weight:700; }
+    .sec-head span{ font-size:.82rem; color:var(--ink-mute); }
+
+    /* ---------------- cards ---------------- */
+    .grid{
+        display:grid; grid-template-columns:repeat(5, 1fr); gap:16px;
+        margin-bottom:36px;
+    }
+    .card{
+        background:var(--card); border:1px solid var(--line); border-radius:18px;
+        padding:20px; text-decoration:none; color:var(--ink);
+        display:flex; flex-direction:column; gap:14px;
+        box-shadow: var(--shadow);
+        transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+        cursor:pointer; position:relative;
+    }
+    .card:hover, .card:focus-visible{ transform:translateY(-4px); box-shadow:var(--shadow-hov); border-color:#dfe2ee; }
+    .card.locked{ opacity:.88; }
+
+    .card-top{ display:flex; align-items:flex-start; justify-content:space-between; }
+    .icon-chip{
+        width:44px; height:44px; border-radius:12px;
+        display:flex; align-items:center; justify-content:center;
+        font-size:1.15rem;
+    }
+    .num-tag{ font-size:.72rem; color:var(--ink-mute); font-weight:600; }
+
+    .card-title{ font-size:.98rem; font-weight:700; line-height:1.35; min-height:2.7em; }
+
+    .badge-row{ display:flex; align-items:center; gap:6px; font-size:.78rem; color:var(--ink-soft); }
+    .badge-row i{ font-size:.72rem; }
+
+    .status-bar{ height:6px; border-radius:999px; background:#eef0f5; overflow:hidden; }
+    .status-bar i{ display:block; height:100%; border-radius:999px; }
+    .status-text{ display:flex; align-items:center; justify-content:space-between; font-size:.76rem; font-weight:600; }
+
+    .card-arrow{
+        position:absolute; top:20px; right:20px; width:26px; height:26px; border-radius:50%;
+        display:flex; align-items:center; justify-content:center;
+        background:#f2f3f8; color:var(--ink-mute); font-size:.72rem;
+        opacity:0; transform:translateX(-4px);
+        transition:opacity .2s ease, transform .2s ease, background .2s ease, color .2s ease;
+    }
+    .card:hover .card-arrow{ opacity:1; transform:translateX(0); }
+
+    /* subject accents */
+    .c-pldc .icon-chip{ background:var(--brand-bg); color:var(--brand); }
+    .c-th   .icon-chip{ background:#f1ecff; color:#7c5cfc; }
+    .c-ktct .icon-chip{ background:var(--green-bg); color:var(--green); }
+    .c-cnxh .icon-chip{ background:#ffece8; color:#e4572e; }
+    .c-lsd  .icon-chip{ background:var(--amber-bg); color:var(--amber); }
+    .c-tthcm .icon-chip{ background:#fde8e8; color:#d92d20; }
+
+    .card:hover .card-arrow{ background:var(--brand); color:#fff; }
+    .c-th:hover .card-arrow{ background:#7c5cfc; }
+    .c-ktct:hover .card-arrow{ background:var(--green); }
+
+    /* ---------------- footer ---------------- */
+    footer{
+        text-align:center; color:var(--ink-mute); font-size:.82rem;
+        padding-top:20px; border-top:1px solid var(--line);
+        margin-top:auto;
+    }
+
+    /* ---------------- toast ---------------- */
+    .toast{
+        position:fixed; left:50%; bottom:30px; transform:translate(-50%, 14px);
+        background:#20222c; color:#fff; font-size:.88rem;
+        padding:12px 20px; border-radius:12px;
+        display:flex; align-items:center; gap:10px;
+        box-shadow:0 16px 40px -14px rgba(0,0,0,.4);
+        opacity:0; pointer-events:none; z-index:50;
+        transition:opacity .25s ease, transform .25s ease;
+    }
+    .toast.show{ opacity:1; transform:translate(-50%, 0); }
+    .toast i{ color:var(--amber); }
+    .toast-btn{
+        margin-left:6px; flex-shrink:0; background:rgba(255,255,255,.14); color:#fff;
+        border:1px solid rgba(255,255,255,.28); border-radius:8px;
+        font-size:.78rem; font-weight:600; padding:6px 12px; cursor:pointer;
+        transition:background .15s ease;
+    }
+    .toast-btn:hover{ background:rgba(255,255,255,.24); }
+    .toast-btn.done{ background:var(--green); border-color:var(--green); cursor:default; }
+
+    /* ---------------- responsive ---------------- */
+    @media (max-width: 860px){
+        .sidebar{ display:none; }
+    }
+    @media (max-width: 1020px){
+        .grid{ grid-template-columns:repeat(3, 1fr); }
+        .hero{ grid-template-columns:1fr; }
+        .stat-grid{ grid-template-columns:repeat(4, 1fr); }
+        .quick-grid{ grid-template-columns:repeat(2, 1fr); }
+    }
+    @media (max-width: 640px){
+        .grid{ grid-template-columns:repeat(2, 1fr); }
+        .stat-grid{ grid-template-columns:repeat(2, 1fr); }
+        .topbar{ padding:14px 18px; }
+        .wrap{ padding:24px 16px 48px; }
+        .hero-illustration{ display:none; }
+
+        .quick-grid{ grid-template-columns:repeat(2, 1fr); gap:10px; }
+        .quick-tile{
+            flex-direction:column; align-items:flex-start; gap:10px;
+            padding:14px; text-align:left;
+        }
+        .quick-tile .q-arrow{ display:none; }
+        .q-icon{ width:38px; height:38px; }
+        .q-title{ font-size:.84rem; line-height:1.25; }
+        .q-sub{ font-size:.7rem; }
+    }
+
+    /* ---------------- faq ---------------- */
+    .faq-item{
+        background:var(--card); border:1px solid var(--line); border-radius:14px;
+        padding:16px 18px;
+    }
+    .faq-item summary{
+        cursor:pointer; font-weight:700; font-size:.92rem; list-style:none;
+        display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .faq-item summary::-webkit-details-marker{ display:none; }
+    .faq-item summary::after{
+        content:'+'; color:var(--ink-mute); font-size:1.2rem; font-weight:400; flex-shrink:0;
+        transition:transform .2s ease;
+    }
+    .faq-item[open] summary::after{ content:'−'; }
+    .faq-item p{ color:var(--ink-mute); font-size:.85rem; line-height:1.6; margin-top:10px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+    <aside class="sidebar">
+        <a class="side-logo" href="#" data-go="home" style="text-decoration:none; color:inherit; cursor:pointer;">
+            <div class="mark">S</div>
+            <div class="name">SNG EDU</div>
+        </a>
+        <nav class="side-nav">
+            <a class="side-link active" href="#" data-tab="home"><i class="fa-solid fa-house"></i>Trang chủ</a>
+            <a class="side-link" href="#" data-tab="doc"><i class="fa-solid fa-folder-open"></i>Tài liệu</a>
+            <a class="side-link" href="#" data-tab="quiz"><i class="fa-solid fa-list-check"></i>Trắc nghiệm</a>
+            <a class="side-link" href="#" data-tab="tool"><i class="fa-solid fa-toolbox"></i>Công cụ</a>
+            <a class="side-link" href="#" data-tab="product"><i class="fa-solid fa-bag-shopping"></i>Sản phẩm</a>
+            <a class="side-link" href="#" data-tab="support"><i class="fa-solid fa-headset"></i>Hỗ trợ</a>
+        </nav>
+        <div class="side-foot">
+            <div class="side-user">
+                <div class="side-avatar">K<span class="online-dot"></span></div>
+                <div>
+                    <div class="u-name">Khách</div>
+                    <div class="u-sub">Nhấn để xem hồ sơ</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main">
+
+        <div class="topbar">
+            <div class="topbar-title">Trang chủ</div>
+            <div class="topbar-right">
+                <div class="pill"><i class="fa-solid fa-fire"></i> Chuỗi ôn tập</div>
+                <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
+                    <i class="fa-solid fa-moon"></i>
+                    <i class="fa-solid fa-sun"></i>
+                </button>
+                <div class="avatar-btn">K<span class="online-dot"></span></div>
+            </div>
+        </div>
+
+        <div class="wrap">
+
+    <!-- ============ TAB: TRANG CHỦ ============ -->
+    <section class="tab-panel" id="panel-home">
+
+        <div class="hero">
+            <div class="hero-card">
+                <div class="hero-text">
+                    <div class="hero-eyebrow">SNG EDU - Không gian tri thức cộng đồng</div>
+                    <h1>Mở kho tài liệu, bắt đầu ôn tập ngay hôm nay</h1>
+                    <p>Nơi tri thức được chọn lọc và sẻ chia — từng tài liệu đều đến từ cộng đồng, được sàng lọc kỹ để đảm bảo chất lượng. Không chỉ là kho lưu trữ, đây là không gian để bạn kết nối, học hỏi và phát triển bản thân mỗi ngày. 📚 Giao diện gọn gàng, trực quan, giúp bạn tìm đúng tài liệu cần trong tích tắc — nhanh, mượt và hiệu quả. 🚀</p>
+                    <div class="avatar-group">
+                        <div class="avatar-stack">
+                            <div class="mini-avt" style="background:#4f6bff">H</div>
+                            <div class="mini-avt" style="background:#7c5cfc">L</div>
+                            <div class="mini-avt" style="background:#17b26a">M</div>
+                            <div class="mini-avt" style="background:#f5a524">T</div>
+                        </div>
+                        <div class="ag-text"><b>1.240 bạn</b> đang ôn tập tuần này</div>
+                    </div>
+                </div>
+                <svg class="hero-illustration" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="100" cy="176" rx="72" ry="10" fill="#1f2433" opacity=".06"/>
+                    <rect x="34" y="128" width="132" height="20" rx="6" fill="#4f6bff" transform="rotate(-2 100 138)"/>
+                    <rect x="46" y="106" width="112" height="20" rx="6" fill="#7c5cfc" transform="rotate(1.5 100 116)"/>
+                    <rect x="40" y="84"  width="118" height="20" rx="6" fill="#17b26a" transform="rotate(-1.5 100 94)"/>
+                    <g transform="translate(100 55)">
+                        <polygon points="0,-16 40,0 0,16 -40,0" fill="#1f2433"/>
+                        <polygon points="0,-16 40,0 0,4 -40,0" fill="#333a4d"/>
+                        <circle cx="0" cy="0" r="6" fill="#f5a524"/>
+                        <line x1="30" y1="-5" x2="30" y2="16" stroke="#f5a524" stroke-width="2.5" stroke-linecap="round"/>
+                        <circle cx="30" cy="18" r="3" fill="#f5a524"/>
+                    </g>
+                    <g transform="translate(150 96) rotate(18)">
+                        <rect x="-3" y="-30" width="6" height="42" rx="3" fill="#ffb37a"/>
+                        <polygon points="-3,12 3,12 0,24" fill="#e08a4f"/>
+                    </g>
+                    <circle cx="158" cy="52" r="16" fill="#fef3e0"/>
+                    <path d="M158 44 a8 8 0 1 1 -0.1 0 M154 60 h8" stroke="#f5a524" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="sec-head"><h2>Truy cập nhanh</h2></div>
+        <div class="quick-grid">
+            <div class="quick-tile" data-go="quiz">
+                <div class="q-icon" style="background:var(--brand-bg); color:var(--brand)"><i class="fa-solid fa-list-check"></i></div>
+                <div><div class="q-title">Ôn tập trắc nghiệm</div><div class="q-sub">Chọn học phần</div></div>
+                <i class="fa-solid fa-arrow-right q-arrow"></i>
+            </div>
+            <div class="quick-tile" data-go="doc">
+                <div class="q-icon" style="background:#f1ecff; color:#7c5cfc"><i class="fa-solid fa-folder-open"></i></div>
+                <div><div class="q-title">Tài liệu ôn thi</div><div class="q-sub">Tóm tắt &amp; đề cương</div></div>
+                <i class="fa-solid fa-arrow-right q-arrow"></i>
+            </div>
+            <div class="quick-tile" data-go="tool">
+                <div class="q-icon" style="background:var(--green-bg); color:var(--green)"><i class="fa-solid fa-toolbox"></i></div>
+                <div><div class="q-title">Công cụ hỗ trợ</div><div class="q-sub">Flashcard ôn tập</div></div>
+                <i class="fa-solid fa-arrow-right q-arrow"></i>
+            </div>
+            <div class="quick-tile" data-go="product">
+                <div class="q-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-bag-shopping"></i></div>
+                <div><div class="q-title">Sản phẩm</div><div class="q-sub">Gói nâng cấp</div></div>
+                <i class="fa-solid fa-arrow-right q-arrow"></i>
+            </div>
+            <div class="quick-tile" data-go="support">
+                <div class="q-icon" style="background:#e8f3ff; color:#0068ff"><i class="fa-solid fa-headset"></i></div>
+                <div><div class="q-title">Hỗ trợ</div><div class="q-sub">Zalo &amp; góp ý</div></div>
+                <i class="fa-solid fa-arrow-right q-arrow"></i>
+            </div>
+        </div>
+
+        <div class="sec-head" style="margin-top:8px"><h2>Học phần nổi bật</h2><span>6 học phần</span></div>
+        <div class="grid">
+            <a class="card locked c-pldc" href="#" data-locked="true" data-subject="pldc" data-subject-name="Pháp luật đại cương">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <div class="num-tag">01</div>
+                </div>
+                <div class="card-title">Pháp luật đại cương</div>
+                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
+                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
+                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
+            </a>
+            <a class="card c-th" href="TH/index.html">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip"><i class="fa-solid fa-brain"></i></div>
+                    <div class="num-tag">02</div>
+                </div>
+                <div class="card-title">Triết học Mác – Lênin</div>
+                <div class="badge-row"><i class="fa-solid fa-layer-group"></i> 560 câu hỏi</div>
+                <div class="status-bar"><i style="width:100%; background:#7c5cfc"></i></div>
+                <div class="status-text" style="color:#7c5cfc">Sẵn sàng ôn tập</div>
+            </a>
+            <a class="card c-ktct" href="KTCT/index.html">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip"><i class="fa-solid fa-coins"></i></div>
+                    <div class="num-tag">03</div>
+                </div>
+                <div class="card-title">Kinh tế chính trị Mác – Lênin</div>
+                <div class="badge-row"><i class="fa-solid fa-layer-group"></i> 560 câu hỏi</div>
+                <div class="status-bar"><i style="width:100%; background:var(--green)"></i></div>
+                <div class="status-text" style="color:var(--green)">Sẵn sàng ôn tập</div>
+            </a>
+            <a class="card c-cnxh" href="CNXH/index.html">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip"><i class="fa-solid fa-people-group"></i></div>
+                    <div class="num-tag">04</div>
+                </div>
+                <div class="card-title">Chủ nghĩa xã hội khoa học</div>
+                <div class="badge-row"><i class="fa-solid fa-layer-group"></i> 560 câu hỏi</div>
+                <div class="status-bar"><i style="width:100%; background:#e4572e"></i></div>
+                <div class="status-text" style="color:#e4572e">Sẵn sàng ôn tập</div>
+            </a>
+            <a class="card locked c-lsd" href="#" data-locked="true" data-subject="lsd" data-subject-name="Lịch sử Đảng Cộng sản">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip"><i class="fa-solid fa-landmark"></i></div>
+                    <div class="num-tag">05</div>
+                </div>
+                <div class="card-title">Lịch sử Đảng Cộng sản</div>
+                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
+                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
+                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
+            </a>
+            <a class="card locked c-tthcm" href="#" data-locked="true" data-subject="tthcm" data-subject-name="Tư tưởng Hồ Chí Minh">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip"><i class="fa-solid fa-star"></i></div>
+                    <div class="num-tag">06</div>
+                </div>
+                <div class="card-title">Tư tưởng Hồ Chí Minh</div>
+                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
+                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
+                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
+            </a>
+        </div>
+
+    </section>
+
+    <!-- ============ TAB: TRẮC NGHIỆM ============ -->
+    <section class="tab-panel" id="panel-quiz" style="display:none">
+
+        <div class="sec-head">
+            <h2>Học phần đại cương</h2>
+            <span>6 học phần</span>
+        </div>
+
+        <div class="grid">
+
+            <a class="card locked c-pldc" href="#" data-locked="true" data-subject="pldc" data-subject-name="Pháp luật đại cương">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <div class="num-tag">01</div>
+                </div>
+                <div class="card-title">Pháp luật đại cương</div>
+                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
+                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
+                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
+            </a>
+
+            <a class="card c-th" href="TH/index.html">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip"><i class="fa-solid fa-brain"></i></div>
+                    <div class="num-tag">02</div>
+                </div>
+                <div class="card-title">Triết học Mác – Lênin</div>
+                <div class="badge-row"><i class="fa-solid fa-layer-group"></i> 560 câu hỏi</div>
+                <div class="status-bar"><i style="width:100%; background:#7c5cfc"></i></div>
+                <div class="status-text" style="color:#7c5cfc">Sẵn sàng ôn tập</div>
+            </a>
+
+            <a class="card c-ktct" href="KTCT/index.html">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip"><i class="fa-solid fa-coins"></i></div>
+                    <div class="num-tag">03</div>
+                </div>
+                <div class="card-title">Kinh tế chính trị Mác – Lênin</div>
+                <div class="badge-row"><i class="fa-solid fa-layer-group"></i> 560 câu hỏi</div>
+                <div class="status-bar"><i style="width:100%; background:var(--green)"></i></div>
+                <div class="status-text" style="color:var(--green)">Sẵn sàng ôn tập</div>
+            </a>
+
+            <a class="card c-cnxh" href="CNXH/index.html">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip"><i class="fa-solid fa-people-group"></i></div>
+                    <div class="num-tag">04</div>
+                </div>
+                <div class="card-title">Chủ nghĩa xã hội khoa học</div>
+                <div class="badge-row"><i class="fa-solid fa-layer-group"></i> 560 câu hỏi</div>
+                <div class="status-bar"><i style="width:100%; background:#e4572e"></i></div>
+                <div class="status-text" style="color:#e4572e">Sẵn sàng ôn tập</div>
+            </a>
+
+            <a class="card locked c-lsd" href="#" data-locked="true" data-subject="lsd" data-subject-name="Lịch sử Đảng Cộng sản">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip"><i class="fa-solid fa-landmark"></i></div>
+                    <div class="num-tag">05</div>
+                </div>
+                <div class="card-title">Lịch sử Đảng Cộng sản</div>
+                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
+                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
+                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
+            </a>
+
+            <a class="card locked c-tthcm" href="#" data-locked="true" data-subject="tthcm" data-subject-name="Tư tưởng Hồ Chí Minh">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip"><i class="fa-solid fa-star"></i></div>
+                    <div class="num-tag">06</div>
+                </div>
+                <div class="card-title">Tư tưởng Hồ Chí Minh</div>
+                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
+                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
+                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- ============ TAB: TÀI LIỆU ============ -->
+    <section class="tab-panel" id="panel-doc" style="display:none">
+        <div class="sec-head"><h2>Tài liệu</h2><span>2 loại</span></div>
+
+        <div class="pill-row">
+            <button class="filter-pill active" data-filter="all" type="button">Tất cả</button>
+            <button class="filter-pill" data-filter="free" type="button">Miễn phí</button>
+            <button class="filter-pill" data-filter="paid" type="button">Trả phí</button>
+        </div>
+
+        <div class="doc-cat" data-cat="free">
+            <div class="doc-cat-head">
+                <div class="doc-cat-name"><i class="fa-solid fa-gift" style="color:var(--green)"></i> Tài liệu miễn phí</div>
+                <span class="doc-count">0 tài liệu</span>
+            </div>
+            <div class="empty-state small">
+                <div class="empty-icon" style="background:var(--green-bg); color:var(--green)"><i class="fa-solid fa-folder-open"></i></div>
+                <div class="empty-title">Chưa có tài liệu miễn phí</div>
+            </div>
+        </div>
+
+        <div class="doc-cat" data-cat="paid">
+            <div class="doc-cat-head">
+                <div class="doc-cat-name"><i class="fa-solid fa-lock" style="color:var(--amber)"></i> Tài liệu trả phí</div>
+                <span class="doc-count">0 tài liệu</span>
+            </div>
+            <div class="empty-state small">
+                <div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-crown"></i></div>
+                <div class="empty-title">Chưa có tài liệu trả phí</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ TAB: CÔNG CỤ ============ -->
+    <section class="tab-panel" id="panel-tool" style="display:none">
+        <div class="sec-head"><h2>Công cụ</h2></div>
+        <div class="grid">
+            <a class="card locked" href="#" data-locked="true" data-subject="tool-dethi" data-subject-name="Đề thi ngẫu nhiên">
+                <div class="card-top"><div class="icon-chip" style="background:var(--green-bg); color:var(--green)"><i class="fa-solid fa-shuffle"></i></div></div>
+                <div class="card-title">Đề thi ngẫu nhiên</div>
+                <div class="badge-row"><i class="fa-regular fa-clock"></i> Sắp ra mắt</div>
+            </a>
+            <a class="card locked" href="#" data-locked="true" data-subject="tool-flashcard" data-subject-name="Flashcard ôn nhanh">
+                <div class="card-top"><div class="icon-chip" style="background:var(--brand-bg); color:var(--brand)"><i class="fa-solid fa-clone"></i></div></div>
+                <div class="card-title">Flashcard ôn nhanh</div>
+                <div class="badge-row"><i class="fa-regular fa-clock"></i> Sắp ra mắt</div>
+            </a>
+            <a class="card locked" href="#" data-locked="true" data-subject="tool-thongke" data-subject-name="Thống kê kết quả">
+                <div class="card-top"><div class="icon-chip" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-chart-line"></i></div></div>
+                <div class="card-title">Thống kê kết quả</div>
+                <div class="badge-row"><i class="fa-regular fa-clock"></i> Sắp ra mắt</div>
+            </a>
+        </div>
+    </section>
+
+    <!-- ============ TAB: SẢN PHẨM ============ -->
+    <section class="tab-panel" id="panel-product" style="display:none">
+        <div class="sec-head"><h2>Sản phẩm</h2></div>
+        <div class="empty-state">
+            <div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-bag-shopping"></i></div>
+            <div class="empty-title">Chưa có sản phẩm nào</div>
+            <div class="empty-sub">Gói tài liệu, khoá ôn thi nâng cao sẽ sớm ra mắt tại đây.</div>
+        </div>
+    </section>
+
+    <!-- ============ TAB: HỖ TRỢ ============ -->
+    <section class="tab-panel" id="panel-support" style="display:none">
+        <div class="sec-head"><h2>Hỗ trợ</h2></div>
+
+        <div style="background:var(--brand-bg); border:1px solid var(--line); border-radius:20px; padding:26px 28px; margin-bottom:22px;">
+            <div style="font-weight:800; font-size:1.1rem; margin-bottom:6px;">Kẹt chỗ nào, nhắn liền chỗ đó 👋</div>
+            <div style="color:var(--ink-mute); font-size:.9rem; max-width:600px; line-height:1.6;">Báo lỗi câu hỏi, góp ý tính năng, hay chỉ đơn giản chưa hiểu một đáp án nào đó trong đề — đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.</div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:repeat(2, 1fr)">
+            <a class="card" href="https://zalo.me/0825160035" target="_blank" rel="noopener">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip" style="background:#e8f3ff; color:#0068ff"><i class="fa-solid fa-comment-dots"></i></div>
+                </div>
+                <div class="card-title">Nhắn Zalo</div>
+                <div class="badge-row"><i class="fa-solid fa-phone"></i> Nhấn để mở Zalo chat</div>
+                <div class="status-text" style="color:#0068ff">Phản hồi trong ngày</div>
+            </a>
+            <a class="card" href="https://forms.gle/dLLMdpZttmZWYmuRA" target="_blank" rel="noopener">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip" style="background:var(--green-bg); color:var(--green)"><i class="fa-solid fa-pen-to-square"></i></div>
+                </div>
+                <div class="card-title">Gửi biểu mẫu góp ý</div>
+                <div class="badge-row"><i class="fa-solid fa-file-lines"></i> Google Form</div>
+                <div class="status-text" style="color:var(--green)">Báo lỗi &amp; đề xuất</div>
+            </a>
+        </div>
+
+        <div class="sec-head" style="margin-top:30px"><h2>Câu hỏi thường gặp</h2></div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            <details class="faq-item">
+                <summary>Tài liệu và trắc nghiệm trên SNG EDU có mất phí không?</summary>
+                <p>Toàn bộ học phần đang mở đều miễn phí 100%. Các gói nâng cao (nếu có trong tương lai) sẽ được thông báo rõ trước khi ra mắt, không tự động trừ phí.</p>
+            </details>
+            <details class="faq-item">
+                <summary>Phát hiện câu hỏi hoặc đáp án bị sai thì báo ở đâu?</summary>
+                <p>Gửi qua Zalo kèm ảnh chụp câu hỏi, hoặc điền vào Form góp ý ở trên — đội ngũ sẽ kiểm tra và cập nhật trong thời gian sớm nhất.</p>
+            </details>
+            <details class="faq-item">
+                <summary>Khi nào các học phần "Sắp ra mắt" sẽ mở?</summary>
+                <p>Bạn có thể bấm nút "Quan tâm" ngay trên thẻ học phần đó — hệ thống sẽ ghi nhận và ưu tiên biên soạn theo mức độ quan tâm.</p>
+            </details>
+        </div>
+    </section>
+
+    <footer>SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải</footer>
+
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">
+    <i class="fa-solid fa-hourglass-half"></i>
+    <span id="toastMsg">Học phần này đang được biên soạn, quay lại sau nhé.</span>
+    <button class="toast-btn" id="toastBtn" type="button">Quan tâm</button>
+</div>
+
+<script>
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMsg');
+    const toastBtn = document.getElementById('toastBtn');
+    let toastTimer;
+    let interested = [];
+    try{ interested = JSON.parse(localStorage.getItem('sng-interested') || '[]'); }catch(e){ interested = []; }
+
+    function showToast(subjectId, subjectName){
+        const label = subjectName ? `“${subjectName}” đang được biên soạn, quay lại sau nhé.` : 'Mục này đang được biên soạn, quay lại sau nhé.';
+        toastMsg.textContent = label;
+
+        if(subjectId && interested.includes(subjectId)){
+            toastBtn.textContent = 'Đã quan tâm ✓';
+            toastBtn.classList.add('done');
+        }else{
+            toastBtn.textContent = 'Quan tâm';
+            toastBtn.classList.remove('done');
+        }
+        toastBtn.dataset.subject = subjectId || '';
+
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(()=> toast.classList.remove('show'), 3600);
+    }
+
+    toastBtn.addEventListener('click', ()=>{
+        const id = toastBtn.dataset.subject;
+        if(!id || toastBtn.classList.contains('done')) return;
+        interested.push(id);
+        try{ localStorage.setItem('sng-interested', JSON.stringify(interested)); }catch(e){}
+        toastBtn.textContent = 'Đã quan tâm ✓';
+        toastBtn.classList.add('done');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(()=> toast.classList.remove('show'), 1800);
+    });
+
+    document.querySelectorAll('[data-locked="true"]').forEach(el=>{
+        el.addEventListener('click', e=>{
+            e.preventDefault();
+            showToast(el.dataset.subject, el.dataset.subjectName);
+        });
+    });
+
+    const panels = { home:'panel-home', quiz:'panel-quiz', doc:'panel-doc', tool:'panel-tool', product:'panel-product', support:'panel-support' };
+    const titles = {
+        home:    ['Trang chủ', ''],
+        quiz:    ['Trắc nghiệm', ''],
+        doc:     ['Tài liệu', ''],
+        tool:    ['Công cụ', ''],
+        product: ['Sản phẩm', ''],
+        support: ['Hỗ trợ', '']
+    };
+    const topbarTitle = document.querySelector('.topbar-title');
+
+    function goTab(key, opts){
+        opts = opts || {};
+        Object.values(panels).forEach(id => document.getElementById(id).style.display = 'none');
+        document.getElementById(panels[key]).style.display = '';
+        document.querySelectorAll('.side-link[data-tab]').forEach(el => el.classList.toggle('active', el.dataset.tab === key));
+        const [t, sub] = titles[key];
+        topbarTitle.innerHTML = t + '<span>' + sub + '</span>';
+        window.scrollTo({top:0, behavior:'smooth'});
+
+        if(!opts.fromPopState){
+            const url = key === 'home' ? location.pathname : location.pathname + '#' + key;
+            history.pushState({ tab: key }, '', url);
+        }
+    }
+
+    document.querySelectorAll('.side-link[data-tab]').forEach(el=>{
+        el.addEventListener('click', e=>{ e.preventDefault(); goTab(el.dataset.tab); });
+    });
+    document.querySelectorAll('[data-go]').forEach(el=>{
+        el.addEventListener('click', ()=> goTab(el.dataset.go));
+    });
+
+    // Thiết lập trạng thái ban đầu trong lịch sử trình duyệt
+    (function initHistory(){
+        const hashTab = location.hash.replace('#', '');
+        const startTab = panels[hashTab] ? hashTab : 'home';
+        history.replaceState({ tab: startTab }, '', location.pathname + (startTab === 'home' ? '' : '#' + startTab));
+        if(startTab !== 'home'){ goTab(startTab, { fromPopState:true }); }
+    })();
+
+    // Bấm nút "Quay lại" của trình duyệt sẽ chuyển tab thay vì thoát hẳn trang
+    window.addEventListener('popstate', e=>{
+        const key = (e.state && e.state.tab) || 'home';
+        goTab(key, { fromPopState:true });
+    });
+
+    const themeBtn = document.getElementById('themeToggle');
+    themeBtn.addEventListener('click', ()=>{
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const next = isDark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try{ localStorage.setItem('sng-theme', next); }catch(e){}
+    });
+
+    document.querySelectorAll('.filter-pill').forEach(pill=>{
+        pill.addEventListener('click', ()=>{
+            document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
+            pill.classList.add('active');
+            const f = pill.dataset.filter;
+            document.querySelectorAll('.doc-cat').forEach(cat=>{
+                cat.style.display = (f === 'all' || cat.dataset.cat === f) ? '' : 'none';
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

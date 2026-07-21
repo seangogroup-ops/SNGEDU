@@ -3,117 +3,268 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quản trị câu hỏi - SNG EDU</title>
+<title>Quản trị · SNG EDU</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
-    :root{--blue:#3258db;--bg:#f0f2f5;--white:#fff;--border:#e5e7eb;--gray:#6b7280;--red:#ef4444;--green:#22c55e;}
-    *{box-sizing:border-box;font-family:'Segoe UI',Roboto,Arial,sans-serif;}
-    body{margin:0;background:var(--bg);color:#111;}
-    header{background:var(--white);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.08);}
-    header b{font-size:1.1rem;}
-    button{cursor:pointer;border:none;border-radius:8px;font-weight:600;padding:9px 16px;font-size:.9rem;}
-    .btn-primary{background:var(--blue);color:#fff;}
-    .btn-danger{background:var(--red);color:#fff;}
-    .btn-ghost{background:#eee;color:#333;}
-    .wrap{max-width:900px;margin:24px auto;padding:0 16px;}
-    .card{background:var(--white);border-radius:12px;padding:20px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
-    input,select,textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:.95rem;margin-top:4px;}
-    label{font-weight:600;font-size:.85rem;color:var(--gray);display:block;margin-top:12px;}
-    .row{display:flex;gap:12px;}
-    .row>div{flex:1;}
-    #loginBox{max-width:360px;margin:80px auto;text-align:center;}
-    #loginBox .card{text-align:left;}
-    .hidden{display:none !important;}
-    .q-item{border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
-    .q-item .opt{padding:4px 0;font-size:.9rem;}
-    .opt.correct{color:var(--green);font-weight:700;}
-    .q-item .actions{margin-top:10px;display:flex;gap:8px;}
-    .opt-row{display:flex;align-items:center;gap:8px;margin-top:6px;}
-    .opt-row input[type=radio]{width:auto;}
-    .opt-row input[type=text]{flex:1;}
-    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;}
-    .toolbar>div{flex:1;min-width:140px;}
-    small.hint{color:var(--gray);display:block;margin-top:4px;}
-    .msg{padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.9rem;}
-    .msg.ok{background:#f0fdf4;color:#166534;}
-    .msg.err{background:#fef2f2;color:#991b1b;}
+:root{
+    --navy:#161b2c;
+    --navy-2:#212842;
+    --navy-text:#aab0c6;
+    --bg:#f4f5f9;
+    --white:#ffffff;
+    --border:#e3e5ee;
+    --text:#1c2033;
+    --gray:#6b7185;
+    --accent:#4457e8;
+    --accent-dark:#333fc2;
+    --green:#16a34a;
+    --green-bg:#effaf1;
+    --red:#dc2626;
+    --red-bg:#fef2f2;
+    --amber:#b45309;
+    --amber-bg:#fff8ec;
+    --radius:10px;
+}
+*{box-sizing:border-box;}
+body{
+    margin:0;
+    font-family:-apple-system,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+}
+button{cursor:pointer;border:none;border-radius:8px;font-weight:600;font-family:inherit;transition:filter .12s;}
+button:hover{filter:brightness(0.96);}
+button:active{filter:brightness(0.9);}
+input,select,textarea{
+    width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;
+    font-size:.92rem;font-family:inherit;background:var(--white);color:var(--text);
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent);}
+label{font-weight:600;font-size:.78rem;color:var(--gray);display:block;margin:10px 0 4px;letter-spacing:.01em;text-transform:uppercase;}
+.hidden{display:none !important;}
+
+/* ---------- LOGIN ---------- */
+#loginScreen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 20% 20%, #232b4a, var(--navy) 60%);
+}
+.login-card{
+    background:var(--white);border-radius:16px;padding:36px 32px;width:100%;max-width:360px;
+    box-shadow:0 20px 60px rgba(10,15,40,.35);
+}
+.login-card h1{font-size:1.3rem;margin:0 0 2px;}
+.login-card p{color:var(--gray);font-size:.85rem;margin:0 0 18px;}
+.login-card button{width:100%;background:var(--accent);color:#fff;padding:11px;font-size:.95rem;margin-top:14px;}
+#loginMsg{margin-top:10px;color:var(--red);font-size:.85rem;min-height:1.2em;}
+
+/* ---------- SHELL ---------- */
+#shell{display:flex;min-height:100vh;}
+aside{
+    width:280px;flex:0 0 280px;background:var(--navy);color:var(--navy-text);
+    padding:20px 16px;display:flex;flex-direction:column;gap:22px;
+}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:700;font-size:1.02rem;padding:0 4px;}
+.brand span.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block;}
+.side-section h4{
+    font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#767ea0;
+    margin:0 0 8px;padding:0 4px;display:flex;justify-content:space-between;align-items:center;
+}
+.side-list{display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto;}
+.side-item{
+    padding:8px 10px;border-radius:8px;font-size:.87rem;cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;gap:6px;color:var(--navy-text);
+}
+.side-item:hover{background:var(--navy-2);}
+.side-item.active{background:var(--accent);color:#fff;font-weight:600;}
+.side-item .code{opacity:.65;font-size:.76rem;font-weight:400;}
+.side-add{
+    background:transparent;border:1px dashed #454e72;color:#98a0c2;
+    padding:5px 9px;font-size:.75rem;border-radius:6px;
+}
+.side-add:hover{border-color:var(--accent);color:#fff;}
+.mini-form{display:none;flex-direction:column;gap:6px;margin-top:8px;padding:10px;background:var(--navy-2);border-radius:8px;}
+.mini-form.show{display:flex;}
+.mini-form input,.mini-form select{background:#1c2340;border-color:#3a4266;color:#fff;font-size:.82rem;padding:7px 9px;}
+.mini-form .mini-actions{display:flex;gap:6px;margin-top:2px;}
+.mini-form .mini-actions button{flex:1;padding:6px;font-size:.78rem;}
+.btn-mini-save{background:var(--accent);color:#fff;}
+.btn-mini-cancel{background:#2b3355;color:#c7cce3;}
+.side-item-row{display:flex;align-items:center;gap:2px;}
+.icon-x{
+    opacity:0;width:20px;height:20px;border-radius:6px;background:transparent;color:inherit;
+    display:flex;align-items:center;justify-content:center;font-size:.85rem;flex:0 0 auto;
+}
+.side-item:hover .icon-x{opacity:.7;}
+.icon-x:hover{opacity:1 !important;background:rgba(255,255,255,.15);}
+.sidebar-foot{margin-top:auto;border-top:1px solid #2a3153;padding-top:14px;font-size:.8rem;}
+.sidebar-foot .email{color:#fff;font-weight:600;word-break:break-all;}
+.sidebar-foot button{width:100%;margin-top:10px;background:#2b3355;color:#dfe2f2;padding:8px;font-size:.82rem;}
+
+main{flex:1;padding:26px 34px 60px;max-width:1000px;}
+.context-bar{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--white);
+    border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:20px;
+}
+.context-bar .ctx-label{font-size:.78rem;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;}
+.context-bar .ctx-value{font-weight:700;font-size:1rem;}
+.context-bar .ctx-sep{color:var(--border);font-weight:400;}
+.context-bar .ctx-empty{color:var(--amber);font-size:.85rem;background:var(--amber-bg);padding:4px 10px;border-radius:6px;}
+
+.tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid var(--border);}
+.tab{
+    padding:10px 16px;font-size:.88rem;font-weight:600;color:var(--gray);background:transparent;
+    border-radius:8px 8px 0 0;border-bottom:2px solid transparent;
+}
+.tab.active{color:var(--accent);border-bottom:2px solid var(--accent);background:var(--white);}
+
+.panel{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:18px;}
+.panel h3{margin:0 0 4px;font-size:1.02rem;}
+.hint{color:var(--gray);font-size:.82rem;margin:2px 0 14px;line-height:1.5;}
+.row{display:flex;gap:12px;flex-wrap:wrap;}
+.row>div{flex:1;min-width:180px;}
+
+.opt-row{display:flex;align-items:center;gap:8px;margin-top:7px;}
+.opt-row input[type=radio]{width:auto;accent-color:var(--accent);}
+.opt-row input[type=text]{flex:1;}
+.opt-letter{width:22px;font-weight:700;color:var(--gray);font-size:.85rem;}
+
+.btn-primary{background:var(--accent);color:#fff;padding:10px 18px;font-size:.9rem;}
+.btn-primary:hover{background:var(--accent-dark);}
+.btn-ghost{background:#eef0f7;color:var(--text);padding:9px 16px;font-size:.87rem;}
+.btn-danger{background:var(--red-bg);color:var(--red);padding:6px 12px;font-size:.8rem;}
+.btn-danger:hover{background:#fde3e3;}
+.btn-edit{background:#eef0f7;color:var(--accent-dark);padding:6px 12px;font-size:.8rem;}
+
+.q-item{border:1px solid var(--border);border-radius:10px;padding:15px;margin-bottom:10px;}
+.q-item .q-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+.q-item b.qnum{color:var(--accent-dark);}
+.q-item .opt{padding:3px 0 3px 4px;font-size:.88rem;color:var(--text);}
+.q-item .opt.correct{color:var(--green);font-weight:700;}
+.q-item .opt.correct::before{content:"✓ ";}
+.q-item .expl{margin-top:8px;font-size:.83rem;color:var(--gray);background:var(--bg);padding:8px 10px;border-radius:6px;}
+.q-item .actions{margin-top:10px;display:flex;gap:8px;}
+
+.msg{padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:.87rem;font-weight:500;}
+.msg.ok{background:var(--green-bg);color:#166534;}
+.msg.err{background:var(--red-bg);color:#991b1b;}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray);font-size:.88rem;}
+textarea{resize:vertical;}
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-thumb{background:#3a4266;border-radius:4px;}
 </style>
 </head>
 <body>
 
-<div id="loginBox">
-    <h2>🔐 Đăng nhập Admin</h2>
-    <div class="card">
+<!-- ================= LOGIN ================= -->
+<div id="loginScreen">
+    <div class="login-card">
+        <h1>🔐 Đăng nhập quản trị</h1>
+        <p>SNG EDU · trang quản lý môn học, chương và câu hỏi</p>
         <label>Email</label>
         <input id="loginEmail" type="email" placeholder="admin@example.com">
         <label>Mật khẩu</label>
-        <input id="loginPass" type="password">
-        <button class="btn-primary" style="width:100%;margin-top:16px;" onclick="doLogin()">Đăng nhập</button>
-        <div id="loginMsg" style="margin-top:10px;color:var(--red);font-size:.9rem;"></div>
+        <input id="loginPass" type="password" placeholder="••••••••">
+        <button onclick="doLogin()">Đăng nhập</button>
+        <div id="loginMsg"></div>
     </div>
 </div>
 
-<div id="adminArea" class="hidden">
-<header>
-    <b>📚 Quản trị câu hỏi</b>
-    <button class="btn-ghost" onclick="doLogout()">Đăng xuất</button>
-</header>
+<!-- ================= SHELL ================= -->
+<div id="shell" class="hidden">
+    <aside>
+        <div class="brand"><span class="dot"></span> SNG EDU · Admin</div>
 
-<div class="wrap">
-    <div id="msgBox"></div>
-
-    <div class="card">
-        <div class="toolbar">
-            <div>
-                <label>Môn học</label>
-                <select id="selSubject" onchange="onFilterChange()"></select>
-            </div>
-            <div>
-                <label>Mã đề / chương</label>
-                <input id="inpChapter" placeholder="vd: 1-40" onchange="loadQuestions()">
-            </div>
-            <div style="flex:0;">
-                <button class="btn-primary" onclick="loadQuestions()">Tải câu hỏi</button>
+        <div class="side-section">
+            <h4>Môn học <button class="side-add" onclick="toggleForm('subjectForm')">+ Thêm</button></h4>
+            <div id="subjectList" class="side-list"></div>
+            <div id="subjectForm" class="mini-form">
+                <input id="newSubjectId" placeholder="Mã môn, vd: TH">
+                <input id="newSubjectName" placeholder="Tên đầy đủ, vd: Triết học">
+                <div class="mini-actions">
+                    <button class="btn-mini-save" onclick="addSubject()">Lưu</button>
+                    <button class="btn-mini-cancel" onclick="toggleForm('subjectForm')">Hủy</button>
+                </div>
             </div>
         </div>
-        <details>
-            <summary style="cursor:pointer;color:var(--gray);font-size:.85rem;">+ Thêm môn học mới</summary>
-            <div class="row" style="margin-top:10px;">
-                <div><label>Mã môn (vd: TH)</label><input id="newSubjectId"></div>
-                <div><label>Tên môn</label><input id="newSubjectName"></div>
+
+        <div class="side-section">
+            <h4>Chương / đề <button class="side-add" onclick="toggleForm('chapterForm')">+ Thêm</button></h4>
+            <div id="chapterList" class="side-list"></div>
+            <div id="chapterForm" class="mini-form">
+                <input id="newChapCode" placeholder="Mã chương, vd: 1-40">
+                <input id="newChapLabel" placeholder="Tên hiển thị, vd: Câu 1 – 40">
+                <input id="newChapNote" placeholder="Ghi chú (tùy chọn)">
+                <select id="newChapGroup">
+                    <option value="Nội dung chính">Nội dung chính</option>
+                    <option value="Bổ sung">Bổ sung</option>
+                    <option value="Đề thi thử">Đề thi thử</option>
+                </select>
+                <div class="mini-actions">
+                    <button class="btn-mini-save" onclick="addChapter()">Lưu</button>
+                    <button class="btn-mini-cancel" onclick="toggleForm('chapterForm')">Hủy</button>
+                </div>
             </div>
-            <button class="btn-ghost" style="margin-top:10px;" onclick="addSubject()">Lưu môn học</button>
-        </details>
-    </div>
+        </div>
 
-    <div class="card">
-        <h3>➕ Thêm 1 câu hỏi</h3>
-        <label>Nội dung câu hỏi</label>
-        <textarea id="qContent" rows="2"></textarea>
-        <div id="optionsForm"></div>
-        <label>Giải thích (tùy chọn)</label>
-        <textarea id="qExplain" rows="2"></textarea>
-        <button class="btn-primary" style="margin-top:14px;" onclick="addSingleQuestion()">Lưu câu hỏi</button>
-    </div>
+        <div class="sidebar-foot">
+            <div class="email" id="userEmail"></div>
+            <button onclick="doLogout()">Đăng xuất</button>
+        </div>
+    </aside>
 
-    <div class="card">
-        <h3>📋 Dán nhiều câu hỏi cùng lúc</h3>
-        <small class="hint">Dán đúng định dạng: <b>Câu 1: Nội dung...</b> / <b>A. đáp án</b> / đáp án đúng thêm dấu * phía trước (vd <b>*B. đáp án</b>) / dòng <b>Gt: giải thích</b> (không bắt buộc). Cách nhau 1 dòng trống giữa các câu.</small>
-        <textarea id="bulkText" rows="8" placeholder="Câu 1: Thủ đô của Việt Nam là?
+    <main>
+        <div class="context-bar" id="contextBar"></div>
+        <div id="msgBox"></div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="list" onclick="switchTab('list')">📖 Danh sách câu hỏi</button>
+            <button class="tab" data-tab="single" onclick="switchTab('single')">➕ Thêm câu hỏi</button>
+            <button class="tab" data-tab="bulk" onclick="switchTab('bulk')">📋 Dán nhiều câu hỏi</button>
+        </div>
+
+        <div id="tab-list" class="tab-panel">
+            <div class="panel">
+                <h3>Câu hỏi trong đề đang chọn</h3>
+                <div id="qList"><div class="empty-state">Chọn một môn học và một chương/đề ở thanh bên trái để xem câu hỏi.</div></div>
+            </div>
+        </div>
+
+        <div id="tab-single" class="tab-panel hidden">
+            <div class="panel">
+                <h3 id="singleFormTitle">Thêm 1 câu hỏi</h3>
+                <p class="hint">Câu hỏi sẽ được lưu vào môn và chương đang chọn ở thanh bên trái.</p>
+                <label>Nội dung câu hỏi</label>
+                <textarea id="qContent" rows="2" placeholder="Nhập nội dung câu hỏi..."></textarea>
+                <div id="optionsForm"></div>
+                <label>Giải thích (tùy chọn)</label>
+                <textarea id="qExplain" rows="2" placeholder="Giải thích vì sao đáp án đúng..."></textarea>
+                <div style="display:flex;gap:10px;margin-top:14px;">
+                    <button class="btn-primary" id="singleSaveBtn" onclick="saveSingleQuestion()">Lưu câu hỏi</button>
+                    <button class="btn-ghost hidden" id="cancelEditBtn" onclick="cancelEdit()">Hủy sửa</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-bulk" class="tab-panel hidden">
+            <div class="panel">
+                <h3>Dán nhiều câu hỏi cùng lúc</h3>
+                <p class="hint">
+                    Định dạng: <b>Câu 1: Nội dung...</b>, các dòng tiếp theo <b>A. đáp án</b> ... <b>D. đáp án</b>,
+                    đánh dấu đáp án đúng bằng dấu * phía trước (vd <b>*B. đáp án</b>), dòng <b>Gt: giải thích</b> không bắt buộc.
+                    Mỗi câu cách nhau 1 dòng trống.
+                </p>
+                <textarea id="bulkText" rows="10" placeholder="Câu 1: Thủ đô của Việt Nam là?
 A. TP.HCM
 *B. Hà Nội
 C. Đà Nẵng
 D. Huế
-
 Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
-        <button class="btn-primary" style="margin-top:14px;" onclick="bulkImport()">Nạp tất cả</button>
-    </div>
-
-    <div class="card">
-        <h3>📖 Danh sách câu hỏi trong đề này</h3>
-        <div id="qList">Chưa tải câu hỏi.</div>
-    </div>
-</div>
+                <button class="btn-primary" style="margin-top:14px;" onclick="bulkImport()">Nạp tất cả</button>
+            </div>
+        </div>
+    </main>
 </div>
 
 <script>
@@ -121,15 +272,21 @@ const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentSubject = '', currentChapter = '';
+let subjects = [];
+let chapters = [];
+let currentSubject = null;   // {id, name}
+let currentChapter = null;   // {chapter, label}
+let editingQuestionId = null;
 
 // ---------- AUTH ----------
 async function doLogin(){
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPass').value;
-    const { error } = await sb.auth.signInWithPassword({ email, password });
+    document.getElementById('loginMsg').innerText = '';
+    if (!email || !password){ document.getElementById('loginMsg').innerText = 'Nhập đủ email và mật khẩu.'; return; }
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error){ document.getElementById('loginMsg').innerText = 'Sai email hoặc mật khẩu.'; return; }
-    showAdmin();
+    showAdmin(data.user.email);
 }
 async function doLogout(){
     await sb.auth.signOut();
@@ -137,62 +294,186 @@ async function doLogout(){
 }
 async function checkSession(){
     const { data } = await sb.auth.getSession();
-    if (data.session) showAdmin();
+    if (data.session) showAdmin(data.session.user.email);
 }
-function showAdmin(){
-    document.getElementById('loginBox').classList.add('hidden');
-    document.getElementById('adminArea').classList.remove('hidden');
+function showAdmin(email){
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('shell').classList.remove('hidden');
+    document.getElementById('userEmail').innerText = email;
+    renderOptionForm();
     loadSubjects();
+}
+
+// ---------- SIDEBAR HELPERS ----------
+function toggleForm(id){
+    document.getElementById(id).classList.toggle('show');
+}
+function updateContextBar(){
+    const bar = document.getElementById('contextBar');
+    if (!currentSubject){
+        bar.innerHTML = `<span class="ctx-empty">👈 Chọn một môn học ở thanh bên trái để bắt đầu</span>`;
+        return;
+    }
+    if (!currentChapter){
+        bar.innerHTML = `<span class="ctx-label">Môn</span> <span class="ctx-value">${escapeHtml(currentSubject.name)}</span>
+            <span class="ctx-sep">/</span> <span class="ctx-empty">👈 Chọn một chương/đề</span>`;
+        return;
+    }
+    bar.innerHTML = `<span class="ctx-label">Môn</span> <span class="ctx-value">${escapeHtml(currentSubject.name)}</span>
+        <span class="ctx-sep">/</span>
+        <span class="ctx-label">Chương</span> <span class="ctx-value">${escapeHtml(currentChapter.label)}</span>`;
 }
 
 // ---------- SUBJECTS ----------
 async function loadSubjects(){
     const { data, error } = await sb.from('subjects').select('*').order('id');
-    const sel = document.getElementById('selSubject');
-    sel.innerHTML = (data||[]).map(s=>`<option value="${s.id}">${s.id} — ${s.name}</option>`).join('');
-    if (data && data.length){ currentSubject = data[0].id; }
-    renderOptionForm();
+    if (error) return showMsg('Lỗi tải môn học: ' + error.message, 'err');
+    subjects = data || [];
+
+    if (currentSubject){
+        currentSubject = subjects.find(s => s.id === currentSubject.id) || null;
+    }
+    if (!currentSubject && subjects.length){
+        currentSubject = subjects[0];
+    }
+    renderSubjectList();
+    loadChapters();
+}
+function renderSubjectList(){
+    const box = document.getElementById('subjectList');
+    if (!subjects.length){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Chưa có môn học nào.</div>`; return; }
+    box.innerHTML = subjects.map(s => `
+        <div class="side-item-row">
+            <div class="side-item ${currentSubject && currentSubject.id===s.id ? 'active' : ''}" style="flex:1;" onclick="selectSubject('${s.id}')">
+                <span>${escapeHtml(s.name)}</span><span class="code">${s.id}</span>
+            </div>
+            <button class="icon-x" title="Xóa môn học" onclick="deleteSubject('${s.id}')">✕</button>
+        </div>
+    `).join('');
+}
+function selectSubject(id){
+    currentSubject = subjects.find(s => s.id === id) || null;
+    currentChapter = null;
+    renderSubjectList();
+    updateContextBar();
+    loadChapters();
+    loadQuestions();
 }
 async function addSubject(){
-    const id = document.getElementById('newSubjectId').value.trim();
+    const id = document.getElementById('newSubjectId').value.trim().toUpperCase();
     const name = document.getElementById('newSubjectName').value.trim();
     if (!id || !name) return showMsg('Nhập đủ mã môn và tên môn.', 'err');
     const { error } = await sb.from('subjects').insert({ id, name });
     if (error) return showMsg('Lỗi: ' + error.message, 'err');
-    showMsg('Đã thêm môn học.', 'ok');
-    document.getElementById('newSubjectId').value='';
-    document.getElementById('newSubjectName').value='';
+    showMsg('Đã thêm môn học "' + name + '".', 'ok');
+    document.getElementById('newSubjectId').value = '';
+    document.getElementById('newSubjectName').value = '';
+    document.getElementById('subjectForm').classList.remove('show');
     loadSubjects();
 }
-function onFilterChange(){ currentSubject = document.getElementById('selSubject').value; }
+async function deleteSubject(id){
+    if (!confirm('Xóa môn học này? Toàn bộ chương và câu hỏi bên trong cũng sẽ bị xóa. Không thể hoàn tác.')) return;
+    const { error } = await sb.from('subjects').delete().eq('id', id);
+    if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
+    if (currentSubject && currentSubject.id === id) currentSubject = null;
+    showMsg('Đã xóa môn học.', 'ok');
+    loadSubjects();
+}
 
-// ---------- LOAD QUESTIONS ----------
+// ---------- CHAPTERS ----------
+async function loadChapters(){
+    const box = document.getElementById('chapterList');
+    if (!currentSubject){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Chọn môn học trước.</div>`; updateContextBar(); return; }
+    const { data, error } = await sb.from('chapters').select('*').eq('subject_id', currentSubject.id).order('order_no');
+    if (error){ box.innerHTML = `<div style="color:#f88;font-size:.82rem;">Lỗi: ${escapeHtml(error.message)}</div>`; updateContextBar(); return; }
+    chapters = data || [];
+    if (!chapters.length){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Môn này chưa có chương/đề nào.</div>`; }
+    else {
+        box.innerHTML = chapters.map(ch => `
+            <div class="side-item-row">
+                <div class="side-item ${currentChapter && currentChapter.chapter===ch.chapter ? 'active' : ''}" style="flex:1;" onclick='selectChapter(${JSON.stringify(ch.chapter)})'>
+                    <span>${escapeHtml(ch.label)}</span><span class="code">${escapeHtml(ch.chapter)}</span>
+                </div>
+                <button class="icon-x" title="Xóa chương" onclick="deleteChapter(${ch.id})">✕</button>
+            </div>
+        `).join('');
+    }
+    updateContextBar();
+}
+function selectChapter(code){
+    currentChapter = chapters.find(c => c.chapter === code) || null;
+    document.getElementById('chapterList').querySelectorAll('.side-item').forEach(el=>{
+        el.classList.toggle('active', currentChapter && el.querySelector('.code') && el.querySelector('.code').textContent === currentChapter.chapter);
+    });
+    updateContextBar();
+    loadQuestions();
+}
+async function addChapter(){
+    if (!currentSubject) return showMsg('Chọn môn học trước.', 'err');
+    const chapter = document.getElementById('newChapCode').value.trim();
+    const label = document.getElementById('newChapLabel').value.trim();
+    const note = document.getElementById('newChapNote').value.trim();
+    const group_name = document.getElementById('newChapGroup').value;
+    if (!chapter || !label) return showMsg('Nhập đủ mã chương và tên hiển thị.', 'err');
+
+    const { data: existing } = await sb.from('chapters').select('order_no')
+        .eq('subject_id', currentSubject.id).order('order_no', { ascending: false }).limit(1);
+    const nextOrder = existing && existing.length ? existing[0].order_no + 1 : 0;
+
+    const { error } = await sb.from('chapters').insert({
+        subject_id: currentSubject.id, chapter, label, note, group_name, order_no: nextOrder
+    });
+    if (error) return showMsg('Lỗi: ' + error.message, 'err');
+    showMsg('Đã thêm chương "' + label + '".', 'ok');
+    document.getElementById('newChapCode').value = '';
+    document.getElementById('newChapLabel').value = '';
+    document.getElementById('newChapNote').value = '';
+    document.getElementById('chapterForm').classList.remove('show');
+    loadChapters();
+}
+async function deleteChapter(id){
+    if (!confirm('Xóa chương/đề này? Câu hỏi bên trong sẽ KHÔNG bị xóa nhưng sẽ không còn hiển thị theo chương này.')) return;
+    const { error } = await sb.from('chapters').delete().eq('id', id);
+    if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
+    showMsg('Đã xóa chương.', 'ok');
+    if (currentChapter && chapters.find(c=>c.id===id && c.chapter===currentChapter.chapter)) currentChapter = null;
+    loadChapters();
+    loadQuestions();
+}
+
+// ---------- TABS ----------
+function switchTab(name){
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+    document.getElementById('tab-' + name).classList.remove('hidden');
+}
+
+// ---------- QUESTIONS: LIST ----------
 async function loadQuestions(){
-    currentSubject = document.getElementById('selSubject').value;
-    currentChapter = document.getElementById('inpChapter').value.trim();
-    if (!currentSubject || !currentChapter) return showMsg('Chọn môn và nhập mã đề trước.', 'err');
-
-    const { data, error } = await sb.from('questions')
-        .select('*').eq('subject_id', currentSubject).eq('chapter', currentChapter)
-        .order('order_no');
-
-    if (error) return showMsg('Lỗi tải: ' + error.message, 'err');
-
     const box = document.getElementById('qList');
-    if (!data.length){ box.innerHTML = '<p style="color:var(--gray)">Chưa có câu hỏi nào trong đề này.</p>'; return; }
+    if (!currentSubject || !currentChapter){
+        box.innerHTML = `<div class="empty-state">Chọn một môn học và một chương/đề ở thanh bên trái để xem câu hỏi.</div>`;
+        return;
+    }
+    const { data, error } = await sb.from('questions')
+        .select('*').eq('subject_id', currentSubject.id).eq('chapter', currentChapter.chapter)
+        .order('order_no');
+    if (error){ box.innerHTML = `<div class="empty-state">Lỗi tải: ${escapeHtml(error.message)}</div>`; return; }
+
+    if (!data.length){ box.innerHTML = `<div class="empty-state">Chưa có câu hỏi nào trong đề này. Dùng tab "Thêm câu hỏi" hoặc "Dán nhiều câu hỏi" để bắt đầu.</div>`; return; }
 
     box.innerHTML = data.map(q => `
         <div class="q-item">
-            <b>Câu ${q.order_no}:</b> ${q.content}
-            ${q.options.map((o,i)=>`<div class="opt ${i===q.correct_idx?'correct':''}">${String.fromCharCode(65+i)}. ${o}</div>`).join('')}
-            ${q.explanation ? `<div style="margin-top:6px;font-size:.85rem;color:var(--gray)">Gt: ${q.explanation}</div>` : ''}
+            <div class="q-head"><div><b class="qnum">Câu ${q.order_no}.</b> ${escapeHtml(q.content)}</div></div>
+            ${q.options.map((o,i)=>`<div class="opt ${i===q.correct_idx?'correct':''}">${String.fromCharCode(65+i)}. ${escapeHtml(o)}</div>`).join('')}
+            ${q.explanation ? `<div class="expl">💡 ${escapeHtml(q.explanation)}</div>` : ''}
             <div class="actions">
+                <button class="btn-edit" onclick='startEdit(${JSON.stringify(q)})'>Sửa</button>
                 <button class="btn-danger" onclick="deleteQuestion(${q.id})">Xóa</button>
             </div>
         </div>
     `).join('');
 }
-
 async function deleteQuestion(id){
     if (!confirm('Xóa câu hỏi này?')) return;
     const { error } = await sb.from('questions').delete().eq('id', id);
@@ -201,42 +482,71 @@ async function deleteQuestion(id){
     loadQuestions();
 }
 
-// ---------- ADD SINGLE QUESTION ----------
+// ---------- QUESTIONS: ADD / EDIT ----------
 function renderOptionForm(){
     const box = document.getElementById('optionsForm');
     box.innerHTML = [0,1,2,3].map(i => `
         <div class="opt-row">
+            <span class="opt-letter">${String.fromCharCode(65+i)}</span>
             <input type="radio" name="correctOpt" value="${i}" ${i===0?'checked':''}>
             <input type="text" id="opt${i}" placeholder="Đáp án ${String.fromCharCode(65+i)}">
         </div>
     `).join('');
 }
-
-async function addSingleQuestion(){
-    currentSubject = document.getElementById('selSubject').value;
-    currentChapter = document.getElementById('inpChapter').value.trim();
-    if (!currentSubject || !currentChapter) return showMsg('Chọn môn và nhập mã đề trước khi thêm câu hỏi.', 'err');
+function startEdit(q){
+    if (!currentSubject || currentSubject.id !== q.subject_id){
+        const s = subjects.find(s=>s.id===q.subject_id);
+        if (s) selectSubject(s.id);
+    }
+    editingQuestionId = q.id;
+    document.getElementById('qContent').value = q.content;
+    q.options.forEach((o,i)=>{ document.getElementById('opt'+i).value = o; });
+    document.querySelector(`input[name=correctOpt][value="${q.correct_idx}"]`).checked = true;
+    document.getElementById('qExplain').value = q.explanation || '';
+    document.getElementById('singleFormTitle').innerText = 'Sửa câu ' + q.order_no;
+    document.getElementById('singleSaveBtn').innerText = 'Cập nhật câu hỏi';
+    document.getElementById('cancelEditBtn').classList.remove('hidden');
+    switchTab('single');
+}
+function cancelEdit(){
+    editingQuestionId = null;
+    document.getElementById('qContent').value = '';
+    [0,1,2,3].forEach(i=>document.getElementById('opt'+i).value='');
+    document.getElementById('qExplain').value = '';
+    document.getElementById('singleFormTitle').innerText = 'Thêm 1 câu hỏi';
+    document.getElementById('singleSaveBtn').innerText = 'Lưu câu hỏi';
+    document.getElementById('cancelEditBtn').classList.add('hidden');
+}
+async function saveSingleQuestion(){
+    if (!currentSubject || !currentChapter) return showMsg('Chọn môn học và chương/đề ở thanh bên trái trước.', 'err');
 
     const content = document.getElementById('qContent').value.trim();
     const options = [0,1,2,3].map(i => document.getElementById('opt'+i).value.trim());
     const correctIdx = parseInt(document.querySelector('input[name=correctOpt]:checked').value);
     const explanation = document.getElementById('qExplain').value.trim();
-
     if (!content || options.some(o=>!o)) return showMsg('Điền đủ nội dung và 4 đáp án.', 'err');
 
-    const { count } = await sb.from('questions').select('*', { count: 'exact', head: true })
-        .eq('subject_id', currentSubject).eq('chapter', currentChapter);
-
-    const { error } = await sb.from('questions').insert({
-        subject_id: currentSubject, chapter: currentChapter, order_no: (count||0)+1,
-        content, options, correct_idx: correctIdx, explanation
-    });
-    if (error) return showMsg('Lỗi lưu: ' + error.message, 'err');
-
-    showMsg('Đã thêm câu hỏi.', 'ok');
-    document.getElementById('qContent').value='';
-    [0,1,2,3].forEach(i=>document.getElementById('opt'+i).value='');
-    document.getElementById('qExplain').value='';
+    if (editingQuestionId){
+        const { error } = await sb.from('questions').update({
+            content, options, correct_idx: correctIdx, explanation
+        }).eq('id', editingQuestionId);
+        if (error) return showMsg('Lỗi cập nhật: ' + error.message, 'err');
+        showMsg('Đã cập nhật câu hỏi.', 'ok');
+        cancelEdit();
+    } else {
+        const { count } = await sb.from('questions').select('*', { count: 'exact', head: true })
+            .eq('subject_id', currentSubject.id).eq('chapter', currentChapter.chapter);
+        const { error } = await sb.from('questions').insert({
+            subject_id: currentSubject.id, chapter: currentChapter.chapter, order_no: (count||0)+1,
+            content, options, correct_idx: correctIdx, explanation
+        });
+        if (error) return showMsg('Lỗi lưu: ' + error.message, 'err');
+        showMsg('Đã thêm câu hỏi.', 'ok');
+        document.getElementById('qContent').value='';
+        [0,1,2,3].forEach(i=>document.getElementById('opt'+i).value='');
+        document.getElementById('qExplain').value='';
+    }
+    switchTab('list');
     loadQuestions();
 }
 
@@ -268,21 +578,18 @@ function parseBulkText(text){
     });
     return out;
 }
-
 async function bulkImport(){
-    currentSubject = document.getElementById('selSubject').value;
-    currentChapter = document.getElementById('inpChapter').value.trim();
-    if (!currentSubject || !currentChapter) return showMsg('Chọn môn và nhập mã đề trước.', 'err');
+    if (!currentSubject || !currentChapter) return showMsg('Chọn môn học và chương/đề ở thanh bên trái trước.', 'err');
 
     const text = document.getElementById('bulkText').value;
     const parsed = parseBulkText(text);
     if (!parsed.length) return showMsg('Không đọc được câu hỏi nào, kiểm tra lại định dạng.', 'err');
 
     const { count } = await sb.from('questions').select('*', { count: 'exact', head: true })
-        .eq('subject_id', currentSubject).eq('chapter', currentChapter);
+        .eq('subject_id', currentSubject.id).eq('chapter', currentChapter.chapter);
 
     const rows = parsed.map((q,i)=>({
-        subject_id: currentSubject, chapter: currentChapter, order_no: (count||0)+i+1,
+        subject_id: currentSubject.id, chapter: currentChapter.chapter, order_no: (count||0)+i+1,
         content: q.content, options: q.options, correct_idx: q.correctIdx, explanation: q.explanation
     }));
 
@@ -291,13 +598,18 @@ async function bulkImport(){
 
     showMsg(`Đã nạp thành công ${rows.length} câu hỏi.`, 'ok');
     document.getElementById('bulkText').value='';
+    switchTab('list');
     loadQuestions();
 }
 
+// ---------- UTIL ----------
 function showMsg(text, type){
     const box = document.getElementById('msgBox');
-    box.innerHTML = `<div class="msg ${type}">${text}</div>`;
-    setTimeout(()=>box.innerHTML='', 4000);
+    box.innerHTML = `<div class="msg ${type}">${escapeHtml(text)}</div>`;
+    setTimeout(()=>{ if (box.innerHTML.includes(text)) box.innerHTML=''; }, 4500);
+}
+function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
 checkSession();

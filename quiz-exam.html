@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Đề Thi Thử - SNG EDU</title>
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
         :root {
             --bg-body:#f0f2f5;--white:#fff;--text-main:#333;--text-gray:#6b7280;
@@ -22,15 +20,15 @@
         body{background:var(--bg-body);color:var(--text-main);line-height:1.6}
 
         header{background:var(--white);height:60px;display:flex;align-items:center;justify-content:space-between;
-            padding:0 20px;box-shadow:0 1px 3px rgba(0,0,0,.1);position:fixed;top:0;width:100%;z-index:1000;gap:10px}
+            padding:0 20px;box-shadow:0 1px 3px rgba(0,0,0,.1);position:fixed;top:0;width:100%;z-index:1000}
         .h-left{display:flex;align-items:center;gap:10px;min-width:0}
         .back-link{color:var(--text-gray);text-decoration:none;font-size:.95rem;display:flex;align-items:center;gap:6px;flex-shrink:0}
         .back-link:hover{color:var(--blue)}
         .h-title{font-weight:700;color:var(--blue);font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .btn-new{background:#f3f4f6;color:var(--text-gray);border:1px solid #e5e7eb;padding:7px 14px;
-            border-radius:6px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:.9rem;flex-shrink:0}
+            border-radius:6px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:.9rem}
         .btn-new:hover{background:#e5e7eb}
-        .h-right{display:flex;align-items:center;gap:15px;flex-shrink:0}
+        .h-right{display:flex;align-items:center;gap:15px}
         .timer{font-weight:700;color:var(--blue);font-size:1.1rem}
         .timer.warn{color:var(--bad);animation:blink 1s infinite}
         @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
@@ -48,7 +46,8 @@
         .layout{display:flex;max-width:1200px;margin:10px auto 40px;padding:0 20px;gap:25px}
         .q-col{flex:1;display:flex;flex-direction:column;gap:20px;min-width:0}
         .q-card{background:#fff;border-radius:12px;padding:25px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
-        .q-num{font-weight:700;color:var(--blue);margin-bottom:8px;font-size:.95rem}
+        .q-num{font-weight:700;color:var(--blue);margin-bottom:4px;font-size:.95rem}
+        .q-src{font-size:.72rem;color:#9ca3af;margin-bottom:10px}
         .opts{display:flex;flex-direction:column;gap:10px;margin-top:15px}
         .opt{display:flex;align-items:center;gap:12px;cursor:pointer}
         .opt input{display:none}
@@ -106,7 +105,7 @@
 <header>
     <div class="h-left">
         <a class="back-link" href="#" id="backLink"><i class="fa-solid fa-arrow-left"></i></a>
-        <span class="h-title" id="h-title"><i class="fa-solid fa-file-signature"></i> Đang tải...</span>
+        <span class="h-title" id="h-title"><i class="fa-solid fa-graduation-cap"></i> Đang tải...</span>
         <button class="btn-new" onclick="reloadExam()"><i class="fa-solid fa-shuffle"></i> Đề mới</button>
     </div>
     <div class="h-right">
@@ -118,11 +117,21 @@
 <div class="settings-bar" id="settingsBar" style="display:none;">
     <div class="sg">
         <label><i class="fa-solid fa-list-check"></i> Số câu:</label>
-        <select id="sel-num"></select>
+        <select id="sel-num">
+            <option value="40" selected>40 câu</option>
+            <option value="60">60 câu</option>
+            <option value="80">80 câu</option>
+            <option value="100">100 câu</option>
+            <option value="9999">Tất cả</option>
+        </select>
     </div>
     <div class="sg">
         <label><i class="fa-regular fa-clock"></i> Thời gian:</label>
         <input type="number" id="sel-time" value="60" min="5" max="300"> phút
+    </div>
+    <div class="sg">
+        <label><i class="fa-solid fa-database"></i> Nguồn:</label>
+        <select id="sel-src"></select>
     </div>
     <div class="stat-badge" id="stat-badge">0 câu trong NHCH</div>
 </div>
@@ -170,7 +179,6 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const params = new URLSearchParams(location.search);
 const subjectId = params.get('subject') || params.get('subject_id') || params.get('mon');
-const chapter = params.get('chapter');
 
 function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -180,15 +188,15 @@ function showState(html){
     document.getElementById('settingsBar').style.display = 'none';
     document.getElementById('mainLayout').style.display = 'none';
 }
-function shuffle(a){ for (let i=a.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
-let baseQuestions = [];   // dữ liệu gốc lấy từ Supabase, không đổi giữa các lần tạo đề mới
-let exam = [];             // bản đã xáo cho lượt làm hiện tại
-let submitted = false, timeLeft = 3600, timerID = null, answered = 0, examMinutes = 60;
+// database[i] = { key, name, questions:[{q,opts,ci,ex}] } — nạp động từ Supabase, thay cho mảng chữ cứng của file gốc
+let database = [];
+let exam = [], submitted = false, timeLeft = 3600, timerID = null, answered = 0;
 
 async function init(){
-    if (!subjectId || !chapter){
-        showState(`<i class="fa-solid fa-circle-exclamation"></i>Thiếu thông tin đề thi trên đường dẫn.<br>Vui lòng quay lại <a href="index.html">trang chủ</a>.`);
+    if (!subjectId){
+        showState(`<i class="fa-solid fa-circle-exclamation"></i>Thiếu thông tin môn học trên đường dẫn.<br>Vui lòng quay lại <a href="index.html">trang chủ</a>.`);
         return;
     }
     document.getElementById('backLink').href = `mon-hoc.html?subject=${encodeURIComponent(subjectId)}`;
@@ -199,87 +207,90 @@ async function init(){
         return;
     }
 
-    const { data: chapRow, error: chapErr } = await sb.from('chapters')
-        .select('*').eq('subject_id', subjectId).eq('chapter', chapter).single();
-    if (chapErr || !chapRow){
-        showState(`<i class="fa-solid fa-circle-exclamation"></i>Không tìm thấy đề thi này.<br>Vui lòng quay lại <a href="mon-hoc.html?subject=${encodeURIComponent(subjectId)}">trang môn học</a>.`);
+    const { data: chapRows, error: chapErr } = await sb.from('chapters')
+        .select('*').eq('subject_id', subjectId).order('order_no');
+    if (chapErr || !chapRows || !chapRows.length){
+        showState(`<i class="fa-solid fa-circle-exclamation"></i>Môn học này chưa có chương nào.<br>Vui lòng quay lại <a href="index.html">trang chủ</a>.`);
         return;
     }
 
-    document.title = `${chapRow.label} · ${subject.name} · SNG EDU`;
-    document.getElementById('h-title').innerHTML = `<i class="fa-solid fa-file-signature"></i> ${escapeHtml(chapRow.label)}`;
-
-    const { data: rows, error: qErr } = await sb.from('questions')
-        .select('*').eq('subject_id', subjectId).eq('chapter', chapter).order('order_no');
+    const { data: qRows, error: qErr } = await sb.from('questions')
+        .select('*').eq('subject_id', subjectId).order('chapter').order('order_no');
     if (qErr){
         showState(`<i class="fa-solid fa-triangle-exclamation"></i>Lỗi tải câu hỏi: ${escapeHtml(qErr.message)}`);
         return;
     }
-    if (!rows || !rows.length){
-        showState(`<i class="fa-solid fa-inbox"></i>Đề thi này chưa có câu hỏi nào.<br>Vui lòng quay lại sau.`);
+    if (!qRows || !qRows.length){
+        showState(`<i class="fa-solid fa-inbox"></i>Môn học này chưa có câu hỏi nào.<br>Vui lòng quay lại sau.`);
         return;
     }
 
-    baseQuestions = rows.map(r => ({
-        q: r.content, opts: r.options, ci: r.correct_idx, ex: r.explanation || ''
-    }));
+    // gom câu hỏi theo từng chương để dựng "database" giống cấu trúc file gốc
+    database = chapRows.map(c => ({ key: c.chapter, name: c.label, questions: [] }));
+    const byKey = Object.fromEntries(database.map(d => [d.key, d]));
+    qRows.forEach(r => {
+        const bucket = byKey[r.chapter];
+        if (!bucket) return;
+        bucket.questions.push({ q: r.content, opts: r.options, ci: r.correct_idx, ex: r.explanation || '' });
+    });
+    database = database.filter(d => d.questions.length > 0);
 
-    // Thời gian làm bài mặc định: ưu tiên số phút ghi trong ghi chú của chương (vd "60 phút"),
-    // nếu không có thì ước lượng ~1.5 phút/câu, tối thiểu 15 phút.
-    examMinutes = parseNoteMinutes(chapRow.note) || Math.max(15, Math.round(baseQuestions.length * 1.5));
+    document.title = `${subject.name} · SNG EDU`;
+    document.getElementById('h-title').innerHTML = `<i class="fa-solid fa-graduation-cap"></i> ${escapeHtml(subject.name)}`;
 
-    setupSettingsBar();
+    buildSrcOptions();
     document.getElementById('settingsBar').style.display = 'flex';
     document.getElementById('mainLayout').style.display = 'flex';
     document.getElementById('loadingArea').innerHTML = '';
 
+    document.getElementById('sel-src').addEventListener('change', updateStat);
+    updateStat();
     generateExam();
 }
 
-function parseNoteMinutes(note){
-    if (!note) return null;
-    const m = String(note).match(/(\d+)\s*ph/i);
-    return m ? parseInt(m[1], 10) : null;
+function buildSrcOptions(){
+    const selSrc = document.getElementById('sel-src');
+    const total = database.reduce((s,d)=>s+d.questions.length, 0);
+    let html = `<option value="all">Tất cả (${total} câu)</option>`;
+    database.forEach((d,i) => {
+        html += `<option value="${i}">${escapeHtml(d.name)} (${d.questions.length} câu)</option>`;
+    });
+    selSrc.innerHTML = html;
 }
 
-// Xây danh sách lựa chọn "Số câu" và giá trị mặc định "Thời gian" dựa trên NHCH thực tế
-function setupSettingsBar(){
-    const total = baseQuestions.length;
-    const selNum = document.getElementById('sel-num');
-    const candidates = [10, 20, 30, 40, 60, 80, 100];
-    let opts = candidates.filter(n => n < total);
-    opts.push(total);
-    selNum.innerHTML = opts.map(n =>
-        `<option value="${n}"${n===total ? ' selected' : ''}>${n === total ? 'Tất cả' : n + ' câu'} (${n} câu)</option>`
-    ).join('');
-    // nếu có nhiều lựa chọn, mặc định chọn mốc gần 40 câu (hoặc tất cả nếu ít hơn)
-    if (opts.length > 1){
-        const preferred = opts.includes(40) ? 40 : total;
-        selNum.value = preferred;
+function getPool(){
+    const v = document.getElementById('sel-src').value;
+    let pool = [];
+    if (v === 'all'){
+        database.forEach(d => pool = pool.concat(d.questions.map(q => ({...q, src: d.name}))));
+    } else {
+        const d = database[+v];
+        pool = d.questions.map(q => ({...q, src: d.name}));
     }
-    document.getElementById('sel-time').value = examMinutes;
-    document.getElementById('stat-badge').textContent = total + ' câu trong NHCH';
+    return pool;
+}
+
+function updateStat(){
+    const n = getPool().length;
+    document.getElementById('stat-badge').textContent = n + ' câu trong NHCH';
 }
 
 function shuffleOptions(q){
     const idx = q.opts.map((_,i)=>i);
     shuffle(idx);
-    const opts = idx.map(i => q.opts[i]);
+    const opts = idx.map(i=>q.opts[i]);
     const ci = idx.indexOf(q.ci);
-    return { q: q.q, opts, ci, ex: q.ex };
+    return { q: q.q, opts, ci, ex: q.ex, src: q.src };
 }
 
 function generateExam(){
-    const n = Math.min(+document.getElementById('sel-num').value || baseQuestions.length, baseQuestions.length);
-    const mins = +document.getElementById('sel-time').value || examMinutes;
-
-    let pool = baseQuestions.slice();
-    shuffle(pool);
-    exam = pool.slice(0, n).map(shuffleOptions);
-
+    const n = Math.min(+document.getElementById('sel-num').value || 60, 9999);
+    const mins = +document.getElementById('sel-time').value || 60;
+    let pool = getPool(); shuffle(pool);
+    exam = pool.slice(0, Math.min(n, pool.length)).map(shuffleOptions);
     submitted = false; answered = 0;
     clearInterval(timerID);
-    timeLeft = mins * 60;
+    timeLeft = mins*60;
     updateTimerDisp();
     document.getElementById('timer-wrap').classList.remove('warn');
     timerID = setInterval(() => {
@@ -299,11 +310,12 @@ function updateTimerDisp(){
 
 function render(){
     const qc = document.getElementById('q-container'), ng = document.getElementById('nav-grid');
-    qc.innerHTML = ''; ng.innerHTML = '';
+    qc.innerHTML=''; ng.innerHTML='';
     exam.forEach((q,i) => {
-        const card = document.createElement('div'); card.className = 'q-card'; card.id = 'q-'+i;
+        const card = document.createElement('div'); card.className='q-card'; card.id='q-'+i;
         card.innerHTML = `
             <div class="q-num">Câu ${i+1} / ${exam.length}</div>
+            <div class="q-src"><i class="fa-solid fa-tag"></i> ${escapeHtml(q.src||'')}</div>
             <div style="font-size:1.05rem">${q.q}</div>
             <div class="opts">${q.opts.map((o,oi)=>`
                 <label class="opt" id="L-${i}-${oi}">
@@ -312,10 +324,10 @@ function render(){
                     <div class="opt-t">${o}</div>
                 </label>`).join('')}
             </div>
-            <div class="ex-box" id="ex-${i}"><b><i class="fa-solid fa-lightbulb" style="color:#f59e0b"></i> Giải thích:</b><br>${q.ex || 'Không có giải thích.'}</div>`;
+            <div class="ex-box" id="ex-${i}"><b><i class="fa-solid fa-lightbulb" style="color:#f59e0b"></i> Giải thích:</b><br>${q.ex||'Không có giải thích.'}</div>`;
         qc.appendChild(card);
         const btn = document.createElement('div');
-        btn.className = 'nav-btn'; btn.id = 'nav-'+i; btn.textContent = i+1;
+        btn.className='nav-btn'; btn.id='nav-'+i; btn.textContent=i+1;
         btn.onclick = () => card.scrollIntoView({behavior:'smooth', block:'start'});
         ng.appendChild(btn);
     });
@@ -337,7 +349,7 @@ function updateProg(){
 
 function submitExam(){
     if (submitted) return;
-    if (timeLeft > 0 && !confirm('Bạn có chắc chắn muốn nộp bài?')) return;
+    if (!confirm('Bạn có chắc chắn muốn nộp bài?')) return;
     submitted = true; clearInterval(timerID);
     let ok=0, bad=0, skip=0;
     exam.forEach((q,i) => {
@@ -347,11 +359,11 @@ function submitExam(){
         const nav = document.getElementById('nav-'+i);
         if (sel){
             const v = +sel.value;
-            if (v === q.ci){ ok++; nav.className = 'nav-btn correct'; }
-            else { bad++; nav.className = 'nav-btn wrong'; document.getElementById('L-'+i+'-'+v).classList.add('bad'); }
-        } else { skip++; nav.className = 'nav-btn wrong'; }
+            if (v === q.ci){ ok++; nav.className='nav-btn correct'; }
+            else { bad++; nav.className='nav-btn wrong'; document.getElementById('L-'+i+'-'+v).classList.add('bad'); }
+        } else { skip++; nav.className='nav-btn wrong'; }
     });
-    const t = exam.length, score = (ok/t*10).toFixed(1), pct = (ok/t*100).toFixed(0);
+    const t = exam.length, score=(ok/t*10).toFixed(1), pct=(ok/t*100).toFixed(0);
     document.getElementById('final-score').textContent = score;
     document.getElementById('r-ok').textContent = ok;
     document.getElementById('r-bad').textContent = bad;
@@ -364,13 +376,7 @@ function submitExam(){
 }
 
 function closeModal(){ document.getElementById('modal').classList.remove('open'); window.scrollTo({top:0, behavior:'smooth'}); }
-function reloadExam(){
-    if (submitted || confirm('Tạo đề mới sẽ mất kết quả hiện tại. Tiếp tục?')){
-        document.getElementById('modal').classList.remove('open');
-        generateExam();
-        window.scrollTo({top:0, behavior:'smooth'});
-    }
-}
+function reloadExam(){ document.getElementById('modal').classList.remove('open'); generateExam(); window.scrollTo({top:0, behavior:'smooth'}); }
 
 init();
 </script>

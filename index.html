@@ -27,6 +27,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
     :root{
         --bg:        #f5f7fb;
@@ -532,74 +533,9 @@
             </div>
         </div>
 
-        <div class="sec-head" style="margin-top:8px"><h2>Học phần nổi bật</h2><span>6 học phần</span></div>
-        <div class="grid">
-            <a class="card locked c-pldc" href="#" data-locked="true" data-subject="pldc" data-subject-name="Pháp luật đại cương">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip"><i class="fa-solid fa-scale-balanced"></i></div>
-                    <div class="num-tag">01</div>
-                </div>
-                <div class="card-title">Pháp luật đại cương</div>
-                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
-                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
-                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
-            </a>
-            <a class="card c-th" href="TH/index.html">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip"><i class="fa-solid fa-brain"></i></div>
-                    <div class="num-tag">02</div>
-                </div>
-                <div class="card-title">Triết học Mác – Lênin</div>
-                <div class="badge-row"><i class="fa-solid fa-layer-group"></i> 560 câu hỏi</div>
-                <div class="status-bar"><i style="width:100%; background:#7c5cfc"></i></div>
-                <div class="status-text" style="color:#7c5cfc">Sẵn sàng ôn tập</div>
-            </a>
-            <a class="card c-ktct" href="KTCT/index.html">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip"><i class="fa-solid fa-coins"></i></div>
-                    <div class="num-tag">03</div>
-                </div>
-                <div class="card-title">Kinh tế chính trị Mác – Lênin</div>
-                <div class="badge-row"><i class="fa-solid fa-layer-group"></i> 560 câu hỏi</div>
-                <div class="status-bar"><i style="width:100%; background:var(--green)"></i></div>
-                <div class="status-text" style="color:var(--green)">Sẵn sàng ôn tập</div>
-            </a>
-            <a class="card c-cnxh" href="CNXH/index.html">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip"><i class="fa-solid fa-people-group"></i></div>
-                    <div class="num-tag">04</div>
-                </div>
-                <div class="card-title">Chủ nghĩa xã hội khoa học</div>
-                <div class="badge-row"><i class="fa-solid fa-layer-group"></i> 560 câu hỏi</div>
-                <div class="status-bar"><i style="width:100%; background:#e4572e"></i></div>
-                <div class="status-text" style="color:#e4572e">Sẵn sàng ôn tập</div>
-            </a>
-            <a class="card locked c-lsd" href="#" data-locked="true" data-subject="lsd" data-subject-name="Lịch sử Đảng Cộng sản">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip"><i class="fa-solid fa-landmark"></i></div>
-                    <div class="num-tag">05</div>
-                </div>
-                <div class="card-title">Lịch sử Đảng Cộng sản</div>
-                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
-                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
-                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
-            </a>
-            <a class="card locked c-tthcm" href="#" data-locked="true" data-subject="tthcm" data-subject-name="Tư tưởng Hồ Chí Minh">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip"><i class="fa-solid fa-star"></i></div>
-                    <div class="num-tag">06</div>
-                </div>
-                <div class="card-title">Tư tưởng Hồ Chí Minh</div>
-                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
-                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
-                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
-            </a>
+        <div class="sec-head" style="margin-top:8px"><h2>Học phần nổi bật</h2><span id="homeSubjectCount">Đang tải...</span></div>
+        <div class="grid" id="homeSubjectGrid">
+            <div class="empty-state small"><div class="empty-title">Đang tải danh sách môn học...</div></div>
         </div>
 
     </section>
@@ -609,84 +545,13 @@
 
         <div class="sec-head">
             <h2>Học phần đại cương</h2>
-            <span>6 học phần</span>
+            <span id="quizSubjectCount">Đang tải...</span>
         </div>
 
-        <div class="grid">
-
-            <a class="card locked c-pldc" href="#" data-locked="true" data-subject="pldc" data-subject-name="Pháp luật đại cương">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip"><i class="fa-solid fa-scale-balanced"></i></div>
-                    <div class="num-tag">01</div>
-                </div>
-                <div class="card-title">Pháp luật đại cương</div>
-                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
-                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
-                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
-            </a>
-
-            <a class="card c-th" href="TH/index.html">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip"><i class="fa-solid fa-brain"></i></div>
-                    <div class="num-tag">02</div>
-                </div>
-                <div class="card-title">Triết học Mác – Lênin</div>
-                <div class="badge-row"><i class="fa-solid fa-layer-group"></i> 560 câu hỏi</div>
-                <div class="status-bar"><i style="width:100%; background:#7c5cfc"></i></div>
-                <div class="status-text" style="color:#7c5cfc">Sẵn sàng ôn tập</div>
-            </a>
-
-            <a class="card c-ktct" href="KTCT/index.html">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip"><i class="fa-solid fa-coins"></i></div>
-                    <div class="num-tag">03</div>
-                </div>
-                <div class="card-title">Kinh tế chính trị Mác – Lênin</div>
-                <div class="badge-row"><i class="fa-solid fa-layer-group"></i> 560 câu hỏi</div>
-                <div class="status-bar"><i style="width:100%; background:var(--green)"></i></div>
-                <div class="status-text" style="color:var(--green)">Sẵn sàng ôn tập</div>
-            </a>
-
-            <a class="card c-cnxh" href="CNXH/index.html">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip"><i class="fa-solid fa-people-group"></i></div>
-                    <div class="num-tag">04</div>
-                </div>
-                <div class="card-title">Chủ nghĩa xã hội khoa học</div>
-                <div class="badge-row"><i class="fa-solid fa-layer-group"></i> 560 câu hỏi</div>
-                <div class="status-bar"><i style="width:100%; background:#e4572e"></i></div>
-                <div class="status-text" style="color:#e4572e">Sẵn sàng ôn tập</div>
-            </a>
-
-            <a class="card locked c-lsd" href="#" data-locked="true" data-subject="lsd" data-subject-name="Lịch sử Đảng Cộng sản">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip"><i class="fa-solid fa-landmark"></i></div>
-                    <div class="num-tag">05</div>
-                </div>
-                <div class="card-title">Lịch sử Đảng Cộng sản</div>
-                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
-                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
-                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
-            </a>
-
-            <a class="card locked c-tthcm" href="#" data-locked="true" data-subject="tthcm" data-subject-name="Tư tưởng Hồ Chí Minh">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip"><i class="fa-solid fa-star"></i></div>
-                    <div class="num-tag">06</div>
-                </div>
-                <div class="card-title">Tư tưởng Hồ Chí Minh</div>
-                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
-                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
-                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
-            </a>
-
+        <div class="grid" id="quizSubjectGrid">
+            <div class="empty-state small"><div class="empty-title">Đang tải danh sách môn học...</div></div>
         </div>
+
     </section>
 
     <!-- ============ TAB: TÀI LIỆU ============ -->
@@ -850,12 +715,127 @@
         toastTimer = setTimeout(()=> toast.classList.remove('show'), 1800);
     });
 
-    document.querySelectorAll('[data-locked="true"]').forEach(el=>{
-        el.addEventListener('click', e=>{
-            e.preventDefault();
-            showToast(el.dataset.subject, el.dataset.subjectName);
+    function bindLockedCards(){
+        document.querySelectorAll('[data-locked="true"]:not([data-bound])').forEach(el=>{
+            el.dataset.bound = '1';
+            el.addEventListener('click', e=>{
+                e.preventDefault();
+                showToast(el.dataset.subject, el.dataset.subjectName);
+            });
         });
-    });
+    }
+    bindLockedCards();
+
+    // ---------------- ĐỒNG BỘ MÔN HỌC VỚI SUPABASE ----------------
+    const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Vị trí/icon/màu thiết kế sẵn cho từng môn theo đúng mã (id) dùng trong Supabase.
+    // Môn nào chưa có trong bảng subjects sẽ tự hiện ở dạng "Sắp ra mắt".
+    const SUBJECT_SLOTS = [
+        { id:'PLDC',  title:'Pháp luật đại cương',          icon:'fa-scale-balanced', color:'#0068ff',      bg:'#e8f3ff' },
+        { id:'TH',    title:'Triết học Mác – Lênin',         icon:'fa-brain',          color:'#7c5cfc',      bg:'#f1ecff' },
+        { id:'KTCT',  title:'Kinh tế chính trị Mác – Lênin', icon:'fa-coins',          color:'var(--green)', bg:'var(--green-bg)' },
+        { id:'CNXH',  title:'Chủ nghĩa xã hội khoa học',     icon:'fa-people-group',   color:'#e4572e',      bg:'#fdece3' },
+        { id:'LSD',   title:'Lịch sử Đảng Cộng sản',         icon:'fa-landmark',       color:'#946b1f',      bg:'#fbf1de' },
+        { id:'TTHCM', title:'Tư tưởng Hồ Chí Minh',          icon:'fa-star',           color:'#c2185b',      bg:'#fde8f0' }
+    ];
+    // Bảng màu dự phòng cho môn mới thêm ở admin nhưng chưa có vị trí thiết kế riêng
+    const EXTRA_PALETTE = [
+        { icon:'fa-book-open',    color:'#0891b2', bg:'#e3f6fb' },
+        { icon:'fa-graduation-cap', color:'#9333ea', bg:'#f4e9fd' },
+        { icon:'fa-flask',        color:'#ca8a04', bg:'#fdf3d8' }
+    ];
+
+    function escapeHtmlHome(s){
+        return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+    function lockedCardHtml(slot, num){
+        return `
+            <a class="card locked" href="#" data-locked="true" data-subject="${slot.id.toLowerCase()}" data-subject-name="${escapeHtmlHome(slot.title)}">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip" style="background:${slot.bg}; color:${slot.color}"><i class="fa-solid ${slot.icon}"></i></div>
+                    <div class="num-tag">${String(num).padStart(2,'0')}</div>
+                </div>
+                <div class="card-title">${escapeHtmlHome(slot.title)}</div>
+                <div class="badge-row"><i class="fa-regular fa-clock"></i> Đang biên soạn</div>
+                <div class="status-bar"><i style="width:0%; background:var(--ink-mute)"></i></div>
+                <div class="status-text" style="color:var(--ink-mute)">Sắp ra mắt</div>
+            </a>
+        `;
+    }
+    function readyCardHtml(subject, style, num){
+        return `
+            <a class="card" href="mon-hoc.html?subject=${encodeURIComponent(subject.id)}">
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top">
+                    <div class="icon-chip" style="background:${style.bg}; color:${style.color}"><i class="fa-solid ${style.icon}"></i></div>
+                    <div class="num-tag">${String(num).padStart(2,'0')}</div>
+                </div>
+                <div class="card-title">${escapeHtmlHome(subject.name)}</div>
+                <div class="badge-row" data-count-for="${escapeHtmlHome(subject.id)}"><i class="fa-solid fa-layer-group"></i> Đang tải...</div>
+                <div class="status-bar"><i style="width:100%; background:${style.color}"></i></div>
+                <div class="status-text" style="color:${style.color}">Sẵn sàng ôn tập</div>
+            </a>
+        `;
+    }
+
+    async function renderSubjectGrids(){
+        const homeGrid = document.getElementById('homeSubjectGrid');
+        const quizGrid = document.getElementById('quizSubjectGrid');
+        const homeCountEl = document.getElementById('homeSubjectCount');
+        const quizCountEl = document.getElementById('quizSubjectCount');
+
+        const { data: dbSubjects, error } = await sb.from('subjects').select('*').order('id');
+
+        if (error){
+            const errHtml = `<div class="empty-state"><div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="empty-title">Không tải được danh sách môn học</div><div class="empty-sub">${escapeHtmlHome(error.message)}</div></div>`;
+            homeGrid.innerHTML = errHtml;
+            quizGrid.innerHTML = errHtml;
+            return;
+        }
+
+        const subjectMap = {};
+        (dbSubjects || []).forEach(s => subjectMap[s.id] = s);
+        const usedIds = new Set();
+        let num = 1;
+        let html = '';
+
+        SUBJECT_SLOTS.forEach(slot => {
+            const s = subjectMap[slot.id];
+            usedIds.add(slot.id);
+            html += s ? readyCardHtml(s, slot, num) : lockedCardHtml(slot, num);
+            num++;
+        });
+        (dbSubjects || []).forEach(s => {
+            if (usedIds.has(s.id)) return;
+            const style = EXTRA_PALETTE[(num - SUBJECT_SLOTS.length - 1) % EXTRA_PALETTE.length];
+            html += readyCardHtml(s, style, num);
+            num++;
+        });
+
+        homeGrid.innerHTML = html;
+        quizGrid.innerHTML = html;
+        const totalLabel = (num - 1) + ' học phần';
+        if (homeCountEl) homeCountEl.textContent = totalLabel;
+        if (quizCountEl) quizCountEl.textContent = totalLabel;
+
+        bindLockedCards();
+        loadQuestionCounts(dbSubjects || []);
+    }
+
+    async function loadQuestionCounts(dbSubjects){
+        await Promise.all(dbSubjects.map(async s => {
+            const { count } = await sb.from('questions').select('*', { count:'exact', head:true }).eq('subject_id', s.id);
+            document.querySelectorAll(`[data-count-for="${s.id}"]`).forEach(el=>{
+                el.innerHTML = `<i class="fa-solid fa-layer-group"></i> ${count || 0} câu hỏi`;
+            });
+        }));
+    }
+
+    renderSubjectGrids();
 
     const panels = { home:'panel-home', quiz:'panel-quiz', doc:'panel-doc', tool:'panel-tool', product:'panel-product', support:'panel-support' };
     const titles = {

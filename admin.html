@@ -202,22 +202,45 @@ main{flex:1;padding:26px 34px 60px;max-width:1000px;}
 .empty-state{text-align:center;padding:40px 20px;color:var(--gray);font-size:.88rem;}
 textarea{resize:vertical;}
 .file-drop{
-    position:relative;border:1.5px dashed var(--border);border-radius:10px;padding:18px;
-    text-align:center;background:var(--bg);transition:.15s;
+    position:relative;border:2px dashed #c7cbe0;border-radius:14px;padding:26px 20px;
+    text-align:center;background:var(--white);transition:.15s;
 }
+.file-drop:hover{border-color:var(--accent);background:#f7f8ff;}
 .file-drop.dragover{border-color:var(--accent);background:#eef0ff;}
 .file-drop input[type=file]{
     position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;
 }
-.file-drop-text{font-size:.85rem;color:var(--text);line-height:1.5;pointer-events:none;}
-.file-list{margin-top:8px;display:flex;flex-direction:column;gap:4px;}
-.file-list .file-row{
-    display:flex;justify-content:space-between;gap:8px;font-size:.82rem;
-    padding:6px 10px;border-radius:6px;background:var(--bg);
+.file-drop-icon{
+    width:46px;height:46px;border-radius:50%;background:#eef0ff;color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin:0 auto 10px;
+    pointer-events:none;
 }
-.file-list .file-row .fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.file-list .file-row .fcount.ok{color:var(--green);font-weight:600;}
-.file-list .file-row .fcount.err{color:var(--red);font-weight:600;}
+.file-drop-title{font-weight:700;color:var(--text);font-size:.95rem;margin-bottom:5px;pointer-events:none;}
+.file-drop-sub{font-size:.8rem;color:var(--gray);line-height:1.5;pointer-events:none;}
+.file-drop-text{font-size:.85rem;color:var(--text);line-height:1.5;pointer-events:none;}
+.callout{
+    background:#eef2ff;border:1px solid #dce0fb;border-left:4px solid var(--accent);
+    border-radius:10px;padding:13px 16px;font-size:.86rem;color:#333a63;line-height:1.65;margin:2px 0 20px;
+}
+.callout b{color:var(--accent-dark);}
+.section-label{
+    font-weight:700;font-size:.92rem;color:var(--text);margin:0 0 10px;
+    display:flex;align-items:center;gap:8px;
+}
+.or-divider{
+    display:flex;align-items:center;gap:12px;margin:24px 0 16px;
+    color:var(--gray);font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+}
+.or-divider::before,.or-divider::after{content:"";flex:1;height:1px;background:var(--border);}
+.file-list{margin-top:14px;display:flex;flex-direction:column;gap:6px;}
+.file-list .file-row{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.85rem;
+    padding:9px 12px;border-radius:8px;background:var(--bg);border:1px solid var(--border);
+}
+.file-list .file-row .fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
+.file-list .file-row .fcount{flex:0 0 auto;font-weight:600;}
+.file-list .file-row .fcount.ok{color:var(--green);}
+.file-list .file-row .fcount.err{color:var(--red);}
 ::-webkit-scrollbar{width:8px;}
 ::-webkit-scrollbar-thumb{background:#3a4266;border-radius:4px;}
 
@@ -346,30 +369,31 @@ textarea{resize:vertical;}
         <div id="tab-bulk" class="tab-panel hidden">
             <div class="panel">
                 <h3>Dán nhiều câu hỏi cùng lúc</h3>
-                <p class="hint">
-                    Định dạng: <b>Câu 1: Nội dung...</b>, các dòng tiếp theo <b>A. đáp án</b> ... <b>D. đáp án</b>,
-                    đánh dấu đáp án đúng bằng dấu * phía trước (vd <b>*B. đáp án</b>), dòng <b>Gt: giải thích</b> không bắt buộc.
+                <div class="callout">
+                    <b>Định dạng:</b> <b>Câu 1: Nội dung...</b>, các dòng tiếp theo <b>A. đáp án</b> ... <b>D. đáp án</b>,
+                    đánh dấu đáp án đúng bằng dấu <b>*</b> phía trước (vd <b>*B. đáp án</b>), dòng <b>Gt: giải thích</b> không bắt buộc.
                     Mỗi câu cách nhau 1 dòng trống.
-                </p>
-
-                <label>Hoặc tải lên file (.html, .htm, .txt) — chọn được nhiều file cùng lúc</label>
-                <div class="file-drop" id="fileDrop">
-                    <input type="file" id="bulkFileInput" accept=".html,.htm,.txt,.md" multiple onchange="handleBulkFiles(this.files)">
-                    <div class="file-drop-text">
-                        📂 Bấm để chọn file, hoặc kéo-thả file vào đây<br>
-                        <span style="font-weight:400;color:var(--gray);">Tự động nhận diện và trích câu hỏi/đáp án từ file quiz .html (dạng rawData) hoặc file .txt/.md theo đúng định dạng ở trên.</span>
-                    </div>
                 </div>
-                <div id="fileReadSummary" class="hint" style="margin-top:8px;"></div>
 
-                <label style="margin-top:16px;">Nội dung đã trích (xem lại / chỉnh sửa trước khi nạp)</label>
                 <textarea id="bulkText" rows="10" placeholder="Câu 1: Thủ đô của Việt Nam là?
 A. TP.HCM
 *B. Hà Nội
 C. Đà Nẵng
 D. Huế
 Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
-                <div style="display:flex;gap:10px;align-items:center;margin-top:14px;">
+
+                <div class="or-divider">hoặc tải file lên</div>
+
+                <div class="section-label">📎 Tải lên file (.html, .htm, .txt, .md) — chọn được nhiều file cùng lúc</div>
+                <div class="file-drop" id="fileDrop">
+                    <input type="file" id="bulkFileInput" accept=".html,.htm,.txt,.md" multiple onchange="handleBulkFiles(this.files)">
+                    <div class="file-drop-icon">📂</div>
+                    <div class="file-drop-title">Bấm để chọn file, hoặc kéo-thả file vào đây</div>
+                    <div class="file-drop-sub">Tự động nhận diện và trích câu hỏi/đáp án từ file quiz .html (kể cả file nhiều chương gộp chung) hoặc file .txt/.md theo đúng định dạng ở trên. Nội dung trích được sẽ tự động thêm vào ô phía trên.</div>
+                </div>
+                <div id="fileReadSummary"></div>
+
+                <div style="display:flex;gap:10px;align-items:center;margin-top:18px;">
                     <button class="btn-primary" onclick="bulkImport()">Nạp tất cả</button>
                     <button class="btn-ghost" onclick="clearBulkText()">Xóa nội dung</button>
                 </div>
@@ -861,16 +885,17 @@ async function saveSingleQuestion(){
 }
 
 // ---------- BULK IMPORT: FILE UPLOAD ----------
-// Tìm khối văn bản chứa danh sách câu hỏi bên trong 1 file .html
-// (ưu tiên biến dạng `const rawData = `...`;` hay bất kỳ template string nào chứa nhiều "Câu N:")
+// Tìm khối văn bản chứa danh sách câu hỏi bên trong 1 file .html.
+// Hỗ trợ cả 2 dạng: (1) 1 biến duy nhất `const rawData = \`...\`;`,
+// và (2) nhiều khối gộp trong 1 mảng, ví dụ `const database = [ {name, content:\`...\`}, {name, content:\`...\`}, ... ]`
+// (dạng đề thi thử random nhiều chương). Mọi khối template string có chứa "Câu N:" đều được gom lại theo đúng thứ tự xuất hiện trong file.
 function extractQuestionTextFromHtml(html){
     const templateLiterals = [...html.matchAll(/`([\s\S]*?)`/g)].map(m => m[1]);
-    let best = '', bestCount = 0;
-    templateLiterals.forEach(t => {
-        const count = (t.match(/Câu\s*\d+\s*:/g) || []).length;
-        if (count > bestCount){ bestCount = count; best = t; }
-    });
-    if (bestCount > 0) return best.trim();
+    const questionParts = templateLiterals
+        .map(t => ({ text: t, count: (t.match(/Câu\s*\d+\s*:/g) || []).length }))
+        .filter(x => x.count > 0)
+        .map(x => x.text.trim());
+    if (questionParts.length) return questionParts.join('\n\n');
 
     // dự phòng: nếu không tìm thấy template literal nào, thử lấy toàn bộ text hiển thị của trang
     const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);

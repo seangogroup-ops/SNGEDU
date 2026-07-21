@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chọn chương/đề · SNG EDU</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+    --bg:#f4f5f9;
+    --white:#ffffff;
+    --border:#e3e5ee;
+    --text:#1c2033;
+    --gray:#6b7185;
+    --accent:#4457e8;
+    --accent-dark:#333fc2;
+    --radius:12px;
+}
+*{box-sizing:border-box;}
+body{
+    margin:0;
+    font-family:-apple-system,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+}
+.topbar{
+    background:var(--white);border-bottom:1px solid var(--border);
+    padding:16px 20px;display:flex;align-items:center;gap:12px;
+}
+.back-link{
+    color:var(--gray);text-decoration:none;font-size:.9rem;font-weight:600;
+    display:flex;align-items:center;gap:4px;
+}
+.back-link:hover{color:var(--accent);}
+main{max-width:760px;margin:0 auto;padding:28px 18px 60px;}
+h1{font-size:1.3rem;margin:0 0 4px;}
+.subtitle{color:var(--gray);font-size:.9rem;margin:0 0 24px;}
+.group-title{
+    font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--gray);margin:22px 0 10px;
+}
+.chapter-list{display:flex;flex-direction:column;gap:10px;}
+.chapter-card{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 18px;text-decoration:none;color:var(--text);
+    transition:border-color .12s, transform .12s;
+}
+.chapter-card:hover{border-color:var(--accent);transform:translateY(-1px);}
+.chapter-card .info .label{font-weight:700;font-size:1rem;margin-bottom:2px;}
+.chapter-card .info .note{color:var(--gray);font-size:.85rem;}
+.chapter-card .code{
+    flex:0 0 auto;font-size:.75rem;font-weight:700;letter-spacing:.02em;
+    background:#eef0f7;color:var(--accent-dark);padding:5px 10px;border-radius:6px;
+}
+.chapter-card .arrow{color:var(--gray);flex:0 0 auto;}
+.empty-state, .error-state{
+    text-align:center;padding:50px 20px;color:var(--gray);font-size:.92rem;
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+}
+.error-state{color:#991b1b;}
+.loading{text-align:center;padding:50px 20px;color:var(--gray);font-size:.92rem;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <a href="index.html" class="back-link">← Trang chủ</a>
+</div>
+
+<main>
+    <h1 id="subjectTitle">Đang tải môn học...</h1>
+    <p class="subtitle" id="subjectSubtitle"></p>
+    <div id="content"><div class="loading">Đang tải danh sách chương/đề...</div></div>
+</main>
+
+<script>
+const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function getSubjectId(){
+    const params = new URLSearchParams(window.location.search);
+    return params.get('subject') || params.get('subject_id') || params.get('mon');
+}
+function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+async function loadPage(){
+    const subjectId = getSubjectId();
+    const content = document.getElementById('content');
+
+    if (!subjectId){
+        document.getElementById('subjectTitle').innerText = 'Thiếu thông tin môn học';
+        content.innerHTML = `<div class="error-state">Không tìm thấy môn học trong đường dẫn. Vui lòng quay lại trang chủ và chọn lại môn học.</div>`;
+        return;
+    }
+
+    const { data: subject, error: subjectErr } = await sb.from('subjects').select('*').eq('id', subjectId).single();
+    if (subjectErr || !subject){
+        document.getElementById('subjectTitle').innerText = 'Không tìm thấy môn học';
+        content.innerHTML = `<div class="error-state">Môn học "${escapeHtml(subjectId)}" không tồn tại hoặc đã bị xóa.</div>`;
+        return;
+    }
+
+    document.getElementById('subjectTitle').innerText = subject.name;
+    document.getElementById('subjectSubtitle').innerText = 'Chọn một chương/đề để bắt đầu ôn tập';
+
+    const { data: chapters, error: chapErr } = await sb.from('chapters')
+        .select('*').eq('subject_id', subjectId).order('order_no');
+
+    if (chapErr){
+        content.innerHTML = `<div class="error-state">Lỗi tải chương/đề: ${escapeHtml(chapErr.message)}</div>`;
+        return;
+    }
+
+    if (!chapters || !chapters.length){
+        content.innerHTML = `<div class="empty-state">Môn học này chưa có chương/đề nào. Vui lòng quay lại sau.</div>`;
+        return;
+    }
+
+    const groups = {};
+    chapters.forEach(ch => {
+        const g = ch.group_name || 'Nội dung chính';
+        if (!groups[g]) groups[g] = [];
+        groups[g].push(ch);
+    });
+
+    let html = '';
+    Object.keys(groups).forEach(groupName => {
+        html += `<div class="group-title">${escapeHtml(groupName)}</div>`;
+        html += `<div class="chapter-list">`;
+        groups[groupName].forEach(ch => {
+            const href = `quiz-dynamic.html?subject=${encodeURIComponent(subjectId)}&chapter=${encodeURIComponent(ch.chapter)}`;
+            html += `
+                <a class="chapter-card" href="${href}">
+                    <div class="info">
+                        <div class="label">${escapeHtml(ch.label)}</div>
+                        ${ch.note ? `<div class="note">${escapeHtml(ch.note)}</div>` : ''}
+                    </div>
+                    <span class="code">${escapeHtml(ch.chapter)}</span>
+                    <span class="arrow">→</span>
+                </a>
+            `;
+        });
+        html += `</div>`;
+    });
+
+    content.innerHTML = html;
+}
+
+loadPage();
+</script>
+</body>
+</html>

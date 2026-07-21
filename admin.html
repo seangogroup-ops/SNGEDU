@@ -135,6 +135,14 @@ aside{
 .side-item.active .icon-x:hover,.side-item.active .icon-edit:hover{background:rgba(255,255,255,.35);}
 .side-item{cursor:grab;}
 .side-item.dragging{opacity:.4;}
+.side-item.select-mode{cursor:pointer;}
+.chap-cb{width:auto;flex:0 0 auto;accent-color:var(--accent);margin:0;}
+.chap-bulk-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;
+    padding:8px 10px;background:var(--navy-2);border-radius:8px;font-size:.78rem;color:#c7cce3;
+}
+.btn-mini-danger{background:rgba(220,38,38,.85);color:#fff;padding:6px 10px;font-size:.75rem;border-radius:6px;}
+.btn-mini-danger:disabled{opacity:.4;cursor:not-allowed;}
 .drag-handle{color:#565e82;font-size:.85rem;letter-spacing:-1px;flex:0 0 auto;cursor:grab;padding-right:1px;}
 .menu-wrap{position:relative;flex:0 0 auto;}
 .menu-drop{
@@ -341,7 +349,19 @@ textarea{resize:vertical;}
         </div>
 
         <div class="side-section">
-            <h4>Chương / đề <button class="side-add" onclick="openChapterForm()">+ Thêm</button></h4>
+            <h4>Chương / đề
+                <span style="display:flex;gap:6px;">
+                    <button class="side-add" id="chapSelectModeBtn" onclick="toggleChapterSelectMode()">☑ Chọn nhiều</button>
+                    <button class="side-add" onclick="openChapterForm()">+ Thêm</button>
+                </span>
+            </h4>
+            <div id="chapBulkBar" class="chap-bulk-bar hidden">
+                <span id="chapBulkCount">Đã chọn 0 mục</span>
+                <div style="display:flex;gap:6px;">
+                    <button class="btn-mini-cancel" style="padding:6px 10px;font-size:.75rem;" onclick="toggleChapterSelectMode()">Hủy</button>
+                    <button class="btn-mini-danger" id="chapBulkDeleteBtn" onclick="bulkDeleteChapters()" disabled>🗑️ Xóa đã chọn</button>
+                </div>
+            </div>
             <div id="chapterList" class="side-list"></div>
             <div id="chapterForm" class="mini-form">
                 <div id="chapterFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm chương/đề</div>
@@ -756,34 +776,18 @@ async function loadChapters(){
     const { data, error } = await sb.from('chapters').select('*').eq('subject_id', currentSubject.id).order('order_no');
     if (error){ box.innerHTML = `<div style="color:#f88;font-size:.82rem;">Lỗi: ${escapeHtml(error.message)}</div>`; updateContextBar(); return; }
     chapters = data || [];
-    if (!chapters.length){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Môn này chưa có chương/đề nào.</div>`; }
-    else {
-        box.innerHTML = chapters.map(ch => `
-            <div class="side-item ${currentChapter && currentChapter.chapter===ch.chapter ? 'active' : ''}" draggable="true" data-chapter="${escapeHtml(ch.chapter)}"
-                 onclick='selectChapter(${JSON.stringify(ch.chapter)})'
-                 ondragstart="onChapterDragStart(event, ${JSON.stringify(ch.chapter)})"
-                 ondragover="onChapterDragOver(event)"
-                 ondrop="onChapterDrop(event, ${JSON.stringify(ch.chapter)})"
-                 ondragend="onChapterDragEnd(event)">
-                <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
-                <span class="name">${escapeHtml(ch.label)}</span>
-                <span class="right-cluster">
-                    <span class="code">${escapeHtml(ch.chapter)}</span>
-                    <button class="icon-edit" title="Sửa chương/đề" onclick='event.stopPropagation(); editChapter(${ch.id})'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
-                    <button class="icon-x" title="Xóa chương" onclick="event.stopPropagation(); deleteChapter(${ch.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg></button>
-                </span>
-            </div>
-        `).join('');
-    }
+    renderChapterList();
     updateContextBar();
 }
 let draggedChapterCode = null;
 function onChapterDragStart(e, code){
+    if (chapterSelectMode) return;
     draggedChapterCode = code;
     e.dataTransfer.effectAllowed = 'move';
     e.currentTarget.classList.add('dragging');
 }
 function onChapterDragOver(e){
+    if (chapterSelectMode) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
 }
@@ -791,6 +795,7 @@ function onChapterDragEnd(e){
     e.currentTarget.classList.remove('dragging');
 }
 async function onChapterDrop(e, targetCode){
+    if (chapterSelectMode) return;
     e.preventDefault();
     if (!draggedChapterCode || draggedChapterCode === targetCode) return;
 
@@ -813,24 +818,79 @@ async function onChapterDrop(e, targetCode){
 
     loadChapters();
 }
+
+// ---------- CHỌN NHIỀU / XÓA HÀNG LOẠT ----------
+let chapterSelectMode = false;
+let selectedChapterIds = new Set();
+function toggleChapterSelectMode(){
+    chapterSelectMode = !chapterSelectMode;
+    selectedChapterIds.clear();
+    document.getElementById('chapSelectModeBtn').textContent = chapterSelectMode ? '✕ Thoát chọn' : '☑ Chọn nhiều';
+    document.getElementById('chapBulkBar').classList.toggle('hidden', !chapterSelectMode);
+    renderChapterList();
+}
+function toggleChapterChecked(id){
+    if (selectedChapterIds.has(id)) selectedChapterIds.delete(id);
+    else selectedChapterIds.add(id);
+    renderChapterList();
+}
+function updateChapterBulkBar(){
+    if (!chapterSelectMode) return;
+    const n = selectedChapterIds.size;
+    document.getElementById('chapBulkCount').textContent = `Đã chọn ${n} mục`;
+    document.getElementById('chapBulkDeleteBtn').disabled = n === 0;
+}
+function bulkDeleteChapters(){
+    const ids = Array.from(selectedChapterIds);
+    if (!ids.length) return;
+    const names = chapters.filter(c => ids.includes(c.id)).map(c => c.label);
+    showConfirm(
+        `Xóa ${ids.length} chương/đề?`,
+        `Sẽ xóa ${ids.length} mục: ${names.join(', ')}. Câu hỏi bên trong sẽ KHÔNG bị xóa nhưng sẽ không còn hiển thị theo các chương này. Không thể hoàn tác.`,
+        async () => {
+            const { error } = await sb.from('chapters').delete().in('id', ids);
+            if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
+            showMsg(`Đã xóa ${ids.length} chương/đề.`, 'ok');
+            if (currentChapter && ids.includes(currentChapter.id)) currentChapter = null;
+            chapterSelectMode = false;
+            selectedChapterIds.clear();
+            document.getElementById('chapSelectModeBtn').textContent = '☑ Chọn nhiều';
+            document.getElementById('chapBulkBar').classList.add('hidden');
+            loadChapters();
+            loadQuestions();
+        }
+    );
+}
 function renderChapterList(){
     const box = document.getElementById('chapterList');
+    if (!chapters.length){
+        box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Môn này chưa có chương/đề nào.</div>`;
+        updateChapterBulkBar();
+        return;
+    }
     box.innerHTML = chapters.map(ch => `
-        <div class="side-item ${currentChapter && currentChapter.chapter===ch.chapter ? 'active' : ''}" draggable="true" data-chapter="${escapeHtml(ch.chapter)}"
-             onclick='selectChapter(${JSON.stringify(ch.chapter)})'
+        <div class="side-item ${currentChapter && currentChapter.chapter===ch.chapter ? 'active' : ''} ${chapterSelectMode ? 'select-mode' : ''}"
+             draggable="${chapterSelectMode ? 'false' : 'true'}" data-chapter="${escapeHtml(ch.chapter)}"
+             onclick='${chapterSelectMode ? `toggleChapterChecked(${ch.id})` : `selectChapter(${JSON.stringify(ch.chapter)})`}'
              ondragstart="onChapterDragStart(event, ${JSON.stringify(ch.chapter)})"
              ondragover="onChapterDragOver(event)"
              ondrop="onChapterDrop(event, ${JSON.stringify(ch.chapter)})"
              ondragend="onChapterDragEnd(event)">
-            <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
+            ${chapterSelectMode
+                ? `<input type="checkbox" class="chap-cb" onclick="event.stopPropagation()" onchange="toggleChapterChecked(${ch.id})" ${selectedChapterIds.has(ch.id) ? 'checked' : ''}>`
+                : `<span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>`
+            }
             <span class="name">${escapeHtml(ch.label)}</span>
             <span class="right-cluster">
                 <span class="code">${escapeHtml(ch.chapter)}</span>
+                ${chapterSelectMode ? '' : `
                 <button class="icon-edit" title="Sửa chương/đề" onclick='event.stopPropagation(); editChapter(${ch.id})'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg></button>
                 <button class="icon-x" title="Xóa chương" onclick="event.stopPropagation(); deleteChapter(${ch.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg></button>
+                `}
             </span>
         </div>
     `).join('');
+    updateChapterBulkBar();
 }
 function selectChapter(code){
     currentChapter = chapters.find(c => c.chapter === code) || null;

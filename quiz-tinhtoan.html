@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">Bài tập tính toán · SNG EDU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0f1117;
+  --ink2:#3d4154;
+  --ink3:#7a7f96;
+  --paper:#f7f8fc;
+  --white:#ffffff;
+  --primary:#3b5bdb;
+  --primary-soft:#eef2ff;
+  --primary-mid:#748ffc;
+  --green:#2f9e44;
+  --green-soft:#ebfbee;
+  --red:#e03131;
+  --red-soft:#fff5f5;
+  --amber:#e67700;
+  --amber-soft:#fff9db;
+  --border:#e4e7f0;
+  --shadow-sm:0 1px 3px rgba(15,17,23,.07),0 1px 2px rgba(15,17,23,.04);
+  --shadow-md:0 4px 16px rgba(15,17,23,.1),0 1px 4px rgba(15,17,23,.06);
+  --shadow-lg:0 12px 40px rgba(15,17,23,.14),0 4px 12px rgba(15,17,23,.08);
+  --radius:14px;
+  --radius-sm:8px;
+}
+
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── HEADER ─────────────────────────────── */
+.hdr{
+  position:sticky;top:0;z-index:200;
+  background:rgba(247,248,252,.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:0 20px;
+  height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+}
+.hdr-left{display:flex;align-items:center;gap:10px}
+.logo-badge{
+  width:34px;height:34px;border-radius:10px;
+  background:var(--primary);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.logo-badge svg{color:#fff}
+.hdr-title{font-size:15px;font-weight:700;color:var(--ink);line-height:1.2}
+.hdr-sub{font-size:11px;font-weight:500;color:var(--ink3);letter-spacing:.3px;margin-top:1px}
+
+.timer-pill{
+  display:flex;align-items:center;gap:7px;
+  background:var(--white);border:1.5px solid var(--border);
+  border-radius:50px;padding:6px 14px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:15px;font-weight:700;color:var(--ink);
+  box-shadow:var(--shadow-sm);
+  transition:border-color .2s,color .2s;
+}
+.timer-pill.urgent{border-color:var(--red);color:var(--red)}
+.timer-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.4s ease infinite}
+.timer-pill.urgent .timer-dot{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.submit-btn{
+  display:flex;align-items:center;gap:6px;
+  background:var(--primary);color:#fff;
+  border:none;border-radius:50px;
+  padding:8px 18px;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:inherit;
+  box-shadow:0 2px 8px rgba(59,91,219,.35);
+  transition:all .15s;white-space:nowrap;
+}
+.submit-btn:hover{background:#2f4ac9;transform:translateY(-1px);box-shadow:0 4px 14px rgba(59,91,219,.4)}
+
+/* ── PROGRESS STRIP ──────────────────────── */
+.prog-strip{height:3px;background:var(--border);display:flex;gap:1px}
+.prog-seg{height:3px;transition:background .3s;flex:1}
+
+/* ── NAV TABS SCROLLER ──────────────────── */
+.nav-rail{
+  background:var(--white);
+  border-bottom:1px solid var(--border);
+  overflow-x:auto;
+  display:flex;
+  padding:0 16px;
+  gap:2px;
+  scrollbar-width:none;
+}
+.nav-rail::-webkit-scrollbar{display:none}
+.nav-dot{
+  flex-shrink:0;
+  min-width:38px;height:38px;
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;
+  cursor:pointer;
+  color:var(--ink3);
+  transition:all .15s;
+  border:2px solid transparent;
+  margin:6px 0;
+}
+.nav-dot:hover{background:var(--primary-soft);color:var(--primary)}
+.nav-dot.cur{background:var(--primary);color:#fff;border-color:var(--primary)}
+.nav-dot.ok{background:var(--green-soft);color:var(--green);border-color:rgba(47,158,68,.2)}
+.nav-dot.ng{background:var(--red-soft);color:var(--red);border-color:rgba(224,49,49,.2)}
+.nav-dot.skip{background:var(--amber-soft);color:var(--amber)}
+.nav-dot.cur.ok,.nav-dot.cur.ng,.nav-dot.cur.skip{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* ── MAIN BODY ───────────────────────────── */
+.body-wrap{
+  max-width:680px;margin:0 auto;
+  padding:24px 20px 120px;
+}
+
+/* ── QUESTION CARD ───────────────────────── */
+.q-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  padding:24px;
+  margin-bottom:16px;
+}
+.q-meta{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:16px;
+}
+.q-num-badge{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;font-weight:700;
+  color:var(--primary);
+  background:var(--primary-soft);
+  border-radius:6px;
+  padding:4px 10px;
+  letter-spacing:.5px;
+}
+.q-of{font-size:12px;color:var(--ink3);font-weight:500}
+.q-text{
+  font-size:17px;font-weight:600;
+  line-height:1.7;color:var(--ink);
+}
+
+/* ── OPTIONS ─────────────────────────────── */
+.options{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.opt{
+  display:flex;align-items:center;gap:14px;
+  padding:15px 18px;
+  border-radius:var(--radius-sm);
+  border:2px solid var(--border);
+  background:var(--paper);
+  cursor:pointer;
+  transition:all .14s;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+.opt:not(.locked):hover{
+  border-color:var(--primary-mid);
+  background:var(--primary-soft);
+}
+.opt:not(.locked):hover .opt-label{
+  background:var(--primary);color:#fff;border-color:var(--primary);
+}
+.opt.locked{cursor:default;pointer-events:none}
+
+.opt-label{
+  width:32px;height:32px;border-radius:50%;
+  border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;font-weight:700;
+  color:var(--ink3);
+  flex-shrink:0;
+  transition:all .14s;
+  background:var(--white);
+}
+.opt-txt{font-size:15px;color:var(--ink);line-height:1.5;font-weight:500}
+
+/* Pending (selected, not yet revealed) */
+.opt.pending{border-color:var(--primary);background:var(--primary-soft)}
+.opt.pending .opt-label{background:var(--primary);border-color:var(--primary);color:#fff}
+.opt.pending .opt-txt{color:var(--primary);font-weight:600}
+
+/* Correct */
+.opt.correct{border-color:var(--green);background:var(--green-soft)}
+.opt.correct .opt-label{background:var(--green);border-color:var(--green);color:#fff}
+.opt.correct .opt-txt{color:var(--green);font-weight:600}
+
+/* Wrong */
+.opt.wrong{border-color:var(--red);background:var(--red-soft)}
+.opt.wrong .opt-label{background:var(--red);border-color:var(--red);color:#fff}
+.opt.wrong .opt-txt{color:var(--red);font-weight:600}
+
+/* ── EXPLANATION BOX ──────────────────────── */
+.explain{
+  margin-top:14px;
+  border-radius:var(--radius-sm);
+  padding:16px 18px;
+  display:flex;gap:12px;
+  border:1.5px solid var(--border);
+  background:var(--white);
+}
+.explain.correct{border-color:rgba(47,158,68,.3);background:var(--green-soft)}
+.explain.wrong{border-color:rgba(224,49,49,.25);background:var(--red-soft)}
+.explain.hint{border-color:rgba(230,119,0,.3);background:var(--amber-soft)}
+.explain-ico{font-size:22px;flex-shrink:0;line-height:1;margin-top:1px}
+.explain-tag{
+  font-size:11px;font-weight:800;letter-spacing:.8px;
+  text-transform:uppercase;margin-bottom:6px;
+}
+.explain.correct .explain-tag{color:var(--green)}
+.explain.wrong .explain-tag{color:var(--red)}
+.explain.hint .explain-tag{color:var(--amber)}
+.explain-body{font-size:14px;color:var(--ink2);line-height:1.65}
+
+/* ── BOTTOM NAV ─────────────────────────── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(247,248,252,.95);
+  backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  padding:12px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+  z-index:150;
+}
+.nav-info{
+  text-align:center;flex:1;
+  font-size:13px;color:var(--ink3);font-weight:500;
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.nav-info-label{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--ink3)}
+.nav-info-count{font-size:14px;font-weight:700;color:var(--ink)}
+.btn-round{
+  width:46px;height:46px;border-radius:50%;
+  border:none;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .15s;flex-shrink:0;
+}
+.btn-prev{background:var(--white);border:1.5px solid var(--border);color:var(--ink2)}
+.btn-prev:hover{background:var(--paper);border-color:var(--ink3)}
+.btn-next{background:var(--primary);color:#fff;box-shadow:0 4px 14px rgba(59,91,219,.4)}
+.btn-next:hover{background:#2f4ac9;transform:scale(1.05)}
+.btn-round:disabled{opacity:.3;cursor:not-allowed;transform:none!important}
+
+/* ── HINT FAB ───────────────────────────── */
+@keyframes fab-bounce{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-4px)}
+}
+.fab-hint{
+  position:fixed;bottom:82px;right:18px;
+  background:linear-gradient(135deg,#f76707,#e67700);
+  border:none;
+  color:#fff;
+  border-radius:50px;
+  padding:14px 22px;
+  font-size:14px;font-weight:800;
+  display:flex;align-items:center;gap:8px;
+  cursor:pointer;
+  box-shadow:0 6px 24px rgba(230,119,0,.5),0 2px 8px rgba(230,119,0,.3);
+  font-family:inherit;
+  transition:all .2s;
+  z-index:140;
+  letter-spacing:.2px;
+  animation:fab-bounce 2.5s ease-in-out infinite;
+}
+.fab-hint:hover{
+  background:linear-gradient(135deg,#e8590c,#cc6600);
+  box-shadow:0 8px 30px rgba(230,119,0,.6),0 3px 10px rgba(230,119,0,.4);
+  transform:translateY(-2px) scale(1.04);
+  animation:none;
+}
+.fab-hint:active{transform:scale(.97);animation:none}
+.fab-hint svg{flex-shrink:0}
+.fab-hint.hidden{display:none}
+
+/* ── SUMMARY ─────────────────────────────── */
+.summary-wrap{
+  max-width:560px;margin:0 auto;
+  padding:32px 20px 100px;
+  text-align:center;
+}
+.sum-hero{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:20px;padding:32px 24px;
+  box-shadow:var(--shadow-md);
+  margin-bottom:20px;
+}
+.sum-emoji{font-size:60px;line-height:1;margin-bottom:12px}
+.sum-score{font-size:60px;font-weight:800;color:var(--primary);letter-spacing:-2px;line-height:1}
+.sum-total{font-size:18px;font-weight:500;color:var(--ink3);margin-bottom:6px}
+.sum-msg{font-size:15px;color:var(--ink2);font-weight:500;margin-top:8px}
+
+.sum-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+.sum-tile{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px 16px;
+  box-shadow:var(--shadow-sm);
+}
+.sum-tile-num{font-size:32px;font-weight:800;line-height:1;margin-bottom:4px}
+.sum-tile-lbl{font-size:12px;font-weight:600;color:var(--ink3);letter-spacing:.3px}
+.c-ok .sum-tile-num{color:var(--green)}
+.c-ng .sum-tile-num{color:var(--red)}
+.c-skip .sum-tile-num{color:var(--amber)}
+.c-pct .sum-tile-num{color:var(--primary)}
+
+.sum-actions{display:flex;flex-direction:column;gap:10px}
+.sum-action-btn{
+  width:100%;padding:15px;border-radius:var(--radius);
+  font-size:15px;font-weight:700;cursor:pointer;
+  border:none;font-family:inherit;
+  transition:all .15s;
+}
+.btn-primary-full{background:var(--primary);color:#fff;box-shadow:0 4px 14px rgba(59,91,219,.35)}
+.btn-primary-full:hover{background:#2f4ac9}
+.btn-outline-full{background:var(--white);color:var(--primary);border:2px solid var(--primary)}
+.btn-outline-full:hover{background:var(--primary-soft)}
+
+/* ── GRID DRAWER ─────────────────────────── */
+.drawer-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(15,17,23,.5);z-index:300;
+  align-items:flex-end;
+}
+.drawer-overlay.open{display:flex}
+.drawer{
+  background:var(--white);
+  border-radius:24px 24px 0 0;
+  padding:20px 20px 32px;
+  width:100%;max-width:680px;
+  margin:0 auto;
+  max-height:70vh;overflow-y:auto;
+}
+.drawer-handle{
+  width:40px;height:4px;background:var(--border);
+  border-radius:4px;margin:0 auto 16px;
+}
+.drawer-title{
+  font-size:14px;font-weight:700;color:var(--ink);
+  text-align:center;margin-bottom:16px;
+}
+.drawer-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.drawer-dot{
+  aspect-ratio:1;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;
+  cursor:pointer;
+  border:2px solid var(--border);
+  background:var(--paper);
+  color:var(--ink3);
+  transition:all .12s;
+}
+.drawer-dot:hover{border-color:var(--primary-mid);color:var(--primary)}
+.drawer-dot.cur{background:var(--primary);border-color:var(--primary);color:#fff}
+.drawer-dot.ok{background:var(--green-soft);border-color:rgba(47,158,68,.3);color:var(--green)}
+.drawer-dot.ng{background:var(--red-soft);border-color:rgba(224,49,49,.25);color:var(--red)}
+.drawer-dot.skip{background:var(--amber-soft);border-color:rgba(230,119,0,.25);color:var(--amber)}
+.drawer-close{
+  width:100%;padding:12px;border-radius:10px;
+  border:1.5px solid var(--border);
+  background:var(--paper);color:var(--ink2);
+  font-size:14px;font-weight:600;
+  cursor:pointer;margin-top:16px;font-family:inherit;
+  transition:all .12s;
+}
+.drawer-close:hover{background:var(--border)}
+
+/* ── CONFIRM DIALOG ──────────────────────── */
+.confirm-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(15,17,23,.55);z-index:400;
+  align-items:center;justify-content:center;padding:24px;
+}
+.confirm-overlay.open{display:flex}
+.confirm-box{
+  background:var(--white);border-radius:20px;
+  padding:32px 28px;width:100%;max-width:360px;
+  text-align:center;
+  box-shadow:var(--shadow-lg);
+}
+.confirm-icon{font-size:48px;margin-bottom:14px}
+.confirm-title{font-size:20px;font-weight:800;color:var(--ink);margin-bottom:8px}
+.confirm-desc{font-size:14px;color:var(--ink2);line-height:1.6;margin-bottom:24px}
+.confirm-actions{display:flex;gap:10px}
+.confirm-cancel{
+  flex:1;padding:13px;border-radius:12px;
+  background:var(--paper);color:var(--ink2);
+  border:1.5px solid var(--border);
+  font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:all .12s;
+}
+.confirm-cancel:hover{background:var(--border)}
+.confirm-ok{
+  flex:1;padding:13px;border-radius:12px;
+  background:var(--primary);color:#fff;
+  border:none;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 12px rgba(59,91,219,.35);
+  transition:all .12s;
+}
+.confirm-ok:hover{background:#2f4ac9}
+
+/* ── RESPONSIVE ──────────────────────────── */
+@media(max-width:480px){
+  .hdr-sub{display:none}
+  .q-text{font-size:15px}
+  .submit-btn span{display:none}
+  .submit-btn{padding:8px 12px}
+  .drawer-grid{grid-template-columns:repeat(6,1fr)}
+}
+
+/* ── ANSWER REVIEW LIST ─────────────────── */
+.ral-section{margin-top:24px;text-align:left}
+.ral-title{font-size:15px;font-weight:800;color:var(--ink);margin-bottom:14px;text-align:center;letter-spacing:.2px}
+.ral-item{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px 18px 14px;
+  margin-bottom:12px;box-shadow:var(--shadow-sm);
+}
+.ral-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ral-num{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--ink3)}
+.ral-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:50px;letter-spacing:.4px}
+.ral-badge.ok{background:var(--green-soft);color:var(--green)}
+.ral-badge.ng{background:var(--red-soft);color:var(--red)}
+.ral-badge.skip{background:var(--amber-soft);color:var(--amber)}
+.ral-badge.hint{background:var(--amber-soft);color:var(--amber)}
+.ral-question{font-size:14px;font-weight:600;color:var(--ink);line-height:1.6;margin-bottom:12px}
+.ral-opts{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.ral-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;border-radius:var(--radius-sm);
+  border:1.5px solid var(--border);
+  font-size:13px;color:var(--ink2);
+}
+.ral-opt.ral-correct{border-color:var(--green);background:var(--green-soft);color:var(--green);font-weight:700}
+.ral-opt.ral-wrong{border-color:var(--red);background:var(--red-soft);color:var(--red);font-weight:700}
+.ral-lbl{
+  width:24px;height:24px;border-radius:50%;
+  border:1.5px solid currentColor;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;flex-shrink:0;
+  font-family:'JetBrains Mono',monospace;
+}
+.ral-explain{
+  font-size:12px;color:var(--ink3);line-height:1.6;
+  border-top:1px solid var(--border);padding-top:10px;
+}
+
+/* ── BACK BUTTON ─────────────────────────── */
+.back-btn{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  background:var(--white);border:1.5px solid var(--border);color:var(--ink2);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all .14s;text-decoration:none;
+}
+.back-btn:hover{background:var(--paper);border-color:var(--ink3)}
+
+/* ── STATE (loading / error) ─────────────── */
+.state-wrap{max-width:480px;margin:60px auto;padding:0 20px;text-align:center}
+.state-card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+  padding:44px 28px;box-shadow:var(--shadow-sm);
+}
+.state-card .state-ico{font-size:34px;margin-bottom:14px;line-height:1}
+.state-card .state-title{font-size:16px;font-weight:800;color:var(--ink);margin-bottom:8px}
+.state-card .state-desc{font-size:13.5px;color:var(--ink3);line-height:1.6}
+.state-card .state-desc a{color:var(--primary);font-weight:700;text-decoration:none}
+.state-card .state-desc a:hover{text-decoration:underline}
+.state-card.is-error .state-ico{color:var(--red)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{
+  width:30px;height:30px;border-radius:50%;
+  border:3px solid var(--border);border-top-color:var(--primary);
+  margin:0 auto 16px;animation:spin .7s linear infinite;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-left">
+    <a class="back-btn" id="backBtn" href="index.html" title="Quay lại">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+    <div class="logo-badge">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div>
+      <div class="hdr-title" id="hdrTitle">Bài tập tính toán</div>
+      <div class="hdr-sub" id="hdrSub">Đang tải…</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px" id="hdrActions">
+    <div class="timer-pill" id="timer-pill">
+      <span class="timer-dot" id="timer-dot"></span>
+      <span id="timer-txt">60:00</span>
+    </div>
+    <button class="submit-btn" onclick="openConfirm()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Nộp bài</span>
+    </button>
+  </div>
+</header>
+
+<!-- PROGRESS STRIP -->
+<div class="prog-strip" id="prog-strip"></div>
+
+<!-- NAV RAIL (question dots) -->
+<div class="nav-rail" id="nav-rail"></div>
+
+<!-- STATE (loading/error), shown before questions are ready -->
+<div class="state-wrap" id="stateWrap"></div>
+
+<!-- MAIN CONTENT -->
+<div id="main-content"></div>
+
+<!-- HINT FAB -->
+<button class="fab-hint hidden" id="fab-hint" onclick="showHint()">
+  <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5"/><path d="M12 16v-4m0-4h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+  💡 Xem đáp án
+</button>
+
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawerOutside(event)">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">Danh sách câu hỏi</div>
+    <div class="drawer-grid" id="drawer-grid"></div>
+    <button class="drawer-close" onclick="closeDrawer()">Đóng</button>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">📋</div>
+    <div class="confirm-title">Nộp bài?</div>
+    <div class="confirm-desc" id="confirm-desc">Bạn chắc chắn muốn nộp bài không?</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" onclick="closeConfirm()">Làm tiếp</button>
+      <button class="confirm-ok" onclick="doSubmit()">Nộp bài</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SUPABASE CONFIG ──
+const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function getParam(name){
+  return new URLSearchParams(window.location.search).get(name);
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function showState(html, isError){
+  document.getElementById('stateWrap').innerHTML =
+    `<div class="state-card${isError ? ' is-error' : ''}">${html}</div>`;
+  document.getElementById('main-content').innerHTML = '';
+  document.getElementById('hdrActions').style.display = 'none';
+  document.getElementById('nav-rail').innerHTML = '';
+  document.getElementById('prog-strip').innerHTML = '';
+}
+function clearState(){
+  document.getElementById('stateWrap').innerHTML = '';
+  document.getElementById('hdrActions').style.display = 'flex';
+}
+
+// ── DATA (nạp động từ Supabase) ──
+let Q = [];
+
+async function loadQuiz(){
+  const subjectId = getParam('subject') || getParam('subject_id') || getParam('mon');
+  const chapter = getParam('chapter');
+
+  document.getElementById('backBtn').href = subjectId
+    ? `mon-hoc.html?subject=${encodeURIComponent(subjectId)}`
+    : 'index.html';
+
+  if (!subjectId || !chapter){
+    showState(`<div class="state-ico">⚠️</div><div class="state-title">Thiếu thông tin đề</div><div class="state-desc">Không tìm thấy môn học hoặc chương/đề trong đường dẫn.<br>Vui lòng quay lại <a href="index.html">trang chủ</a> và chọn lại.</div>`, true);
+    return;
+  }
+
+  const { data: subject, error: subjectErr } = await sb.from('subjects').select('*').eq('id', subjectId).single();
+  if (subjectErr || !subject || subject.status === 'hidden'){
+    showState(`<div class="state-ico">⚠️</div><div class="state-title">Không tìm thấy môn học</div><div class="state-desc">Vui lòng quay lại <a href="index.html">trang chủ</a> để chọn môn khác.</div>`, true);
+    return;
+  }
+
+  const { data: chapterRow } = await sb.from('chapters').select('*')
+    .eq('subject_id', subjectId).eq('chapter', chapter).single();
+
+  document.title = `${chapterRow ? chapterRow.label + ' · ' : ''}${subject.name} · SNG EDU`;
+  document.getElementById('hdrTitle').innerText = subject.name;
+  document.getElementById('hdrSub').innerText = chapterRow ? chapterRow.label : 'Bài tập tính toán';
+
+  const { data: questions, error: qErr } = await sb.from('questions').select('*')
+    .eq('subject_id', subjectId).eq('chapter', chapter).order('order_no');
+
+  if (qErr){
+    showState(`<div class="state-ico">⚠️</div><div class="state-title">Lỗi tải câu hỏi</div><div class="state-desc">${escapeHtml(qErr.message)}</div>`, true);
+    return;
+  }
+  if (!questions || !questions.length){
+    showState(`<div class="state-ico">📭</div><div class="state-title">Chưa có câu hỏi</div><div class="state-desc">Đề này chưa có câu hỏi nào. Vui lòng quay lại <a href="index.html">trang chủ</a>.</div>`, true);
+    return;
+  }
+
+  Q = questions.map(q => ({
+    t: q.content,
+    o: Array.isArray(q.options) ? q.options : [],
+    c: q.correct_idx,
+    g: q.explanation || ''
+  }));
+
+  ans = new Array(Q.length).fill(null);
+  clearState();
+  startTimer();
+  renderQ();
+}
+
+
+// ── STATE ──
+let cur = 0;
+let ans = [];
+// ans[i]: null | {choice:number, revealed:bool} | 'skip' | 'hint' | 'unanswered'
+let showSum = false;
+let totalSec = 60 * 60;
+
+// ── TIMER (chỉ bắt đầu chạy sau khi đề đã tải xong) ──
+const timerEl = document.getElementById('timer-txt');
+const timerPill = document.getElementById('timer-pill');
+let timerInterval = null;
+function startTimer(){
+  if (timerInterval) return; // tránh khởi động 2 lần
+  timerInterval = setInterval(() => {
+    if (totalSec <= 0) { clearInterval(timerInterval); finishQuiz(); return; }
+    totalSec--;
+    const m = String(Math.floor(totalSec / 60)).padStart(2, '0');
+    const s = String(totalSec % 60).padStart(2, '0');
+    timerEl.textContent = m + ':' + s;
+    if (totalSec < 300) timerPill.classList.add('urgent');
+  }, 1000);
+}
+
+// ── HELPERS ──
+const LABELS = ['A', 'B', 'C', 'D'];
+
+function revealCurrent() {
+  const a = ans[cur];
+  if (a && a !== 'skip' && a !== 'unanswered' && a !== 'hint' && !a.revealed)
+    ans[cur] = { choice: a.choice, revealed: true };
+}
+function skipIfEmpty() {
+  if (ans[cur] === null) ans[cur] = 'skip';
+}
+function ansState(i) {
+  const a = ans[i];
+  if (!a || a === 'skip') return 'none';
+  if (a === 'unanswered') return 'unanswered';
+  if (a === 'hint') return 'hint';
+  if (!a.revealed) return 'pending';
+  return a.choice === Q[i].c ? 'ok' : 'ng';
+}
+
+// ── RENDER NAV ──
+function renderNav() {
+  const rail = document.getElementById('nav-rail');
+  rail.innerHTML = Q.map((_, i) => {
+    const s = ansState(i);
+    const isCur = i === cur && !showSum;
+    let cls = 'nav-dot';
+    if (isCur) cls += ' cur';
+    else if (s === 'ok') cls += ' ok';
+    else if (s === 'ng') cls += ' ng';
+    else if (s === 'hint' || s === 'none' && ans[i] === 'skip') cls += ' skip';
+    return `<div class="${cls}" onclick="goTo(${i})">${i + 1}</div>`;
+  }).join('');
+  // Scroll active into view
+  setTimeout(() => {
+    const dots = rail.querySelectorAll('.nav-dot');
+    if (dots[cur]) dots[cur].scrollIntoView({ block: 'nearest', inline: 'center' });
+  }, 30);
+}
+
+// ── RENDER PROGRESS ──
+function renderProgress() {
+  const strip = document.getElementById('prog-strip');
+  strip.innerHTML = Q.map((_, i) => {
+    const s = ansState(i);
+    let bg = '#e4e7f0';
+    if (s === 'ok') bg = '#2f9e44';
+    else if (s === 'ng' || s === 'unanswered') bg = '#e03131';
+    else if (s === 'hint' || (ans[i] === 'skip')) bg = '#e67700';
+    return `<div class="prog-seg" style="background:${bg}"></div>`;
+  }).join('');
+}
+
+// ── RENDER QUESTION ──
+function renderQ() {
+  if (showSum) { renderSum(); return; }
+
+  const q = Q[cur];
+  const a = ans[cur];
+  const isHint = a === 'hint';
+  const isSkip = a === 'unanswered';
+  const isChosen = a && a !== 'skip' && a !== 'unanswered' && a !== 'hint';
+  const isRevealed = isChosen && a.revealed;
+  const choice = isChosen ? a.choice : null;
+  const locked = isSkip || isRevealed || isHint;
+
+  // Build options
+  const opts = q.o.map((o, i) => {
+    let cls = 'opt';
+    if (locked) cls += ' locked';
+    if (isRevealed) {
+      if (i === q.c) cls += ' correct';
+      else if (i === choice) cls += ' wrong';
+    } else if (isHint && i === q.c) {
+      cls += ' correct';
+    } else if (isChosen && i === choice && !isRevealed) {
+      cls += ' pending';
+    }
+    const click = !locked ? `onclick="pick(${i})"` : '';
+    return `<div class="${cls}" ${click}>
+      <div class="opt-label">${LABELS[i]}</div>
+      <div class="opt-txt">${o}</div>
+    </div>`;
+  }).join('');
+
+  // Explanation
+  let explain = '';
+  if (isRevealed) {
+    const isCorrect = choice === q.c;
+    const cls = isCorrect ? 'correct' : 'wrong';
+    const ico = isCorrect ? '✅' : '❌';
+    const tag = isCorrect ? 'Chính xác!' : `Sai — Đáp án đúng: ${LABELS[q.c]}. ${q.o[q.c]}`;
+    explain = `<div class="explain ${cls}">
+      <div class="explain-ico">${ico}</div>
+      <div><div class="explain-tag">${tag}</div><div class="explain-body">${q.g}</div></div>
+    </div>`;
+  } else if (isHint) {
+    explain = `<div class="explain hint">
+      <div class="explain-ico">💡</div>
+      <div><div class="explain-tag">Đáp án đúng: ${LABELS[q.c]}</div><div class="explain-body"><strong>${q.o[q.c]}</strong><br><br>${q.g}</div></div>
+    </div>`;
+  }
+
+  // FAB
+  const fab = document.getElementById('fab-hint');
+  const showFab = !showSum && !locked;
+  fab.classList.toggle('hidden', !showFab);
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="body-wrap">
+      <div class="q-card">
+        <div class="q-meta">
+          <span class="q-num-badge">CÂU ${cur + 1}</span>
+          <span class="q-of">/ ${Q.length} câu</span>
+        </div>
+        <div class="q-text">${q.t}</div>
+        <div class="options">${opts}</div>
+        ${explain}
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="btn-round btn-prev" onclick="prev()" ${cur === 0 ? 'disabled' : ''}>
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="nav-info" onclick="openDrawer()">
+        <span class="nav-info-label">Tiến độ</span>
+        <span class="nav-info-count">${cur + 1} / ${Q.length}</span>
+      </div>
+      <button class="btn-round btn-next" onclick="next()">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>`;
+
+  renderNav();
+  renderProgress();
+}
+
+// ── RENDER SUMMARY ──
+function renderSum() {
+  const ok = ans.filter((a, i) => a && a !== 'skip' && a !== 'unanswered' && a !== 'hint' && a.revealed && a.choice === Q[i].c).length;
+  const ng = ans.filter((a, i) => a && a !== 'skip' && a !== 'unanswered' && a !== 'hint' && a.revealed && a.choice !== Q[i].c).length;
+  const sk = ans.filter(a => !a || a === 'skip' || a === 'unanswered' || a === 'hint').length;
+  const pct = Math.round(ok / Q.length * 100);
+  const pass = ok >= Math.ceil(Q.length * 0.8);
+
+  const answerList = Q.map((q, i) => {
+    const a = ans[i];
+    const isSkip = !a || a === 'skip' || a === 'unanswered';
+    const isHint = a === 'hint';
+    const isCorrect = !isSkip && !isHint && a.revealed && a.choice === q.c;
+    const isWrong   = !isSkip && !isHint && a.revealed && a.choice !== q.c;
+    const choiceIdx = (!isSkip && !isHint) ? a.choice : null;
+
+    let badge, badgeCls;
+    if (isCorrect)    { badge = '✓ Đúng';   badgeCls = 'ral-badge ok'; }
+    else if (isWrong) { badge = '✗ Sai';    badgeCls = 'ral-badge ng'; }
+    else if (isHint)  { badge = '💡 Gợi ý'; badgeCls = 'ral-badge hint'; }
+    else              { badge = '— Bỏ qua'; badgeCls = 'ral-badge skip'; }
+
+    const opts = q.o.map((o, j) => {
+      let cls = 'ral-opt';
+      if (j === q.c) cls += ' ral-correct';
+      else if (j === choiceIdx && isWrong) cls += ' ral-wrong';
+      return `<div class="${cls}"><span class="ral-lbl">${LABELS[j]}</span><span>${o}</span></div>`;
+    }).join('');
+
+    return `<div class="ral-item">
+      <div class="ral-header"><span class="ral-num">Câu ${i + 1}</span><span class="${badgeCls}">${badge}</span></div>
+      <div class="ral-question">${q.t}</div>
+      <div class="ral-opts">${opts}</div>
+      <div class="ral-explain">💬 ${q.g}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="summary-wrap">
+      <div class="sum-hero">
+        <div class="sum-emoji">${pass ? '🎉' : '📖'}</div>
+        <div class="sum-score">${ok}</div>
+        <div class="sum-total">/ ${Q.length} câu đúng</div>
+        <div class="sum-msg">${pass ? 'Xuất sắc! Bạn nắm vững nội dung.' : 'Cần ôn thêm để nắm chắc hơn nhé.'}</div>
+      </div>
+      <div class="sum-grid">
+        <div class="sum-tile c-ok"><div class="sum-tile-num">${ok}</div><div class="sum-tile-lbl">Câu đúng</div></div>
+        <div class="sum-tile c-ng"><div class="sum-tile-num">${ng}</div><div class="sum-tile-lbl">Câu sai</div></div>
+        <div class="sum-tile c-skip"><div class="sum-tile-num">${sk}</div><div class="sum-tile-lbl">Bỏ qua</div></div>
+        <div class="sum-tile c-pct"><div class="sum-tile-num">${pct}%</div><div class="sum-tile-lbl">Điểm số</div></div>
+      </div>
+      <div class="sum-actions">
+        <button class="sum-action-btn btn-primary-full" onclick="restart()">Làm lại từ đầu</button>
+      </div>
+      <div class="ral-section">
+        <div class="ral-title">📋 Đáp án chi tiết</div>
+        ${answerList}
+      </div>
+    </div>`;
+
+  document.getElementById('fab-hint').classList.add('hidden');
+  renderNav();
+  renderProgress();
+}
+
+// ── ACTIONS ──
+function pick(i) {
+  const a = ans[cur];
+  if (a && a !== 'skip' && a !== 'unanswered' && a !== 'hint' && a.revealed) return;
+  ans[cur] = { choice: i, revealed: false };
+  renderQ();
+}
+
+function prev() {
+  if (cur === 0) return;
+  revealCurrent();
+  cur--;
+  showSum = false;
+  renderQ();
+}
+
+function next() {
+  revealCurrent();
+  if (cur < Q.length - 1) { cur++; renderQ(); }
+  else { openConfirm(); }
+}
+
+function goTo(i) {
+  revealCurrent();
+  skipIfEmpty();
+  cur = i;
+  showSum = false;
+  renderQ();
+  closeDrawer();
+}
+
+function showHint() {
+  const a = ans[cur];
+  if (a && a !== 'skip' && a !== 'unanswered' && !a.revealed)
+    ans[cur] = { choice: a.choice, revealed: true };
+  else if (a === null)
+    ans[cur] = 'hint';
+  renderQ();
+}
+
+function finishQuiz() {
+  // Reveal all answers — pending choices get revealed and scored properly
+  ans = ans.map(a => {
+    if (a === null) return 'unanswered';
+    if (a === 'skip') return 'skip';
+    if (a === 'hint' || a === 'unanswered') return a;
+    if (!a.revealed) return { choice: a.choice, revealed: true };
+    return a;
+  });
+  showSum = true;
+  renderSum();
+}
+
+function restart() {
+  ans = new Array(Q.length).fill(null);
+  cur = 0; showSum = false;
+  totalSec = 60 * 60;
+  renderQ();
+}
+
+function review() {
+  showSum = false; cur = 0; renderQ();
+}
+
+// ── DRAWER ──
+function openDrawer() {
+  const grid = document.getElementById('drawer-grid');
+  grid.innerHTML = Q.map((_, i) => {
+    const s = ansState(i);
+    let cls = 'drawer-dot';
+    if (i === cur && !showSum) cls += ' cur';
+    else if (s === 'ok') cls += ' ok';
+    else if (s === 'ng') cls += ' ng';
+    else if (s === 'hint' || ans[i] === 'skip') cls += ' skip';
+    return `<div class="${cls}" onclick="goTo(${i})">${i + 1}</div>`;
+  }).join('');
+  document.getElementById('drawer-overlay').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer-overlay').classList.remove('open');
+}
+function closeDrawerOutside(e) {
+  if (e.target === document.getElementById('drawer-overlay')) closeDrawer();
+}
+
+// ── CONFIRM ──
+function openConfirm() {
+  const done = ans.filter(a => a !== null && a !== 'skip' && a !== 'unanswered').length;
+  const skip = ans.filter(a => a === null || a === 'skip').length;
+  const desc = document.getElementById('confirm-desc');
+  if (skip > 0)
+    desc.innerHTML = `Đã làm <strong>${done}/${Q.length}</strong> câu, còn <strong>${skip}</strong> câu chưa trả lời.`;
+  else
+    desc.innerHTML = `Đã hoàn thành <strong>tất cả ${Q.length} câu</strong>. Sẵn sàng nộp!`;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+}
+function doSubmit() {
+  closeConfirm();
+  finishQuiz();
+}
+
+// ── INIT ──
+document.getElementById('hdrActions').style.display = 'none';
+document.getElementById('stateWrap').innerHTML =
+  `<div class="state-card"><div class="spinner"></div><div class="state-title">Đang tải đề bài…</div></div>`;
+loadQuiz();
+</script>
+</body>
+</html>

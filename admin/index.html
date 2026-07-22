@@ -204,6 +204,10 @@ aside{
 
 /* ---------- SETTINGS (Cài đặt trang chủ) ---------- */
 .side-item.settings-item{gap:8px;}
+.settings-inline-label{
+    font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#767ea0;
+    margin:14px 0 8px;padding:0 4px;
+}
 .side-item.settings-item .set-ico{
     width:22px;height:22px;border-radius:6px;flex:0 0 auto;
     display:flex;align-items:center;justify-content:center;font-size:.72rem;
@@ -460,6 +464,25 @@ textarea{resize:vertical;}
                     <button class="btn-mini-cancel" onclick="closeSubjectForm()">Hủy</button>
                 </div>
             </div>
+
+            <div class="settings-inline-label">Cài đặt trang chủ</div>
+            <div class="side-list" id="settingsNavList">
+                <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
+                    <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
+                </div>
+                <div class="side-item settings-item" data-setkey="quick_tn" onclick="openSettingsPanel('quick_tn')">
+                    <span class="set-ico">📝</span><span class="name">Trắc nghiệm</span>
+                </div>
+                <div class="side-item settings-item" data-setkey="quick_tl" onclick="openSettingsPanel('quick_tl')">
+                    <span class="set-ico">📁</span><span class="name">Tài liệu</span>
+                </div>
+                <div class="side-item settings-item" data-setkey="quick_cc" onclick="openSettingsPanel('quick_cc')">
+                    <span class="set-ico">🧰</span><span class="name">Công cụ</span>
+                </div>
+                <div class="side-item settings-item" data-setkey="quick_sp" onclick="openSettingsPanel('quick_sp')">
+                    <span class="set-ico">🎁</span><span class="name">Sản phẩm</span>
+                </div>
+            </div>
         </div>
 
         <div class="side-section">
@@ -490,27 +513,6 @@ textarea{resize:vertical;}
                 <div class="mini-actions">
                     <button class="btn-mini-save" onclick="addChapter()">Lưu</button>
                     <button class="btn-mini-cancel" onclick="closeChapterForm()">Hủy</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="side-section">
-            <h4>Cài đặt trang chủ</h4>
-            <div class="side-list" id="settingsNavList">
-                <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
-                    <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
-                </div>
-                <div class="side-item settings-item" data-setkey="quick_tn" onclick="openSettingsPanel('quick_tn')">
-                    <span class="set-ico">📝</span><span class="name">TN — Trắc nghiệm</span>
-                </div>
-                <div class="side-item settings-item" data-setkey="quick_tl" onclick="openSettingsPanel('quick_tl')">
-                    <span class="set-ico">📁</span><span class="name">TL — Tài liệu</span>
-                </div>
-                <div class="side-item settings-item" data-setkey="quick_cc" onclick="openSettingsPanel('quick_cc')">
-                    <span class="set-ico">🧰</span><span class="name">CC — Công cụ</span>
-                </div>
-                <div class="side-item settings-item" data-setkey="quick_sp" onclick="openSettingsPanel('quick_sp')">
-                    <span class="set-ico">🎁</span><span class="name">SP — Sản phẩm</span>
                 </div>
             </div>
         </div>

@@ -10,7 +10,7 @@
         var savedTheme = localStorage.getItem('sng-theme');
         if(savedTheme === 'dark' || savedTheme === 'light'){
             document.documentElement.setAttribute('data-theme', savedTheme);
-        }else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+        }else{
             document.documentElement.setAttribute('data-theme', 'dark');
         }
     }catch(e){}

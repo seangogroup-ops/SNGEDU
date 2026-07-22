@@ -167,8 +167,49 @@ aside{
 .subj-mgr-col-head h4{margin:0;font-size:.92rem;}
 .subj-mgr-col-head .hint-inline{font-weight:400;color:var(--gray);font-size:.82rem;}
 .subj-mgr-list{max-height:none;}
-.subj-mgr-col .side-item{padding:11px 10px 11px 12px;font-size:.92rem;}
-.subj-mgr-col .mini-form{margin-top:12px;}
+
+/* Khối Môn học/Chương·đề nằm trên card nền trắng (không phải sidebar tối) —
+   cần override lại toàn bộ màu chữ/viền vốn được thiết kế cho nền tối, nếu không
+   chữ sẽ quá mờ/khó đọc trên nền trắng. */
+.subj-mgr-col .side-item{padding:11px 10px 11px 12px;font-size:.92rem;color:var(--text);}
+.subj-mgr-col .side-item:hover{background:var(--bg);}
+.subj-mgr-col .side-item .code{background:var(--bg);color:var(--gray);}
+.subj-mgr-col .side-item.active .code{background:rgba(255,255,255,.28);color:#fff;}
+.subj-mgr-col .drag-handle{color:#c1c5da;}
+.subj-mgr-col .side-item.active .drag-handle{color:rgba(255,255,255,.8);}
+
+.subj-mgr-col .side-add{background:var(--white);border:1px solid var(--border);color:var(--gray);}
+.subj-mgr-col .side-add:hover{border-color:var(--accent);color:var(--accent);background:#eef0ff;}
+
+.subj-mgr-col .folder-header{color:var(--text);}
+.subj-mgr-col .folder-header:hover{background:var(--bg);}
+.subj-mgr-col .folder-arrow{color:var(--gray);}
+.subj-mgr-col .folder-count{color:var(--gray);background:var(--bg);border:1px solid var(--border);}
+.subj-mgr-col .folder-items{border-left-color:var(--border);}
+
+.subj-mgr-col .mini-form{margin-top:12px;background:var(--bg);border:1px solid var(--border);}
+.subj-mgr-col .mini-form input,.subj-mgr-col .mini-form select{background:var(--white);border:1px solid var(--border);color:var(--text);}
+.subj-mgr-col .mini-form input::placeholder{color:#a3a8bf;}
+.subj-mgr-col .mini-form input:focus,.subj-mgr-col .mini-form select:focus{outline:none;border-color:var(--accent);}
+.subj-mgr-col .mini-form input:disabled{background:#eef0f6;color:#a6acc0;}
+.subj-mgr-col .mini-form-title{font-size:.75rem;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;}
+.subj-mgr-col .btn-mini-cancel{background:var(--white);color:var(--gray);border:1px solid var(--border);}
+.subj-mgr-col .btn-mini-cancel:hover{color:var(--text);border-color:var(--gray);background:var(--bg);}
+
+.subj-mgr-col .chap-bulk-bar{background:var(--bg);border:1px solid var(--border);color:var(--text);}
+.subj-mgr-col .chap-bulk-actions .btn-mini-cancel{background:var(--white);}
+
+.subj-mgr-col .menu-drop{background:var(--white);border:1px solid var(--border);box-shadow:0 10px 30px rgba(20,24,50,.14);}
+.subj-mgr-col .menu-drop button{color:var(--text);}
+.subj-mgr-col .menu-drop button:hover{background:var(--bg);}
+
+.subj-mgr-col .folder-select-arrow{color:var(--gray);}
+.subj-mgr-col .folder-select-dropdown{background:var(--white);border:1px solid var(--border);box-shadow:0 10px 30px rgba(20,24,50,.14);}
+.subj-mgr-col .folder-select-option{color:var(--text);}
+.subj-mgr-col .folder-select-option:hover{background:var(--bg);}
+.subj-mgr-col .folder-select-option.muted{color:var(--gray);}
+.subj-mgr-col .folder-select-option.create{color:var(--accent);border-top-color:var(--border);}
+.subj-mgr-col .folder-select-empty{color:var(--gray);}
 
 /* ---------- CONTEXT BAR: nút đổi môn/chương ---------- */
 .context-bar{justify-content:space-between;}
@@ -511,7 +552,7 @@ textarea{resize:vertical;}
                     </div>
                     <div id="subjectList" class="side-list subj-mgr-list"></div>
                     <div id="subjectForm" class="mini-form">
-                        <div id="subjectFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm môn học</div>
+                        <div id="subjectFormTitle" class="mini-form-title">Thêm môn học</div>
                         <input id="newSubjectId" placeholder="Mã môn, vd: TH">
                         <input id="newSubjectName" placeholder="Tên đầy đủ, vd: Triết học">
                         <div class="folder-select" id="folderSelectWrap">
@@ -550,7 +591,7 @@ textarea{resize:vertical;}
                     </div>
                     <div id="chapterList" class="side-list subj-mgr-list"></div>
                     <div id="chapterForm" class="mini-form">
-                        <div id="chapterFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm chương/đề</div>
+                        <div id="chapterFormTitle" class="mini-form-title">Thêm chương/đề</div>
                         <input id="newChapCode" placeholder="Mã chương, vd: 1-40">
                         <input id="newChapLabel" placeholder="Tên hiển thị, vd: Câu 1 – 40">
                         <input id="newChapNote" placeholder="Ghi chú (tùy chọn)">
@@ -1048,6 +1089,8 @@ function openSubjectForm(){
     document.getElementById('newSubjectFolder').value = '';
     document.getElementById('newSubjectStatus').value = 'ready';
     document.getElementById('newSubjectId').disabled = false;
+    collapsedFolders.clear(); // luôn hiện đầy đủ danh sách môn khi đang thêm, tránh trông như bị mất danh sách
+    renderSubjectList();
     document.getElementById('subjectForm').classList.add('show');
     closeFolderDropdown();
 }

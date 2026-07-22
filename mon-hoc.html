@@ -344,6 +344,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Chương thuộc nhóm này sẽ mở giao diện làm bài thi (quiz-exam.html) thay vì
 // giao diện ôn tập thường (quiz-dynamic.html)
 const EXAM_GROUP = 'Đề thi thử';
+const CALC_GROUP = 'Bài tập tính toán';
 
 // Bảng màu + icon xoay vòng cho từng môn học (chọn theo hash của mã môn, để mỗi môn luôn ra đúng 1 màu/1 icon cố định)
 const PALETTE = [
@@ -467,10 +468,11 @@ async function loadPage(){
     let html = '';
     groupOrder.forEach(groupName => {
         const isExamGroup = groupName === EXAM_GROUP;
+        const isCalcGroup = groupName === CALC_GROUP;
         html += `<div class="section-label${isExamGroup ? ' is-exam' : ''}">${escapeHtml(groupName)}</div>`;
         html += `<div class="chapter-list">`;
         groups[groupName].forEach(ch => {
-            const targetPage = isExamGroup ? 'quiz-exam.html' : 'quiz-dynamic.html';
+            const targetPage = isExamGroup ? 'quiz-exam.html' : (isCalcGroup ? 'quiz-tinhtoan.html' : 'quiz-dynamic.html');
             const href = `${targetPage}?subject=${encodeURIComponent(subjectId)}&chapter=${encodeURIComponent(ch.chapter)}`;
             const n = counts[ch.chapter] || 0;
             if (isExamGroup){
@@ -490,7 +492,7 @@ async function loadPage(){
             html += `
                 <a class="chapter-card" href="${href}">
                     <div class="c-top">
-                        <div class="icon-chip"><i class="fa-solid fa-list-check"></i></div>
+                        <div class="icon-chip"><i class="fa-solid ${isCalcGroup ? 'fa-calculator' : 'fa-list-check'}"></i></div>
                         <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                     </div>
                     <div class="c-name">${escapeHtml(ch.label)}</div>

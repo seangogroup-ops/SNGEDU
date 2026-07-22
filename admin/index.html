@@ -65,6 +65,13 @@ label{font-weight:600;font-size:.78rem;color:var(--gray);display:block;margin:10
     aside{width:100%;flex:0 0 auto;padding:16px;gap:16px;}
     main{padding:16px 14px 40px;}
 
+    /* Chân sidebar (email/Đăng xuất) dùng margin-top:auto để tự đẩy xuống cuối khi sidebar
+       cao cố định (PC). Trên mobile, sidebar co theo nội dung (không còn cao cố định) nên
+       margin-top:auto rơi vào phép tính chiều cao mập mờ, khiến một số trình duyệt/điện thoại
+       tính sai và cắt cụt cả sidebar (mất "Sản phẩm" + chân trang). Bỏ auto-margin trên mobile
+       để loại hẳn phép tính mập mờ đó — chân trang chỉ cần nối tiếp bình thường trong luồng. */
+    .sidebar-foot{margin-top:16px !important;}
+
     /* Thẻ Môn học/Chương·đề: đỡ tốn diện tích, dễ chạm hơn trên điện thoại */
     .subj-mgr-head{margin-bottom:14px;}
     .subj-mgr-head h2{font-size:1.02rem;}
@@ -554,7 +561,7 @@ textarea{resize:vertical;}
 <!-- ================= SHELL ================= -->
 <div id="shell" class="hidden">
     <aside>
-        <div class="brand"><span class="dot"></span> SNG EDU · Admin <span style="font-size:.62rem;font-weight:400;color:#5a6285;">(bản đã sửa sidebar #2)</span></div>
+        <div class="brand"><span class="dot"></span> SNG EDU · Admin <span style="font-size:.62rem;font-weight:400;color:#5a6285;">(bản đã sửa sidebar #3)</span></div>
 
         <div class="side-section">
             <div class="settings-inline-label">Cài đặt trang chủ</div>

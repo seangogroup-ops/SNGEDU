@@ -439,10 +439,20 @@ async function loadPage(){
         return;
     }
 
-    // Đếm số câu hỏi theo từng chương (1 truy vấn duy nhất, gộp đếm ở phía client)
+    // Đếm số câu hỏi theo từng chương (gộp đếm ở phía client).
+    // Supabase/PostgREST chỉ trả tối đa 1000 dòng mỗi lần select(), nên phải phân
+    // trang bằng .range() — nếu không, môn nào có tổng số câu hỏi > 1000 sẽ bị
+    // cắt ngang, khiến vài chương (thường là chương nạp sau cùng) đếm ra 0 câu.
     const counts = {};
-    const { data: qRows } = await sb.from('questions').select('chapter').eq('subject_id', subjectId);
-    (qRows || []).forEach(r => { counts[r.chapter] = (counts[r.chapter] || 0) + 1; });
+    const COUNT_PAGE_SIZE = 1000;
+    for (let page = 0; ; page++){
+        const from = page * COUNT_PAGE_SIZE, to = from + COUNT_PAGE_SIZE - 1;
+        const { data: chunk } = await sb.from('questions').select('chapter')
+            .eq('subject_id', subjectId).range(from, to);
+        if (!chunk || !chunk.length) break;
+        chunk.forEach(r => { counts[r.chapter] = (counts[r.chapter] || 0) + 1; });
+        if (chunk.length < COUNT_PAGE_SIZE) break; // trang cuối cùng
+    }
 
     // Gom nhóm chương theo group_name, giữ đúng thứ tự nhóm xuất hiện lần đầu trong dữ liệu.
     // Nhóm "Đề thi thử" vẫn nằm trong cùng lưới chương, chỉ khác style thẻ + trỏ sang quiz-exam.html

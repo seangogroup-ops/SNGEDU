@@ -60,62 +60,6 @@ label{font-weight:600;font-size:.78rem;color:var(--gray);display:block;margin:10
 
 /* ---------- SHELL ---------- */
 #shell{display:flex;min-height:100vh;}
-@media (max-width: 720px){
-    #shell{flex-direction:column;}
-    aside{width:100%;flex:0 0 auto;padding:16px;gap:16px;}
-    main{padding:16px 14px 40px;}
-
-    /* Chân sidebar (email/Đăng xuất) dùng margin-top:auto để tự đẩy xuống cuối khi sidebar
-       cao cố định (PC). Trên mobile, sidebar co theo nội dung (không còn cao cố định) nên
-       margin-top:auto rơi vào phép tính chiều cao mập mờ, khiến một số trình duyệt/điện thoại
-       tính sai và cắt cụt cả sidebar (mất "Sản phẩm" + chân trang). Bỏ auto-margin trên mobile
-       để loại hẳn phép tính mập mờ đó — chân trang chỉ cần nối tiếp bình thường trong luồng. */
-    .sidebar-foot{margin-top:16px !important;}
-
-    /* Thẻ Môn học/Chương·đề: đỡ tốn diện tích, dễ chạm hơn trên điện thoại */
-    .subj-mgr-head{margin-bottom:14px;}
-    .subj-mgr-head h2{font-size:1.02rem;}
-    .subj-mgr-grid{gap:14px;}
-    .subj-mgr-col{padding:14px;}
-    .subj-mgr-col .side-item{padding:12px 10px;}
-
-    /* Panel/card nội dung câu hỏi, cài đặt trang chủ */
-    .panel{padding:16px;}
-    .settings-form-card{padding:16px;max-width:100%;}
-
-    /* Thanh ngữ cảnh (môn/chương đang chọn) */
-    .context-bar{padding:12px 14px;gap:8px 10px;}
-    .context-bar .ctx-value{font-size:.95rem;}
-    .ctx-switch-btn{padding:8px 12px;}
-
-    /* Tab: cho phép xuống dòng thay vì tràn ngang gây cuộn trang */
-    .tabs{flex-wrap:wrap;gap:6px;border-bottom:none;padding-bottom:2px;}
-    .tab{padding:9px 13px;font-size:.8rem;border-radius:8px;background:var(--bg);border-bottom:none;}
-    .tab.active{background:var(--accent);color:#fff;}
-
-    /* Vùng chèn nội dung câu hỏi + số TT: xếp chồng cho dễ gõ trên bàn phím ảo */
-    .content-order-row{flex-wrap:wrap;}
-    .order-col{flex:1 1 120px;}
-    .content-order-col{flex:1 1 220px;}
-
-    /* Nút icon Sửa/Xóa to hơn một chút để bấm tay chuẩn hơn */
-    .icon-x,.icon-edit{width:27px;height:27px;}
-    .icon-x svg,.icon-edit svg{width:13px;height:13px;}
-
-    /* Modal xác nhận / tổng hợp câu hỏi: bớt padding, không tràn ngang */
-    .confirm-box,.merge-box{padding:18px;}
-    #confirmOverlay,#mergeOverlay{padding:14px;}
-
-    /* Danh sách câu hỏi: cụm nút thao tác co giãn thay vì tràn hàng */
-    .q-item{padding:13px;}
-    .q-item .actions{flex-wrap:wrap;}
-}
-@media (max-width: 420px){
-    /* Màn hình rất nhỏ: các cặp nút Hủy/Lưu, Hủy/Xóa xếp dọc để vùng chạm rộng rãi hơn */
-    .confirm-box .confirm-actions,.merge-actions{flex-direction:column;}
-    .confirm-box .confirm-actions button,.merge-actions button{flex:none;width:100%;}
-    .side-toolbar{flex-wrap:wrap;}
-}
 aside{
     width:280px;flex:0 0 280px;background:var(--navy);color:var(--navy-text);
     padding:20px 16px;display:flex;flex-direction:column;gap:22px;
@@ -540,6 +484,80 @@ textarea{resize:vertical;}
 .merge-actions{display:flex;gap:10px;margin-top:20px;}
 .merge-actions button{flex:1;padding:11px;font-size:.9rem;}
 .btn-merge-cancel{background:#eef0f7;color:var(--text);}
+
+/* =========================================================================
+   MOBILE OVERRIDES — đặt cuối cùng trong <style> để thắng cascade tự nhiên
+   (rule cùng độ ưu tiên, đứng sau sẽ thắng — không cần !important).
+   ========================================================================= */
+@media (max-width: 720px){
+    /* Sidebar mobile: dùng layout block + margin cố định, không dùng flex/gap/margin-top:auto
+       ở tầng container, để không phụ thuộc vào cách các trình duyệt/WebView khác nhau tính
+       chiều cao cho flex-column có nội dung co giãn. */
+    #shell{display:block;}
+    aside{
+        display:block;
+        width:100%;
+        flex:none;
+        padding:16px;
+        gap:0;
+    }
+    aside > *{margin-bottom:16px;}
+    aside > *:last-child{margin-bottom:0;}
+    .side-list{
+        display:block;
+        max-height:none;
+        overflow:visible;
+    }
+    .side-list .side-item{margin-bottom:3px;}
+    .side-list .side-item:last-child{margin-bottom:0;}
+    .side-list .folder-group{margin-bottom:4px;}
+    main{padding:16px 14px 40px;display:block;}
+    .sidebar-foot{margin-top:0;}
+
+    /* Thẻ Môn học/Chương·đề: đỡ tốn diện tích, dễ chạm hơn trên điện thoại */
+    .subj-mgr-head{margin-bottom:14px;}
+    .subj-mgr-head h2{font-size:1.02rem;}
+    .subj-mgr-grid{gap:14px;}
+    .subj-mgr-col{padding:14px;}
+    .subj-mgr-col .side-item{padding:12px 10px;}
+
+    /* Panel/card nội dung câu hỏi, cài đặt trang chủ */
+    .panel{padding:16px;}
+    .settings-form-card{padding:16px;max-width:100%;}
+
+    /* Thanh ngữ cảnh (môn/chương đang chọn) */
+    .context-bar{padding:12px 14px;gap:8px 10px;}
+    .context-bar .ctx-value{font-size:.95rem;}
+    .ctx-switch-btn{padding:8px 12px;}
+
+    /* Tab: cho phép xuống dòng thay vì tràn ngang gây cuộn trang */
+    .tabs{flex-wrap:wrap;gap:6px;border-bottom:none;padding-bottom:2px;}
+    .tab{padding:9px 13px;font-size:.8rem;border-radius:8px;background:var(--bg);border-bottom:none;}
+    .tab.active{background:var(--accent);color:#fff;}
+
+    /* Vùng chèn nội dung câu hỏi + số TT: xếp chồng cho dễ gõ trên bàn phím ảo */
+    .content-order-row{flex-wrap:wrap;}
+    .order-col{flex:1 1 120px;}
+    .content-order-col{flex:1 1 220px;}
+
+    /* Nút icon Sửa/Xóa to hơn một chút để bấm tay chuẩn hơn */
+    .icon-x,.icon-edit{width:27px;height:27px;}
+    .icon-x svg,.icon-edit svg{width:13px;height:13px;}
+
+    /* Modal xác nhận / tổng hợp câu hỏi: bớt padding, không tràn ngang */
+    .confirm-box,.merge-box{padding:18px;}
+    #confirmOverlay,#mergeOverlay{padding:14px;}
+
+    /* Danh sách câu hỏi: cụm nút thao tác co giãn thay vì tràn hàng */
+    .q-item{padding:13px;}
+    .q-item .actions{flex-wrap:wrap;}
+}
+@media (max-width: 420px){
+    /* Màn hình rất nhỏ: các cặp nút Hủy/Lưu, Hủy/Xóa xếp dọc để vùng chạm rộng rãi hơn */
+    .confirm-box .confirm-actions,.merge-actions{flex-direction:column;}
+    .confirm-box .confirm-actions button,.merge-actions button{flex:none;width:100%;}
+    .side-toolbar{flex-wrap:wrap;}
+}
 </style>
 </head>
 <body>
@@ -561,7 +579,7 @@ textarea{resize:vertical;}
 <!-- ================= SHELL ================= -->
 <div id="shell" class="hidden">
     <aside>
-        <div class="brand"><span class="dot"></span> SNG EDU · Admin <span style="font-size:.62rem;font-weight:400;color:#5a6285;">(bản đã sửa sidebar #3)</span></div>
+        <div class="brand"><span class="dot"></span> SNG EDU · Admin <span style="font-size:.62rem;font-weight:400;color:#5a6285;">(bản đã sửa sidebar #5 — final)</span></div>
 
         <div class="side-section">
             <div class="settings-inline-label">Cài đặt trang chủ</div>

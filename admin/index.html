@@ -156,19 +156,6 @@ aside{
 .side-toolbar{display:flex;gap:6px;margin-bottom:8px;}
 .side-toolbar .side-add{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 4px;}
 
-/* ---------- TOP NAV (Trắc nghiệm) ---------- */
-.top-nav-item{
-    display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:10px;cursor:pointer;
-    margin-bottom:4px;transition:background .12s ease;
-}
-.top-nav-item:hover{background:var(--navy-2);}
-.top-nav-item.active{background:var(--accent);}
-.top-nav-item .top-nav-ico{font-size:1.15rem;flex:0 0 auto;}
-.top-nav-item .top-nav-text{display:flex;flex-direction:column;line-height:1.3;min-width:0;}
-.top-nav-item .top-nav-text b{font-size:.9rem;color:#fff;}
-.top-nav-item .top-nav-text small{font-size:.72rem;color:#aab0d1;}
-.top-nav-item.active .top-nav-text small{color:rgba(255,255,255,.8);}
-
 /* ---------- SUBJECT MANAGER (Môn học + Chương/đề, khu vực chính) ---------- */
 #subjectManagerPanel.hidden{display:none;}
 .subj-mgr-head{margin-bottom:20px;}
@@ -481,21 +468,16 @@ textarea{resize:vertical;}
         <div class="brand"><span class="dot"></span> SNG EDU · Admin</div>
 
         <div class="side-section">
-            <div class="top-nav-item active" id="navSubjectMgr" onclick="showSubjectManager()">
-                <span class="top-nav-ico">📚</span>
-                <span class="top-nav-text">
-                    <b>Trắc nghiệm</b>
-                    <small>Môn học · Chương / đề</small>
-                </span>
-            </div>
-
             <div class="settings-inline-label">Cài đặt trang chủ</div>
             <div class="side-list" id="settingsNavList">
                 <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
                     <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
                 </div>
-                <div class="side-item settings-item" data-setkey="quick_tn" onclick="openSettingsPanel('quick_tn')">
+                <div class="side-item settings-item active" id="navSubjectMgr" data-setkey="quick_tn" onclick="showSubjectManager()">
                     <span class="set-ico">📝</span><span class="name">Trắc nghiệm</span>
+                    <button class="icon-edit" title="Cấu hình thẻ Trắc nghiệm ở trang chủ" onclick="event.stopPropagation(); openSettingsPanel('quick_tn')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </button>
                 </div>
                 <div class="side-item settings-item" data-setkey="quick_tl" onclick="openSettingsPanel('quick_tl')">
                     <span class="set-ico">📁</span><span class="name">Tài liệu</span>

@@ -137,6 +137,21 @@ aside{
 .side-item.dragging{opacity:.4;}
 .side-item.drag-over{box-shadow:inset 0 0 0 2px var(--accent);background:var(--navy-2);}
 .side-item.select-mode{cursor:pointer;}
+.folder-group{margin-bottom:4px;}
+.folder-header{
+    display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:8px;cursor:pointer;
+    font-size:.8rem;font-weight:700;color:#c3c9e6;user-select:none;
+}
+.folder-header:hover{background:var(--navy-2);}
+.folder-arrow{display:inline-block;font-size:.72rem;color:#8e96bd;transition:transform .15s ease;}
+.folder-arrow.collapsed{transform:rotate(-90deg);}
+.folder-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.folder-count{
+    flex:0 0 auto;font-size:.66rem;font-weight:700;color:#9aa0c2;
+    background:rgba(255,255,255,.08);padding:1px 7px;border-radius:10px;
+}
+.folder-items{display:flex;flex-direction:column;gap:3px;padding-left:14px;border-left:1px solid #33395c;margin:2px 0 6px 11px;}
+.folder-items.hidden{display:none;}
 .chap-cb{width:auto;flex:0 0 auto;accent-color:var(--accent);margin:0;}
 .side-toolbar{display:flex;gap:6px;margin-bottom:8px;}
 .side-toolbar .side-add{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 4px;}
@@ -368,6 +383,8 @@ textarea{resize:vertical;}
                 <div id="subjectFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm môn học</div>
                 <input id="newSubjectId" placeholder="Mã môn, vd: TH">
                 <input id="newSubjectName" placeholder="Tên đầy đủ, vd: Triết học">
+                <input id="newSubjectFolder" placeholder="Thư mục (tùy chọn), vd: Trắc nghiệm" list="subjectFolderSuggestions">
+                <datalist id="subjectFolderSuggestions"></datalist>
                 <select id="newSubjectStatus">
                     <option value="ready">🟢 Sẵn sàng</option>
                     <option value="maintenance">🛠️ Bảo trì</option>
@@ -660,12 +677,21 @@ async function refreshSubjectQuestionCount(subjectId){
     renderSubjectList();
     updateContextBar();
 }
-function renderSubjectList(){
-    const box = document.getElementById('subjectList');
-    if (!subjects.length){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Chưa có môn học nào.</div>`; return; }
-    box.innerHTML = subjects.map((s) => {
-        const meta = STATUS_META[s.status || 'ready'] || STATUS_META.ready;
-        return `
+let collapsedFolders = new Set(); // các thư mục đang bị thu gọn (chỉ lưu tạm trong phiên làm việc)
+function toggleFolderCollapse(folder){
+    if (collapsedFolders.has(folder)) collapsedFolders.delete(folder);
+    else collapsedFolders.add(folder);
+    renderSubjectList();
+}
+function refreshFolderSuggestions(){
+    const dl = document.getElementById('subjectFolderSuggestions');
+    if (!dl) return;
+    const folders = [...new Set(subjects.map(s => (s.folder || '').trim()).filter(Boolean))];
+    dl.innerHTML = folders.map(f => `<option value="${escapeHtml(f)}"></option>`).join('');
+}
+function subjectItemHtml(s){
+    const meta = STATUS_META[s.status || 'ready'] || STATUS_META.ready;
+    return `
         <div class="side-item ${currentSubject && currentSubject.id===s.id ? 'active' : ''}" draggable="true" data-id="${s.id}"
              onclick="selectSubject('${s.id}')"
              ondragstart="onSubjectDragStart(event, '${s.id}')"
@@ -686,9 +712,45 @@ function renderSubjectList(){
                     </div>
                 </span>
             </span>
-        </div>
-    `;
-    }).join('');
+        </div>`;
+}
+function renderSubjectList(){
+    const box = document.getElementById('subjectList');
+    refreshFolderSuggestions();
+    if (!subjects.length){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Chưa có môn học nào.</div>`; return; }
+
+    // Gom các môn có cùng "folder" (thư mục) vào 1 nhóm có thể thu/mở, giữ đúng thứ tự
+    // thư mục xuất hiện lần đầu tiên trong danh sách. Môn không có thư mục hiển thị bình thường.
+    const folderOrder = [];
+    const folderMap = {};
+    const rootItems = [];
+    subjects.forEach(s => {
+        const f = (s.folder || '').trim();
+        if (!f){ rootItems.push(s); return; }
+        if (!folderMap[f]){ folderMap[f] = []; folderOrder.push(f); }
+        folderMap[f].push(s);
+    });
+
+    let html = '';
+    folderOrder.forEach(f => {
+        const items = folderMap[f];
+        const collapsed = collapsedFolders.has(f);
+        html += `
+        <div class="folder-group">
+            <div class="folder-header" onclick='toggleFolderCollapse(${JSON.stringify(f)})'>
+                <span class="folder-arrow ${collapsed ? 'collapsed' : ''}">▾</span>
+                <span class="folder-icon">📁</span>
+                <span class="folder-name">${escapeHtml(f)}</span>
+                <span class="folder-count">${items.length}</span>
+            </div>
+            <div class="folder-items ${collapsed ? 'hidden' : ''}">
+                ${items.map(s => subjectItemHtml(s)).join('')}
+            </div>
+        </div>`;
+    });
+    html += rootItems.map(s => subjectItemHtml(s)).join('');
+
+    box.innerHTML = html;
 }
 let draggedSubjectId = null;
 function onSubjectDragStart(e, id){
@@ -763,6 +825,7 @@ function openSubjectForm(){
     document.getElementById('subjectFormTitle').innerText = 'Thêm môn học';
     document.getElementById('newSubjectId').value = '';
     document.getElementById('newSubjectName').value = '';
+    document.getElementById('newSubjectFolder').value = '';
     document.getElementById('newSubjectStatus').value = 'ready';
     document.getElementById('newSubjectId').disabled = false;
     document.getElementById('subjectForm').classList.add('show');
@@ -780,6 +843,7 @@ function editSubject(id){
     document.getElementById('newSubjectId').value = s.id;
     document.getElementById('newSubjectId').disabled = true; // mã môn không đổi vì được dùng làm khóa liên kết chương/câu hỏi
     document.getElementById('newSubjectName').value = s.name;
+    document.getElementById('newSubjectFolder').value = s.folder || '';
     document.getElementById('newSubjectStatus').value = s.status || 'ready';
     document.getElementById('subjectForm').classList.add('show');
     document.getElementById('newSubjectName').focus();
@@ -787,16 +851,17 @@ function editSubject(id){
 async function addSubject(){
     const id = document.getElementById('newSubjectId').value.trim().toUpperCase();
     const name = document.getElementById('newSubjectName').value.trim();
+    const folder = document.getElementById('newSubjectFolder').value.trim();
     const status = document.getElementById('newSubjectStatus').value;
     if (!id || !name) return showMsg('Nhập đủ mã môn và tên môn.', 'err');
 
     if (editingSubjectId){
-        const { error } = await sb.from('subjects').update({ name, status }).eq('id', editingSubjectId);
+        const { error } = await sb.from('subjects').update({ name, status, folder: folder || null }).eq('id', editingSubjectId);
         if (error) return showMsg('Lỗi cập nhật: ' + error.message, 'err');
         showMsg('Đã cập nhật môn học "' + name + '".', 'ok');
     } else {
         const maxOrder = subjects.reduce((max, s) => Math.max(max, s.order_no || 0), 0);
-        const { error } = await sb.from('subjects').insert({ id, name, order_no: maxOrder + 1, status });
+        const { error } = await sb.from('subjects').insert({ id, name, order_no: maxOrder + 1, status, folder: folder || null });
         if (error) return showMsg('Lỗi: ' + error.message, 'err');
         showMsg('Đã thêm môn học "' + name + '".', 'ok');
     }

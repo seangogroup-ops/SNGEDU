@@ -133,8 +133,9 @@ aside{
 .icon-edit:hover{background:rgba(68,87,232,.4);color:#dbe0ff;}
 .side-item.active .icon-x,.side-item.active .icon-edit{background:rgba(255,255,255,.2);color:#fff;}
 .side-item.active .icon-x:hover,.side-item.active .icon-edit:hover{background:rgba(255,255,255,.35);}
-.side-item{cursor:grab;}
+.side-item{cursor:pointer;transition:background .12s ease,opacity .15s ease,box-shadow .12s ease;}
 .side-item.dragging{opacity:.4;}
+.side-item.drag-over{box-shadow:inset 0 0 0 2px var(--accent);background:var(--navy-2);}
 .side-item.select-mode{cursor:pointer;}
 .chap-cb{width:auto;flex:0 0 auto;accent-color:var(--accent);margin:0;}
 .side-toolbar{display:flex;gap:6px;margin-bottom:8px;}
@@ -202,8 +203,9 @@ main{flex:1;padding:26px 34px 60px;max-width:1000px;}
 .btn-danger:hover{background:#fde3e3;}
 .btn-edit{background:#eef0f7;color:var(--accent-dark);padding:6px 12px;font-size:.8rem;}
 
-.q-item{border:1px solid var(--border);border-radius:10px;padding:15px;margin-bottom:10px;cursor:grab;}
+.q-item{border:1px solid var(--border);border-radius:10px;padding:15px;margin-bottom:10px;cursor:default;transition:opacity .15s ease,box-shadow .12s ease,background .12s ease;}
 .q-item.dragging{opacity:.4;}
+.q-item.drag-over{box-shadow:inset 0 0 0 2px var(--accent);background:var(--bg);}
 .q-item .q-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
 .q-item .q-head .drag-handle{color:#b6bad0;font-size:.9rem;padding-top:1px;}
 .q-item b.qnum{color:var(--accent-dark);}
@@ -219,6 +221,12 @@ main{flex:1;padding:26px 34px 60px;max-width:1000px;}
 
 .empty-state{text-align:center;padding:40px 20px;color:var(--gray);font-size:.88rem;}
 textarea{resize:vertical;}
+.content-order-row{display:flex;gap:10px;align-items:flex-start;}
+.content-order-col{flex:1;min-width:0;}
+.content-order-col textarea{margin:0;}
+.order-col{flex:0 0 92px;}
+.order-col input{margin:0;text-align:center;}
+.content-order-row label{margin-top:0;}
 .file-drop{
     position:relative;border:2px dashed #c7cbe0;border-radius:14px;padding:26px 20px;
     text-align:center;background:var(--white);transition:.15s;
@@ -438,11 +446,17 @@ textarea{resize:vertical;}
             <div class="panel">
                 <h3 id="singleFormTitle">Thêm 1 câu hỏi</h3>
                 <p class="hint">Câu hỏi sẽ được lưu vào môn và chương đang chọn ở thanh bên trái.</p>
-                <label>Số thứ tự (tùy chọn)</label>
-                <input type="number" id="qOrderNo" min="1" placeholder="Để trống = tự động xếp cuối danh sách">
-                <p class="hint" style="margin-top:4px;">Nhập số để chèn câu hỏi vào đúng vị trí đó (các câu phía sau sẽ tự dời xuống). Để trống thì câu mới sẽ được thêm vào cuối.</p>
-                <label>Nội dung câu hỏi</label>
-                <textarea id="qContent" rows="2" placeholder="Nhập nội dung câu hỏi..."></textarea>
+                <div class="content-order-row">
+                    <div class="content-order-col">
+                        <label>Nội dung câu hỏi</label>
+                        <textarea id="qContent" rows="2" placeholder="Nhập nội dung câu hỏi..."></textarea>
+                    </div>
+                    <div class="order-col">
+                        <label>Số TT</label>
+                        <input type="number" id="qOrderNo" min="1" placeholder="Tự động" title="Để trống = tự động xếp cuối danh sách. Nhập số để chèn vào đúng vị trí đó.">
+                    </div>
+                </div>
+                <p class="hint" style="margin-top:4px;">Số thứ tự: để trống = tự động xếp cuối danh sách; nhập số để chèn câu hỏi vào đúng vị trí đó (các câu phía sau tự dời xuống).</p>
                 <label>Đáp án</label>
                 <p class="opt-hint" style="margin:-6px 0 4px;">Bấm nút tròn cạnh đáp án đúng — thẻ tương ứng sẽ tự chuyển sang màu xanh.</p>
                 <div id="optionsForm"></div>
@@ -655,6 +669,7 @@ function renderSubjectList(){
              onclick="selectSubject('${s.id}')"
              ondragstart="onSubjectDragStart(event, '${s.id}')"
              ondragover="onSubjectDragOver(event)"
+             ondragleave="this.classList.remove('drag-over')"
              ondrop="onSubjectDrop(event, '${s.id}')"
              ondragend="onSubjectDragEnd(event)">
             <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
@@ -676,6 +691,7 @@ function renderSubjectList(){
 }
 let draggedSubjectId = null;
 function onSubjectDragStart(e, id){
+    if (!e.target.closest('.drag-handle')){ e.preventDefault(); return; }
     draggedSubjectId = id;
     e.dataTransfer.effectAllowed = 'move';
     e.currentTarget.classList.add('dragging');
@@ -683,12 +699,15 @@ function onSubjectDragStart(e, id){
 function onSubjectDragOver(e){
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    e.currentTarget.classList.add('drag-over');
 }
 function onSubjectDragEnd(e){
     e.currentTarget.classList.remove('dragging');
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
 }
 async function onSubjectDrop(e, targetId){
     e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
     if (!draggedSubjectId || draggedSubjectId === targetId) return;
 
     const fromIdx = subjects.findIndex(s => s.id === draggedSubjectId);
@@ -812,6 +831,7 @@ async function loadChapters(){
 let draggedChapterCode = null;
 function onChapterDragStart(e, code){
     if (chapterSelectMode) return;
+    if (!e.target.closest('.drag-handle')){ e.preventDefault(); return; }
     draggedChapterCode = code;
     e.dataTransfer.effectAllowed = 'move';
     e.currentTarget.classList.add('dragging');
@@ -820,13 +840,16 @@ function onChapterDragOver(e){
     if (chapterSelectMode) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    e.currentTarget.classList.add('drag-over');
 }
 function onChapterDragEnd(e){
     e.currentTarget.classList.remove('dragging');
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
 }
 async function onChapterDrop(e, targetCode){
     if (chapterSelectMode) return;
     e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
     if (!draggedChapterCode || draggedChapterCode === targetCode) return;
 
     const fromIdx = chapters.findIndex(c => c.chapter === draggedChapterCode);
@@ -904,6 +927,7 @@ function renderChapterList(){
              onclick='${chapterSelectMode ? `toggleChapterChecked(${ch.id})` : `selectChapter(${JSON.stringify(ch.chapter)})`}'
              ondragstart="onChapterDragStart(event, ${JSON.stringify(ch.chapter)})"
              ondragover="onChapterDragOver(event)"
+             ondragleave="this.classList.remove('drag-over')"
              ondrop="onChapterDrop(event, ${JSON.stringify(ch.chapter)})"
              ondragend="onChapterDragEnd(event)">
             ${chapterSelectMode
@@ -1053,6 +1077,7 @@ function renderQuestionList(){
         <div class="q-item" draggable="true" data-id="${q.id}"
              ondragstart="onQuestionDragStart(event, ${q.id})"
              ondragover="onQuestionDragOver(event)"
+             ondragleave="this.classList.remove('drag-over')"
              ondrop="onQuestionDrop(event, ${q.id})"
              ondragend="onQuestionDragEnd(event)">
             <div class="q-head"><div><span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span> <b class="qnum">Câu ${q.order_no}.</b> ${escapeHtml(q.content)}</div></div>
@@ -1067,6 +1092,7 @@ function renderQuestionList(){
 }
 let draggedQuestionId = null;
 function onQuestionDragStart(e, id){
+    if (!e.target.closest('.drag-handle')){ e.preventDefault(); return; }
     draggedQuestionId = id;
     e.dataTransfer.effectAllowed = 'move';
     e.currentTarget.classList.add('dragging');
@@ -1074,12 +1100,15 @@ function onQuestionDragStart(e, id){
 function onQuestionDragOver(e){
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    e.currentTarget.classList.add('drag-over');
 }
 function onQuestionDragEnd(e){
     e.currentTarget.classList.remove('dragging');
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
 }
 async function onQuestionDrop(e, targetId){
     e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
     if (!draggedQuestionId || draggedQuestionId === targetId) return;
 
     const fromIdx = currentQuestions.findIndex(q => q.id === draggedQuestionId);

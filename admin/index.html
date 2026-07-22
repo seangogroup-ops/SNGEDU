@@ -152,6 +152,14 @@ aside{
 }
 .folder-items{display:flex;flex-direction:column;gap:3px;padding-left:14px;border-left:1px solid #33395c;margin:2px 0 6px 11px;}
 .folder-items.hidden{display:none;}
+.chapter-nest{
+    margin:4px 0 10px 18px;padding:10px 10px 10px 12px;
+    border-left:2px solid var(--accent);background:rgba(68,87,232,.08);border-radius:0 8px 8px 0;
+}
+.chapter-nest-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.chapter-nest-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#98a0c2;font-weight:700;white-space:nowrap;}
+.chapter-nest .side-toolbar{margin-bottom:0;flex:0 0 auto;}
+.chapter-nest .side-list{max-height:260px;}
 .chap-cb{width:auto;flex:0 0 auto;accent-color:var(--accent);margin:0;}
 .side-toolbar{display:flex;gap:6px;margin-bottom:8px;}
 .side-toolbar .side-add{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 4px;}
@@ -481,38 +489,6 @@ textarea{resize:vertical;}
                 </div>
                 <div class="side-item settings-item" data-setkey="quick_sp" onclick="openSettingsPanel('quick_sp')">
                     <span class="set-ico">🎁</span><span class="name">Sản phẩm</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="side-section">
-            <h4>Chương / đề</h4>
-            <div class="side-toolbar" id="chapToolbar">
-                <button class="side-add" onclick="openChapterForm()">+ Thêm</button>
-                <button class="side-add" onclick="toggleChapterSelectMode()">☑ Chọn nhiều</button>
-            </div>
-            <div id="chapBulkBar" class="chap-bulk-bar hidden">
-                <div class="chap-bulk-count" id="chapBulkCount">Đã chọn 0 mục</div>
-                <div class="chap-bulk-actions">
-                    <button class="btn-mini-cancel" onclick="toggleChapterSelectMode()">Hủy</button>
-                    <button class="btn-mini-danger" id="chapBulkDeleteBtn" onclick="bulkDeleteChapters()" disabled>🗑️ Xóa đã chọn</button>
-                </div>
-            </div>
-            <div id="chapterList" class="side-list"></div>
-            <div id="chapterForm" class="mini-form">
-                <div id="chapterFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm chương/đề</div>
-                <input id="newChapCode" placeholder="Mã chương, vd: 1-40">
-                <input id="newChapLabel" placeholder="Tên hiển thị, vd: Câu 1 – 40">
-                <input id="newChapNote" placeholder="Ghi chú (tùy chọn)">
-                <select id="newChapGroup">
-                    <option value="Nội dung chính">Nội dung chính</option>
-                    <option value="Bổ sung">Bổ sung</option>
-                    <option value="Bài tập tính toán">Bài tập tính toán</option>
-                    <option value="Đề thi thử">Đề thi thử</option>
-                </select>
-                <div class="mini-actions">
-                    <button class="btn-mini-save" onclick="addChapter()">Lưu</button>
-                    <button class="btn-mini-cancel" onclick="closeChapterForm()">Hủy</button>
                 </div>
             </div>
         </div>
@@ -863,10 +839,49 @@ document.addEventListener('click', (e) => {
     const wrap = document.getElementById('folderSelectWrap');
     if (wrap && !wrap.contains(e.target)) closeFolderDropdown();
 });
+function chapterNestHtml(){
+    // Khối "Chương/đề" lồng ngay dưới môn học đang chọn, gộp chung 1 cây với "Môn học"
+    // thay vì tách thành section riêng bên dưới.
+    return `
+    <div class="chapter-nest" onclick="event.stopPropagation()">
+        <div class="chapter-nest-header">
+            <span class="chapter-nest-title">📄 Chương / đề</span>
+            <div class="side-toolbar" id="chapToolbar">
+                <button class="side-add" onclick="openChapterForm()">+ Thêm</button>
+                <button class="side-add" onclick="toggleChapterSelectMode()">☑ Chọn nhiều</button>
+            </div>
+        </div>
+        <div id="chapBulkBar" class="chap-bulk-bar hidden">
+            <div class="chap-bulk-count" id="chapBulkCount">Đã chọn 0 mục</div>
+            <div class="chap-bulk-actions">
+                <button class="btn-mini-cancel" onclick="toggleChapterSelectMode()">Hủy</button>
+                <button class="btn-mini-danger" id="chapBulkDeleteBtn" onclick="bulkDeleteChapters()" disabled>🗑️ Xóa đã chọn</button>
+            </div>
+        </div>
+        <div id="chapterList" class="side-list"></div>
+        <div id="chapterForm" class="mini-form">
+            <div id="chapterFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm chương/đề</div>
+            <input id="newChapCode" placeholder="Mã chương, vd: 1-40">
+            <input id="newChapLabel" placeholder="Tên hiển thị, vd: Câu 1 – 40">
+            <input id="newChapNote" placeholder="Ghi chú (tùy chọn)">
+            <select id="newChapGroup">
+                <option value="Nội dung chính">Nội dung chính</option>
+                <option value="Bổ sung">Bổ sung</option>
+                <option value="Bài tập tính toán">Bài tập tính toán</option>
+                <option value="Đề thi thử">Đề thi thử</option>
+            </select>
+            <div class="mini-actions">
+                <button class="btn-mini-save" onclick="addChapter()">Lưu</button>
+                <button class="btn-mini-cancel" onclick="closeChapterForm()">Hủy</button>
+            </div>
+        </div>
+    </div>`;
+}
 function subjectItemHtml(s){
     const meta = STATUS_META[s.status || 'ready'] || STATUS_META.ready;
+    const isActive = currentSubject && currentSubject.id === s.id;
     return `
-        <div class="side-item ${currentSubject && currentSubject.id===s.id ? 'active' : ''}" data-id="${s.id}"
+        <div class="side-item ${isActive ? 'active' : ''}" data-id="${s.id}"
              onclick="selectSubject('${s.id}')">
             <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
             <span class="name">${escapeHtml(s.name)}</span>
@@ -881,7 +896,7 @@ function subjectItemHtml(s){
                     </div>
                 </span>
             </span>
-        </div>`;
+        </div>${isActive ? chapterNestHtml() : ''}`;
 }
 function renderSubjectList(){
     const box = document.getElementById('subjectList');
@@ -919,6 +934,10 @@ function renderSubjectList(){
     html += rootItems.map(s => subjectItemHtml(s)).join('');
 
     box.innerHTML = html;
+
+    // #chapterList vừa được tạo lại (nếu có môn đang chọn) -> nạp lại nội dung chương/đề
+    // để không bị trống khi renderSubjectList() chạy lại (vd sau khi đếm số câu hỏi).
+    if (currentSubject) renderChapterList();
 }
 async function reorderSubjects(fromId, toId){
     if (!fromId || !toId || fromId === toId) return;
@@ -965,6 +984,7 @@ function selectSubject(id){
     closeSettingsPanel();
     currentSubject = subjects.find(s => s.id === id) || null;
     currentChapter = null;
+    chapters = []; // tránh nháy danh sách chương của môn cũ trong lúc chờ tải dữ liệu môn mới
     renderSubjectList();
     updateContextBar();
     loadChapters();

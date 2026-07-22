@@ -864,15 +864,19 @@
         loadQuestionCounts(readySubjects);
     }
 
-    // Chương thuộc nhóm này không tính vào tổng số câu hỏi hiển thị trên thẻ môn học
-    // (khớp với EXAM_GROUP dùng ở mon-hoc.html)
+    // Chương thuộc các nhóm này không tính vào tổng số câu hỏi hiển thị trên thẻ môn học
+    // (khớp với EXAM_GROUP/CALC_GROUP dùng ở mon-hoc.html)
     const EXAM_GROUP = 'Đề thi thử';
+    const CALC_GROUP = 'Bài tập tính toán';
     async function loadQuestionCounts(dbSubjects){
         await Promise.all(dbSubjects.map(async s => {
-            // Lấy danh sách chương KHÔNG thuộc nhóm "Đề thi thử" của môn này
+            // Lấy danh sách chương KHÔNG thuộc nhóm "Đề thi thử" / "Bài tập tính toán" của môn này
             const { data: chaps } = await sb.from('chapters').select('chapter, group_name').eq('subject_id', s.id);
             const nonExamCodes = (chaps || [])
-                .filter(c => (c.group_name || 'Nội dung chính') !== EXAM_GROUP)
+                .filter(c => {
+                    const g = c.group_name || 'Nội dung chính';
+                    return g !== EXAM_GROUP && g !== CALC_GROUP;
+                })
                 .map(c => c.chapter);
 
             let count = 0;

@@ -202,6 +202,46 @@ aside{
 .sidebar-foot .email{color:#fff;font-weight:600;word-break:break-all;}
 .sidebar-foot button{width:100%;margin-top:10px;background:#2b3355;color:#dfe2f2;padding:8px;font-size:.82rem;}
 
+/* ---------- SETTINGS (Cài đặt trang chủ) ---------- */
+.side-item.settings-item{gap:8px;}
+.side-item.settings-item .set-ico{
+    width:22px;height:22px;border-radius:6px;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;font-size:.72rem;
+    background:rgba(255,255,255,.08);color:#c3c9e6;
+}
+.side-item.active.settings-item .set-ico{background:rgba(255,255,255,.25);color:#fff;}
+
+.settings-form-card{
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+    padding:22px;max-width:560px;
+}
+.settings-form-card h3{margin:0 0 4px;}
+.settings-form-card .hint{margin-bottom:16px;}
+.icon-color-row{display:flex;gap:10px;}
+.icon-color-row > div{flex:1;}
+.color-swatch-row{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+.color-swatch{
+    width:30px;height:30px;border-radius:8px;cursor:pointer;border:2px solid transparent;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:.8rem;
+}
+.color-swatch.selected{border-color:var(--text);box-shadow:0 0 0 2px var(--white) inset;}
+.color-swatch.indigo{background:#4457e8;}
+.color-swatch.purple{background:#8b5cf6;}
+.color-swatch.green{background:#16a34a;}
+.color-swatch.amber{background:#d97706;}
+.color-swatch.blue{background:#2563eb;}
+.color-swatch.red{background:#dc2626;}
+.settings-preview{
+    display:flex;align-items:center;gap:12px;margin-top:18px;padding:14px 16px;
+    border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);
+}
+.settings-preview .prev-ico{
+    width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:1.1rem;flex:0 0 auto;
+}
+.settings-preview .prev-text b{display:block;font-size:.92rem;}
+.settings-preview .prev-text span{display:block;font-size:.78rem;color:var(--gray);}
+
 main{flex:1;padding:26px 34px 60px;max-width:1000px;}
 .context-bar{
     display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--white);
@@ -454,6 +494,27 @@ textarea{resize:vertical;}
             </div>
         </div>
 
+        <div class="side-section">
+            <h4>Cài đặt trang chủ</h4>
+            <div class="side-list" id="settingsNavList">
+                <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
+                    <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
+                </div>
+                <div class="side-item settings-item" data-setkey="quick_tn" onclick="openSettingsPanel('quick_tn')">
+                    <span class="set-ico">📝</span><span class="name">TN — Trắc nghiệm</span>
+                </div>
+                <div class="side-item settings-item" data-setkey="quick_tl" onclick="openSettingsPanel('quick_tl')">
+                    <span class="set-ico">📁</span><span class="name">TL — Tài liệu</span>
+                </div>
+                <div class="side-item settings-item" data-setkey="quick_cc" onclick="openSettingsPanel('quick_cc')">
+                    <span class="set-ico">🧰</span><span class="name">CC — Công cụ</span>
+                </div>
+                <div class="side-item settings-item" data-setkey="quick_sp" onclick="openSettingsPanel('quick_sp')">
+                    <span class="set-ico">🎁</span><span class="name">SP — Sản phẩm</span>
+                </div>
+            </div>
+        </div>
+
         <div class="sidebar-foot">
             <div class="email" id="userEmail"></div>
             <button onclick="doLogout()">Đăng xuất</button>
@@ -461,6 +522,53 @@ textarea{resize:vertical;}
     </aside>
 
     <main>
+        <div id="settingsPanel" class="hidden">
+            <div class="settings-form-card">
+                <h3 id="setFormTitle">Cài đặt</h3>
+                <p class="hint" id="setFormHint">Nội dung này hiển thị ở trang chủ.</p>
+
+                <div id="setFieldsHero" class="hidden">
+                    <label>Dòng nhỏ phía trên (eyebrow)</label>
+                    <input id="setHeroEyebrow" placeholder="Mác – Lênin">
+                    <label>Tiêu đề chính</label>
+                    <input id="setHeroTitle" placeholder="Ôn tập trắc nghiệm...">
+                    <label>Mô tả</label>
+                    <textarea id="setHeroDesc" rows="3" placeholder="Chọn một chương bên dưới..."></textarea>
+                </div>
+
+                <div id="setFieldsCard" class="hidden">
+                    <label>Icon (mã lớp Font Awesome)</label>
+                    <input id="setCardIcon" placeholder="fa-solid fa-list-check">
+                    <div class="hint" style="margin:2px 0 0;">Xem mã icon tại <a href="https://fontawesome.com/search" target="_blank" rel="noopener">fontawesome.com/search</a>, copy đúng class (vd: fa-solid fa-briefcase).</div>
+                    <label>Màu icon</label>
+                    <div class="color-swatch-row" id="setColorRow">
+                        <div class="color-swatch indigo" data-color="indigo" onclick="pickSetColor('indigo')">🎨</div>
+                        <div class="color-swatch purple" data-color="purple" onclick="pickSetColor('purple')">🎨</div>
+                        <div class="color-swatch green" data-color="green" onclick="pickSetColor('green')">🎨</div>
+                        <div class="color-swatch amber" data-color="amber" onclick="pickSetColor('amber')">🎨</div>
+                        <div class="color-swatch blue" data-color="blue" onclick="pickSetColor('blue')">🎨</div>
+                        <div class="color-swatch red" data-color="red" onclick="pickSetColor('red')">🎨</div>
+                    </div>
+                    <label>Tiêu đề thẻ</label>
+                    <input id="setCardTitle" placeholder="Ôn tập trắc nghiệm">
+                    <label>Mô tả ngắn</label>
+                    <input id="setCardSubtitle" placeholder="Chọn học phần">
+                    <label>Đường dẫn (link)</label>
+                    <input id="setCardLink" placeholder="chon-mon.html">
+                    <div class="settings-preview">
+                        <div class="prev-ico" id="setPreviewIco"><i class="fa-solid fa-list-check"></i></div>
+                        <div class="prev-text"><b id="setPreviewTitle">Ôn tập trắc nghiệm</b><span id="setPreviewSubtitle">Chọn học phần</span></div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:10px;margin-top:18px;">
+                    <button class="btn-primary" onclick="saveSiteSetting()">Lưu thay đổi</button>
+                    <span id="setSaveMsg" style="align-self:center;font-size:.85rem;color:var(--green);"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="mainAppArea">
         <div class="context-bar" id="contextBar"></div>
         <div id="msgBox"></div>
 
@@ -555,6 +663,7 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
                     <button class="btn-ghost" onclick="exportSubjectFile()">⬇️ Xuất cả môn học (.txt)</button>
                 </div>
             </div>
+        </div>
         </div>
     </main>
 </div>
@@ -851,6 +960,7 @@ document.addEventListener('click', () => closeAllSubjectMenus());
 document.getElementById('subjectList').addEventListener('scroll', () => closeAllSubjectMenus());
 window.addEventListener('resize', () => closeAllSubjectMenus());
 function selectSubject(id){
+    closeSettingsPanel();
     currentSubject = subjects.find(s => s.id === id) || null;
     currentChapter = null;
     renderSubjectList();
@@ -1828,6 +1938,128 @@ function enableDragReorder(containerId, itemSelector, getId, isBlocked, onDrop){
 enableDragReorder('subjectList', '.side-item', el => el.dataset.id, null, reorderSubjects);
 enableDragReorder('chapterList', '.side-item', el => el.dataset.chapter, () => chapterSelectMode, reorderChapters);
 enableDragReorder('qList', '.q-item', el => Number(el.dataset.id), null, reorderQuestions);
+
+// ---------- CÀI ĐẶT TRANG CHỦ (site_settings) ----------
+let currentSetKey = null;
+let currentSetPayload = null;
+
+const SETTINGS_META = {
+    home_hero: { title: 'Trang chủ — Khối giới thiệu (Hero)', hint: 'Nội dung khối lớn ở đầu trang chủ.' },
+    quick_tn:  { title: 'TN — Ôn tập trắc nghiệm', hint: 'Thẻ "Truy cập nhanh" ở trang chủ.' },
+    quick_tl:  { title: 'TL — Tài liệu ôn thi', hint: 'Thẻ "Truy cập nhanh" ở trang chủ.' },
+    quick_cc:  { title: 'CC — Công cụ hỗ trợ', hint: 'Thẻ "Truy cập nhanh" ở trang chủ.' },
+    quick_sp:  { title: 'SP — Sản phẩm', hint: 'Thẻ "Truy cập nhanh" ở trang chủ.' },
+};
+
+async function openSettingsPanel(key){
+    // Bỏ chọn môn học / chương đang chọn để tránh nhầm lẫn 2 khu vực
+    currentSubject = null;
+    currentChapter = null;
+    renderSubjectList();
+
+    currentSetKey = key;
+    document.querySelectorAll('.settings-item').forEach(el=>{
+        el.classList.toggle('active', el.dataset.setkey === key);
+    });
+
+    document.getElementById('mainAppArea').classList.add('hidden');
+    document.getElementById('settingsPanel').classList.remove('hidden');
+    document.getElementById('setSaveMsg').innerText = '';
+
+    const meta = SETTINGS_META[key] || { title:'Cài đặt', hint:'' };
+    document.getElementById('setFormTitle').innerText = meta.title;
+    document.getElementById('setFormHint').innerText = meta.hint;
+
+    const isHero = key === 'home_hero';
+    document.getElementById('setFieldsHero').classList.toggle('hidden', !isHero);
+    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero);
+
+    const { data, error } = await sb.from('site_settings').select('*').eq('key', key).single();
+    if (error && error.code !== 'PGRST116'){
+        // PGRST116 = không tìm thấy dòng nào — không sao, dùng giá trị mặc định trống
+    }
+    currentSetPayload = (data && data.payload) ? data.payload : {};
+
+    if (isHero){
+        document.getElementById('setHeroEyebrow').value = currentSetPayload.eyebrow || '';
+        document.getElementById('setHeroTitle').value = currentSetPayload.title || '';
+        document.getElementById('setHeroDesc').value = currentSetPayload.desc || '';
+    } else {
+        document.getElementById('setCardIcon').value = currentSetPayload.icon || '';
+        document.getElementById('setCardTitle').value = currentSetPayload.title || '';
+        document.getElementById('setCardSubtitle').value = currentSetPayload.subtitle || '';
+        document.getElementById('setCardLink').value = currentSetPayload.link || '';
+        pickSetColor(currentSetPayload.color || 'indigo');
+        updateSetPreview();
+    }
+}
+
+function closeSettingsPanel(){
+    currentSetKey = null;
+    document.querySelectorAll('.settings-item').forEach(el=>el.classList.remove('active'));
+    document.getElementById('settingsPanel').classList.add('hidden');
+    document.getElementById('mainAppArea').classList.remove('hidden');
+}
+
+function pickSetColor(color){
+    document.querySelectorAll('#setColorRow .color-swatch').forEach(el=>{
+        el.classList.toggle('selected', el.dataset.color === color);
+    });
+    updateSetPreview();
+}
+
+function updateSetPreview(){
+    const icon = document.getElementById('setCardIcon').value.trim() || 'fa-solid fa-star';
+    const title = document.getElementById('setCardTitle').value.trim() || '—';
+    const subtitle = document.getElementById('setCardSubtitle').value.trim() || '';
+    const selected = document.querySelector('#setColorRow .color-swatch.selected');
+    const color = selected ? selected.dataset.color : 'indigo';
+
+    document.getElementById('setPreviewIco').innerHTML = `<i class="${escapeHtml(icon)}"></i>`;
+    document.getElementById('setPreviewIco').className = 'prev-ico color-swatch ' + color;
+    document.getElementById('setPreviewTitle').innerText = title;
+    document.getElementById('setPreviewSubtitle').innerText = subtitle;
+}
+['setCardIcon','setCardTitle','setCardSubtitle'].forEach(id=>{
+    document.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateSetPreview);
+    });
+});
+
+async function saveSiteSetting(){
+    if (!currentSetKey) return;
+    let payload;
+    if (currentSetKey === 'home_hero'){
+        payload = {
+            eyebrow: document.getElementById('setHeroEyebrow').value.trim(),
+            title: document.getElementById('setHeroTitle').value.trim(),
+            desc: document.getElementById('setHeroDesc').value.trim(),
+        };
+    } else {
+        const selected = document.querySelector('#setColorRow .color-swatch.selected');
+        payload = {
+            icon: document.getElementById('setCardIcon').value.trim(),
+            color: selected ? selected.dataset.color : 'indigo',
+            title: document.getElementById('setCardTitle').value.trim(),
+            subtitle: document.getElementById('setCardSubtitle').value.trim(),
+            link: document.getElementById('setCardLink').value.trim(),
+        };
+    }
+
+    const { error } = await sb.from('site_settings')
+        .upsert({ key: currentSetKey, payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+
+    const msgEl = document.getElementById('setSaveMsg');
+    if (error){
+        msgEl.style.color = 'var(--red)';
+        msgEl.innerText = 'Lỗi: ' + error.message;
+    } else {
+        msgEl.style.color = 'var(--green)';
+        msgEl.innerText = '✔ Đã lưu. Trang chủ sẽ hiện nội dung mới ngay khi tải lại.';
+        setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4000);
+    }
+}
 
 checkSession();
 </script>

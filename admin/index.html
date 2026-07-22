@@ -93,10 +93,12 @@ aside{
 .side-item .name{flex-shrink:1;min-width:0;}
 .brand{display:flex;align-items:center;gap:11px;color:#fff;font-weight:800;font-size:1rem;padding:0 4px 4px;letter-spacing:-.01em;}
 .brand span.dot{
-    width:30px;height:30px;border-radius:9px;flex:0 0 auto;display:inline-block;
+    width:32px;height:32px;border-radius:9px;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
     background:linear-gradient(135deg,var(--accent),#8b7cf6);
     box-shadow:0 4px 14px var(--accent-glow);
 }
+.brand span.dot svg{width:18px;height:18px;display:block;}
 .side-section h4{
     font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#6b7299;font-family:var(--font-display);font-weight:700;
     margin:0 0 9px;padding:0 4px;display:flex;justify-content:space-between;align-items:center;
@@ -313,6 +315,12 @@ aside{
     background:rgba(255,255,255,.08);color:#c3c9e6;
 }
 .side-item.active.settings-item .set-ico{background:rgba(255,255,255,.25);color:#fff;}
+.side-item.disabled{cursor:default;opacity:.5;}
+.side-item.disabled:hover{background:transparent;color:var(--navy-text);}
+.soon-tag{
+    flex:0 0 auto;font-size:.6rem;font-weight:700;letter-spacing:.03em;font-family:var(--font-display);
+    background:rgba(255,255,255,.08);color:#8e96bd;padding:2px 7px;border-radius:5px;white-space:nowrap;
+}
 
 .settings-form-card{
     background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);
@@ -622,7 +630,15 @@ textarea{resize:vertical;}
 <!-- ================= SHELL ================= -->
 <div id="shell" class="hidden">
     <aside>
-        <div class="brand"><span class="dot"></span> SNG EDU · Admin</div>
+        <div class="brand">
+            <span class="dot">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 3 2 8l10 5 8-4.2V15h1.5V8L12 3Z" fill="#fff"/>
+                    <path d="M6 11.5V16c0 1.7 2.7 3.5 6 3.5s6-1.8 6-3.5v-4.5l-6 3-6-3Z" fill="#fff" fill-opacity=".92"/>
+                </svg>
+            </span>
+            SNG EDU · Admin
+        </div>
 
         <div class="side-section">
             <div class="settings-inline-label">Cài đặt trang chủ</div>
@@ -644,6 +660,10 @@ textarea{resize:vertical;}
                 </div>
                 <div class="side-item settings-item" data-setkey="quick_sp" onclick="openSettingsPanel('quick_sp')">
                     <span class="set-ico">🎁</span><span class="name">Sản phẩm</span>
+                </div>
+                <div class="side-item settings-item disabled">
+                    <span class="set-ico">⚙️</span><span class="name">Cài đặt</span>
+                    <span class="soon-tag">Sắp có</span>
                 </div>
             </div>
         </div>

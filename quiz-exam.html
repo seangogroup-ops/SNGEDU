@@ -47,7 +47,7 @@
         .q-col{flex:1;display:flex;flex-direction:column;gap:20px;min-width:0}
         .q-card{background:#fff;border-radius:12px;padding:25px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
         .q-num{font-weight:700;color:var(--blue);margin-bottom:4px;font-size:.95rem}
-        .q-src{font-size:.72rem;color:#9ca3af;margin-bottom:10px}
+        .q-src{font-size:.72rem;color:#9ca3af;margin-bottom:10px;display:none}
         .opts{display:flex;flex-direction:column;gap:10px;margin-top:15px}
         .opt{display:flex;align-items:center;gap:12px;cursor:pointer}
         .opt input{display:none}
@@ -214,13 +214,25 @@ async function init(){
         return;
     }
 
-    const { data: qRows, error: qErr } = await sb.from('questions')
-        .select('*').eq('subject_id', subjectId).order('chapter').order('order_no');
-    if (qErr){
-        showState(`<i class="fa-solid fa-triangle-exclamation"></i>Lỗi tải câu hỏi: ${escapeHtml(qErr.message)}`);
-        return;
+    // Supabase/PostgREST chỉ trả tối đa 1000 dòng mỗi lần select() theo mặc định,
+    // nên phải phân trang bằng .range() để chắc chắn lấy hết toàn bộ câu hỏi,
+    // không bị cắt ngang ở đúng mốc 1000 câu như trước.
+    const PAGE_SIZE = 1000;
+    let qRows = [];
+    for (let page = 0; ; page++){
+        const from = page * PAGE_SIZE, to = from + PAGE_SIZE - 1;
+        const { data: chunk, error: qErr } = await sb.from('questions')
+            .select('*').eq('subject_id', subjectId).order('chapter').order('order_no')
+            .range(from, to);
+        if (qErr){
+            showState(`<i class="fa-solid fa-triangle-exclamation"></i>Lỗi tải câu hỏi: ${escapeHtml(qErr.message)}`);
+            return;
+        }
+        if (!chunk || !chunk.length) break;
+        qRows = qRows.concat(chunk);
+        if (chunk.length < PAGE_SIZE) break; // trang cuối cùng, không cần gọi thêm
     }
-    if (!qRows || !qRows.length){
+    if (!qRows.length){
         showState(`<i class="fa-solid fa-inbox"></i>Môn học này chưa có câu hỏi nào.<br>Vui lòng quay lại sau.`);
         return;
     }

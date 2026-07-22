@@ -166,7 +166,7 @@ aside{
 }
 .btn-mini-danger{background:rgba(220,38,38,.85);color:#fff;}
 .btn-mini-danger:disabled{opacity:.4;cursor:not-allowed;}
-.drag-handle{color:#565e82;font-size:.85rem;letter-spacing:-1px;flex:0 0 auto;cursor:grab;padding-right:1px;}
+.drag-handle{color:#565e82;font-size:.85rem;letter-spacing:-1px;flex:0 0 auto;cursor:grab;padding-right:1px;touch-action:none;}
 .menu-wrap{position:relative;flex:0 0 auto;}
 .menu-drop{
     position:fixed;z-index:2000;min-width:110px;
@@ -178,6 +178,26 @@ aside{
     padding:8px 12px;font-size:.82rem;border-radius:0;font-weight:500;
 }
 .menu-drop button:hover{background:#2b3355;}
+.folder-select{position:relative;}
+.folder-select input{padding-right:28px;}
+.folder-select-arrow{
+    position:absolute;right:9px;top:50%;transform:translateY(-50%);
+    font-size:.65rem;color:#767ea0;pointer-events:none;transition:transform .12s ease;
+}
+.folder-select.open .folder-select-arrow{transform:translateY(-50%) rotate(180deg);}
+.folder-select-dropdown{
+    position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:2000;
+    background:#1c2340;border:1px solid #3a4266;border-radius:8px;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);overflow-y:auto;max-height:190px;
+}
+.folder-select-dropdown.hidden{display:none;}
+.folder-select-option{
+    display:flex;align-items:center;gap:6px;padding:8px 10px;font-size:.8rem;color:#dfe2f2;cursor:pointer;
+}
+.folder-select-option:hover{background:#2b3355;}
+.folder-select-option.muted{color:#8f96b8;}
+.folder-select-option.create{color:#a9b3ff;font-weight:600;border-top:1px solid #2a3153;}
+.folder-select-empty{padding:8px 10px;font-size:.78rem;color:#767ea0;}
 .sidebar-foot{margin-top:auto;border-top:1px solid #2a3153;padding-top:14px;font-size:.8rem;}
 .sidebar-foot .email{color:#fff;font-weight:600;word-break:break-all;}
 .sidebar-foot button{width:100%;margin-top:10px;background:#2b3355;color:#dfe2f2;padding:8px;font-size:.82rem;}
@@ -222,7 +242,7 @@ main{flex:1;padding:26px 34px 60px;max-width:1000px;}
 .q-item.dragging{opacity:.4;}
 .q-item.drag-over{box-shadow:inset 0 0 0 2px var(--accent);background:var(--bg);}
 .q-item .q-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
-.q-item .q-head .drag-handle{color:#b6bad0;font-size:.9rem;padding-top:1px;}
+.q-item .q-head .drag-handle{color:#b6bad0;font-size:.9rem;padding-top:1px;touch-action:none;}
 .q-item b.qnum{color:var(--accent-dark);}
 .q-item .opt{padding:3px 0 3px 4px;font-size:.88rem;color:var(--text);}
 .q-item .opt.correct{color:var(--green);font-weight:700;}
@@ -383,8 +403,12 @@ textarea{resize:vertical;}
                 <div id="subjectFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm môn học</div>
                 <input id="newSubjectId" placeholder="Mã môn, vd: TH">
                 <input id="newSubjectName" placeholder="Tên đầy đủ, vd: Triết học">
-                <input id="newSubjectFolder" placeholder="Thư mục (tùy chọn), vd: Trắc nghiệm" list="subjectFolderSuggestions">
-                <datalist id="subjectFolderSuggestions"></datalist>
+                <div class="folder-select" id="folderSelectWrap">
+                    <input id="newSubjectFolder" placeholder="Thư mục (tùy chọn), vd: Trắc nghiệm" autocomplete="off"
+                           oninput="onFolderInput()" onfocus="openFolderDropdown()" onclick="event.stopPropagation(); openFolderDropdown()">
+                    <span class="folder-select-arrow">▾</span>
+                    <div class="folder-select-dropdown hidden" id="folderSelectDropdown"></div>
+                </div>
                 <select id="newSubjectStatus">
                     <option value="ready">🟢 Sẵn sàng</option>
                     <option value="maintenance">🛠️ Bảo trì</option>
@@ -683,22 +707,55 @@ function toggleFolderCollapse(folder){
     else collapsedFolders.add(folder);
     renderSubjectList();
 }
-function refreshFolderSuggestions(){
-    const dl = document.getElementById('subjectFolderSuggestions');
-    if (!dl) return;
-    const folders = [...new Set(subjects.map(s => (s.folder || '').trim()).filter(Boolean))];
-    dl.innerHTML = folders.map(f => `<option value="${escapeHtml(f)}"></option>`).join('');
+function getAllFolders(){
+    return [...new Set(subjects.map(s => (s.folder || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'vi'));
 }
+function renderFolderDropdown(){
+    const dd = document.getElementById('folderSelectDropdown');
+    if (!dd) return;
+    const raw = document.getElementById('newSubjectFolder').value;
+    const q = raw.trim().toLowerCase();
+    const folders = getAllFolders();
+    const matched = folders.filter(f => f.toLowerCase().includes(q));
+
+    let html = `<div class="folder-select-option muted" onclick="pickFolder('')">🚫 Không có thư mục</div>`;
+    if (matched.length){
+        html += matched.map(f => `<div class="folder-select-option" onclick="pickFolder(${JSON.stringify(f)})">📁 ${escapeHtml(f)}</div>`).join('');
+    } else if (!q){
+        html += `<div class="folder-select-empty">Chưa có thư mục nào, gõ tên để tạo mới.</div>`;
+    }
+    if (q && !folders.some(f => f.toLowerCase() === q)){
+        html += `<div class="folder-select-option create" onclick="pickFolder(${JSON.stringify(raw.trim())})">➕ Tạo thư mục mới "${escapeHtml(raw.trim())}"</div>`;
+    }
+    dd.innerHTML = html;
+}
+function openFolderDropdown(){
+    renderFolderDropdown();
+    document.getElementById('folderSelectDropdown').classList.remove('hidden');
+    document.getElementById('folderSelectWrap').classList.add('open');
+}
+function closeFolderDropdown(){
+    document.getElementById('folderSelectDropdown').classList.add('hidden');
+    document.getElementById('folderSelectWrap').classList.remove('open');
+}
+function onFolderInput(){
+    renderFolderDropdown();
+    document.getElementById('folderSelectDropdown').classList.remove('hidden');
+    document.getElementById('folderSelectWrap').classList.add('open');
+}
+function pickFolder(name){
+    document.getElementById('newSubjectFolder').value = name;
+    closeFolderDropdown();
+}
+document.addEventListener('click', (e) => {
+    const wrap = document.getElementById('folderSelectWrap');
+    if (wrap && !wrap.contains(e.target)) closeFolderDropdown();
+});
 function subjectItemHtml(s){
     const meta = STATUS_META[s.status || 'ready'] || STATUS_META.ready;
     return `
-        <div class="side-item ${currentSubject && currentSubject.id===s.id ? 'active' : ''}" draggable="true" data-id="${s.id}"
-             onclick="selectSubject('${s.id}')"
-             ondragstart="onSubjectDragStart(event, '${s.id}')"
-             ondragover="onSubjectDragOver(event)"
-             ondragleave="this.classList.remove('drag-over')"
-             ondrop="onSubjectDrop(event, '${s.id}')"
-             ondragend="onSubjectDragEnd(event)">
+        <div class="side-item ${currentSubject && currentSubject.id===s.id ? 'active' : ''}" data-id="${s.id}"
+             onclick="selectSubject('${s.id}')">
             <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
             <span class="name">${escapeHtml(s.name)}</span>
             <span class="right-cluster">
@@ -716,7 +773,6 @@ function subjectItemHtml(s){
 }
 function renderSubjectList(){
     const box = document.getElementById('subjectList');
-    refreshFolderSuggestions();
     if (!subjects.length){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Chưa có môn học nào.</div>`; return; }
 
     // Gom các môn có cùng "folder" (thư mục) vào 1 nhóm có thể thu/mở, giữ đúng thứ tự
@@ -752,29 +808,10 @@ function renderSubjectList(){
 
     box.innerHTML = html;
 }
-let draggedSubjectId = null;
-function onSubjectDragStart(e, id){
-    if (!e.target.closest('.drag-handle')){ e.preventDefault(); return; }
-    draggedSubjectId = id;
-    e.dataTransfer.effectAllowed = 'move';
-    e.currentTarget.classList.add('dragging');
-}
-function onSubjectDragOver(e){
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    e.currentTarget.classList.add('drag-over');
-}
-function onSubjectDragEnd(e){
-    e.currentTarget.classList.remove('dragging');
-    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-}
-async function onSubjectDrop(e, targetId){
-    e.preventDefault();
-    e.currentTarget.classList.remove('drag-over');
-    if (!draggedSubjectId || draggedSubjectId === targetId) return;
-
-    const fromIdx = subjects.findIndex(s => s.id === draggedSubjectId);
-    const toIdx = subjects.findIndex(s => s.id === targetId);
+async function reorderSubjects(fromId, toId){
+    if (!fromId || !toId || fromId === toId) return;
+    const fromIdx = subjects.findIndex(s => s.id === fromId);
+    const toIdx = subjects.findIndex(s => s.id === toId);
     if (fromIdx < 0 || toIdx < 0) return;
 
     const reordered = subjects.slice();
@@ -829,11 +866,13 @@ function openSubjectForm(){
     document.getElementById('newSubjectStatus').value = 'ready';
     document.getElementById('newSubjectId').disabled = false;
     document.getElementById('subjectForm').classList.add('show');
+    closeFolderDropdown();
 }
 function closeSubjectForm(){
     editingSubjectId = null;
     document.getElementById('newSubjectId').disabled = false;
     document.getElementById('subjectForm').classList.remove('show');
+    closeFolderDropdown();
 }
 function editSubject(id){
     const s = subjects.find(x => x.id === id);
@@ -847,6 +886,7 @@ function editSubject(id){
     document.getElementById('newSubjectStatus').value = s.status || 'ready';
     document.getElementById('subjectForm').classList.add('show');
     document.getElementById('newSubjectName').focus();
+    closeFolderDropdown();
 }
 async function addSubject(){
     const id = document.getElementById('newSubjectId').value.trim().toUpperCase();
@@ -894,32 +934,10 @@ async function loadChapters(){
     renderChapterList();
     updateContextBar();
 }
-let draggedChapterCode = null;
-function onChapterDragStart(e, code){
-    if (chapterSelectMode) return;
-    if (!e.target.closest('.drag-handle')){ e.preventDefault(); return; }
-    draggedChapterCode = code;
-    e.dataTransfer.effectAllowed = 'move';
-    e.currentTarget.classList.add('dragging');
-}
-function onChapterDragOver(e){
-    if (chapterSelectMode) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    e.currentTarget.classList.add('drag-over');
-}
-function onChapterDragEnd(e){
-    e.currentTarget.classList.remove('dragging');
-    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-}
-async function onChapterDrop(e, targetCode){
-    if (chapterSelectMode) return;
-    e.preventDefault();
-    e.currentTarget.classList.remove('drag-over');
-    if (!draggedChapterCode || draggedChapterCode === targetCode) return;
-
-    const fromIdx = chapters.findIndex(c => c.chapter === draggedChapterCode);
-    const toIdx = chapters.findIndex(c => c.chapter === targetCode);
+async function reorderChapters(fromCode, toCode){
+    if (!fromCode || !toCode || fromCode === toCode) return;
+    const fromIdx = chapters.findIndex(c => c.chapter === fromCode);
+    const toIdx = chapters.findIndex(c => c.chapter === toCode);
     if (fromIdx < 0 || toIdx < 0) return;
 
     const reordered = chapters.slice();
@@ -989,13 +1007,8 @@ function renderChapterList(){
     }
     box.innerHTML = chapters.map(ch => `
         <div class="side-item ${currentChapter && currentChapter.chapter===ch.chapter ? 'active' : ''} ${chapterSelectMode ? 'select-mode' : ''}"
-             draggable="${chapterSelectMode ? 'false' : 'true'}" data-chapter="${escapeHtml(ch.chapter)}"
-             onclick='${chapterSelectMode ? `toggleChapterChecked(${ch.id})` : `selectChapter(${JSON.stringify(ch.chapter)})`}'
-             ondragstart="onChapterDragStart(event, ${JSON.stringify(ch.chapter)})"
-             ondragover="onChapterDragOver(event)"
-             ondragleave="this.classList.remove('drag-over')"
-             ondrop="onChapterDrop(event, ${JSON.stringify(ch.chapter)})"
-             ondragend="onChapterDragEnd(event)">
+             data-chapter="${escapeHtml(ch.chapter)}"
+             onclick='${chapterSelectMode ? `toggleChapterChecked(${ch.id})` : `selectChapter(${JSON.stringify(ch.chapter)})`}'>
             ${chapterSelectMode
                 ? `<input type="checkbox" class="chap-cb" onclick="event.stopPropagation()" onchange="toggleChapterChecked(${ch.id})" ${selectedChapterIds.has(ch.id) ? 'checked' : ''}>`
                 : `<span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>`
@@ -1166,12 +1179,7 @@ async function loadQuestions(){
 function renderQuestionList(){
     const box = document.getElementById('qList');
     box.innerHTML = currentQuestions.map(q => `
-        <div class="q-item" draggable="true" data-id="${q.id}"
-             ondragstart="onQuestionDragStart(event, ${q.id})"
-             ondragover="onQuestionDragOver(event)"
-             ondragleave="this.classList.remove('drag-over')"
-             ondrop="onQuestionDrop(event, ${q.id})"
-             ondragend="onQuestionDragEnd(event)">
+        <div class="q-item" data-id="${q.id}">
             <div class="q-head"><div><span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span> <b class="qnum">Câu ${q.order_no}.</b> ${escapeHtml(q.content)}</div></div>
             ${q.options.map((o,i)=>`<div class="opt ${i===q.correct_idx?'correct':''}">${String.fromCharCode(65+i)}. ${escapeHtml(o)}</div>`).join('')}
             ${q.explanation ? `<div class="expl">💡 ${escapeHtml(q.explanation)}</div>` : ''}
@@ -1182,29 +1190,10 @@ function renderQuestionList(){
         </div>
     `).join('');
 }
-let draggedQuestionId = null;
-function onQuestionDragStart(e, id){
-    if (!e.target.closest('.drag-handle')){ e.preventDefault(); return; }
-    draggedQuestionId = id;
-    e.dataTransfer.effectAllowed = 'move';
-    e.currentTarget.classList.add('dragging');
-}
-function onQuestionDragOver(e){
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    e.currentTarget.classList.add('drag-over');
-}
-function onQuestionDragEnd(e){
-    e.currentTarget.classList.remove('dragging');
-    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-}
-async function onQuestionDrop(e, targetId){
-    e.preventDefault();
-    e.currentTarget.classList.remove('drag-over');
-    if (!draggedQuestionId || draggedQuestionId === targetId) return;
-
-    const fromIdx = currentQuestions.findIndex(q => q.id === draggedQuestionId);
-    const toIdx = currentQuestions.findIndex(q => q.id === targetId);
+async function reorderQuestions(fromId, toId){
+    if (!fromId || !toId || fromId === toId) return;
+    const fromIdx = currentQuestions.findIndex(q => q.id === fromId);
+    const toIdx = currentQuestions.findIndex(q => q.id === toId);
     if (fromIdx < 0 || toIdx < 0) return;
 
     const reordered = currentQuestions.slice();
@@ -1784,6 +1773,60 @@ function showMsg(text, type){
 function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
+
+// ---------- KÉO-THẢ (dùng Pointer Events, hoạt động cả chuột lẫn cảm ứng/touch) ----------
+function enableDragReorder(containerId, itemSelector, getId, isBlocked, onDrop){
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.addEventListener('pointerdown', (e) => {
+        if (isBlocked && isBlocked()) return;
+        const handle = e.target.closest('.drag-handle');
+        if (!handle || !container.contains(handle)) return;
+        const item = handle.closest(itemSelector);
+        if (!item) return;
+
+        e.preventDefault();
+        const pointerId = e.pointerId;
+        const dragId = getId(item);
+        let overItem = null;
+        item.classList.add('dragging');
+        try { handle.setPointerCapture(pointerId); } catch(err){}
+
+        function onMove(ev){
+            if (ev.pointerId !== pointerId) return;
+            ev.preventDefault();
+            const el = document.elementFromPoint(ev.clientX, ev.clientY);
+            const hovered = el ? el.closest(itemSelector) : null;
+            if (overItem && overItem !== hovered) overItem.classList.remove('drag-over');
+            if (hovered && hovered !== item && container.contains(hovered)){
+                hovered.classList.add('drag-over');
+                overItem = hovered;
+            } else {
+                overItem = null;
+            }
+        }
+        function onUp(ev){
+            if (ev.pointerId !== pointerId) return;
+            handle.removeEventListener('pointermove', onMove);
+            handle.removeEventListener('pointerup', onUp);
+            handle.removeEventListener('pointercancel', onUp);
+            try { handle.releasePointerCapture(pointerId); } catch(err){}
+            item.classList.remove('dragging');
+            if (overItem){
+                overItem.classList.remove('drag-over');
+                const targetId = getId(overItem);
+                if (targetId !== dragId) onDrop(dragId, targetId);
+            }
+        }
+        handle.addEventListener('pointermove', onMove);
+        handle.addEventListener('pointerup', onUp);
+        handle.addEventListener('pointercancel', onUp);
+    });
+}
+enableDragReorder('subjectList', '.side-item', el => el.dataset.id, null, reorderSubjects);
+enableDragReorder('chapterList', '.side-item', el => el.dataset.chapter, () => chapterSelectMode, reorderChapters);
+enableDragReorder('qList', '.q-item', el => Number(el.dataset.id), null, reorderQuestions);
 
 checkSession();
 </script>

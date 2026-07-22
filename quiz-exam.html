@@ -237,8 +237,19 @@ async function init(){
         return;
     }
 
+    // Chương thuộc nhóm "Đề thi thử" là một bộ câu hỏi RIÊNG dành cho trang đề thi thử
+    // (quiz-dynamic.html), không phải một chương nội dung bình thường — nên phải loại
+    // khỏi danh sách "Nguồn" ở đây, nếu không sẽ bị cộng dồn 2 lần vào tổng "Tất cả"
+    // (khớp với EXAM_GROUP dùng ở index.html và mon-hoc.html).
+    const EXAM_GROUP = 'Đề thi thử';
+    const contentChapRows = chapRows.filter(c => (c.group_name || 'Nội dung chính') !== EXAM_GROUP);
+    if (!contentChapRows.length){
+        showState(`<i class="fa-solid fa-circle-exclamation"></i>Môn học này chưa có chương nào.<br>Vui lòng quay lại <a href="index.html">trang chủ</a>.`);
+        return;
+    }
+
     // gom câu hỏi theo từng chương để dựng "database" giống cấu trúc file gốc
-    database = chapRows.map(c => ({ key: c.chapter, name: c.label, questions: [] }));
+    database = contentChapRows.map(c => ({ key: c.chapter, name: c.label, questions: [] }));
     const byKey = Object.fromEntries(database.map(d => [d.key, d]));
     qRows.forEach(r => {
         const bucket = byKey[r.chapter];

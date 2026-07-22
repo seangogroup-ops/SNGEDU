@@ -152,17 +152,49 @@ aside{
 }
 .folder-items{display:flex;flex-direction:column;gap:3px;padding-left:14px;border-left:1px solid #33395c;margin:2px 0 6px 11px;}
 .folder-items.hidden{display:none;}
-.chapter-nest{
-    margin:4px 0 10px 18px;padding:10px 10px 10px 12px;
-    border-left:2px solid var(--accent);background:rgba(68,87,232,.08);border-radius:0 8px 8px 0;
-}
-.chapter-nest-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
-.chapter-nest-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#98a0c2;font-weight:700;white-space:nowrap;}
-.chapter-nest .side-toolbar{margin-bottom:0;flex:0 0 auto;}
-.chapter-nest .side-list{max-height:260px;}
 .chap-cb{width:auto;flex:0 0 auto;accent-color:var(--accent);margin:0;}
 .side-toolbar{display:flex;gap:6px;margin-bottom:8px;}
 .side-toolbar .side-add{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 4px;}
+
+/* ---------- TOP NAV (Trắc nghiệm) ---------- */
+.top-nav-item{
+    display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:10px;cursor:pointer;
+    margin-bottom:4px;transition:background .12s ease;
+}
+.top-nav-item:hover{background:var(--navy-2);}
+.top-nav-item.active{background:var(--accent);}
+.top-nav-item .top-nav-ico{font-size:1.15rem;flex:0 0 auto;}
+.top-nav-item .top-nav-text{display:flex;flex-direction:column;line-height:1.3;min-width:0;}
+.top-nav-item .top-nav-text b{font-size:.9rem;color:#fff;}
+.top-nav-item .top-nav-text small{font-size:.72rem;color:#aab0d1;}
+.top-nav-item.active .top-nav-text small{color:rgba(255,255,255,.8);}
+
+/* ---------- SUBJECT MANAGER (Môn học + Chương/đề, khu vực chính) ---------- */
+#subjectManagerPanel.hidden{display:none;}
+.subj-mgr-head{margin-bottom:20px;}
+.subj-mgr-head h2{margin:0 0 4px;font-size:1.15rem;}
+.subj-mgr-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start;}
+@media (max-width: 860px){.subj-mgr-grid{grid-template-columns:1fr;}}
+.subj-mgr-col{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.subj-mgr-col-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.subj-mgr-col-head h4{margin:0;font-size:.92rem;}
+.subj-mgr-col-head .hint-inline{font-weight:400;color:var(--gray);font-size:.82rem;}
+.subj-mgr-list{max-height:none;}
+.subj-mgr-col .side-item{padding:11px 10px 11px 12px;font-size:.92rem;}
+.subj-mgr-col .mini-form{margin-top:12px;}
+
+/* ---------- CONTEXT BAR: nút đổi môn/chương ---------- */
+.context-bar{justify-content:space-between;}
+.ctx-switch-btn{
+    background:var(--navy-2,#2b3355);color:#fff;border:none;border-radius:8px;
+    padding:7px 12px;font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap;
+}
+.ctx-switch-btn:hover{opacity:.85;}
+.settings-back-btn{
+    background:transparent;border:1px solid var(--border);color:var(--gray);
+    border-radius:8px;padding:6px 12px;font-size:.82rem;margin-bottom:14px;cursor:pointer;
+}
+.settings-back-btn:hover{color:var(--text);border-color:var(--gray);}
 .chap-bulk-bar{
     display:flex;flex-direction:column;gap:8px;margin:0 0 8px;
     padding:10px;background:var(--navy-2);border-radius:8px;font-size:.78rem;color:#c7cce3;
@@ -449,28 +481,12 @@ textarea{resize:vertical;}
         <div class="brand"><span class="dot"></span> SNG EDU · Admin</div>
 
         <div class="side-section">
-            <h4>Môn học <button class="side-add" onclick="openSubjectForm()">+ Thêm</button></h4>
-            <div id="subjectList" class="side-list"></div>
-            <div id="subjectForm" class="mini-form">
-                <div id="subjectFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm môn học</div>
-                <input id="newSubjectId" placeholder="Mã môn, vd: TH">
-                <input id="newSubjectName" placeholder="Tên đầy đủ, vd: Triết học">
-                <div class="folder-select" id="folderSelectWrap">
-                    <input id="newSubjectFolder" placeholder="Thư mục (tùy chọn), vd: Trắc nghiệm" autocomplete="off"
-                           oninput="onFolderInput()" onfocus="openFolderDropdown()" onclick="event.stopPropagation(); openFolderDropdown()">
-                    <span class="folder-select-arrow">▾</span>
-                    <div class="folder-select-dropdown hidden" id="folderSelectDropdown"></div>
-                </div>
-                <select id="newSubjectStatus">
-                    <option value="ready">🟢 Sẵn sàng</option>
-                    <option value="maintenance">🛠️ Bảo trì</option>
-                    <option value="pending">⚪ Chưa cập nhật</option>
-                    <option value="hidden">🚫 Ẩn (không hiện trang chủ)</option>
-                </select>
-                <div class="mini-actions">
-                    <button class="btn-mini-save" onclick="addSubject()">Lưu</button>
-                    <button class="btn-mini-cancel" onclick="closeSubjectForm()">Hủy</button>
-                </div>
+            <div class="top-nav-item active" id="navSubjectMgr" onclick="showSubjectManager()">
+                <span class="top-nav-ico">📚</span>
+                <span class="top-nav-text">
+                    <b>Trắc nghiệm</b>
+                    <small>Môn học · Chương / đề</small>
+                </span>
             </div>
 
             <div class="settings-inline-label">Cài đặt trang chủ</div>
@@ -500,7 +516,79 @@ textarea{resize:vertical;}
     </aside>
 
     <main>
+        <div id="subjectManagerPanel">
+            <div class="subj-mgr-head">
+                <h2>📚 Quản lý môn học &amp; chương / đề</h2>
+                <p class="hint">Chọn một môn học, sau đó chọn chương/đề để bắt đầu soạn câu hỏi.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col">
+                    <div class="subj-mgr-col-head">
+                        <h4>Môn học</h4>
+                        <button class="side-add" onclick="openSubjectForm()">+ Thêm</button>
+                    </div>
+                    <div id="subjectList" class="side-list subj-mgr-list"></div>
+                    <div id="subjectForm" class="mini-form">
+                        <div id="subjectFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm môn học</div>
+                        <input id="newSubjectId" placeholder="Mã môn, vd: TH">
+                        <input id="newSubjectName" placeholder="Tên đầy đủ, vd: Triết học">
+                        <div class="folder-select" id="folderSelectWrap">
+                            <input id="newSubjectFolder" placeholder="Thư mục (tùy chọn), vd: Trắc nghiệm" autocomplete="off"
+                                   oninput="onFolderInput()" onfocus="openFolderDropdown()" onclick="event.stopPropagation(); openFolderDropdown()">
+                            <span class="folder-select-arrow">▾</span>
+                            <div class="folder-select-dropdown hidden" id="folderSelectDropdown"></div>
+                        </div>
+                        <select id="newSubjectStatus">
+                            <option value="ready">🟢 Sẵn sàng</option>
+                            <option value="maintenance">🛠️ Bảo trì</option>
+                            <option value="pending">⚪ Chưa cập nhật</option>
+                            <option value="hidden">🚫 Ẩn (không hiện trang chủ)</option>
+                        </select>
+                        <div class="mini-actions">
+                            <button class="btn-mini-save" onclick="addSubject()">Lưu</button>
+                            <button class="btn-mini-cancel" onclick="closeSubjectForm()">Hủy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subj-mgr-col">
+                    <div class="subj-mgr-col-head">
+                        <h4>Chương / đề <span id="chapCurrentSubjectName" class="hint-inline"></span></h4>
+                        <div class="side-toolbar" id="chapToolbar">
+                            <button class="side-add" onclick="openChapterForm()">+ Thêm</button>
+                            <button class="side-add" onclick="toggleChapterSelectMode()">☑ Chọn nhiều</button>
+                        </div>
+                    </div>
+                    <div id="chapBulkBar" class="chap-bulk-bar hidden">
+                        <div class="chap-bulk-count" id="chapBulkCount">Đã chọn 0 mục</div>
+                        <div class="chap-bulk-actions">
+                            <button class="btn-mini-cancel" onclick="toggleChapterSelectMode()">Hủy</button>
+                            <button class="btn-mini-danger" id="chapBulkDeleteBtn" onclick="bulkDeleteChapters()" disabled>🗑️ Xóa đã chọn</button>
+                        </div>
+                    </div>
+                    <div id="chapterList" class="side-list subj-mgr-list"></div>
+                    <div id="chapterForm" class="mini-form">
+                        <div id="chapterFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm chương/đề</div>
+                        <input id="newChapCode" placeholder="Mã chương, vd: 1-40">
+                        <input id="newChapLabel" placeholder="Tên hiển thị, vd: Câu 1 – 40">
+                        <input id="newChapNote" placeholder="Ghi chú (tùy chọn)">
+                        <select id="newChapGroup">
+                            <option value="Nội dung chính">Nội dung chính</option>
+                            <option value="Bổ sung">Bổ sung</option>
+                            <option value="Bài tập tính toán">Bài tập tính toán</option>
+                            <option value="Đề thi thử">Đề thi thử</option>
+                        </select>
+                        <div class="mini-actions">
+                            <button class="btn-mini-save" onclick="addChapter()">Lưu</button>
+                            <button class="btn-mini-cancel" onclick="closeChapterForm()">Hủy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="settingsPanel" class="hidden">
+            <button class="settings-back-btn" onclick="closeSettingsPanel()">← Quay lại Trắc nghiệm</button>
             <div class="settings-form-card">
                 <h3 id="setFormTitle">Cài đặt</h3>
                 <p class="hint" id="setFormHint">Nội dung này hiển thị ở trang chủ.</p>
@@ -546,7 +634,7 @@ textarea{resize:vertical;}
             </div>
         </div>
 
-        <div id="mainAppArea">
+        <div id="mainAppArea" class="hidden">
         <div class="context-bar" id="contextBar"></div>
         <div id="msgBox"></div>
 
@@ -722,6 +810,24 @@ function showAdmin(email){
     document.getElementById('userEmail').innerText = email;
     renderOptionForm();
     loadSubjects();
+    showSubjectManager();
+}
+
+// ---------- CHUYỂN ĐỔI GIỮA 3 KHU VỰC CHÍNH ----------
+// subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
+// mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
+// settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
+function showSubjectManager(){
+    document.getElementById('navSubjectMgr').classList.add('active');
+    document.getElementById('subjectManagerPanel').classList.remove('hidden');
+    document.getElementById('mainAppArea').classList.add('hidden');
+    document.getElementById('settingsPanel').classList.add('hidden');
+}
+function showQuestionsPanel(){
+    document.getElementById('navSubjectMgr').classList.add('active');
+    document.getElementById('subjectManagerPanel').classList.add('hidden');
+    document.getElementById('mainAppArea').classList.remove('hidden');
+    document.getElementById('settingsPanel').classList.add('hidden');
 }
 
 // ---------- SIDEBAR HELPERS ----------
@@ -743,20 +849,21 @@ function subjectStatusHtml(subjectId){
 function updateContextBar(){
     toggleMergeButton();
     const bar = document.getElementById('contextBar');
+    const switchBtn = `<button class="ctx-switch-btn" onclick="showSubjectManager()">🔁 Đổi môn / chương</button>`;
     if (!currentSubject){
-        bar.innerHTML = `<span class="ctx-empty">👈 Chọn một môn học ở thanh bên trái để bắt đầu</span>`;
+        bar.innerHTML = `<span class="ctx-empty">👈 Chọn một môn học để bắt đầu</span>${switchBtn}`;
         return;
     }
     if (!currentChapter){
-        bar.innerHTML = `<span class="ctx-label">Môn</span> <span class="ctx-value">${escapeHtml(currentSubject.name)}</span>
+        bar.innerHTML = `<span><span class="ctx-label">Môn</span> <span class="ctx-value">${escapeHtml(currentSubject.name)}</span>
             ${subjectStatusHtml(currentSubject.id)}
-            <span class="ctx-sep">/</span> <span class="ctx-empty">👈 Chọn một chương/đề</span>`;
+            <span class="ctx-sep">/</span> <span class="ctx-empty">👈 Chọn một chương/đề</span></span>${switchBtn}`;
         return;
     }
-    bar.innerHTML = `<span class="ctx-label">Môn</span> <span class="ctx-value">${escapeHtml(currentSubject.name)}</span>
+    bar.innerHTML = `<span><span class="ctx-label">Môn</span> <span class="ctx-value">${escapeHtml(currentSubject.name)}</span>
         ${subjectStatusHtml(currentSubject.id)}
         <span class="ctx-sep">/</span>
-        <span class="ctx-label">Chương</span> <span class="ctx-value">${escapeHtml(currentChapter.label)}</span>`;
+        <span class="ctx-label">Chương</span> <span class="ctx-value">${escapeHtml(currentChapter.label)}</span></span>${switchBtn}`;
 }
 
 // ---------- SUBJECTS ----------
@@ -839,44 +946,6 @@ document.addEventListener('click', (e) => {
     const wrap = document.getElementById('folderSelectWrap');
     if (wrap && !wrap.contains(e.target)) closeFolderDropdown();
 });
-function chapterNestHtml(){
-    // Khối "Chương/đề" lồng ngay dưới môn học đang chọn, gộp chung 1 cây với "Môn học"
-    // thay vì tách thành section riêng bên dưới.
-    return `
-    <div class="chapter-nest" onclick="event.stopPropagation()">
-        <div class="chapter-nest-header">
-            <span class="chapter-nest-title">📄 Chương / đề</span>
-            <div class="side-toolbar" id="chapToolbar">
-                <button class="side-add" onclick="openChapterForm()">+ Thêm</button>
-                <button class="side-add" onclick="toggleChapterSelectMode()">☑ Chọn nhiều</button>
-            </div>
-        </div>
-        <div id="chapBulkBar" class="chap-bulk-bar hidden">
-            <div class="chap-bulk-count" id="chapBulkCount">Đã chọn 0 mục</div>
-            <div class="chap-bulk-actions">
-                <button class="btn-mini-cancel" onclick="toggleChapterSelectMode()">Hủy</button>
-                <button class="btn-mini-danger" id="chapBulkDeleteBtn" onclick="bulkDeleteChapters()" disabled>🗑️ Xóa đã chọn</button>
-            </div>
-        </div>
-        <div id="chapterList" class="side-list"></div>
-        <div id="chapterForm" class="mini-form">
-            <div id="chapterFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm chương/đề</div>
-            <input id="newChapCode" placeholder="Mã chương, vd: 1-40">
-            <input id="newChapLabel" placeholder="Tên hiển thị, vd: Câu 1 – 40">
-            <input id="newChapNote" placeholder="Ghi chú (tùy chọn)">
-            <select id="newChapGroup">
-                <option value="Nội dung chính">Nội dung chính</option>
-                <option value="Bổ sung">Bổ sung</option>
-                <option value="Bài tập tính toán">Bài tập tính toán</option>
-                <option value="Đề thi thử">Đề thi thử</option>
-            </select>
-            <div class="mini-actions">
-                <button class="btn-mini-save" onclick="addChapter()">Lưu</button>
-                <button class="btn-mini-cancel" onclick="closeChapterForm()">Hủy</button>
-            </div>
-        </div>
-    </div>`;
-}
 function subjectItemHtml(s){
     const meta = STATUS_META[s.status || 'ready'] || STATUS_META.ready;
     const isActive = currentSubject && currentSubject.id === s.id;
@@ -896,7 +965,7 @@ function subjectItemHtml(s){
                     </div>
                 </span>
             </span>
-        </div>${isActive ? chapterNestHtml() : ''}`;
+        </div>`;
 }
 function renderSubjectList(){
     const box = document.getElementById('subjectList');
@@ -935,9 +1004,8 @@ function renderSubjectList(){
 
     box.innerHTML = html;
 
-    // #chapterList vừa được tạo lại (nếu có môn đang chọn) -> nạp lại nội dung chương/đề
-    // để không bị trống khi renderSubjectList() chạy lại (vd sau khi đếm số câu hỏi).
-    if (currentSubject) renderChapterList();
+    const nameEl = document.getElementById('chapCurrentSubjectName');
+    if (nameEl) nameEl.textContent = currentSubject ? '· ' + currentSubject.name : '';
 }
 async function reorderSubjects(fromId, toId){
     if (!fromId || !toId || fromId === toId) return;
@@ -981,7 +1049,7 @@ document.addEventListener('click', () => closeAllSubjectMenus());
 document.getElementById('subjectList').addEventListener('scroll', () => closeAllSubjectMenus());
 window.addEventListener('resize', () => closeAllSubjectMenus());
 function selectSubject(id){
-    closeSettingsPanel();
+    showSubjectManager(); // đảm bảo luôn ở đúng màn quản lý môn/chương, không phụ thuộc currentChapter cũ
     currentSubject = subjects.find(s => s.id === id) || null;
     currentChapter = null;
     chapters = []; // tránh nháy danh sách chương của môn cũ trong lúc chờ tải dữ liệu môn mới
@@ -1165,6 +1233,7 @@ function selectChapter(code){
     });
     updateContextBar();
     loadQuestions();
+    if (currentChapter) showQuestionsPanel();
 }
 function openChapterForm(){
     if (!currentSubject) return showMsg('Chọn môn học trước.', 'err');
@@ -1974,16 +2043,13 @@ const SETTINGS_META = {
 };
 
 async function openSettingsPanel(key){
-    // Bỏ chọn môn học / chương đang chọn để tránh nhầm lẫn 2 khu vực
-    currentSubject = null;
-    currentChapter = null;
-    renderSubjectList();
-
+    document.getElementById('navSubjectMgr').classList.remove('active');
     currentSetKey = key;
     document.querySelectorAll('.settings-item').forEach(el=>{
         el.classList.toggle('active', el.dataset.setkey === key);
     });
 
+    document.getElementById('subjectManagerPanel').classList.add('hidden');
     document.getElementById('mainAppArea').classList.add('hidden');
     document.getElementById('settingsPanel').classList.remove('hidden');
     document.getElementById('setSaveMsg').innerText = '';
@@ -2020,7 +2086,13 @@ function closeSettingsPanel(){
     currentSetKey = null;
     document.querySelectorAll('.settings-item').forEach(el=>el.classList.remove('active'));
     document.getElementById('settingsPanel').classList.add('hidden');
-    document.getElementById('mainAppArea').classList.remove('hidden');
+
+    // Quay lại đúng khu vực: đã chọn chương/đề thì về câu hỏi, chưa thì về quản lý môn/chương
+    if (currentChapter){
+        showQuestionsPanel();
+    } else {
+        showSubjectManager();
+    }
 }
 
 function pickSetColor(color){

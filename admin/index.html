@@ -62,8 +62,52 @@ label{font-weight:600;font-size:.78rem;color:var(--gray);display:block;margin:10
 #shell{display:flex;min-height:100vh;}
 @media (max-width: 720px){
     #shell{flex-direction:column;}
-    aside{width:100%;flex:0 0 auto;}
-    main{padding:20px 16px 50px;}
+    aside{width:100%;flex:0 0 auto;padding:16px;gap:16px;}
+    main{padding:16px 14px 40px;}
+
+    /* Thẻ Môn học/Chương·đề: đỡ tốn diện tích, dễ chạm hơn trên điện thoại */
+    .subj-mgr-head{margin-bottom:14px;}
+    .subj-mgr-head h2{font-size:1.02rem;}
+    .subj-mgr-grid{gap:14px;}
+    .subj-mgr-col{padding:14px;}
+    .subj-mgr-col .side-item{padding:12px 10px;}
+
+    /* Panel/card nội dung câu hỏi, cài đặt trang chủ */
+    .panel{padding:16px;}
+    .settings-form-card{padding:16px;max-width:100%;}
+
+    /* Thanh ngữ cảnh (môn/chương đang chọn) */
+    .context-bar{padding:12px 14px;gap:8px 10px;}
+    .context-bar .ctx-value{font-size:.95rem;}
+    .ctx-switch-btn{padding:8px 12px;}
+
+    /* Tab: cho phép xuống dòng thay vì tràn ngang gây cuộn trang */
+    .tabs{flex-wrap:wrap;gap:6px;border-bottom:none;padding-bottom:2px;}
+    .tab{padding:9px 13px;font-size:.8rem;border-radius:8px;background:var(--bg);border-bottom:none;}
+    .tab.active{background:var(--accent);color:#fff;}
+
+    /* Vùng chèn nội dung câu hỏi + số TT: xếp chồng cho dễ gõ trên bàn phím ảo */
+    .content-order-row{flex-wrap:wrap;}
+    .order-col{flex:1 1 120px;}
+    .content-order-col{flex:1 1 220px;}
+
+    /* Nút icon Sửa/Xóa to hơn một chút để bấm tay chuẩn hơn */
+    .icon-x,.icon-edit{width:27px;height:27px;}
+    .icon-x svg,.icon-edit svg{width:13px;height:13px;}
+
+    /* Modal xác nhận / tổng hợp câu hỏi: bớt padding, không tràn ngang */
+    .confirm-box,.merge-box{padding:18px;}
+    #confirmOverlay,#mergeOverlay{padding:14px;}
+
+    /* Danh sách câu hỏi: cụm nút thao tác co giãn thay vì tràn hàng */
+    .q-item{padding:13px;}
+    .q-item .actions{flex-wrap:wrap;}
+}
+@media (max-width: 420px){
+    /* Màn hình rất nhỏ: các cặp nút Hủy/Lưu, Hủy/Xóa xếp dọc để vùng chạm rộng rãi hơn */
+    .confirm-box .confirm-actions,.merge-actions{flex-direction:column;}
+    .confirm-box .confirm-actions button,.merge-actions button{flex:none;width:100%;}
+    .side-toolbar{flex-wrap:wrap;}
 }
 aside{
     width:280px;flex:0 0 280px;background:var(--navy);color:var(--navy-text);

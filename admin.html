@@ -567,6 +567,7 @@ let currentChapter = null;   // {chapter, label}
 let editingQuestionId = null;
 let editingSubjectId = null;
 let editingChapterId = null;
+let editingChapterOldCode = null; // mã chương gốc trước khi sửa, dùng để cascade cập nhật câu hỏi nếu đổi mã
 
 // ---------- AUTH ----------
 async function doLogin(){
@@ -957,6 +958,7 @@ function selectChapter(code){
 function openChapterForm(){
     if (!currentSubject) return showMsg('Chọn môn học trước.', 'err');
     editingChapterId = null;
+    editingChapterOldCode = null;
     document.getElementById('chapterFormTitle').innerText = 'Thêm chương/đề';
     document.getElementById('newChapCode').value = '';
     document.getElementById('newChapLabel').value = '';
@@ -967,6 +969,7 @@ function openChapterForm(){
 }
 function closeChapterForm(){
     editingChapterId = null;
+    editingChapterOldCode = null;
     document.getElementById('newChapCode').disabled = false;
     document.getElementById('chapterForm').classList.remove('show');
 }
@@ -974,9 +977,10 @@ function editChapter(id){
     const ch = chapters.find(c => c.id === id);
     if (!ch) return;
     editingChapterId = id;
+    editingChapterOldCode = ch.chapter;
     document.getElementById('chapterFormTitle').innerText = 'Sửa chương/đề';
     document.getElementById('newChapCode').value = ch.chapter;
-    document.getElementById('newChapCode').disabled = true; // mã chương không đổi vì được dùng làm khóa liên kết câu hỏi
+    document.getElementById('newChapCode').disabled = false;
     document.getElementById('newChapLabel').value = ch.label;
     document.getElementById('newChapNote').value = ch.note || '';
     document.getElementById('newChapGroup').value = ch.group_name || 'Nội dung chính';
@@ -992,11 +996,34 @@ async function addChapter(){
     if (!chapter || !label) return showMsg('Nhập đủ mã chương và tên hiển thị.', 'err');
 
     if (editingChapterId){
-        const { error } = await sb.from('chapters').update({ label, note, group_name }).eq('id', editingChapterId);
+        const codeChanged = editingChapterOldCode && chapter !== editingChapterOldCode;
+
+        // Nếu người dùng đổi mã chương: kiểm tra không trùng với chương khác trong cùng môn học,
+        // vì mã chương đang được dùng làm khóa liên kết câu hỏi (questions.chapter).
+        if (codeChanged){
+            const trung = chapters.some(c => c.id !== editingChapterId && c.chapter === chapter);
+            if (trung) return showMsg(`Mã chương "${chapter}" đã tồn tại trong môn học này, hãy chọn mã khác.`, 'err');
+        }
+
+        const { error } = await sb.from('chapters').update({ chapter, label, note, group_name }).eq('id', editingChapterId);
         if (error) return showMsg('Lỗi cập nhật: ' + error.message, 'err');
+
+        // Đổi mã chương xong -> cascade cập nhật toàn bộ câu hỏi cũ đang trỏ theo mã cũ sang mã mới,
+        // để không bị "mất" câu hỏi (vì chapter là khóa liên kết, không phải id chương).
+        if (codeChanged){
+            const { error: qErr } = await sb.from('questions').update({ chapter })
+                .eq('subject_id', currentSubject.id).eq('chapter', editingChapterOldCode);
+            if (qErr){
+                showMsg('Đã đổi tên chương nhưng lỗi khi cập nhật câu hỏi liên kết: ' + qErr.message, 'err');
+            } else if (currentChapter && currentChapter.chapter === editingChapterOldCode){
+                currentChapter = { ...currentChapter, chapter };
+            }
+        }
+
         showMsg('Đã cập nhật chương "' + label + '".', 'ok');
         closeChapterForm();
         loadChapters();
+        loadQuestions();
         return;
     }
 

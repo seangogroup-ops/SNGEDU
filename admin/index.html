@@ -122,6 +122,9 @@ aside{
     margin:0 0 8px;padding:0 4px;display:flex;justify-content:space-between;align-items:center;
 }
 .side-list{display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto;}
+/* Menu "Cài đặt trang chủ" trong sidebar: danh sách cố định 5 mục, không cần giới hạn chiều cao/cuộn riêng
+   (trước đây ăn chung max-height:220px của .side-list khiến mục cuối bị giấu, tạo ô cuộn nhỏ trông như vỡ UI) */
+#settingsNavList{max-height:none;overflow-y:visible;}
 .side-item{
     padding:9px 8px 9px 10px;border-radius:8px;font-size:.87rem;cursor:pointer;
     display:flex;justify-content:space-between;align-items:center;gap:6px;color:var(--navy-text);

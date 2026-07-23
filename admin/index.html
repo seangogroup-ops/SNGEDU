@@ -642,14 +642,20 @@ textarea{resize:vertical;}
 
         <div class="side-section">
             <div class="side-list" id="settingsNavList">
+                <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
+                    <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
+                </div>
+                <div class="side-item settings-item" id="nav_doc" onclick="showComingSoon('doc')">
+                    <span class="set-ico">📁</span><span class="name">Tài liệu</span>
+                </div>
                 <div class="side-item settings-item active" id="navSubjectMgr" onclick="showSubjectManager()">
                     <span class="set-ico">📝</span><span class="name">Trắc nghiệm</span>
                 </div>
-                <div class="side-item settings-item" id="navQuickLinks" onclick="showQuickLinksManager()">
-                    <span class="set-ico">⚡</span><span class="name">Truy cập nhanh</span>
+                <div class="side-item settings-item" id="nav_tool" onclick="showComingSoon('tool')">
+                    <span class="set-ico">🧰</span><span class="name">Công cụ</span>
                 </div>
-                <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
-                    <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
+                <div class="side-item settings-item" id="nav_product" onclick="showComingSoon('product')">
+                    <span class="set-ico">🛍️</span><span class="name">Sản phẩm</span>
                 </div>
                 <div class="side-item settings-item" id="navGeneralSettings" onclick="showGeneralSettings()">
                     <span class="set-ico">⚙️</span><span class="name">Cài đặt</span>
@@ -792,14 +798,51 @@ textarea{resize:vertical;}
             </div>
         </div>
 
+        <div id="comingSoonPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2><span id="comingSoonIcon">📁</span> <span id="comingSoonTitle">Tài liệu</span></h2>
+                <p class="hint" id="comingSoonHint">Mục này sẽ sớm có trong bản cập nhật tiếp theo.</p>
+            </div>
+            <div class="empty-state" style="padding:40px 14px;text-align:center;">Chưa cần cập nhật ở bước này — mục quản lý nội dung riêng sẽ được thêm sau.</div>
+        </div>
+
         <div id="generalSettingsPanel" class="hidden">
             <div class="subj-mgr-head">
                 <h2>⚙️ Cài đặt</h2>
-                <p class="hint">Thông tin tài khoản quản trị và đổi mật khẩu đăng nhập.</p>
+                <p class="hint">Thẻ "Hỗ trợ" trên trang chủ, thông tin tài khoản và đổi mật khẩu đăng nhập.</p>
             </div>
             <div class="subj-mgr-grid">
                 <div class="subj-mgr-col" style="max-width:460px;">
                     <div class="settings-form-card">
+                        <h3>Thẻ "Hỗ trợ" (trang chủ)</h3>
+                        <p class="hint">Hiển thị ở mục Truy cập nhanh trên trang chủ.</p>
+                        <label>Icon (mã lớp Font Awesome)</label>
+                        <input id="genSupportIcon" placeholder="fa-solid fa-headset">
+                        <div class="hint" style="margin:2px 0 0;">Xem mã icon tại <a href="https://fontawesome.com/search" target="_blank" rel="noopener">fontawesome.com/search</a>.</div>
+                        <label style="margin-top:10px;">Màu icon</label>
+                        <div class="color-swatch-row" id="genSupportColorRow">
+                            <div class="color-swatch indigo" data-color="indigo" onclick="pickGenSupportColor('indigo')">🎨</div>
+                            <div class="color-swatch purple" data-color="purple" onclick="pickGenSupportColor('purple')">🎨</div>
+                            <div class="color-swatch green" data-color="green" onclick="pickGenSupportColor('green')">🎨</div>
+                            <div class="color-swatch amber" data-color="amber" onclick="pickGenSupportColor('amber')">🎨</div>
+                            <div class="color-swatch blue" data-color="blue" onclick="pickGenSupportColor('blue')">🎨</div>
+                            <div class="color-swatch red" data-color="red" onclick="pickGenSupportColor('red')">🎨</div>
+                        </div>
+                        <label>Tiêu đề thẻ</label>
+                        <input id="genSupportTitle" placeholder="Hỗ trợ">
+                        <label>Mô tả ngắn</label>
+                        <input id="genSupportSubtitle" placeholder="Zalo & góp ý">
+                        <div class="settings-preview">
+                            <div class="prev-ico" id="genSupportPreviewIco"><i class="fa-solid fa-headset"></i></div>
+                            <div class="prev-text"><b id="genSupportPreviewTitle">Hỗ trợ</b><span id="genSupportPreviewSubtitle">Zalo & góp ý</span></div>
+                        </div>
+                        <div class="mini-actions" style="margin-top:12px;">
+                            <button class="btn-mini-save" onclick="saveSupportCard()">Lưu thẻ Hỗ trợ</button>
+                        </div>
+                        <div id="genSupportMsg" class="hint" style="margin-top:8px;"></div>
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
                         <h3>Tài khoản</h3>
                         <p class="hint">Email đang đăng nhập</p>
                         <div class="settings-preview">
@@ -1054,7 +1097,7 @@ function showAdmin(email){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'quickLinksPanel', 'generalSettingsPanel'];
+const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'quickLinksPanel', 'generalSettingsPanel', 'comingSoonPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -1063,6 +1106,18 @@ function showAdminPanel(panelId, navId){
     document.querySelectorAll('#settingsNavList .settings-item').forEach(el => {
         el.classList.toggle('active', el.id === navId);
     });
+}
+const COMING_SOON_META = {
+    doc:     { icon:'📁', title:'Tài liệu',   hint:'Quản lý mục "Tài liệu ôn thi" trên trang chủ.' },
+    tool:    { icon:'🧰', title:'Công cụ',    hint:'Quản lý mục "Công cụ hỗ trợ" trên trang chủ.' },
+    product: { icon:'🛍️', title:'Sản phẩm',   hint:'Quản lý mục "Sản phẩm" trên trang chủ.' },
+};
+function showComingSoon(key){
+    showAdminPanel('comingSoonPanel', 'nav_' + key);
+    const meta = COMING_SOON_META[key] || { icon:'📁', title:'', hint:'' };
+    document.getElementById('comingSoonIcon').innerText = meta.icon;
+    document.getElementById('comingSoonTitle').innerText = meta.title;
+    document.getElementById('comingSoonHint').innerText = meta.hint;
 }
 function showSubjectManager(){
     showAdminPanel('subjectManagerPanel', 'navSubjectMgr');
@@ -1083,6 +1138,70 @@ function showGeneralSettings(){
     document.getElementById('genNewPassword').value = '';
     document.getElementById('genNewPasswordConfirm').value = '';
     document.getElementById('genPassMsg').innerText = '';
+    loadSupportCard();
+}
+
+// ---------- Thẻ "Hỗ trợ" (trang chủ) — quản lý ngay trong tab Cài đặt, dùng chung bảng quick_links ----------
+let supportCardId = null;
+let supportCardMaxOrder = 0;
+async function loadSupportCard(){
+    const msgEl = document.getElementById('genSupportMsg');
+    msgEl.innerText = '';
+    const { data, error } = await sb.from('quick_links').select('*').order('order_no', { ascending: true, nullsFirst: false }).order('id');
+    if (error){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Lỗi tải thẻ Hỗ trợ: ' + error.message; return; }
+    const rows = data || [];
+    supportCardMaxOrder = rows.reduce((max, q) => Math.max(max, q.order_no || 0), 0);
+    const support = rows.find(q => q.link === 'support');
+    supportCardId = support ? support.id : null;
+    document.getElementById('genSupportIcon').value = support ? (support.icon || '') : 'fa-solid fa-headset';
+    document.getElementById('genSupportTitle').value = support ? (support.title || '') : 'Hỗ trợ';
+    document.getElementById('genSupportSubtitle').value = support ? (support.subtitle || '') : '';
+    pickGenSupportColor(support ? (support.color || 'blue') : 'blue');
+    updateGenSupportPreview();
+}
+function pickGenSupportColor(color){
+    document.querySelectorAll('#genSupportColorRow .color-swatch').forEach(el=>{
+        el.classList.toggle('selected', el.dataset.color === color);
+    });
+    updateGenSupportPreview();
+}
+function updateGenSupportPreview(){
+    const icon = document.getElementById('genSupportIcon').value.trim() || 'fa-solid fa-headset';
+    const title = document.getElementById('genSupportTitle').value.trim() || '—';
+    const subtitle = document.getElementById('genSupportSubtitle').value.trim() || '';
+    const selected = document.querySelector('#genSupportColorRow .color-swatch.selected');
+    const color = selected ? selected.dataset.color : 'blue';
+    document.getElementById('genSupportPreviewIco').innerHTML = `<i class="${escapeHtml(icon)}"></i>`;
+    document.getElementById('genSupportPreviewIco').className = 'prev-ico color-swatch ' + color;
+    document.getElementById('genSupportPreviewTitle').innerText = title;
+    document.getElementById('genSupportPreviewSubtitle').innerText = subtitle;
+}
+['genSupportIcon','genSupportTitle','genSupportSubtitle'].forEach(id=>{
+    document.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateGenSupportPreview);
+    });
+});
+async function saveSupportCard(){
+    const icon = document.getElementById('genSupportIcon').value.trim() || 'fa-solid fa-headset';
+    const title = document.getElementById('genSupportTitle').value.trim();
+    const subtitle = document.getElementById('genSupportSubtitle').value.trim();
+    const selected = document.querySelector('#genSupportColorRow .color-swatch.selected');
+    const color = selected ? selected.dataset.color : 'blue';
+    const msgEl = document.getElementById('genSupportMsg');
+    if (!title){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Nhập tiêu đề cho thẻ Hỗ trợ.'; return; }
+    msgEl.style.color = '';
+    msgEl.innerText = 'Đang lưu...';
+    if (supportCardId){
+        const { error } = await sb.from('quick_links').update({ icon, color, title, subtitle }).eq('id', supportCardId);
+        if (error){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Lỗi: ' + error.message; return; }
+    } else {
+        const { data, error } = await sb.from('quick_links').insert({ icon, color, title, subtitle, link: 'support', order_no: supportCardMaxOrder + 1 }).select().single();
+        if (error){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Lỗi: ' + error.message; return; }
+        supportCardId = data.id;
+    }
+    msgEl.style.color = '#2f9e44';
+    msgEl.innerText = '✔ Đã lưu thẻ Hỗ trợ.';
 }
 async function changePassword(){
     const pass = document.getElementById('genNewPassword').value;
@@ -2496,8 +2615,7 @@ const SETTINGS_META = {
 };
 
 async function openSettingsPanel(key){
-    document.getElementById('navSubjectMgr').classList.remove('active');
-    document.getElementById('navQuickLinks').classList.remove('active');
+    document.querySelectorAll('#settingsNavList .settings-item').forEach(el => el.classList.remove('active'));
     currentSetKey = key;
     document.querySelectorAll('.settings-item').forEach(el=>{
         el.classList.toggle('active', el.dataset.setkey === key);

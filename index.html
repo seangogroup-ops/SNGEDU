@@ -469,9 +469,9 @@
         <div class="hero">
             <div class="hero-card">
                 <div class="hero-text">
-                    <div class="hero-eyebrow">SNG EDU - Không gian tri thức cộng đồng</div>
-                    <h1>Mở kho tài liệu, bắt đầu ôn tập ngay hôm nay</h1>
-                    <p>Nơi tri thức được chọn lọc và sẻ chia — từng tài liệu đều đến từ cộng đồng, được sàng lọc kỹ để đảm bảo chất lượng. Không chỉ là kho lưu trữ, đây là không gian để bạn kết nối, học hỏi và phát triển bản thân mỗi ngày. 📚 Giao diện gọn gàng, trực quan, giúp bạn tìm đúng tài liệu cần trong tích tắc — nhanh, mượt và hiệu quả. 🚀</p>
+                    <div class="hero-eyebrow" id="heroEyebrow">SNG EDU - Không gian tri thức cộng đồng</div>
+                    <h1 id="heroTitle">Mở kho tài liệu, bắt đầu ôn tập ngay hôm nay</h1>
+                    <p id="heroDesc">Nơi tri thức được chọn lọc và sẻ chia — từng tài liệu đều đến từ cộng đồng, được sàng lọc kỹ để đảm bảo chất lượng. Không chỉ là kho lưu trữ, đây là không gian để bạn kết nối, học hỏi và phát triển bản thân mỗi ngày. 📚 Giao diện gọn gàng, trực quan, giúp bạn tìm đúng tài liệu cần trong tích tắc — nhanh, mượt và hiệu quả. 🚀</p>
                     <div class="avatar-group">
                         <div class="avatar-stack">
                             <div class="mini-avt" style="background:#4f6bff">H</div>
@@ -505,33 +505,10 @@
         </div>
 
         <div class="sec-head"><h2>Truy cập nhanh</h2></div>
-        <div class="quick-grid">
-            <div class="quick-tile" data-go="quiz">
-                <div class="q-icon" style="background:var(--brand-bg); color:var(--brand)"><i class="fa-solid fa-list-check"></i></div>
-                <div><div class="q-title">Ôn tập trắc nghiệm</div><div class="q-sub">Chọn học phần</div></div>
-                <i class="fa-solid fa-arrow-right q-arrow"></i>
-            </div>
-            <div class="quick-tile" data-go="doc">
-                <div class="q-icon" style="background:#f1ecff; color:#7c5cfc"><i class="fa-solid fa-folder-open"></i></div>
-                <div><div class="q-title">Tài liệu ôn thi</div><div class="q-sub">Tóm tắt &amp; đề cương</div></div>
-                <i class="fa-solid fa-arrow-right q-arrow"></i>
-            </div>
-            <div class="quick-tile" data-go="tool">
-                <div class="q-icon" style="background:var(--green-bg); color:var(--green)"><i class="fa-solid fa-toolbox"></i></div>
-                <div><div class="q-title">Công cụ hỗ trợ</div><div class="q-sub">Flashcard ôn tập</div></div>
-                <i class="fa-solid fa-arrow-right q-arrow"></i>
-            </div>
-            <div class="quick-tile" data-go="product">
-                <div class="q-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-bag-shopping"></i></div>
-                <div><div class="q-title">Sản phẩm</div><div class="q-sub">Gói nâng cấp</div></div>
-                <i class="fa-solid fa-arrow-right q-arrow"></i>
-            </div>
-            <div class="quick-tile" data-go="support">
-                <div class="q-icon" style="background:#e8f3ff; color:#0068ff"><i class="fa-solid fa-headset"></i></div>
-                <div><div class="q-title">Hỗ trợ</div><div class="q-sub">Zalo &amp; góp ý</div></div>
-                <i class="fa-solid fa-arrow-right q-arrow"></i>
-            </div>
+        <div class="quick-grid" id="quickGrid">
+            <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
         </div>
+
 
         <div class="sec-head" style="margin-top:8px"><h2>Học phần nổi bật</h2><span id="homeSubjectCount">Đang tải...</span></div>
         <div class="grid" id="homeSubjectGrid">
@@ -893,6 +870,68 @@
     }
 
     renderSubjectGrids();
+
+    // ---------------- KHỐI GIỚI THIỆU (hero) — đọc từ Supabase site_settings ----------------
+    async function loadHeroSettings(){
+        const { data, error } = await sb.from('site_settings').select('*').eq('key', 'home_hero').single();
+        if (error || !data || !data.payload) return; // chưa cấu hình -> giữ nội dung tĩnh mặc định
+        const hero = data.payload;
+        if (hero.eyebrow) document.getElementById('heroEyebrow').textContent = hero.eyebrow;
+        if (hero.title)   document.getElementById('heroTitle').textContent = hero.title;
+        if (hero.desc)    document.getElementById('heroDesc').textContent = hero.desc;
+    }
+    loadHeroSettings();
+
+    // ---------------- TRUY CẬP NHANH — hoàn toàn động, quản lý (thêm/sửa/xóa/đổi tên/sắp xếp) ở trang admin ----------------
+    const QL_COLOR_MAP = {
+        indigo: { bg:'var(--brand-bg)', fg:'var(--brand)' },
+        purple: { bg:'#f1ecff',         fg:'#7c5cfc' },
+        green:  { bg:'var(--green-bg)', fg:'var(--green)' },
+        amber:  { bg:'var(--amber-bg)', fg:'var(--amber)' },
+        blue:   { bg:'#e8f3ff',         fg:'#0068ff' },
+        red:    { bg:'#fde8e8',         fg:'#dc2626' }
+    };
+    const QL_KNOWN_TABS = ['home', 'doc', 'quiz', 'tool', 'product', 'support'];
+
+    function quickTileHtml(q){
+        const style = QL_COLOR_MAP[q.color] || QL_COLOR_MAP.indigo;
+        const isTab = QL_KNOWN_TABS.includes(q.link);
+        return `
+            <div class="quick-tile" data-ql-id="${escapeHtmlHome(q.id)}" ${isTab ? `data-go="${q.link}"` : `data-href="${escapeHtmlHome(q.link || '#')}"`}>
+                <div class="q-icon" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(q.icon || 'fa-solid fa-star')}"></i></div>
+                <div><div class="q-title">${escapeHtmlHome(q.title)}</div><div class="q-sub">${escapeHtmlHome(q.subtitle || '')}</div></div>
+                <i class="fa-solid fa-arrow-right q-arrow"></i>
+            </div>`;
+    }
+
+    async function renderQuickGrid(){
+        const grid = document.getElementById('quickGrid');
+        const { data: links, error } = await sb.from('quick_links').select('*').order('order_no', { ascending: true, nullsFirst: false }).order('id');
+
+        if (error){
+            grid.innerHTML = `<div class="empty-state small"><div class="empty-title">Không tải được Truy cập nhanh</div><div class="empty-sub">${escapeHtmlHome(error.message)}</div></div>`;
+            return;
+        }
+        if (!links || !links.length){
+            grid.innerHTML = `<div class="empty-state small"><div class="empty-title">Chưa có thẻ nào</div><div class="empty-sub">Vào trang admin &gt; Truy cập nhanh để thêm thẻ đầu tiên.</div></div>`;
+            return;
+        }
+
+        grid.innerHTML = links.map(quickTileHtml).join('');
+
+        // Thẻ trỏ tới 1 tab có sẵn (home/doc/quiz/tool/product/support) -> chuyển tab như menu bên trái
+        grid.querySelectorAll('[data-go]').forEach(el=>{
+            el.addEventListener('click', ()=> goTab(el.dataset.go));
+        });
+        // Thẻ trỏ tới đường dẫn tùy ý (URL khác hoặc file .html khác) -> điều hướng thẳng tới đó
+        grid.querySelectorAll('[data-href]').forEach(el=>{
+            el.addEventListener('click', ()=>{
+                const href = el.dataset.href;
+                if (href && href !== '#') window.location.href = href;
+            });
+        });
+    }
+    renderQuickGrid();
 
     const panels = { home:'panel-home', quiz:'panel-quiz', doc:'panel-doc', tool:'panel-tool', product:'panel-product', support:'panel-support' };
     const titles = {

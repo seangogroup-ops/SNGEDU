@@ -641,26 +641,18 @@ textarea{resize:vertical;}
         </div>
 
         <div class="side-section">
-            <div class="settings-inline-label">Nội dung</div>
-            <div class="side-list">
-                <div class="side-item settings-item active" id="navSubjectMgr" onclick="showSubjectManager()">
-                    <span class="set-ico">📚</span><span class="name">Môn học &amp; câu hỏi</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="side-section">
-            <div class="settings-inline-label">Cài đặt trang chủ</div>
             <div class="side-list" id="settingsNavList">
-                <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
-                    <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
+                <div class="side-item settings-item active" id="navSubjectMgr" onclick="showSubjectManager()">
+                    <span class="set-ico">📝</span><span class="name">Trắc nghiệm</span>
                 </div>
                 <div class="side-item settings-item" id="navQuickLinks" onclick="showQuickLinksManager()">
                     <span class="set-ico">⚡</span><span class="name">Truy cập nhanh</span>
                 </div>
-                <div class="side-item settings-item disabled">
+                <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
+                    <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
+                </div>
+                <div class="side-item settings-item" id="navGeneralSettings" onclick="showGeneralSettings()">
                     <span class="set-ico">⚙️</span><span class="name">Cài đặt</span>
-                    <span class="soon-tag">Sắp có</span>
                 </div>
             </div>
         </div>
@@ -795,6 +787,38 @@ textarea{resize:vertical;}
                             <button class="btn-mini-save" onclick="saveQuickLink()">Lưu</button>
                             <button class="btn-mini-cancel" onclick="closeQuickLinkForm()">Hủy</button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="generalSettingsPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>⚙️ Cài đặt</h2>
+                <p class="hint">Thông tin tài khoản quản trị và đổi mật khẩu đăng nhập.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col" style="max-width:460px;">
+                    <div class="settings-form-card">
+                        <h3>Tài khoản</h3>
+                        <p class="hint">Email đang đăng nhập</p>
+                        <div class="settings-preview">
+                            <div class="prev-ico">👤</div>
+                            <div class="prev-text"><b id="genAccountEmail">—</b><span>Quản trị viên</span></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
+                        <h3>Đổi mật khẩu</h3>
+                        <p class="hint">Mật khẩu mới cần tối thiểu 6 ký tự.</p>
+                        <label>Mật khẩu mới</label>
+                        <input id="genNewPassword" type="password" placeholder="••••••••" autocomplete="new-password">
+                        <label>Nhập lại mật khẩu mới</label>
+                        <input id="genNewPasswordConfirm" type="password" placeholder="••••••••" autocomplete="new-password">
+                        <div class="mini-actions" style="margin-top:12px;">
+                            <button class="btn-mini-save" onclick="changePassword()">Lưu mật khẩu mới</button>
+                        </div>
+                        <div id="genPassMsg" class="hint" style="margin-top:8px;"></div>
                     </div>
                 </div>
             </div>
@@ -1030,35 +1054,52 @@ function showAdmin(email){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
+const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'quickLinksPanel', 'generalSettingsPanel'];
+function showAdminPanel(panelId, navId){
+    ADMIN_PANEL_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', id !== panelId);
+    });
+    document.querySelectorAll('#settingsNavList .settings-item').forEach(el => {
+        el.classList.toggle('active', el.id === navId);
+    });
+}
 function showSubjectManager(){
-    document.getElementById('navSubjectMgr').classList.add('active');
-    document.getElementById('navQuickLinks').classList.remove('active');
-    document.querySelectorAll('#settingsNavList .settings-item').forEach(el => el.classList.remove('active'));
-    document.getElementById('subjectManagerPanel').classList.remove('hidden');
-    document.getElementById('mainAppArea').classList.add('hidden');
-    document.getElementById('settingsPanel').classList.add('hidden');
-    document.getElementById('quickLinksPanel').classList.add('hidden');
+    showAdminPanel('subjectManagerPanel', 'navSubjectMgr');
 }
 function showQuestionsPanel(){
-    document.getElementById('navSubjectMgr').classList.add('active');
-    document.getElementById('navQuickLinks').classList.remove('active');
-    document.querySelectorAll('#settingsNavList .settings-item').forEach(el => el.classList.remove('active'));
-    document.getElementById('subjectManagerPanel').classList.add('hidden');
-    document.getElementById('mainAppArea').classList.remove('hidden');
-    document.getElementById('settingsPanel').classList.add('hidden');
-    document.getElementById('quickLinksPanel').classList.add('hidden');
+    showAdminPanel('mainAppArea', 'navSubjectMgr');
 }
 function showQuickLinksManager(){
-    document.getElementById('navSubjectMgr').classList.remove('active');
-    document.querySelectorAll('#settingsNavList .settings-item').forEach(el => el.classList.remove('active'));
-    document.getElementById('navQuickLinks').classList.add('active');
-    document.getElementById('subjectManagerPanel').classList.add('hidden');
-    document.getElementById('mainAppArea').classList.add('hidden');
-    document.getElementById('settingsPanel').classList.add('hidden');
-    document.getElementById('quickLinksPanel').classList.remove('hidden');
+    showAdminPanel('quickLinksPanel', 'navQuickLinks');
     closeQuickLinkForm();
     loadQuickLinks();
 }
+function showGeneralSettings(){
+    showAdminPanel('generalSettingsPanel', 'navGeneralSettings');
+    const emailEl = document.getElementById('genAccountEmail');
+    const sideEmailEl = document.getElementById('userEmail');
+    if (emailEl && sideEmailEl) emailEl.textContent = sideEmailEl.textContent || '';
+    document.getElementById('genNewPassword').value = '';
+    document.getElementById('genNewPasswordConfirm').value = '';
+    document.getElementById('genPassMsg').innerText = '';
+}
+async function changePassword(){
+    const pass = document.getElementById('genNewPassword').value;
+    const confirm = document.getElementById('genNewPasswordConfirm').value;
+    const msgEl = document.getElementById('genPassMsg');
+    msgEl.style.color = '';
+    if (!pass || pass.length < 6){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Mật khẩu mới cần tối thiểu 6 ký tự.'; return; }
+    if (pass !== confirm){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Hai mật khẩu nhập không khớp.'; return; }
+    msgEl.innerText = 'Đang lưu...';
+    const { error } = await sb.auth.updateUser({ password: pass });
+    if (error){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Lỗi: ' + error.message; return; }
+    msgEl.style.color = '#2f9e44';
+    msgEl.innerText = '✔ Đã đổi mật khẩu.';
+    document.getElementById('genNewPassword').value = '';
+    document.getElementById('genNewPasswordConfirm').value = '';
+}
+
 
 // ---------- SIDEBAR HELPERS ----------
 function toggleForm(id){
@@ -2465,6 +2506,7 @@ async function openSettingsPanel(key){
     document.getElementById('subjectManagerPanel').classList.add('hidden');
     document.getElementById('mainAppArea').classList.add('hidden');
     document.getElementById('quickLinksPanel').classList.add('hidden');
+    document.getElementById('generalSettingsPanel').classList.add('hidden');
     document.getElementById('settingsPanel').classList.remove('hidden');
     document.getElementById('setSaveMsg').innerText = '';
 

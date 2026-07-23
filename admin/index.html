@@ -641,25 +641,22 @@ textarea{resize:vertical;}
         </div>
 
         <div class="side-section">
+            <div class="settings-inline-label">Nội dung</div>
+            <div class="side-list">
+                <div class="side-item settings-item active" id="navSubjectMgr" onclick="showSubjectManager()">
+                    <span class="set-ico">📚</span><span class="name">Môn học &amp; câu hỏi</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-section">
             <div class="settings-inline-label">Cài đặt trang chủ</div>
             <div class="side-list" id="settingsNavList">
                 <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
                     <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
                 </div>
-                <div class="side-item settings-item active" id="navSubjectMgr" data-setkey="quick_tn" onclick="showSubjectManager()">
-                    <span class="set-ico">📝</span><span class="name">Trắc nghiệm</span>
-                    <button class="icon-edit" title="Cấu hình thẻ Trắc nghiệm ở trang chủ" onclick="event.stopPropagation(); openSettingsPanel('quick_tn')">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    </button>
-                </div>
-                <div class="side-item settings-item" data-setkey="quick_tl" onclick="openSettingsPanel('quick_tl')">
-                    <span class="set-ico">📁</span><span class="name">Tài liệu</span>
-                </div>
-                <div class="side-item settings-item" data-setkey="quick_cc" onclick="openSettingsPanel('quick_cc')">
-                    <span class="set-ico">🧰</span><span class="name">Công cụ</span>
-                </div>
-                <div class="side-item settings-item" data-setkey="quick_sp" onclick="openSettingsPanel('quick_sp')">
-                    <span class="set-ico">🎁</span><span class="name">Sản phẩm</span>
+                <div class="side-item settings-item" id="navQuickLinks" onclick="showQuickLinksManager()">
+                    <span class="set-ico">⚡</span><span class="name">Truy cập nhanh</span>
                 </div>
                 <div class="side-item settings-item disabled">
                     <span class="set-ico">⚙️</span><span class="name">Cài đặt</span>
@@ -746,8 +743,65 @@ textarea{resize:vertical;}
             </div>
         </div>
 
+        <div id="quickLinksPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>⚡ Truy cập nhanh (trang chủ)</h2>
+                <p class="hint">Các thẻ hiển thị ở mục "Truy cập nhanh" trên trang chủ. Kéo thả để đổi thứ tự, thêm/sửa/xóa/đổi tên thoải mái.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col" style="max-width:460px;">
+                    <div class="subj-mgr-col-head">
+                        <h4>Danh sách thẻ</h4>
+                        <button class="side-add" onclick="openQuickLinkForm()">+ Thêm thẻ</button>
+                    </div>
+                    <div id="quickLinkList" class="side-list subj-mgr-list"></div>
+                </div>
+
+                <div class="subj-mgr-col">
+                    <div id="quickLinkForm" class="mini-form">
+                        <div id="quickLinkFormTitle" class="mini-form-title">Thêm thẻ</div>
+                        <label>Icon (mã lớp Font Awesome)</label>
+                        <input id="qlIcon" placeholder="fa-solid fa-list-check">
+                        <div class="hint" style="margin:2px 0 0;">Xem mã icon tại <a href="https://fontawesome.com/search" target="_blank" rel="noopener">fontawesome.com/search</a>, copy đúng class (vd: fa-solid fa-briefcase).</div>
+                        <label style="margin-top:10px;">Màu icon</label>
+                        <div class="color-swatch-row" id="qlColorRow">
+                            <div class="color-swatch indigo" data-color="indigo" onclick="pickQlColor('indigo')">🎨</div>
+                            <div class="color-swatch purple" data-color="purple" onclick="pickQlColor('purple')">🎨</div>
+                            <div class="color-swatch green" data-color="green" onclick="pickQlColor('green')">🎨</div>
+                            <div class="color-swatch amber" data-color="amber" onclick="pickQlColor('amber')">🎨</div>
+                            <div class="color-swatch blue" data-color="blue" onclick="pickQlColor('blue')">🎨</div>
+                            <div class="color-swatch red" data-color="red" onclick="pickQlColor('red')">🎨</div>
+                        </div>
+                        <label>Tiêu đề thẻ</label>
+                        <input id="qlTitle" placeholder="Ôn tập trắc nghiệm">
+                        <label>Mô tả ngắn</label>
+                        <input id="qlSubtitle" placeholder="Chọn học phần">
+                        <label>Bấm vào thẻ sẽ đi tới</label>
+                        <select id="qlLink">
+                            <option value="home">Trang chủ</option>
+                            <option value="doc">Tài liệu</option>
+                            <option value="quiz">Trắc nghiệm</option>
+                            <option value="tool">Công cụ</option>
+                            <option value="product">Sản phẩm</option>
+                            <option value="support">Hỗ trợ</option>
+                            <option value="__custom">Đường dẫn khác (URL/file)…</option>
+                        </select>
+                        <input id="qlLinkCustom" class="hidden" placeholder="https://... hoặc ten-file.html" style="margin-top:8px;">
+                        <div class="settings-preview">
+                            <div class="prev-ico" id="qlPreviewIco"><i class="fa-solid fa-list-check"></i></div>
+                            <div class="prev-text"><b id="qlPreviewTitle">Tiêu đề</b><span id="qlPreviewSubtitle">Mô tả</span></div>
+                        </div>
+                        <div class="mini-actions">
+                            <button class="btn-mini-save" onclick="saveQuickLink()">Lưu</button>
+                            <button class="btn-mini-cancel" onclick="closeQuickLinkForm()">Hủy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="settingsPanel" class="hidden">
-            <button class="settings-back-btn" onclick="closeSettingsPanel()">← Quay lại Trắc nghiệm</button>
+            <button class="settings-back-btn" onclick="closeSettingsPanel()">← Quay lại</button>
             <div class="settings-form-card">
                 <h3 id="setFormTitle">Cài đặt</h3>
                 <p class="hint" id="setFormHint">Nội dung này hiển thị ở trang chủ.</p>
@@ -978,15 +1032,32 @@ function showAdmin(email){
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
 function showSubjectManager(){
     document.getElementById('navSubjectMgr').classList.add('active');
+    document.getElementById('navQuickLinks').classList.remove('active');
+    document.querySelectorAll('#settingsNavList .settings-item').forEach(el => el.classList.remove('active'));
     document.getElementById('subjectManagerPanel').classList.remove('hidden');
     document.getElementById('mainAppArea').classList.add('hidden');
     document.getElementById('settingsPanel').classList.add('hidden');
+    document.getElementById('quickLinksPanel').classList.add('hidden');
 }
 function showQuestionsPanel(){
     document.getElementById('navSubjectMgr').classList.add('active');
+    document.getElementById('navQuickLinks').classList.remove('active');
+    document.querySelectorAll('#settingsNavList .settings-item').forEach(el => el.classList.remove('active'));
     document.getElementById('subjectManagerPanel').classList.add('hidden');
     document.getElementById('mainAppArea').classList.remove('hidden');
     document.getElementById('settingsPanel').classList.add('hidden');
+    document.getElementById('quickLinksPanel').classList.add('hidden');
+}
+function showQuickLinksManager(){
+    document.getElementById('navSubjectMgr').classList.remove('active');
+    document.querySelectorAll('#settingsNavList .settings-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('navQuickLinks').classList.add('active');
+    document.getElementById('subjectManagerPanel').classList.add('hidden');
+    document.getElementById('mainAppArea').classList.add('hidden');
+    document.getElementById('settingsPanel').classList.add('hidden');
+    document.getElementById('quickLinksPanel').classList.remove('hidden');
+    closeQuickLinkForm();
+    loadQuickLinks();
 }
 
 // ---------- SIDEBAR HELPERS ----------
@@ -1282,6 +1353,189 @@ function deleteSubject(id){
             if (currentSubject && currentSubject.id === id) currentSubject = null;
             showMsg('Đã xóa môn học.', 'ok');
             loadSubjects();
+        }
+    );
+}
+
+// ---------- QUICK LINKS (thẻ "Truy cập nhanh" ở trang chủ, bảng quick_links) ----------
+let quickLinks = [];
+let editingQuickLinkId = null;
+const QL_TAB_LABELS = { home:'Trang chủ', doc:'Tài liệu', quiz:'Trắc nghiệm', tool:'Công cụ', product:'Sản phẩm', support:'Hỗ trợ' };
+
+async function loadQuickLinks(){
+    const { data, error } = await sb.from('quick_links').select('*').order('order_no', { ascending: true, nullsFirst: false }).order('id');
+    if (error) return showMsg('Lỗi tải Truy cập nhanh: ' + error.message, 'err');
+    quickLinks = data || [];
+    renderQuickLinkList();
+}
+function quickLinkItemHtml(q){
+    const linkLabel = QL_TAB_LABELS[q.link] || q.link;
+    return `
+        <div class="side-item" data-id="${q.id}">
+            <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
+            <span class="prev-ico color-swatch ${q.color || 'indigo'}" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="${escapeHtml(q.icon || 'fa-solid fa-star')}"></i></span>
+            <span class="name">${escapeHtml(q.title)}<span class="hint-inline"> · ${escapeHtml(linkLabel)}</span></span>
+            <span class="right-cluster">
+                <span class="menu-wrap">
+                    <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleQuickLinkMenu('${q.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+                    <div class="menu-drop hidden" id="qlmenu-${q.id}">
+                        <button onclick="event.stopPropagation(); closeAllQuickLinkMenus(); editQuickLink('${q.id}')">✏️ Sửa</button>
+                        <button onclick="event.stopPropagation(); closeAllQuickLinkMenus(); deleteQuickLink('${q.id}')">🗑️ Xóa</button>
+                    </div>
+                </span>
+            </span>
+        </div>`;
+}
+function renderQuickLinkList(){
+    const box = document.getElementById('quickLinkList');
+    if (!box) return;
+    if (!quickLinks.length){ box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Chưa có thẻ nào. Bấm "+ Thêm thẻ" để tạo thẻ đầu tiên.</div>`; return; }
+    box.innerHTML = quickLinks.map(q => quickLinkItemHtml(q)).join('');
+}
+async function reorderQuickLinks(fromId, toId){
+    if (!fromId || !toId || fromId === toId) return;
+    const fromIdx = quickLinks.findIndex(q => String(q.id) === String(fromId));
+    const toIdx = quickLinks.findIndex(q => String(q.id) === String(toId));
+    if (fromIdx < 0 || toIdx < 0) return;
+
+    const reordered = quickLinks.slice();
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+
+    quickLinks = reordered;
+    renderQuickLinkList();
+
+    const results = await Promise.all(
+        reordered.map((q, i) => sb.from('quick_links').update({ order_no: i + 1 }).eq('id', q.id))
+    );
+    const failed = results.find(r => r.error);
+    if (failed) showMsg('Lỗi lưu thứ tự: ' + failed.error.message, 'err');
+    loadQuickLinks();
+}
+function toggleQuickLinkMenu(id, btn){
+    const menu = document.getElementById('qlmenu-' + id);
+    const wasHidden = menu.classList.contains('hidden');
+    closeAllQuickLinkMenus();
+    if (wasHidden && btn){
+        const rect = btn.getBoundingClientRect();
+        menu.style.top = (rect.bottom + 4) + 'px';
+        menu.style.left = 'auto';
+        menu.style.right = (window.innerWidth - rect.right) + 'px';
+        menu.classList.remove('hidden');
+    }
+}
+function closeAllQuickLinkMenus(exceptId){
+    document.querySelectorAll('[id^="qlmenu-"]').forEach(el => {
+        if (!exceptId || el.id !== 'qlmenu-' + exceptId) el.classList.add('hidden');
+    });
+}
+document.addEventListener('click', () => closeAllQuickLinkMenus());
+
+function pickQlColor(color){
+    document.querySelectorAll('#qlColorRow .color-swatch').forEach(el=>{
+        el.classList.toggle('selected', el.dataset.color === color);
+    });
+    updateQlPreview();
+}
+function updateQlPreview(){
+    const icon = document.getElementById('qlIcon').value.trim() || 'fa-solid fa-star';
+    const title = document.getElementById('qlTitle').value.trim() || '—';
+    const subtitle = document.getElementById('qlSubtitle').value.trim() || '';
+    const selected = document.querySelector('#qlColorRow .color-swatch.selected');
+    const color = selected ? selected.dataset.color : 'indigo';
+
+    document.getElementById('qlPreviewIco').innerHTML = `<i class="${escapeHtml(icon)}"></i>`;
+    document.getElementById('qlPreviewIco').className = 'prev-ico color-swatch ' + color;
+    document.getElementById('qlPreviewTitle').innerText = title;
+    document.getElementById('qlPreviewSubtitle').innerText = subtitle;
+}
+['qlIcon','qlTitle','qlSubtitle'].forEach(id=>{
+    document.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateQlPreview);
+    });
+});
+document.addEventListener('DOMContentLoaded', () => {
+    const sel = document.getElementById('qlLink');
+    if (sel) sel.addEventListener('change', () => {
+        document.getElementById('qlLinkCustom').classList.toggle('hidden', sel.value !== '__custom');
+    });
+});
+
+function openQuickLinkForm(){
+    editingQuickLinkId = null;
+    document.getElementById('quickLinkFormTitle').innerText = 'Thêm thẻ';
+    document.getElementById('qlIcon').value = '';
+    document.getElementById('qlTitle').value = '';
+    document.getElementById('qlSubtitle').value = '';
+    document.getElementById('qlLink').value = 'quiz';
+    document.getElementById('qlLinkCustom').value = '';
+    document.getElementById('qlLinkCustom').classList.add('hidden');
+    pickQlColor('indigo');
+    updateQlPreview();
+    document.getElementById('quickLinkForm').classList.add('show');
+}
+function closeQuickLinkForm(){
+    editingQuickLinkId = null;
+    const form = document.getElementById('quickLinkForm');
+    if (form) form.classList.remove('show');
+}
+function editQuickLink(id){
+    const q = quickLinks.find(x => String(x.id) === String(id));
+    if (!q) return;
+    editingQuickLinkId = id;
+    document.getElementById('quickLinkFormTitle').innerText = 'Sửa thẻ';
+    document.getElementById('qlIcon').value = q.icon || '';
+    document.getElementById('qlTitle').value = q.title || '';
+    document.getElementById('qlSubtitle').value = q.subtitle || '';
+    if (QL_TAB_LABELS[q.link]){
+        document.getElementById('qlLink').value = q.link;
+        document.getElementById('qlLinkCustom').classList.add('hidden');
+        document.getElementById('qlLinkCustom').value = '';
+    } else {
+        document.getElementById('qlLink').value = '__custom';
+        document.getElementById('qlLinkCustom').classList.remove('hidden');
+        document.getElementById('qlLinkCustom').value = q.link || '';
+    }
+    pickQlColor(q.color || 'indigo');
+    updateQlPreview();
+    document.getElementById('quickLinkForm').classList.add('show');
+    document.getElementById('qlTitle').focus();
+}
+async function saveQuickLink(){
+    const icon = document.getElementById('qlIcon').value.trim() || 'fa-solid fa-star';
+    const title = document.getElementById('qlTitle').value.trim();
+    const subtitle = document.getElementById('qlSubtitle').value.trim();
+    const linkSel = document.getElementById('qlLink').value;
+    const link = linkSel === '__custom' ? document.getElementById('qlLinkCustom').value.trim() : linkSel;
+    const selected = document.querySelector('#qlColorRow .color-swatch.selected');
+    const color = selected ? selected.dataset.color : 'indigo';
+    if (!title || !link) return showMsg('Nhập đủ tiêu đề và đường dẫn.', 'err');
+
+    if (editingQuickLinkId){
+        const { error } = await sb.from('quick_links').update({ icon, color, title, subtitle, link }).eq('id', editingQuickLinkId);
+        if (error) return showMsg('Lỗi cập nhật: ' + error.message, 'err');
+        showMsg('Đã cập nhật thẻ "' + title + '".', 'ok');
+    } else {
+        const maxOrder = quickLinks.reduce((max, q) => Math.max(max, q.order_no || 0), 0);
+        const { error } = await sb.from('quick_links').insert({ icon, color, title, subtitle, link, order_no: maxOrder + 1 });
+        if (error) return showMsg('Lỗi: ' + error.message, 'err');
+        showMsg('Đã thêm thẻ "' + title + '".', 'ok');
+    }
+    closeQuickLinkForm();
+    loadQuickLinks();
+}
+function deleteQuickLink(id){
+    const q = quickLinks.find(x => String(x.id) === String(id));
+    const title = q ? q.title : '';
+    showConfirm(
+        'Xóa thẻ truy cập nhanh?',
+        `Xóa thẻ "${title}"? Thẻ sẽ biến mất khỏi trang chủ ngay. Không thể hoàn tác.`,
+        async () => {
+            const { error } = await sb.from('quick_links').delete().eq('id', id);
+            if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
+            showMsg('Đã xóa thẻ.', 'ok');
+            loadQuickLinks();
         }
     );
 }
@@ -2190,6 +2444,7 @@ function enableDragReorder(containerId, itemSelector, getId, isBlocked, onDrop){
 enableDragReorder('subjectList', '.side-item', el => el.dataset.id, null, reorderSubjects);
 enableDragReorder('chapterList', '.side-item', el => el.dataset.chapter, () => chapterSelectMode, reorderChapters);
 enableDragReorder('qList', '.q-item', el => Number(el.dataset.id), null, reorderQuestions);
+enableDragReorder('quickLinkList', '.side-item', el => el.dataset.id, null, reorderQuickLinks);
 
 // ---------- CÀI ĐẶT TRANG CHỦ (site_settings) ----------
 let currentSetKey = null;
@@ -2197,14 +2452,11 @@ let currentSetPayload = null;
 
 const SETTINGS_META = {
     home_hero: { title: 'Trang chủ — Khối giới thiệu (Hero)', hint: 'Nội dung khối lớn ở đầu trang chủ.' },
-    quick_tn:  { title: 'TN — Ôn tập trắc nghiệm', hint: 'Thẻ "Truy cập nhanh" ở trang chủ.' },
-    quick_tl:  { title: 'TL — Tài liệu ôn thi', hint: 'Thẻ "Truy cập nhanh" ở trang chủ.' },
-    quick_cc:  { title: 'CC — Công cụ hỗ trợ', hint: 'Thẻ "Truy cập nhanh" ở trang chủ.' },
-    quick_sp:  { title: 'SP — Sản phẩm', hint: 'Thẻ "Truy cập nhanh" ở trang chủ.' },
 };
 
 async function openSettingsPanel(key){
     document.getElementById('navSubjectMgr').classList.remove('active');
+    document.getElementById('navQuickLinks').classList.remove('active');
     currentSetKey = key;
     document.querySelectorAll('.settings-item').forEach(el=>{
         el.classList.toggle('active', el.dataset.setkey === key);
@@ -2212,6 +2464,7 @@ async function openSettingsPanel(key){
 
     document.getElementById('subjectManagerPanel').classList.add('hidden');
     document.getElementById('mainAppArea').classList.add('hidden');
+    document.getElementById('quickLinksPanel').classList.add('hidden');
     document.getElementById('settingsPanel').classList.remove('hidden');
     document.getElementById('setSaveMsg').innerText = '';
 

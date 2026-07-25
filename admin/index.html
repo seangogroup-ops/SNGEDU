@@ -209,6 +209,12 @@ aside{
 .subj-mgr-col .side-item.active .code{background:rgba(255,255,255,.28);color:#fff;}
 .subj-mgr-col .drag-handle{color:#c1c5da;}
 .subj-mgr-col .side-item.active .drag-handle{color:rgba(255,255,255,.8);}
+/* Khi kéo một mục đang "active" (nền tím + chữ trắng), opacity .4 làm cả nền lẫn chữ
+   mờ đi cùng lúc trên nền trắng của panel này, khiến chữ trắng gần như biến mất (lỗi tương phản).
+   Ép mục đang kéo luôn hiện ở dạng thẻ sáng, viền đứt, chữ tối rõ ràng — bất kể trước đó có active hay không. */
+.subj-mgr-col .side-item.dragging{opacity:1;background:var(--white);color:var(--text);border:1.5px dashed var(--accent);box-shadow:0 10px 24px -10px rgba(20,22,45,.28);}
+.subj-mgr-col .side-item.dragging .code{background:var(--bg);color:var(--gray);}
+.subj-mgr-col .side-item.dragging .drag-handle{color:var(--accent);}
 
 .subj-mgr-col .side-add{background:var(--white);border:1px solid var(--border);color:var(--gray);}
 .subj-mgr-col .side-add:hover{border-color:var(--accent);border-style:solid;color:var(--accent);background:var(--accent-soft);}

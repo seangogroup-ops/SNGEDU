@@ -37,12 +37,28 @@
         header {
             background-color: var(--white); height: 60px; display: flex; align-items: center; justify-content: space-between;
             padding: 0 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: fixed; top: 0; width: 100%; z-index: 1000;
+            gap: 10px;
         }
-        .header-left { display: flex; align-items: center; gap: 8px; color: var(--text-gray); font-size: 0.95rem; cursor: pointer; }
-        .header-title { font-weight: 700; font-size: 1rem; color: var(--text-main); }
-        .header-right { display: flex; align-items: center; gap: 20px; }
-        .timer { font-weight: 700; color: var(--azota-blue); font-size: 1.1rem; }
-        .btn-submit { background-color: var(--azota-blue); color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .header-left { display: flex; align-items: center; gap: 8px; color: var(--text-gray); font-size: 0.95rem; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
+        .header-title { font-weight: 700; font-size: 1rem; color: var(--text-main); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+        .header-right { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+        .timer { font-weight: 700; color: var(--azota-blue); font-size: 1.1rem; white-space: nowrap; }
+        .btn-submit { background-color: var(--azota-blue); color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+
+        @media (max-width: 640px) {
+            header { padding: 0 10px; gap: 6px; }
+            .header-left span { display: none; }
+            .header-title { font-size: 0.85rem; }
+            .header-right { gap: 10px; }
+            .timer { font-size: 0.95rem; }
+            .timer span#timer-display { display: inline; }
+            .btn-submit { padding: 8px 12px; font-size: 0.9rem; }
+            .btn-submit span, .btn-submit i.fa-paper-plane + text { display: none; }
+        }
+        @media (max-width: 420px) {
+            .btn-submit { padding: 8px; }
+            .btn-submit .btn-text { display: none; }
+        }
 
         .layout { display: flex; max-width: 1200px; margin: 80px auto 40px; padding: 0 20px; gap: 25px; align-items: flex-start; }
         .questions-col { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
@@ -120,7 +136,7 @@
     <div class="header-title" id="headerTitle">Đang tải đề...</div>
     <div class="header-right">
         <div class="timer"><i class="fa-regular fa-clock"></i> <span id="timer-display">60:00</span></div>
-        <button class="btn-submit" onclick="submitExam()"><i class="fa-solid fa-paper-plane"></i> Nộp bài</button>
+        <button class="btn-submit" onclick="submitExam()"><i class="fa-solid fa-paper-plane"></i> <span class="btn-text">Nộp bài</span></button>
     </div>
 </header>
 

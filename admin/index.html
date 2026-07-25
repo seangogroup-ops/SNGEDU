@@ -6,88 +6,119 @@
 <title>Quản trị · SNG EDU</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
 :root{
-    --navy:#161b2c;
-    --navy-2:#212842;
-    --navy-text:#aab0c6;
-    --bg:#f4f5f9;
+    --navy:#12162a;
+    --navy-2:#1e2340;
+    --navy-text:#9aa1c4;
+    --bg:#f3f4fa;
     --white:#ffffff;
-    --border:#e3e5ee;
-    --text:#1c2033;
-    --gray:#6b7185;
-    --accent:#4457e8;
-    --accent-dark:#333fc2;
+    --border:#e4e6f1;
+    --text:#181c30;
+    --gray:#6d7286;
+    --accent:#4f4ee0;
+    --accent-dark:#3c3bc4;
     --green:#16a34a;
-    --green-bg:#effaf1;
+    --green-bg:#eefaf1;
     --red:#dc2626;
     --red-bg:#fef2f2;
     --amber:#b45309;
     --amber-bg:#fff8ec;
-    --radius:10px;
+    --radius:12px;
+
+    /* thêm — không được JS tham chiếu, an toàn để tinh chỉnh riêng */
+    --radius-sm:8px;
+    --radius-lg:16px;
+    --accent-soft:#eef0ff;
+    --accent-glow:rgba(79,78,224,.22);
+    --shadow-xs:0 1px 2px rgba(20,22,45,.05);
+    --shadow-sm:0 2px 8px rgba(20,22,45,.06);
+    --shadow-md:0 10px 28px rgba(20,22,45,.10);
+    --shadow-lg:0 24px 60px rgba(12,15,35,.35);
+    --font-display:'Plus Jakarta Sans',Inter,-apple-system,"Segoe UI",sans-serif;
+    --font-body:'Inter',-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box;}
 body{
     margin:0;
-    font-family:-apple-system,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+    font-family:var(--font-body);
     background:var(--bg);
     color:var(--text);
     -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
 }
-button{cursor:pointer;border:none;border-radius:8px;font-weight:600;font-family:inherit;transition:filter .12s;}
-button:hover{filter:brightness(0.96);}
-button:active{filter:brightness(0.9);}
+h1,h2,h3,h4{font-family:var(--font-display);letter-spacing:-.01em;}
+button{cursor:pointer;border:none;border-radius:var(--radius-sm);font-weight:600;font-family:var(--font-display);transition:filter .12s,transform .12s,box-shadow .12s;}
+button:hover{filter:brightness(0.97);}
+button:active{filter:brightness(0.92);transform:translateY(1px);}
 input,select,textarea{
-    width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;
-    font-size:.92rem;font-family:inherit;background:var(--white);color:var(--text);
+    width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);
+    font-size:.92rem;font-family:var(--font-body);background:var(--white);color:var(--text);
+    transition:border-color .12s,box-shadow .12s;
 }
-input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent);}
-label{font-weight:600;font-size:.78rem;color:var(--gray);display:block;margin:10px 0 4px;letter-spacing:.01em;text-transform:uppercase;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+label{font-weight:700;font-size:.72rem;color:var(--gray);display:block;margin:12px 0 5px;letter-spacing:.05em;text-transform:uppercase;}
 .hidden{display:none !important;}
 
 /* ---------- LOGIN ---------- */
 #loginScreen{
     min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:radial-gradient(circle at 20% 20%, #232b4a, var(--navy) 60%);
+    background:
+        radial-gradient(circle at 15% 12%, rgba(79,78,224,.35), transparent 42%),
+        radial-gradient(circle at 88% 82%, rgba(79,78,224,.18), transparent 45%),
+        var(--navy);
+    padding:20px;
 }
 .login-card{
-    background:var(--white);border-radius:16px;padding:36px 32px;width:100%;max-width:360px;
-    box-shadow:0 20px 60px rgba(10,15,40,.35);
+    position:relative;
+    background:var(--white);border-radius:var(--radius-lg);padding:38px 34px;width:100%;max-width:380px;
+    box-shadow:var(--shadow-lg);
+    border-top:4px solid var(--accent);
 }
-.login-card h1{font-size:1.3rem;margin:0 0 2px;}
-.login-card p{color:var(--gray);font-size:.85rem;margin:0 0 18px;}
-.login-card button{width:100%;background:var(--accent);color:#fff;padding:11px;font-size:.95rem;margin-top:14px;}
-#loginMsg{margin-top:10px;color:var(--red);font-size:.85rem;min-height:1.2em;}
+.login-card h1{font-size:1.32rem;margin:0 0 3px;letter-spacing:-.02em;}
+.login-card p{color:var(--gray);font-size:.85rem;margin:0 0 20px;line-height:1.5;}
+.login-card button{width:100%;background:var(--accent);color:#fff;padding:12px;font-size:.95rem;margin-top:16px;box-shadow:0 8px 20px var(--accent-glow);}
+.login-card button:hover{background:var(--accent-dark);}
+#loginMsg{margin-top:10px;color:var(--red);font-size:.85rem;min-height:1.2em;font-weight:600;}
 
 /* ---------- SHELL ---------- */
 #shell{display:flex;min-height:100vh;}
-@media (max-width: 720px){
-    #shell{flex-direction:column;}
-    aside{width:100%;flex:0 0 auto;}
-    main{padding:20px 16px 50px;}
-}
 aside{
-    width:280px;flex:0 0 280px;background:var(--navy);color:var(--navy-text);
-    padding:20px 16px;display:flex;flex-direction:column;gap:22px;
+    width:272px;flex:0 0 272px;background:var(--navy);color:var(--navy-text);
+    padding:22px 16px;display:flex;flex-direction:column;gap:24px;
     box-sizing:border-box;overflow-x:hidden;
+    border-right:1px solid rgba(255,255,255,.05);
 }
 .side-item .name{flex-shrink:1;min-width:0;}
-.brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:700;font-size:1.02rem;padding:0 4px;}
-.brand span.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block;}
+.brand{display:flex;align-items:center;gap:11px;color:#fff;font-weight:800;font-size:1rem;padding:0 4px 4px;letter-spacing:-.01em;}
+.brand span.dot{
+    width:32px;height:32px;border-radius:9px;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--accent),#8b7cf6);
+    box-shadow:0 4px 14px var(--accent-glow);
+}
+.brand span.dot svg{width:18px;height:18px;display:block;}
 .side-section h4{
-    font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#767ea0;
-    margin:0 0 8px;padding:0 4px;display:flex;justify-content:space-between;align-items:center;
+    font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#6b7299;font-family:var(--font-display);font-weight:700;
+    margin:0 0 9px;padding:0 4px;display:flex;justify-content:space-between;align-items:center;
 }
 .side-list{display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto;}
+/* Menu "Cài đặt trang chủ" trong sidebar: danh sách cố định 5 mục, không cần giới hạn chiều cao/cuộn riêng
+   (trước đây ăn chung max-height:220px của .side-list khiến mục cuối bị giấu, tạo ô cuộn nhỏ trông như vỡ UI)
+   FIX-SIDEBAR-CUTOFF-V2 */
+#settingsNavList{max-height:none !important;overflow-y:visible !important;overflow:visible !important;}
 .side-item{
-    padding:9px 8px 9px 10px;border-radius:8px;font-size:.87rem;cursor:pointer;
+    padding:10px 9px 10px 11px;border-radius:var(--radius-sm);font-size:.87rem;cursor:pointer;
     display:flex;justify-content:space-between;align-items:center;gap:6px;color:var(--navy-text);
+    transition:background .12s ease,opacity .15s ease,box-shadow .12s ease,color .12s ease;
 }
-.side-item:hover{background:var(--navy-2);}
-.side-item.active{background:var(--accent);color:#fff;font-weight:600;}
+.side-item:hover{background:var(--navy-2);color:#fff;}
+.side-item.active{background:var(--accent);color:#fff;font-weight:600;box-shadow:0 6px 16px rgba(79,78,224,.35);}
 .side-item .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .side-item .right-cluster{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
 .side-item .code{
-    flex:0 0 auto;font-size:.68rem;font-weight:700;letter-spacing:.03em;
+    flex:0 0 auto;font-size:.66rem;font-weight:700;letter-spacing:.03em;font-family:var(--font-display);
     background:rgba(255,255,255,.1);color:#c3c9e6;padding:2px 7px;border-radius:5px;
 }
 .side-item.active .code{background:rgba(255,255,255,.28);color:#fff;}
@@ -97,7 +128,7 @@ aside{
 .status-dot.maintenance{background:#f5a524;}
 .status-dot.hidden{background:#dc2626;}
 .status-badge{
-    flex:0 0 auto;font-size:.66rem;font-weight:700;letter-spacing:.02em;
+    flex:0 0 auto;font-size:.64rem;font-weight:700;letter-spacing:.02em;font-family:var(--font-display);
     padding:2px 7px;border-radius:5px;white-space:nowrap;
 }
 .status-badge.ready{background:rgba(46,211,146,.16);color:#16a34a;}
@@ -109,75 +140,144 @@ aside{
 .side-item.active .status-badge.empty{background:rgba(255,255,255,.2);color:#fff;}
 .side-add{
     background:transparent;border:1px dashed #454e72;color:#98a0c2;
-    padding:5px 9px;font-size:.75rem;border-radius:6px;
+    padding:6px 10px;font-size:.74rem;border-radius:7px;font-family:var(--font-display);
 }
-.side-add:hover{border-color:var(--accent);color:#fff;}
-.mini-form{display:none;flex-direction:column;gap:6px;margin-top:8px;padding:10px;background:var(--navy-2);border-radius:8px;}
+.side-add:hover{border-color:var(--accent);border-style:solid;color:#fff;background:rgba(79,78,224,.18);}
+.mini-form{display:none;flex-direction:column;gap:7px;margin-top:9px;padding:12px;background:var(--navy-2);border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,.05);}
 .mini-form.show{display:flex;}
-.mini-form input,.mini-form select{background:#1c2340;border-color:#3a4266;color:#fff;font-size:.82rem;padding:7px 9px;}
-.mini-form input:disabled{background:#161b30;color:#767ea0;cursor:not-allowed;}
+.mini-form input,.mini-form select{background:#161b32;border-color:#343a63;color:#fff;font-size:.82rem;padding:8px 10px;}
+.mini-form input:disabled{background:#12162a;color:#767ea0;cursor:not-allowed;}
 .mini-form .mini-actions{display:flex;gap:6px;margin-top:2px;}
-.mini-form .mini-actions button{flex:1;padding:6px;font-size:.78rem;}
+.mini-form .mini-actions button{flex:1;padding:7px;font-size:.78rem;}
 .btn-mini-save{background:var(--accent);color:#fff;}
-.btn-mini-cancel{background:#2b3355;color:#c7cce3;}
+.btn-mini-save:hover{background:var(--accent-dark);}
+.btn-mini-cancel{background:#2b3159;color:#c7cce3;}
 .side-item-row{display:block;}
 .icon-x,.icon-edit{
-    width:22px;height:22px;border-radius:6px;
+    width:23px;height:23px;border-radius:7px;
     display:flex;align-items:center;justify-content:center;flex:0 0 auto;
     border:none;padding:0;
 }
 .icon-x{background:rgba(220,38,38,.16);color:#e8a3a3;}
-.icon-edit{background:rgba(68,87,232,.18);color:#aab4f5;}
+.icon-edit{background:rgba(79,78,224,.18);color:#b3b2f7;}
 .icon-x svg,.icon-edit svg{width:12px;height:12px;display:block;}
 .icon-x:hover{background:rgba(220,38,38,.35);color:#ffb3b3;}
-.icon-edit:hover{background:rgba(68,87,232,.4);color:#dbe0ff;}
+.icon-edit:hover{background:rgba(79,78,224,.4);color:#e2e1ff;}
 .side-item.active .icon-x,.side-item.active .icon-edit{background:rgba(255,255,255,.2);color:#fff;}
 .side-item.active .icon-x:hover,.side-item.active .icon-edit:hover{background:rgba(255,255,255,.35);}
-.side-item{cursor:pointer;transition:background .12s ease,opacity .15s ease,box-shadow .12s ease;}
+.side-item{cursor:pointer;}
 .side-item.dragging{opacity:.4;}
 .side-item.drag-over{box-shadow:inset 0 0 0 2px var(--accent);background:var(--navy-2);}
 .side-item.select-mode{cursor:pointer;}
 .folder-group{margin-bottom:4px;}
 .folder-header{
-    display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:8px;cursor:pointer;
-    font-size:.8rem;font-weight:700;color:#c3c9e6;user-select:none;
+    display:flex;align-items:center;gap:7px;padding:8px 8px;border-radius:var(--radius-sm);cursor:pointer;
+    font-size:.79rem;font-weight:700;color:#c3c9e6;user-select:none;font-family:var(--font-display);
 }
 .folder-header:hover{background:var(--navy-2);}
-.folder-arrow{display:inline-block;font-size:.72rem;color:#8e96bd;transition:transform .15s ease;}
+.folder-arrow{display:inline-block;font-size:.7rem;color:#8e96bd;transition:transform .15s ease;}
 .folder-arrow.collapsed{transform:rotate(-90deg);}
 .folder-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .folder-count{
-    flex:0 0 auto;font-size:.66rem;font-weight:700;color:#9aa0c2;
+    flex:0 0 auto;font-size:.64rem;font-weight:700;color:#9aa0c2;
     background:rgba(255,255,255,.08);padding:1px 7px;border-radius:10px;
 }
-.folder-items{display:flex;flex-direction:column;gap:3px;padding-left:14px;border-left:1px solid #33395c;margin:2px 0 6px 11px;}
+.folder-items{display:flex;flex-direction:column;gap:3px;padding-left:14px;border-left:1px solid #2d3358;margin:2px 0 6px 11px;}
 .folder-items.hidden{display:none;}
 .chap-cb{width:auto;flex:0 0 auto;accent-color:var(--accent);margin:0;}
-.side-toolbar{display:flex;gap:6px;margin-bottom:8px;}
-.side-toolbar .side-add{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 4px;}
+.side-toolbar{display:flex;gap:6px;margin-bottom:9px;}
+.side-toolbar .side-add{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:7px 4px;}
+
+/* ---------- SUBJECT MANAGER (Môn học + Chương/đề, khu vực chính) ---------- */
+#subjectManagerPanel.hidden{display:none;}
+.subj-mgr-head{margin-bottom:22px;}
+.subj-mgr-head h2{margin:0 0 4px;font-size:1.28rem;letter-spacing:-.02em;}
+.subj-mgr-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
+@media (max-width: 860px){.subj-mgr-grid{grid-template-columns:1fr;}}
+.subj-mgr-col{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-xs);}
+.subj-mgr-col-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px;flex-wrap:wrap;}
+.subj-mgr-col-head h4{margin:0;font-size:.94rem;letter-spacing:-.01em;}
+.subj-mgr-col-head .hint-inline{font-weight:500;color:var(--gray);font-size:.8rem;font-family:var(--font-body);}
+.subj-mgr-list{max-height:none;}
+
+/* Khối Môn học/Chương·đề nằm trên card nền trắng (không phải sidebar tối) —
+   toàn bộ màu chữ/viền được viết riêng cho nền sáng để đảm bảo độ tương phản. */
+.subj-mgr-col .side-item{padding:12px 11px 12px 12px;font-size:.9rem;color:var(--text);}
+.subj-mgr-col .side-item:hover{background:var(--bg);color:var(--text);}
+.subj-mgr-col .side-item.active{color:#fff;}
+.subj-mgr-col .side-item .code{background:var(--bg);color:var(--gray);}
+.subj-mgr-col .side-item.active .code{background:rgba(255,255,255,.28);color:#fff;}
+.subj-mgr-col .drag-handle{color:#c1c5da;}
+.subj-mgr-col .side-item.active .drag-handle{color:rgba(255,255,255,.8);}
+
+.subj-mgr-col .side-add{background:var(--white);border:1px solid var(--border);color:var(--gray);}
+.subj-mgr-col .side-add:hover{border-color:var(--accent);border-style:solid;color:var(--accent);background:var(--accent-soft);}
+
+.subj-mgr-col .folder-header{color:var(--text);}
+.subj-mgr-col .folder-header:hover{background:var(--bg);}
+.subj-mgr-col .folder-arrow{color:var(--gray);}
+.subj-mgr-col .folder-count{color:var(--gray);background:var(--bg);border:1px solid var(--border);}
+.subj-mgr-col .folder-items{border-left-color:var(--border);}
+
+.subj-mgr-col .mini-form{margin-top:13px;background:var(--bg);border:1px solid var(--border);}
+.subj-mgr-col .mini-form input,.subj-mgr-col .mini-form select{background:var(--white);border:1px solid var(--border);color:var(--text);}
+.subj-mgr-col .mini-form input::placeholder{color:#a3a8bf;}
+.subj-mgr-col .mini-form input:focus,.subj-mgr-col .mini-form select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+.subj-mgr-col .mini-form input:disabled{background:#eef0f6;color:#a6acc0;}
+.subj-mgr-col .mini-form-title{font-size:.73rem;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-display);}
+.subj-mgr-col .btn-mini-cancel{background:var(--white);color:var(--gray);border:1px solid var(--border);}
+.subj-mgr-col .btn-mini-cancel:hover{color:var(--text);border-color:var(--gray);background:var(--bg);}
+
+.subj-mgr-col .chap-bulk-bar{background:var(--bg);border:1px solid var(--border);color:var(--text);}
+.subj-mgr-col .chap-bulk-actions .btn-mini-cancel{background:var(--white);}
+
+.subj-mgr-col .menu-drop{background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-md);}
+.subj-mgr-col .menu-drop button{color:var(--text);}
+.subj-mgr-col .menu-drop button:hover{background:var(--bg);}
+
+.subj-mgr-col .folder-select-arrow{color:var(--gray);}
+.subj-mgr-col .folder-select-dropdown{background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-md);}
+.subj-mgr-col .folder-select-option{color:var(--text);}
+.subj-mgr-col .folder-select-option:hover{background:var(--bg);}
+.subj-mgr-col .folder-select-option.muted{color:var(--gray);}
+.subj-mgr-col .folder-select-option.create{color:var(--accent);border-top-color:var(--border);}
+.subj-mgr-col .folder-select-empty{color:var(--gray);}
+
+/* ---------- CONTEXT BAR: nút đổi môn/chương ---------- */
+.context-bar{justify-content:space-between;}
+.ctx-switch-btn{
+    background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);
+    padding:8px 13px;font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap;
+}
+.ctx-switch-btn:hover{background:var(--navy-2);}
+.settings-back-btn{
+    background:var(--white);border:1px solid var(--border);color:var(--gray);font-family:var(--font-display);
+    border-radius:var(--radius-sm);padding:7px 13px;font-size:.82rem;margin-bottom:16px;cursor:pointer;
+}
+.settings-back-btn:hover{color:var(--text);border-color:var(--gray);}
 .chap-bulk-bar{
-    display:flex;flex-direction:column;gap:8px;margin:0 0 8px;
-    padding:10px;background:var(--navy-2);border-radius:8px;font-size:.78rem;color:#c7cce3;
+    display:flex;flex-direction:column;gap:8px;margin:0 0 9px;
+    padding:11px;background:var(--navy-2);border-radius:var(--radius-sm);font-size:.78rem;color:#c7cce3;
 }
 .chap-bulk-count{font-weight:600;}
 .chap-bulk-actions{display:flex;gap:6px;}
 .chap-bulk-actions .btn-mini-cancel,.chap-bulk-actions .btn-mini-danger{
-    flex:1;padding:8px 6px;font-size:.76rem;text-align:center;white-space:nowrap;border-radius:6px;
+    flex:1;padding:9px 6px;font-size:.76rem;text-align:center;white-space:nowrap;border-radius:var(--radius-sm);
 }
-.btn-mini-danger{background:rgba(220,38,38,.85);color:#fff;}
+.btn-mini-danger{background:var(--red);color:#fff;}
 .btn-mini-danger:disabled{opacity:.4;cursor:not-allowed;}
 .drag-handle{color:#565e82;font-size:.85rem;letter-spacing:-1px;flex:0 0 auto;cursor:grab;padding-right:1px;touch-action:none;}
 .menu-wrap{position:relative;flex:0 0 auto;}
 .menu-drop{
-    position:fixed;z-index:2000;min-width:110px;
-    background:#1c2340;border:1px solid #3a4266;border-radius:8px;
-    box-shadow:0 8px 24px rgba(0,0,0,.35);overflow:hidden;
+    position:fixed;z-index:2000;min-width:114px;
+    background:#181d38;border:1px solid #343a63;border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg);overflow:hidden;
 }
 .menu-drop button{
     display:block;width:100%;text-align:left;background:transparent;color:#dfe2f2;
-    padding:8px 12px;font-size:.82rem;border-radius:0;font-weight:500;
+    padding:9px 12px;font-size:.82rem;border-radius:0;font-weight:500;font-family:var(--font-body);
 }
-.menu-drop button:hover{background:#2b3355;}
+.menu-drop button:hover{background:#2b3159;}
 .folder-select{position:relative;}
 .folder-select input{padding-right:28px;}
 .folder-select-arrow{
@@ -187,74 +287,132 @@ aside{
 .folder-select.open .folder-select-arrow{transform:translateY(-50%) rotate(180deg);}
 .folder-select-dropdown{
     position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:2000;
-    background:#1c2340;border:1px solid #3a4266;border-radius:8px;
-    box-shadow:0 8px 24px rgba(0,0,0,.35);overflow-y:auto;max-height:190px;
+    background:#181d38;border:1px solid #343a63;border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-lg);overflow-y:auto;max-height:190px;
 }
 .folder-select-dropdown.hidden{display:none;}
 .folder-select-option{
-    display:flex;align-items:center;gap:6px;padding:8px 10px;font-size:.8rem;color:#dfe2f2;cursor:pointer;
+    display:flex;align-items:center;gap:6px;padding:9px 10px;font-size:.8rem;color:#dfe2f2;cursor:pointer;
 }
-.folder-select-option:hover{background:#2b3355;}
+.folder-select-option:hover{background:#2b3159;}
 .folder-select-option.muted{color:#8f96b8;}
 .folder-select-option.create{color:#a9b3ff;font-weight:600;border-top:1px solid #2a3153;}
-.folder-select-empty{padding:8px 10px;font-size:.78rem;color:#767ea0;}
-.sidebar-foot{margin-top:auto;border-top:1px solid #2a3153;padding-top:14px;font-size:.8rem;}
+.folder-select-empty{padding:9px 10px;font-size:.78rem;color:#767ea0;}
+.sidebar-foot{margin-top:auto;border-top:1px solid rgba(255,255,255,.07);padding-top:15px;font-size:.8rem;}
 .sidebar-foot .email{color:#fff;font-weight:600;word-break:break-all;}
-.sidebar-foot button{width:100%;margin-top:10px;background:#2b3355;color:#dfe2f2;padding:8px;font-size:.82rem;}
+.sidebar-foot button{width:100%;margin-top:11px;background:#242a4d;color:#dfe2f2;padding:9px;font-size:.82rem;}
+.sidebar-foot button:hover{background:#2d3459;}
 
-main{flex:1;padding:26px 34px 60px;max-width:1000px;}
+/* ---------- SETTINGS (Cài đặt trang chủ) ---------- */
+.side-item.settings-item{gap:8px;}
+.settings-inline-label{
+    font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#6b7299;font-family:var(--font-display);font-weight:700;
+    margin:15px 0 9px;padding:0 4px;
+}
+.side-item.settings-item .set-ico{
+    width:23px;height:23px;border-radius:7px;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;font-size:.72rem;
+    background:rgba(255,255,255,.08);color:#c3c9e6;
+}
+.side-item.active.settings-item .set-ico{background:rgba(255,255,255,.25);color:#fff;}
+.side-item.disabled{cursor:default;opacity:.5;}
+.side-item.disabled:hover{background:transparent;color:var(--navy-text);}
+.soon-tag{
+    flex:0 0 auto;font-size:.6rem;font-weight:700;letter-spacing:.03em;font-family:var(--font-display);
+    background:rgba(255,255,255,.08);color:#8e96bd;padding:2px 7px;border-radius:5px;white-space:nowrap;
+}
+
+.settings-form-card{
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);
+    padding:24px;max-width:560px;box-shadow:var(--shadow-xs);
+}
+.settings-form-card h3{margin:0 0 4px;font-size:1.1rem;letter-spacing:-.01em;}
+.settings-form-card .hint{margin-bottom:18px;}
+.icon-color-row{display:flex;gap:10px;}
+.icon-color-row > div{flex:1;}
+.color-swatch-row{display:flex;gap:8px;margin-top:7px;flex-wrap:wrap;}
+.color-swatch{
+    width:31px;height:31px;border-radius:9px;cursor:pointer;border:2px solid transparent;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-size:.8rem;
+    transition:transform .12s;
+}
+.color-swatch:hover{transform:translateY(-2px);}
+.color-swatch.selected{border-color:var(--text);box-shadow:0 0 0 2px var(--white) inset;}
+.color-swatch.indigo{background:#4f4ee0;}
+.color-swatch.purple{background:#8b5cf6;}
+.color-swatch.green{background:#16a34a;}
+.color-swatch.amber{background:#d97706;}
+.color-swatch.blue{background:#2563eb;}
+.color-swatch.red{background:#dc2626;}
+.settings-preview{
+    display:flex;align-items:center;gap:13px;margin-top:20px;padding:15px 17px;
+    border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);
+}
+.settings-preview .prev-ico{
+    width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:1.1rem;flex:0 0 auto;
+}
+.settings-preview .prev-text b{display:block;font-size:.94rem;font-family:var(--font-display);}
+.settings-preview .prev-text span{display:block;font-size:.78rem;color:var(--gray);margin-top:1px;}
+
+main{flex:1;padding:30px 36px 60px;max-width:1020px;}
 .context-bar{
     display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--white);
-    border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:20px;
+    border:1px solid var(--border);border-radius:var(--radius);padding:15px 19px;margin-bottom:22px;
+    box-shadow:var(--shadow-xs);
 }
-.context-bar .ctx-label{font-size:.78rem;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;}
-.context-bar .ctx-value{font-weight:700;font-size:1rem;}
+.context-bar .ctx-label{font-size:.72rem;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;font-family:var(--font-display);font-weight:700;}
+.context-bar .ctx-value{font-weight:700;font-size:1rem;font-family:var(--font-display);letter-spacing:-.01em;}
 .context-bar .ctx-sep{color:var(--border);font-weight:400;}
-.context-bar .ctx-empty{color:var(--amber);font-size:.85rem;background:var(--amber-bg);padding:4px 10px;border-radius:6px;}
+.context-bar .ctx-empty{color:var(--amber);font-size:.85rem;background:var(--amber-bg);padding:5px 11px;border-radius:var(--radius-sm);font-weight:600;}
 
-.tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid var(--border);}
+.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);}
 .tab{
-    padding:10px 16px;font-size:.88rem;font-weight:600;color:var(--gray);background:transparent;
-    border-radius:8px 8px 0 0;border-bottom:2px solid transparent;
+    padding:11px 17px;font-size:.87rem;font-weight:600;color:var(--gray);background:transparent;font-family:var(--font-display);
+    border-radius:var(--radius-sm) var(--radius-sm) 0 0;border-bottom:2px solid transparent;
 }
+.tab:hover{color:var(--text);}
 .tab.active{color:var(--accent);border-bottom:2px solid var(--accent);background:var(--white);}
 
-.panel{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:18px;}
-.panel h3{margin:0 0 4px;font-size:1.02rem;}
-.hint{color:var(--gray);font-size:.82rem;margin:2px 0 14px;line-height:1.5;}
+.panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:18px;box-shadow:var(--shadow-xs);}
+.panel h3{margin:0 0 4px;font-size:1.04rem;letter-spacing:-.01em;}
+.hint{color:var(--gray);font-size:.82rem;margin:2px 0 14px;line-height:1.55;}
 .row{display:flex;gap:12px;flex-wrap:wrap;}
 .row>div{flex:1;min-width:180px;}
 
-.opt-row{display:flex;align-items:center;gap:8px;margin-top:7px;}
+.opt-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
 .opt-row input[type=radio]{width:auto;accent-color:var(--accent);}
 .opt-row input[type=text]{flex:1;}
-.opt-letter{width:22px;font-weight:700;color:var(--gray);font-size:.85rem;}
+.opt-letter{width:22px;font-weight:700;color:var(--gray);font-size:.85rem;font-family:var(--font-display);}
 .opt-hint{color:var(--gray);font-size:.78rem;margin:12px 0 0;line-height:1.5;}
 
-.btn-primary{background:var(--accent);color:#fff;padding:10px 18px;font-size:.9rem;}
+.btn-primary{background:var(--accent);color:#fff;padding:11px 19px;font-size:.9rem;box-shadow:0 4px 14px var(--accent-glow);}
 .btn-primary:hover{background:var(--accent-dark);}
-.btn-ghost{background:#eef0f7;color:var(--text);padding:9px 16px;font-size:.87rem;}
-.btn-danger{background:var(--red-bg);color:var(--red);padding:6px 12px;font-size:.8rem;}
+.btn-ghost{background:#eef0f8;color:var(--text);padding:10px 17px;font-size:.87rem;}
+.btn-ghost:hover{background:#e4e7f4;}
+.btn-danger{background:var(--red-bg);color:var(--red);padding:7px 13px;font-size:.8rem;}
 .btn-danger:hover{background:#fde3e3;}
-.btn-edit{background:#eef0f7;color:var(--accent-dark);padding:6px 12px;font-size:.8rem;}
+.btn-edit{background:var(--accent-soft);color:var(--accent-dark);padding:7px 13px;font-size:.8rem;}
+.btn-edit:hover{background:#e0e2fc;}
 
-.q-item{border:1px solid var(--border);border-radius:10px;padding:15px;margin-bottom:10px;cursor:default;transition:opacity .15s ease,box-shadow .12s ease,background .12s ease;}
+.q-item{border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:11px;cursor:default;transition:opacity .15s ease,box-shadow .12s ease,background .12s ease,border-color .12s ease;}
+.q-item:hover{border-color:#d3d6e8;box-shadow:var(--shadow-xs);}
 .q-item.dragging{opacity:.4;}
 .q-item.drag-over{box-shadow:inset 0 0 0 2px var(--accent);background:var(--bg);}
 .q-item .q-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
 .q-item .q-head .drag-handle{color:#b6bad0;font-size:.9rem;padding-top:1px;touch-action:none;}
-.q-item b.qnum{color:var(--accent-dark);}
-.q-item .opt{padding:3px 0 3px 4px;font-size:.88rem;color:var(--text);}
+.q-item b.qnum{color:var(--accent-dark);font-family:var(--font-display);}
+.q-item .opt{padding:4px 0 4px 4px;font-size:.88rem;color:var(--text);}
 .q-item .opt.correct{color:var(--green);font-weight:700;}
 .q-item .opt.correct::before{content:"✓ ";}
-.q-item .expl{margin-top:8px;font-size:.83rem;color:var(--gray);background:var(--bg);padding:8px 10px;border-radius:6px;}
-.q-item .actions{margin-top:10px;display:flex;gap:8px;}
+.q-item .expl{margin-top:9px;font-size:.83rem;color:var(--gray);background:var(--bg);padding:9px 11px;border-radius:var(--radius-sm);line-height:1.5;}
+.q-item .actions{margin-top:11px;display:flex;gap:8px;flex-wrap:wrap;}
 
-.msg{padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:.87rem;font-weight:500;}
+.msg{padding:11px 15px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:.87rem;font-weight:600;}
 .msg.ok{background:var(--green-bg);color:#166534;}
 .msg.err{background:var(--red-bg);color:#991b1b;}
 
-.empty-state{text-align:center;padding:40px 20px;color:var(--gray);font-size:.88rem;}
+.empty-state{text-align:center;padding:44px 20px;color:var(--gray);font-size:.88rem;}
 textarea{resize:vertical;}
 .content-order-row{display:flex;gap:10px;align-items:flex-start;}
 .content-order-col{flex:1;min-width:0;}
@@ -263,116 +421,194 @@ textarea{resize:vertical;}
 .order-col input{margin:0;text-align:center;}
 .content-order-row label{margin-top:0;}
 .file-drop{
-    position:relative;border:2px dashed #c7cbe0;border-radius:14px;padding:26px 20px;
+    position:relative;border:2px dashed #cbcfe4;border-radius:var(--radius-lg);padding:28px 20px;
     text-align:center;background:var(--white);transition:.15s;
 }
-.file-drop:hover{border-color:var(--accent);background:#f7f8ff;}
-.file-drop.dragover{border-color:var(--accent);background:#eef0ff;}
+.file-drop:hover{border-color:var(--accent);background:#f8f8ff;}
+.file-drop.dragover{border-color:var(--accent);background:var(--accent-soft);}
 .file-drop input[type=file]{
     position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;
 }
 .file-drop-icon{
-    width:46px;height:46px;border-radius:50%;background:#eef0ff;color:var(--accent);
-    display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin:0 auto 10px;
+    width:48px;height:48px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin:0 auto 11px;
     pointer-events:none;
 }
-.file-drop-title{font-weight:700;color:var(--text);font-size:.95rem;margin-bottom:5px;pointer-events:none;}
+.file-drop-title{font-weight:700;color:var(--text);font-size:.95rem;margin-bottom:5px;pointer-events:none;font-family:var(--font-display);}
 .file-drop-sub{font-size:.8rem;color:var(--gray);line-height:1.5;pointer-events:none;}
 .file-drop-text{font-size:.85rem;color:var(--text);line-height:1.5;pointer-events:none;}
 .callout{
-    background:#eef2ff;border:1px solid #dce0fb;border-left:4px solid var(--accent);
-    border-radius:10px;padding:13px 16px;font-size:.86rem;color:#333a63;line-height:1.65;margin:2px 0 20px;
+    background:#eef0fd;border:1px solid #dcdffa;border-left:4px solid var(--accent);
+    border-radius:var(--radius-sm);padding:14px 17px;font-size:.86rem;color:#31335f;line-height:1.65;margin:2px 0 20px;
 }
 .callout b{color:var(--accent-dark);}
 .section-label{
-    font-weight:700;font-size:.92rem;color:var(--text);margin:0 0 10px;
+    font-weight:700;font-size:.92rem;color:var(--text);margin:0 0 10px;font-family:var(--font-display);
     display:flex;align-items:center;gap:8px;
 }
 .or-divider{
-    display:flex;align-items:center;gap:12px;margin:24px 0 16px;
-    color:var(--gray);font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+    display:flex;align-items:center;gap:12px;margin:26px 0 17px;
+    color:var(--gray);font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-family:var(--font-display);
 }
 .or-divider::before,.or-divider::after{content:"";flex:1;height:1px;background:var(--border);}
-.file-list{margin-top:14px;display:flex;flex-direction:column;gap:6px;}
+.file-list{margin-top:15px;display:flex;flex-direction:column;gap:6px;}
 .file-list .file-row{
     display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.85rem;
-    padding:9px 12px;border-radius:8px;background:var(--bg);border:1px solid var(--border);
+    padding:10px 13px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);
 }
 .file-list .file-row .fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
-.file-list .file-row .fcount{flex:0 0 auto;font-weight:600;}
+.file-list .file-row .fcount{flex:0 0 auto;font-weight:700;font-family:var(--font-display);}
 .file-list .file-row .fcount.ok{color:var(--green);}
 .file-list .file-row .fcount.err{color:var(--red);}
-::-webkit-scrollbar{width:8px;}
-::-webkit-scrollbar-thumb{background:#3a4266;border-radius:4px;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:#343a63;border-radius:4px;}
 
 /* ---------- CONFIRM MODAL ---------- */
 #confirmOverlay{
-    position:fixed;inset:0;background:rgba(15,18,35,.55);backdrop-filter:blur(2px);
+    position:fixed;inset:0;background:rgba(12,14,30,.6);backdrop-filter:blur(3px);
     display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;
 }
 .confirm-box{
-    background:var(--white);border-radius:14px;padding:26px;max-width:380px;width:100%;
-    box-shadow:0 20px 60px rgba(10,15,40,.35);
+    background:var(--white);border-radius:var(--radius-lg);padding:28px;max-width:380px;width:100%;
+    box-shadow:var(--shadow-lg);
 }
 .confirm-box .confirm-icon{
-    width:44px;height:44px;border-radius:50%;background:var(--red-bg);color:var(--red);
-    display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:14px;
+    width:46px;height:46px;border-radius:50%;background:var(--red-bg);color:var(--red);
+    display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:15px;
 }
-.confirm-box h4{margin:0 0 8px;font-size:1.05rem;}
+.confirm-box h4{margin:0 0 8px;font-size:1.06rem;}
 .confirm-box p{margin:0;color:var(--gray);font-size:.88rem;line-height:1.55;}
-.confirm-box .confirm-actions{display:flex;gap:10px;margin-top:20px;}
-.confirm-box .confirm-actions button{flex:1;padding:11px;font-size:.9rem;}
-.btn-confirm-cancel{background:#eef0f7;color:var(--text);}
+.confirm-box .confirm-actions{display:flex;gap:10px;margin-top:22px;}
+.confirm-box .confirm-actions button{flex:1;padding:12px;font-size:.9rem;}
+.btn-confirm-cancel{background:#eef0f8;color:var(--text);}
+.btn-confirm-cancel:hover{background:#e4e7f4;}
 .btn-confirm-danger{background:var(--red);color:#fff;}
 .btn-confirm-danger:hover{background:#b91c1c;}
 
 /* ---------- MERGE (TỔNG HỢP) MODAL ---------- */
 #mergeOverlay{
-    position:fixed;inset:0;background:rgba(15,18,35,.55);backdrop-filter:blur(2px);
+    position:fixed;inset:0;background:rgba(12,14,30,.6);backdrop-filter:blur(3px);
     display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;
 }
 .merge-box{
-    background:var(--white);border-radius:14px;padding:26px;max-width:520px;width:100%;
-    box-shadow:0 20px 60px rgba(10,15,40,.35);
+    background:var(--white);border-radius:var(--radius-lg);padding:28px;max-width:520px;width:100%;
+    box-shadow:var(--shadow-lg);
 }
-.merge-box h4{margin:0 0 8px;font-size:1.05rem;}
-.merge-box p{margin:0 0 14px;color:var(--gray);font-size:.86rem;line-height:1.55;}
+.merge-box h4{margin:0 0 8px;font-size:1.06rem;}
+.merge-box p{margin:0 0 15px;color:var(--gray);font-size:.86rem;line-height:1.55;}
 .merge-box p b{color:var(--text);}
-.merge-source-list{display:flex;flex-direction:column;gap:4px;max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;}
+.merge-source-list{display:flex;flex-direction:column;gap:4px;max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;}
 .merge-src-row{
-    display:flex;align-items:center;gap:8px;padding:8px 6px;border-radius:6px;font-size:.86rem;
+    display:flex;align-items:center;gap:8px;padding:9px 7px;border-radius:var(--radius-sm);font-size:.86rem;
 }
 .merge-src-row:hover{background:var(--bg);}
 .merge-src-row input[type=checkbox]{width:auto;flex:0 0 auto;accent-color:var(--accent);}
 .merge-src-row .msr-label{flex:1;min-width:0;}
 .merge-src-row .msr-group{color:var(--gray);font-weight:400;font-size:.78rem;}
-.merge-src-row .msr-count{flex:0 0 auto;color:var(--gray);font-weight:700;font-size:.78rem;white-space:nowrap;}
+.merge-src-row .msr-count{flex:0 0 auto;color:var(--gray);font-weight:700;font-size:.78rem;white-space:nowrap;font-family:var(--font-display);}
 .merge-src-row input[type=number].merge-src-qty{
-    width:54px;flex:0 0 auto;text-align:center;padding:4px 2px;border:1px solid var(--border);
+    width:54px;flex:0 0 auto;text-align:center;padding:5px 2px;border:1px solid var(--border);
     border-radius:6px;font-size:.82rem;color:var(--text);-moz-appearance:textfield;
 }
 .merge-src-row input[type=number].merge-src-qty:disabled{background:var(--bg);color:var(--gray);opacity:.55;cursor:not-allowed;}
 .merge-src-row input[type=number].merge-src-qty:focus{outline:none;border-color:var(--accent);}
-.merge-select-all-row{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:6px;font-size:.78rem;}
+.merge-select-all-row{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:7px;font-size:.78rem;}
 .merge-select-all-row .msa-links{display:flex;gap:14px;}
-.merge-select-all-row a{color:var(--accent);cursor:pointer;text-decoration:none;font-weight:600;}
+.merge-select-all-row a{color:var(--accent);cursor:pointer;text-decoration:none;font-weight:700;}
 .merge-select-all-row a:hover{text-decoration:underline;}
 .q-count-badge{
-    display:inline-block;background:#eef0ff;color:var(--accent);font-weight:700;font-size:.78rem;
+    display:inline-block;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:.78rem;font-family:var(--font-display);
     padding:3px 10px;border-radius:20px;vertical-align:middle;margin-left:4px;
 }
 .merge-total-badge{
-    flex:0 0 auto;background:#eef0ff;color:var(--accent);font-weight:700;font-size:.78rem;
-    padding:5px 10px;border-radius:20px;white-space:nowrap;
+    flex:0 0 auto;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:.78rem;font-family:var(--font-display);
+    padding:5px 11px;border-radius:20px;white-space:nowrap;
 }
 .merge-clear-row{
-    display:flex;align-items:center;gap:8px;margin-top:14px;font-weight:500;
+    display:flex;align-items:center;gap:8px;margin-top:15px;font-weight:500;
     text-transform:none;font-size:.85rem;color:var(--text);
 }
 .merge-clear-row input{width:auto;accent-color:var(--accent);}
-.merge-actions{display:flex;gap:10px;margin-top:20px;}
-.merge-actions button{flex:1;padding:11px;font-size:.9rem;}
-.btn-merge-cancel{background:#eef0f7;color:var(--text);}
+.merge-actions{display:flex;gap:10px;margin-top:22px;}
+.merge-actions button{flex:1;padding:12px;font-size:.9rem;}
+.btn-merge-cancel{background:#eef0f8;color:var(--text);}
+.btn-merge-cancel:hover{background:#e4e7f4;}
+
+/* =========================================================================
+   MOBILE OVERRIDES — đặt cuối cùng trong <style> để thắng cascade tự nhiên
+   (rule cùng độ ưu tiên, đứng sau sẽ thắng — không cần !important).
+   ========================================================================= */
+@media (max-width: 720px){
+    /* Sidebar mobile: dùng layout block + margin cố định, không dùng flex/gap/margin-top:auto
+       ở tầng container, để không phụ thuộc vào cách các trình duyệt/WebView khác nhau tính
+       chiều cao cho flex-column có nội dung co giãn. */
+    #shell{display:block;}
+    aside{
+        display:block;
+        width:100%;
+        flex:none;
+        padding:16px;
+        gap:0;
+        border-right:none;
+        border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    aside > *{margin-bottom:16px;}
+    aside > *:last-child{margin-bottom:0;}
+    .side-list{
+        display:block;
+        max-height:none;
+        overflow:visible;
+    }
+    .side-list .side-item{margin-bottom:3px;}
+    .side-list .side-item:last-child{margin-bottom:0;}
+    .side-list .folder-group{margin-bottom:4px;}
+    main{padding:18px 14px 40px;display:block;}
+    .sidebar-foot{margin-top:0;}
+
+    /* Thẻ Môn học/Chương·đề: đỡ tốn diện tích, dễ chạm hơn trên điện thoại */
+    .subj-mgr-head{margin-bottom:16px;}
+    .subj-mgr-head h2{font-size:1.05rem;}
+    .subj-mgr-grid{gap:14px;}
+    .subj-mgr-col{padding:15px;}
+    .subj-mgr-col .side-item{padding:12px 10px;}
+
+    /* Panel/card nội dung câu hỏi, cài đặt trang chủ */
+    .panel{padding:17px;}
+    .settings-form-card{padding:17px;max-width:100%;}
+
+    /* Thanh ngữ cảnh (môn/chương đang chọn) */
+    .context-bar{padding:13px 15px;gap:8px 10px;}
+    .context-bar .ctx-value{font-size:.95rem;}
+    .ctx-switch-btn{padding:9px 13px;}
+
+    /* Tab: cho phép xuống dòng thay vì tràn ngang gây cuộn trang */
+    .tabs{flex-wrap:wrap;gap:6px;border-bottom:none;padding-bottom:2px;}
+    .tab{padding:10px 14px;font-size:.8rem;border-radius:var(--radius-sm);background:var(--bg);border-bottom:none;}
+    .tab.active{background:var(--accent);color:#fff;}
+
+    /* Vùng chèn nội dung câu hỏi + số TT: xếp chồng cho dễ gõ trên bàn phím ảo */
+    .content-order-row{flex-wrap:wrap;}
+    .order-col{flex:1 1 120px;}
+    .content-order-col{flex:1 1 220px;}
+
+    /* Nút icon Sửa/Xóa to hơn một chút để bấm tay chuẩn hơn */
+    .icon-x,.icon-edit{width:28px;height:28px;}
+    .icon-x svg,.icon-edit svg{width:13px;height:13px;}
+
+    /* Modal xác nhận / tổng hợp câu hỏi: bớt padding, không tràn ngang */
+    .confirm-box,.merge-box{padding:19px;}
+    #confirmOverlay,#mergeOverlay{padding:14px;}
+
+    /* Danh sách câu hỏi: cụm nút thao tác co giãn thay vì tràn hàng */
+    .q-item{padding:14px;}
+    .q-item .actions{flex-wrap:wrap;}
+}
+@media (max-width: 420px){
+    /* Màn hình rất nhỏ: các cặp nút Hủy/Lưu, Hủy/Xóa xếp dọc để vùng chạm rộng rãi hơn */
+    .confirm-box .confirm-actions,.merge-actions{flex-direction:column;}
+    .confirm-box .confirm-actions button,.merge-actions button{flex:none;width:100%;}
+    .side-toolbar{flex-wrap:wrap;}
+}
 </style>
 </head>
 <body>
@@ -394,66 +630,35 @@ textarea{resize:vertical;}
 <!-- ================= SHELL ================= -->
 <div id="shell" class="hidden">
     <aside>
-        <div class="brand"><span class="dot"></span> SNG EDU · Admin</div>
-
-        <div class="side-section">
-            <h4>Môn học <button class="side-add" onclick="openSubjectForm()">+ Thêm</button></h4>
-            <div id="subjectList" class="side-list"></div>
-            <div id="subjectForm" class="mini-form">
-                <div id="subjectFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm môn học</div>
-                <input id="newSubjectId" placeholder="Mã môn, vd: TH">
-                <input id="newSubjectName" placeholder="Tên đầy đủ, vd: Triết học">
-                <div class="folder-select" id="folderSelectWrap">
-                    <input id="newSubjectFolder" placeholder="Thư mục (tùy chọn), vd: Trắc nghiệm" autocomplete="off"
-                           oninput="onFolderInput()" onfocus="openFolderDropdown()" onclick="event.stopPropagation(); openFolderDropdown()">
-                    <span class="folder-select-arrow">▾</span>
-                    <div class="folder-select-dropdown hidden" id="folderSelectDropdown"></div>
-                </div>
-                <select id="newSubjectStatus">
-                    <option value="ready">🟢 Sẵn sàng</option>
-                    <option value="maintenance">🛠️ Bảo trì</option>
-                    <option value="pending">⚪ Chưa cập nhật</option>
-                    <option value="hidden">🚫 Ẩn (không hiện trang chủ)</option>
-                </select>
-                <label style="display:flex;align-items:center;gap:7px;font-size:.8rem;color:#4a5170;font-weight:600;padding:4px 2px;cursor:pointer;">
-                    <input type="checkbox" id="newSubjectShowExpl" style="width:15px;height:15px;margin:0;" checked>
-                    Hiển thị giải thích đáp án
-                </label>
-                <div class="mini-actions">
-                    <button class="btn-mini-save" onclick="addSubject()">Lưu</button>
-                    <button class="btn-mini-cancel" onclick="closeSubjectForm()">Hủy</button>
-                </div>
-            </div>
+        <div class="brand">
+            <span class="dot">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 3 2 8l10 5 8-4.2V15h1.5V8L12 3Z" fill="#fff"/>
+                    <path d="M6 11.5V16c0 1.7 2.7 3.5 6 3.5s6-1.8 6-3.5v-4.5l-6 3-6-3Z" fill="#fff" fill-opacity=".92"/>
+                </svg>
+            </span>
+            SNG EDU · Admin
         </div>
 
         <div class="side-section">
-            <h4>Chương / đề</h4>
-            <div class="side-toolbar" id="chapToolbar">
-                <button class="side-add" onclick="openChapterForm()">+ Thêm</button>
-                <button class="side-add" onclick="toggleChapterSelectMode()">☑ Chọn nhiều</button>
-            </div>
-            <div id="chapBulkBar" class="chap-bulk-bar hidden">
-                <div class="chap-bulk-count" id="chapBulkCount">Đã chọn 0 mục</div>
-                <div class="chap-bulk-actions">
-                    <button class="btn-mini-cancel" onclick="toggleChapterSelectMode()">Hủy</button>
-                    <button class="btn-mini-danger" id="chapBulkDeleteBtn" onclick="bulkDeleteChapters()" disabled>🗑️ Xóa đã chọn</button>
+            <div class="side-list" id="settingsNavList">
+                <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
+                    <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
                 </div>
-            </div>
-            <div id="chapterList" class="side-list"></div>
-            <div id="chapterForm" class="mini-form">
-                <div id="chapterFormTitle" style="font-size:.75rem;font-weight:700;color:#98a0c2;text-transform:uppercase;letter-spacing:.04em;">Thêm chương/đề</div>
-                <input id="newChapCode" placeholder="Mã chương, vd: 1-40">
-                <input id="newChapLabel" placeholder="Tên hiển thị, vd: Câu 1 – 40">
-                <input id="newChapNote" placeholder="Ghi chú (tùy chọn)">
-                <select id="newChapGroup">
-                    <option value="Nội dung chính">Nội dung chính</option>
-                    <option value="Bổ sung">Bổ sung</option>
-                    <option value="Bài tập tính toán">Bài tập tính toán</option>
-                    <option value="Đề thi thử">Đề thi thử</option>
-                </select>
-                <div class="mini-actions">
-                    <button class="btn-mini-save" onclick="addChapter()">Lưu</button>
-                    <button class="btn-mini-cancel" onclick="closeChapterForm()">Hủy</button>
+                <div class="side-item settings-item" id="nav_doc" onclick="showComingSoon('doc')">
+                    <span class="set-ico">📁</span><span class="name">Tài liệu</span>
+                </div>
+                <div class="side-item settings-item active" id="navSubjectMgr" onclick="showSubjectManager()">
+                    <span class="set-ico">📝</span><span class="name">Trắc nghiệm</span>
+                </div>
+                <div class="side-item settings-item" id="nav_tool" onclick="showComingSoon('tool')">
+                    <span class="set-ico">🧰</span><span class="name">Công cụ</span>
+                </div>
+                <div class="side-item settings-item" id="nav_product" onclick="showComingSoon('product')">
+                    <span class="set-ico">🛍️</span><span class="name">Sản phẩm</span>
+                </div>
+                <div class="side-item settings-item" id="navGeneralSettings" onclick="showGeneralSettings()">
+                    <span class="set-ico">⚙️</span><span class="name">Cài đặt</span>
                 </div>
             </div>
         </div>
@@ -465,6 +670,255 @@ textarea{resize:vertical;}
     </aside>
 
     <main>
+        <div id="subjectManagerPanel">
+            <div class="subj-mgr-head">
+                <h2>📚 Quản lý môn học &amp; chương / đề</h2>
+                <p class="hint">Chọn một môn học, sau đó chọn chương/đề để bắt đầu soạn câu hỏi.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col">
+                    <div class="subj-mgr-col-head">
+                        <h4>Môn học</h4>
+                        <button class="side-add" onclick="openSubjectForm()">+ Thêm</button>
+                    </div>
+                    <div id="subjectList" class="side-list subj-mgr-list"></div>
+                    <div id="subjectForm" class="mini-form">
+                        <div id="subjectFormTitle" class="mini-form-title">Thêm môn học</div>
+                        <input id="newSubjectId" placeholder="Mã môn, vd: TH">
+                        <input id="newSubjectName" placeholder="Tên đầy đủ, vd: Triết học">
+                        <div class="folder-select" id="folderSelectWrap">
+                            <input id="newSubjectFolder" placeholder="Thư mục (tùy chọn), vd: Trắc nghiệm" autocomplete="off"
+                                   oninput="onFolderInput()" onfocus="openFolderDropdown()" onclick="event.stopPropagation(); openFolderDropdown()">
+                            <span class="folder-select-arrow">▾</span>
+                            <div class="folder-select-dropdown hidden" id="folderSelectDropdown"></div>
+                        </div>
+                        <select id="newSubjectStatus">
+                            <option value="ready">🟢 Sẵn sàng</option>
+                            <option value="maintenance">🛠️ Bảo trì</option>
+                            <option value="pending">⚪ Chưa cập nhật</option>
+                            <option value="hidden">🚫 Ẩn (không hiện trang chủ)</option>
+                        </select>
+                        <label style="display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--gray);font-weight:600;padding:4px 2px;cursor:pointer;">
+                            <input type="checkbox" id="newSubjectShowExpl" style="width:15px;height:15px;margin:0;" checked>
+                            Hiển thị giải thích đáp án
+                        </label>
+                        <div class="mini-actions">
+                            <button class="btn-mini-save" onclick="addSubject()">Lưu</button>
+                            <button class="btn-mini-cancel" onclick="closeSubjectForm()">Hủy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subj-mgr-col">
+                    <div class="subj-mgr-col-head">
+                        <h4>Chương / đề <span id="chapCurrentSubjectName" class="hint-inline"></span></h4>
+                        <div class="side-toolbar" id="chapToolbar">
+                            <button class="side-add" onclick="openChapterForm()">+ Thêm</button>
+                            <button class="side-add" onclick="toggleChapterSelectMode()">☑ Chọn nhiều</button>
+                        </div>
+                    </div>
+                    <div id="chapBulkBar" class="chap-bulk-bar hidden">
+                        <div class="chap-bulk-count" id="chapBulkCount">Đã chọn 0 mục</div>
+                        <div class="chap-bulk-actions">
+                            <button class="btn-mini-cancel" onclick="toggleChapterSelectMode()">Hủy</button>
+                            <button class="btn-mini-danger" id="chapBulkDeleteBtn" onclick="bulkDeleteChapters()" disabled>🗑️ Xóa đã chọn</button>
+                        </div>
+                    </div>
+                    <div id="chapterList" class="side-list subj-mgr-list"></div>
+                    <div id="chapterForm" class="mini-form">
+                        <div id="chapterFormTitle" class="mini-form-title">Thêm chương/đề</div>
+                        <input id="newChapCode" placeholder="Mã chương, vd: 1-40">
+                        <input id="newChapLabel" placeholder="Tên hiển thị, vd: Câu 1 – 40">
+                        <input id="newChapNote" placeholder="Ghi chú (tùy chọn)">
+                        <select id="newChapGroup">
+                            <option value="Nội dung chính">Nội dung chính</option>
+                            <option value="Bổ sung">Bổ sung</option>
+                            <option value="Bài tập tính toán">Bài tập tính toán</option>
+                            <option value="Đề thi thử">Đề thi thử</option>
+                        </select>
+                        <div class="mini-actions">
+                            <button class="btn-mini-save" onclick="addChapter()">Lưu</button>
+                            <button class="btn-mini-cancel" onclick="closeChapterForm()">Hủy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="quickLinksPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>⚡ Truy cập nhanh (trang chủ)</h2>
+                <p class="hint">Các thẻ hiển thị ở mục "Truy cập nhanh" trên trang chủ. Kéo thả để đổi thứ tự, thêm/sửa/xóa/đổi tên thoải mái.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col" style="max-width:460px;">
+                    <div class="subj-mgr-col-head">
+                        <h4>Danh sách thẻ</h4>
+                        <button class="side-add" onclick="openQuickLinkForm()">+ Thêm thẻ</button>
+                    </div>
+                    <div id="quickLinkList" class="side-list subj-mgr-list"></div>
+                </div>
+
+                <div class="subj-mgr-col">
+                    <div id="quickLinkForm" class="mini-form">
+                        <div id="quickLinkFormTitle" class="mini-form-title">Thêm thẻ</div>
+                        <label>Icon (mã lớp Font Awesome)</label>
+                        <input id="qlIcon" placeholder="fa-solid fa-list-check">
+                        <div class="hint" style="margin:2px 0 0;">Xem mã icon tại <a href="https://fontawesome.com/search" target="_blank" rel="noopener">fontawesome.com/search</a>, copy đúng class (vd: fa-solid fa-briefcase).</div>
+                        <label style="margin-top:10px;">Màu icon</label>
+                        <div class="color-swatch-row" id="qlColorRow">
+                            <div class="color-swatch indigo" data-color="indigo" onclick="pickQlColor('indigo')">🎨</div>
+                            <div class="color-swatch purple" data-color="purple" onclick="pickQlColor('purple')">🎨</div>
+                            <div class="color-swatch green" data-color="green" onclick="pickQlColor('green')">🎨</div>
+                            <div class="color-swatch amber" data-color="amber" onclick="pickQlColor('amber')">🎨</div>
+                            <div class="color-swatch blue" data-color="blue" onclick="pickQlColor('blue')">🎨</div>
+                            <div class="color-swatch red" data-color="red" onclick="pickQlColor('red')">🎨</div>
+                        </div>
+                        <label>Tiêu đề thẻ</label>
+                        <input id="qlTitle" placeholder="Ôn tập trắc nghiệm">
+                        <label>Mô tả ngắn</label>
+                        <input id="qlSubtitle" placeholder="Chọn học phần">
+                        <label>Bấm vào thẻ sẽ đi tới</label>
+                        <select id="qlLink">
+                            <option value="home">Trang chủ</option>
+                            <option value="doc">Tài liệu</option>
+                            <option value="quiz">Trắc nghiệm</option>
+                            <option value="tool">Công cụ</option>
+                            <option value="product">Sản phẩm</option>
+                            <option value="support">Hỗ trợ</option>
+                            <option value="__custom">Đường dẫn khác (URL/file)…</option>
+                        </select>
+                        <input id="qlLinkCustom" class="hidden" placeholder="https://... hoặc ten-file.html" style="margin-top:8px;">
+                        <div class="settings-preview">
+                            <div class="prev-ico" id="qlPreviewIco"><i class="fa-solid fa-list-check"></i></div>
+                            <div class="prev-text"><b id="qlPreviewTitle">Tiêu đề</b><span id="qlPreviewSubtitle">Mô tả</span></div>
+                        </div>
+                        <div class="mini-actions">
+                            <button class="btn-mini-save" onclick="saveQuickLink()">Lưu</button>
+                            <button class="btn-mini-cancel" onclick="closeQuickLinkForm()">Hủy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="comingSoonPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2><span id="comingSoonIcon">📁</span> <span id="comingSoonTitle">Tài liệu</span></h2>
+                <p class="hint" id="comingSoonHint">Mục này sẽ sớm có trong bản cập nhật tiếp theo.</p>
+            </div>
+            <div class="empty-state" style="padding:40px 14px;text-align:center;">Chưa cần cập nhật ở bước này — mục quản lý nội dung riêng sẽ được thêm sau.</div>
+        </div>
+
+        <div id="generalSettingsPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>⚙️ Cài đặt</h2>
+                <p class="hint">Thẻ "Hỗ trợ" trên trang chủ, thông tin tài khoản và đổi mật khẩu đăng nhập.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col" style="max-width:460px;">
+                    <div class="settings-form-card">
+                        <h3>Thẻ "Hỗ trợ" (trang chủ)</h3>
+                        <p class="hint">Hiển thị ở mục Truy cập nhanh trên trang chủ.</p>
+                        <label>Icon (mã lớp Font Awesome)</label>
+                        <input id="genSupportIcon" placeholder="fa-solid fa-headset">
+                        <div class="hint" style="margin:2px 0 0;">Xem mã icon tại <a href="https://fontawesome.com/search" target="_blank" rel="noopener">fontawesome.com/search</a>.</div>
+                        <label style="margin-top:10px;">Màu icon</label>
+                        <div class="color-swatch-row" id="genSupportColorRow">
+                            <div class="color-swatch indigo" data-color="indigo" onclick="pickGenSupportColor('indigo')">🎨</div>
+                            <div class="color-swatch purple" data-color="purple" onclick="pickGenSupportColor('purple')">🎨</div>
+                            <div class="color-swatch green" data-color="green" onclick="pickGenSupportColor('green')">🎨</div>
+                            <div class="color-swatch amber" data-color="amber" onclick="pickGenSupportColor('amber')">🎨</div>
+                            <div class="color-swatch blue" data-color="blue" onclick="pickGenSupportColor('blue')">🎨</div>
+                            <div class="color-swatch red" data-color="red" onclick="pickGenSupportColor('red')">🎨</div>
+                        </div>
+                        <label>Tiêu đề thẻ</label>
+                        <input id="genSupportTitle" placeholder="Hỗ trợ">
+                        <label>Mô tả ngắn</label>
+                        <input id="genSupportSubtitle" placeholder="Zalo & góp ý">
+                        <div class="settings-preview">
+                            <div class="prev-ico" id="genSupportPreviewIco"><i class="fa-solid fa-headset"></i></div>
+                            <div class="prev-text"><b id="genSupportPreviewTitle">Hỗ trợ</b><span id="genSupportPreviewSubtitle">Zalo & góp ý</span></div>
+                        </div>
+                        <div class="mini-actions" style="margin-top:12px;">
+                            <button class="btn-mini-save" onclick="saveSupportCard()">Lưu thẻ Hỗ trợ</button>
+                        </div>
+                        <div id="genSupportMsg" class="hint" style="margin-top:8px;"></div>
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
+                        <h3>Tài khoản</h3>
+                        <p class="hint">Email đang đăng nhập</p>
+                        <div class="settings-preview">
+                            <div class="prev-ico">👤</div>
+                            <div class="prev-text"><b id="genAccountEmail">—</b><span>Quản trị viên</span></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
+                        <h3>Đổi mật khẩu</h3>
+                        <p class="hint">Mật khẩu mới cần tối thiểu 6 ký tự.</p>
+                        <label>Mật khẩu mới</label>
+                        <input id="genNewPassword" type="password" placeholder="••••••••" autocomplete="new-password">
+                        <label>Nhập lại mật khẩu mới</label>
+                        <input id="genNewPasswordConfirm" type="password" placeholder="••••••••" autocomplete="new-password">
+                        <div class="mini-actions" style="margin-top:12px;">
+                            <button class="btn-mini-save" onclick="changePassword()">Lưu mật khẩu mới</button>
+                        </div>
+                        <div id="genPassMsg" class="hint" style="margin-top:8px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="settingsPanel" class="hidden">
+            <button class="settings-back-btn" onclick="closeSettingsPanel()">← Quay lại</button>
+            <div class="settings-form-card">
+                <h3 id="setFormTitle">Cài đặt</h3>
+                <p class="hint" id="setFormHint">Nội dung này hiển thị ở trang chủ.</p>
+
+                <div id="setFieldsHero" class="hidden">
+                    <label>Dòng nhỏ phía trên (eyebrow)</label>
+                    <input id="setHeroEyebrow" placeholder="Mác – Lênin">
+                    <label>Tiêu đề chính</label>
+                    <input id="setHeroTitle" placeholder="Ôn tập trắc nghiệm...">
+                    <label>Mô tả</label>
+                    <textarea id="setHeroDesc" rows="3" placeholder="Chọn một chương bên dưới..."></textarea>
+                </div>
+
+                <div id="setFieldsCard" class="hidden">
+                    <label>Icon (mã lớp Font Awesome)</label>
+                    <input id="setCardIcon" placeholder="fa-solid fa-list-check">
+                    <div class="hint" style="margin:2px 0 0;">Xem mã icon tại <a href="https://fontawesome.com/search" target="_blank" rel="noopener">fontawesome.com/search</a>, copy đúng class (vd: fa-solid fa-briefcase).</div>
+                    <label>Màu icon</label>
+                    <div class="color-swatch-row" id="setColorRow">
+                        <div class="color-swatch indigo" data-color="indigo" onclick="pickSetColor('indigo')">🎨</div>
+                        <div class="color-swatch purple" data-color="purple" onclick="pickSetColor('purple')">🎨</div>
+                        <div class="color-swatch green" data-color="green" onclick="pickSetColor('green')">🎨</div>
+                        <div class="color-swatch amber" data-color="amber" onclick="pickSetColor('amber')">🎨</div>
+                        <div class="color-swatch blue" data-color="blue" onclick="pickSetColor('blue')">🎨</div>
+                        <div class="color-swatch red" data-color="red" onclick="pickSetColor('red')">🎨</div>
+                    </div>
+                    <label>Tiêu đề thẻ</label>
+                    <input id="setCardTitle" placeholder="Ôn tập trắc nghiệm">
+                    <label>Mô tả ngắn</label>
+                    <input id="setCardSubtitle" placeholder="Chọn học phần">
+                    <label>Đường dẫn (link)</label>
+                    <input id="setCardLink" placeholder="chon-mon.html">
+                    <div class="settings-preview">
+                        <div class="prev-ico" id="setPreviewIco"><i class="fa-solid fa-list-check"></i></div>
+                        <div class="prev-text"><b id="setPreviewTitle">Ôn tập trắc nghiệm</b><span id="setPreviewSubtitle">Chọn học phần</span></div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:10px;margin-top:18px;">
+                    <button class="btn-primary" onclick="saveSiteSetting()">Lưu thay đổi</button>
+                    <span id="setSaveMsg" style="align-self:center;font-size:.85rem;color:var(--green);"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="mainAppArea" class="hidden">
         <div class="context-bar" id="contextBar"></div>
         <div id="msgBox"></div>
 
@@ -560,6 +1014,7 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
                 </div>
             </div>
         </div>
+        </div>
     </main>
 </div>
 
@@ -639,7 +1094,135 @@ function showAdmin(email){
     document.getElementById('userEmail').innerText = email;
     renderOptionForm();
     loadSubjects();
+    showSubjectManager();
 }
+
+// ---------- CHUYỂN ĐỔI GIỮA 3 KHU VỰC CHÍNH ----------
+// subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
+// mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
+// settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
+const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'quickLinksPanel', 'generalSettingsPanel', 'comingSoonPanel'];
+function showAdminPanel(panelId, navId){
+    ADMIN_PANEL_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', id !== panelId);
+    });
+    document.querySelectorAll('#settingsNavList .settings-item').forEach(el => {
+        el.classList.toggle('active', el.id === navId);
+    });
+}
+const COMING_SOON_META = {
+    doc:     { icon:'📁', title:'Tài liệu',   hint:'Quản lý mục "Tài liệu ôn thi" trên trang chủ.' },
+    tool:    { icon:'🧰', title:'Công cụ',    hint:'Quản lý mục "Công cụ hỗ trợ" trên trang chủ.' },
+    product: { icon:'🛍️', title:'Sản phẩm',   hint:'Quản lý mục "Sản phẩm" trên trang chủ.' },
+};
+function showComingSoon(key){
+    showAdminPanel('comingSoonPanel', 'nav_' + key);
+    const meta = COMING_SOON_META[key] || { icon:'📁', title:'', hint:'' };
+    document.getElementById('comingSoonIcon').innerText = meta.icon;
+    document.getElementById('comingSoonTitle').innerText = meta.title;
+    document.getElementById('comingSoonHint').innerText = meta.hint;
+}
+function showSubjectManager(){
+    showAdminPanel('subjectManagerPanel', 'navSubjectMgr');
+}
+function showQuestionsPanel(){
+    showAdminPanel('mainAppArea', 'navSubjectMgr');
+}
+function showQuickLinksManager(){
+    showAdminPanel('quickLinksPanel', 'navQuickLinks');
+    closeQuickLinkForm();
+    loadQuickLinks();
+}
+function showGeneralSettings(){
+    showAdminPanel('generalSettingsPanel', 'navGeneralSettings');
+    const emailEl = document.getElementById('genAccountEmail');
+    const sideEmailEl = document.getElementById('userEmail');
+    if (emailEl && sideEmailEl) emailEl.textContent = sideEmailEl.textContent || '';
+    document.getElementById('genNewPassword').value = '';
+    document.getElementById('genNewPasswordConfirm').value = '';
+    document.getElementById('genPassMsg').innerText = '';
+    loadSupportCard();
+}
+
+// ---------- Thẻ "Hỗ trợ" (trang chủ) — quản lý ngay trong tab Cài đặt, dùng chung bảng quick_links ----------
+let supportCardId = null;
+let supportCardMaxOrder = 0;
+async function loadSupportCard(){
+    const msgEl = document.getElementById('genSupportMsg');
+    msgEl.innerText = '';
+    const { data, error } = await sb.from('quick_links').select('*').order('order_no', { ascending: true, nullsFirst: false }).order('id');
+    if (error){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Lỗi tải thẻ Hỗ trợ: ' + error.message; return; }
+    const rows = data || [];
+    supportCardMaxOrder = rows.reduce((max, q) => Math.max(max, q.order_no || 0), 0);
+    const support = rows.find(q => q.link === 'support');
+    supportCardId = support ? support.id : null;
+    document.getElementById('genSupportIcon').value = support ? (support.icon || '') : 'fa-solid fa-headset';
+    document.getElementById('genSupportTitle').value = support ? (support.title || '') : 'Hỗ trợ';
+    document.getElementById('genSupportSubtitle').value = support ? (support.subtitle || '') : '';
+    pickGenSupportColor(support ? (support.color || 'blue') : 'blue');
+    updateGenSupportPreview();
+}
+function pickGenSupportColor(color){
+    document.querySelectorAll('#genSupportColorRow .color-swatch').forEach(el=>{
+        el.classList.toggle('selected', el.dataset.color === color);
+    });
+    updateGenSupportPreview();
+}
+function updateGenSupportPreview(){
+    const icon = document.getElementById('genSupportIcon').value.trim() || 'fa-solid fa-headset';
+    const title = document.getElementById('genSupportTitle').value.trim() || '—';
+    const subtitle = document.getElementById('genSupportSubtitle').value.trim() || '';
+    const selected = document.querySelector('#genSupportColorRow .color-swatch.selected');
+    const color = selected ? selected.dataset.color : 'blue';
+    document.getElementById('genSupportPreviewIco').innerHTML = `<i class="${escapeHtml(icon)}"></i>`;
+    document.getElementById('genSupportPreviewIco').className = 'prev-ico color-swatch ' + color;
+    document.getElementById('genSupportPreviewTitle').innerText = title;
+    document.getElementById('genSupportPreviewSubtitle').innerText = subtitle;
+}
+['genSupportIcon','genSupportTitle','genSupportSubtitle'].forEach(id=>{
+    document.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateGenSupportPreview);
+    });
+});
+async function saveSupportCard(){
+    const icon = document.getElementById('genSupportIcon').value.trim() || 'fa-solid fa-headset';
+    const title = document.getElementById('genSupportTitle').value.trim();
+    const subtitle = document.getElementById('genSupportSubtitle').value.trim();
+    const selected = document.querySelector('#genSupportColorRow .color-swatch.selected');
+    const color = selected ? selected.dataset.color : 'blue';
+    const msgEl = document.getElementById('genSupportMsg');
+    if (!title){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Nhập tiêu đề cho thẻ Hỗ trợ.'; return; }
+    msgEl.style.color = '';
+    msgEl.innerText = 'Đang lưu...';
+    if (supportCardId){
+        const { error } = await sb.from('quick_links').update({ icon, color, title, subtitle }).eq('id', supportCardId);
+        if (error){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Lỗi: ' + error.message; return; }
+    } else {
+        const { data, error } = await sb.from('quick_links').insert({ icon, color, title, subtitle, link: 'support', order_no: supportCardMaxOrder + 1 }).select().single();
+        if (error){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Lỗi: ' + error.message; return; }
+        supportCardId = data.id;
+    }
+    msgEl.style.color = '#2f9e44';
+    msgEl.innerText = '✔ Đã lưu thẻ Hỗ trợ.';
+}
+async function changePassword(){
+    const pass = document.getElementById('genNewPassword').value;
+    const confirm = document.getElementById('genNewPasswordConfirm').value;
+    const msgEl = document.getElementById('genPassMsg');
+    msgEl.style.color = '';
+    if (!pass || pass.length < 6){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Mật khẩu mới cần tối thiểu 6 ký tự.'; return; }
+    if (pass !== confirm){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Hai mật khẩu nhập không khớp.'; return; }
+    msgEl.innerText = 'Đang lưu...';
+    const { error } = await sb.auth.updateUser({ password: pass });
+    if (error){ msgEl.style.color = '#e5484d'; msgEl.innerText = 'Lỗi: ' + error.message; return; }
+    msgEl.style.color = '#2f9e44';
+    msgEl.innerText = '✔ Đã đổi mật khẩu.';
+    document.getElementById('genNewPassword').value = '';
+    document.getElementById('genNewPasswordConfirm').value = '';
+}
+
 
 // ---------- SIDEBAR HELPERS ----------
 function toggleForm(id){
@@ -660,20 +1243,21 @@ function subjectStatusHtml(subjectId){
 function updateContextBar(){
     toggleMergeButton();
     const bar = document.getElementById('contextBar');
+    const switchBtn = `<button class="ctx-switch-btn" onclick="showSubjectManager()">🔁 Đổi môn / chương</button>`;
     if (!currentSubject){
-        bar.innerHTML = `<span class="ctx-empty">👈 Chọn một môn học ở thanh bên trái để bắt đầu</span>`;
+        bar.innerHTML = `<span class="ctx-empty">👈 Chọn một môn học để bắt đầu</span>${switchBtn}`;
         return;
     }
     if (!currentChapter){
-        bar.innerHTML = `<span class="ctx-label">Môn</span> <span class="ctx-value">${escapeHtml(currentSubject.name)}</span>
+        bar.innerHTML = `<span><span class="ctx-label">Môn</span> <span class="ctx-value">${escapeHtml(currentSubject.name)}</span>
             ${subjectStatusHtml(currentSubject.id)}
-            <span class="ctx-sep">/</span> <span class="ctx-empty">👈 Chọn một chương/đề</span>`;
+            <span class="ctx-sep">/</span> <span class="ctx-empty">👈 Chọn một chương/đề</span></span>${switchBtn}`;
         return;
     }
-    bar.innerHTML = `<span class="ctx-label">Môn</span> <span class="ctx-value">${escapeHtml(currentSubject.name)}</span>
+    bar.innerHTML = `<span><span class="ctx-label">Môn</span> <span class="ctx-value">${escapeHtml(currentSubject.name)}</span>
         ${subjectStatusHtml(currentSubject.id)}
         <span class="ctx-sep">/</span>
-        <span class="ctx-label">Chương</span> <span class="ctx-value">${escapeHtml(currentChapter.label)}</span>`;
+        <span class="ctx-label">Chương</span> <span class="ctx-value">${escapeHtml(currentChapter.label)}</span></span>${switchBtn}`;
 }
 
 // ---------- SUBJECTS ----------
@@ -758,8 +1342,9 @@ document.addEventListener('click', (e) => {
 });
 function subjectItemHtml(s){
     const meta = STATUS_META[s.status || 'ready'] || STATUS_META.ready;
+    const isActive = currentSubject && currentSubject.id === s.id;
     return `
-        <div class="side-item ${currentSubject && currentSubject.id===s.id ? 'active' : ''}" data-id="${s.id}"
+        <div class="side-item ${isActive ? 'active' : ''}" data-id="${s.id}"
              onclick="selectSubject('${s.id}')">
             <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
             <span class="name">${escapeHtml(s.name)}</span>
@@ -778,7 +1363,7 @@ function subjectItemHtml(s){
 }
 function renderSubjectList(){
     const box = document.getElementById('subjectList');
-    if (!subjects.length){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Chưa có môn học nào.</div>`; return; }
+    if (!subjects.length){ box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Chưa có môn học nào.</div>`; return; }
 
     // Gom các môn có cùng "folder" (thư mục) vào 1 nhóm có thể thu/mở, giữ đúng thứ tự
     // thư mục xuất hiện lần đầu tiên trong danh sách. Môn không có thư mục hiển thị bình thường.
@@ -812,6 +1397,9 @@ function renderSubjectList(){
     html += rootItems.map(s => subjectItemHtml(s)).join('');
 
     box.innerHTML = html;
+
+    const nameEl = document.getElementById('chapCurrentSubjectName');
+    if (nameEl) nameEl.textContent = currentSubject ? '· ' + currentSubject.name : '';
 }
 async function reorderSubjects(fromId, toId){
     if (!fromId || !toId || fromId === toId) return;
@@ -855,8 +1443,10 @@ document.addEventListener('click', () => closeAllSubjectMenus());
 document.getElementById('subjectList').addEventListener('scroll', () => closeAllSubjectMenus());
 window.addEventListener('resize', () => closeAllSubjectMenus());
 function selectSubject(id){
+    showSubjectManager(); // đảm bảo luôn ở đúng màn quản lý môn/chương, không phụ thuộc currentChapter cũ
     currentSubject = subjects.find(s => s.id === id) || null;
     currentChapter = null;
+    chapters = []; // tránh nháy danh sách chương của môn cũ trong lúc chờ tải dữ liệu môn mới
     renderSubjectList();
     updateContextBar();
     loadChapters();
@@ -871,6 +1461,8 @@ function openSubjectForm(){
     document.getElementById('newSubjectStatus').value = 'ready';
     document.getElementById('newSubjectShowExpl').checked = true;
     document.getElementById('newSubjectId').disabled = false;
+    collapsedFolders.clear(); // luôn hiện đầy đủ danh sách môn khi đang thêm, tránh trông như bị mất danh sách
+    renderSubjectList();
     document.getElementById('subjectForm').classList.add('show');
     closeFolderDropdown();
 }
@@ -932,12 +1524,195 @@ function deleteSubject(id){
     );
 }
 
+// ---------- QUICK LINKS (thẻ "Truy cập nhanh" ở trang chủ, bảng quick_links) ----------
+let quickLinks = [];
+let editingQuickLinkId = null;
+const QL_TAB_LABELS = { home:'Trang chủ', doc:'Tài liệu', quiz:'Trắc nghiệm', tool:'Công cụ', product:'Sản phẩm', support:'Hỗ trợ' };
+
+async function loadQuickLinks(){
+    const { data, error } = await sb.from('quick_links').select('*').order('order_no', { ascending: true, nullsFirst: false }).order('id');
+    if (error) return showMsg('Lỗi tải Truy cập nhanh: ' + error.message, 'err');
+    quickLinks = data || [];
+    renderQuickLinkList();
+}
+function quickLinkItemHtml(q){
+    const linkLabel = QL_TAB_LABELS[q.link] || q.link;
+    return `
+        <div class="side-item" data-id="${q.id}">
+            <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
+            <span class="prev-ico color-swatch ${q.color || 'indigo'}" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="${escapeHtml(q.icon || 'fa-solid fa-star')}"></i></span>
+            <span class="name">${escapeHtml(q.title)}<span class="hint-inline"> · ${escapeHtml(linkLabel)}</span></span>
+            <span class="right-cluster">
+                <span class="menu-wrap">
+                    <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleQuickLinkMenu('${q.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+                    <div class="menu-drop hidden" id="qlmenu-${q.id}">
+                        <button onclick="event.stopPropagation(); closeAllQuickLinkMenus(); editQuickLink('${q.id}')">✏️ Sửa</button>
+                        <button onclick="event.stopPropagation(); closeAllQuickLinkMenus(); deleteQuickLink('${q.id}')">🗑️ Xóa</button>
+                    </div>
+                </span>
+            </span>
+        </div>`;
+}
+function renderQuickLinkList(){
+    const box = document.getElementById('quickLinkList');
+    if (!box) return;
+    if (!quickLinks.length){ box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Chưa có thẻ nào. Bấm "+ Thêm thẻ" để tạo thẻ đầu tiên.</div>`; return; }
+    box.innerHTML = quickLinks.map(q => quickLinkItemHtml(q)).join('');
+}
+async function reorderQuickLinks(fromId, toId){
+    if (!fromId || !toId || fromId === toId) return;
+    const fromIdx = quickLinks.findIndex(q => String(q.id) === String(fromId));
+    const toIdx = quickLinks.findIndex(q => String(q.id) === String(toId));
+    if (fromIdx < 0 || toIdx < 0) return;
+
+    const reordered = quickLinks.slice();
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+
+    quickLinks = reordered;
+    renderQuickLinkList();
+
+    const results = await Promise.all(
+        reordered.map((q, i) => sb.from('quick_links').update({ order_no: i + 1 }).eq('id', q.id))
+    );
+    const failed = results.find(r => r.error);
+    if (failed) showMsg('Lỗi lưu thứ tự: ' + failed.error.message, 'err');
+    loadQuickLinks();
+}
+function toggleQuickLinkMenu(id, btn){
+    const menu = document.getElementById('qlmenu-' + id);
+    const wasHidden = menu.classList.contains('hidden');
+    closeAllQuickLinkMenus();
+    if (wasHidden && btn){
+        const rect = btn.getBoundingClientRect();
+        menu.style.top = (rect.bottom + 4) + 'px';
+        menu.style.left = 'auto';
+        menu.style.right = (window.innerWidth - rect.right) + 'px';
+        menu.classList.remove('hidden');
+    }
+}
+function closeAllQuickLinkMenus(exceptId){
+    document.querySelectorAll('[id^="qlmenu-"]').forEach(el => {
+        if (!exceptId || el.id !== 'qlmenu-' + exceptId) el.classList.add('hidden');
+    });
+}
+document.addEventListener('click', () => closeAllQuickLinkMenus());
+
+function pickQlColor(color){
+    document.querySelectorAll('#qlColorRow .color-swatch').forEach(el=>{
+        el.classList.toggle('selected', el.dataset.color === color);
+    });
+    updateQlPreview();
+}
+function updateQlPreview(){
+    const icon = document.getElementById('qlIcon').value.trim() || 'fa-solid fa-star';
+    const title = document.getElementById('qlTitle').value.trim() || '—';
+    const subtitle = document.getElementById('qlSubtitle').value.trim() || '';
+    const selected = document.querySelector('#qlColorRow .color-swatch.selected');
+    const color = selected ? selected.dataset.color : 'indigo';
+
+    document.getElementById('qlPreviewIco').innerHTML = `<i class="${escapeHtml(icon)}"></i>`;
+    document.getElementById('qlPreviewIco').className = 'prev-ico color-swatch ' + color;
+    document.getElementById('qlPreviewTitle').innerText = title;
+    document.getElementById('qlPreviewSubtitle').innerText = subtitle;
+}
+['qlIcon','qlTitle','qlSubtitle'].forEach(id=>{
+    document.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateQlPreview);
+    });
+});
+document.addEventListener('DOMContentLoaded', () => {
+    const sel = document.getElementById('qlLink');
+    if (sel) sel.addEventListener('change', () => {
+        document.getElementById('qlLinkCustom').classList.toggle('hidden', sel.value !== '__custom');
+    });
+});
+
+function openQuickLinkForm(){
+    editingQuickLinkId = null;
+    document.getElementById('quickLinkFormTitle').innerText = 'Thêm thẻ';
+    document.getElementById('qlIcon').value = '';
+    document.getElementById('qlTitle').value = '';
+    document.getElementById('qlSubtitle').value = '';
+    document.getElementById('qlLink').value = 'quiz';
+    document.getElementById('qlLinkCustom').value = '';
+    document.getElementById('qlLinkCustom').classList.add('hidden');
+    pickQlColor('indigo');
+    updateQlPreview();
+    document.getElementById('quickLinkForm').classList.add('show');
+}
+function closeQuickLinkForm(){
+    editingQuickLinkId = null;
+    const form = document.getElementById('quickLinkForm');
+    if (form) form.classList.remove('show');
+}
+function editQuickLink(id){
+    const q = quickLinks.find(x => String(x.id) === String(id));
+    if (!q) return;
+    editingQuickLinkId = id;
+    document.getElementById('quickLinkFormTitle').innerText = 'Sửa thẻ';
+    document.getElementById('qlIcon').value = q.icon || '';
+    document.getElementById('qlTitle').value = q.title || '';
+    document.getElementById('qlSubtitle').value = q.subtitle || '';
+    if (QL_TAB_LABELS[q.link]){
+        document.getElementById('qlLink').value = q.link;
+        document.getElementById('qlLinkCustom').classList.add('hidden');
+        document.getElementById('qlLinkCustom').value = '';
+    } else {
+        document.getElementById('qlLink').value = '__custom';
+        document.getElementById('qlLinkCustom').classList.remove('hidden');
+        document.getElementById('qlLinkCustom').value = q.link || '';
+    }
+    pickQlColor(q.color || 'indigo');
+    updateQlPreview();
+    document.getElementById('quickLinkForm').classList.add('show');
+    document.getElementById('qlTitle').focus();
+}
+async function saveQuickLink(){
+    const icon = document.getElementById('qlIcon').value.trim() || 'fa-solid fa-star';
+    const title = document.getElementById('qlTitle').value.trim();
+    const subtitle = document.getElementById('qlSubtitle').value.trim();
+    const linkSel = document.getElementById('qlLink').value;
+    const link = linkSel === '__custom' ? document.getElementById('qlLinkCustom').value.trim() : linkSel;
+    const selected = document.querySelector('#qlColorRow .color-swatch.selected');
+    const color = selected ? selected.dataset.color : 'indigo';
+    if (!title || !link) return showMsg('Nhập đủ tiêu đề và đường dẫn.', 'err');
+
+    if (editingQuickLinkId){
+        const { error } = await sb.from('quick_links').update({ icon, color, title, subtitle, link }).eq('id', editingQuickLinkId);
+        if (error) return showMsg('Lỗi cập nhật: ' + error.message, 'err');
+        showMsg('Đã cập nhật thẻ "' + title + '".', 'ok');
+    } else {
+        const maxOrder = quickLinks.reduce((max, q) => Math.max(max, q.order_no || 0), 0);
+        const { error } = await sb.from('quick_links').insert({ icon, color, title, subtitle, link, order_no: maxOrder + 1 });
+        if (error) return showMsg('Lỗi: ' + error.message, 'err');
+        showMsg('Đã thêm thẻ "' + title + '".', 'ok');
+    }
+    closeQuickLinkForm();
+    loadQuickLinks();
+}
+function deleteQuickLink(id){
+    const q = quickLinks.find(x => String(x.id) === String(id));
+    const title = q ? q.title : '';
+    showConfirm(
+        'Xóa thẻ truy cập nhanh?',
+        `Xóa thẻ "${title}"? Thẻ sẽ biến mất khỏi trang chủ ngay. Không thể hoàn tác.`,
+        async () => {
+            const { error } = await sb.from('quick_links').delete().eq('id', id);
+            if (error) return showMsg('Lỗi xóa: ' + error.message, 'err');
+            showMsg('Đã xóa thẻ.', 'ok');
+            loadQuickLinks();
+        }
+    );
+}
+
 // ---------- CHAPTERS ----------
 async function loadChapters(){
     const box = document.getElementById('chapterList');
-    if (!currentSubject){ box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Chọn môn học trước.</div>`; updateContextBar(); return; }
+    if (!currentSubject){ box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Chọn môn học trước.</div>`; updateContextBar(); return; }
     const { data, error } = await sb.from('chapters').select('*').eq('subject_id', currentSubject.id).order('order_no');
-    if (error){ box.innerHTML = `<div style="color:#f88;font-size:.82rem;">Lỗi: ${escapeHtml(error.message)}</div>`; updateContextBar(); return; }
+    if (error){ box.innerHTML = `<div style="color:var(--red);font-size:.82rem;padding:6px 4px;">Lỗi: ${escapeHtml(error.message)}</div>`; updateContextBar(); return; }
     chapters = data || [];
     renderChapterList();
     updateContextBar();
@@ -1009,7 +1784,7 @@ function bulkDeleteChapters(){
 function renderChapterList(){
     const box = document.getElementById('chapterList');
     if (!chapters.length){
-        box.innerHTML = `<div style="color:#767ea0;font-size:.82rem;padding:6px 4px;">Môn này chưa có chương/đề nào.</div>`;
+        box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Môn này chưa có chương/đề nào.</div>`;
         updateChapterBulkBar();
         return;
     }
@@ -1040,6 +1815,7 @@ function selectChapter(code){
     });
     updateContextBar();
     loadQuestions();
+    if (currentChapter) showQuestionsPanel();
 }
 function openChapterForm(){
     if (!currentSubject) return showMsg('Chọn môn học trước.', 'err');
@@ -1835,6 +2611,130 @@ function enableDragReorder(containerId, itemSelector, getId, isBlocked, onDrop){
 enableDragReorder('subjectList', '.side-item', el => el.dataset.id, null, reorderSubjects);
 enableDragReorder('chapterList', '.side-item', el => el.dataset.chapter, () => chapterSelectMode, reorderChapters);
 enableDragReorder('qList', '.q-item', el => Number(el.dataset.id), null, reorderQuestions);
+enableDragReorder('quickLinkList', '.side-item', el => el.dataset.id, null, reorderQuickLinks);
+
+// ---------- CÀI ĐẶT TRANG CHỦ (site_settings) ----------
+let currentSetKey = null;
+let currentSetPayload = null;
+
+const SETTINGS_META = {
+    home_hero: { title: 'Trang chủ — Khối giới thiệu (Hero)', hint: 'Nội dung khối lớn ở đầu trang chủ.' },
+};
+
+async function openSettingsPanel(key){
+    document.querySelectorAll('#settingsNavList .settings-item').forEach(el => el.classList.remove('active'));
+    currentSetKey = key;
+    document.querySelectorAll('.settings-item').forEach(el=>{
+        el.classList.toggle('active', el.dataset.setkey === key);
+    });
+
+    document.getElementById('subjectManagerPanel').classList.add('hidden');
+    document.getElementById('mainAppArea').classList.add('hidden');
+    document.getElementById('quickLinksPanel').classList.add('hidden');
+    document.getElementById('generalSettingsPanel').classList.add('hidden');
+    document.getElementById('settingsPanel').classList.remove('hidden');
+    document.getElementById('setSaveMsg').innerText = '';
+
+    const meta = SETTINGS_META[key] || { title:'Cài đặt', hint:'' };
+    document.getElementById('setFormTitle').innerText = meta.title;
+    document.getElementById('setFormHint').innerText = meta.hint;
+
+    const isHero = key === 'home_hero';
+    document.getElementById('setFieldsHero').classList.toggle('hidden', !isHero);
+    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero);
+
+    const { data, error } = await sb.from('site_settings').select('*').eq('key', key).single();
+    if (error && error.code !== 'PGRST116'){
+        // PGRST116 = không tìm thấy dòng nào — không sao, dùng giá trị mặc định trống
+    }
+    currentSetPayload = (data && data.payload) ? data.payload : {};
+
+    if (isHero){
+        document.getElementById('setHeroEyebrow').value = currentSetPayload.eyebrow || '';
+        document.getElementById('setHeroTitle').value = currentSetPayload.title || '';
+        document.getElementById('setHeroDesc').value = currentSetPayload.desc || '';
+    } else {
+        document.getElementById('setCardIcon').value = currentSetPayload.icon || '';
+        document.getElementById('setCardTitle').value = currentSetPayload.title || '';
+        document.getElementById('setCardSubtitle').value = currentSetPayload.subtitle || '';
+        document.getElementById('setCardLink').value = currentSetPayload.link || '';
+        pickSetColor(currentSetPayload.color || 'indigo');
+        updateSetPreview();
+    }
+}
+
+function closeSettingsPanel(){
+    currentSetKey = null;
+    document.querySelectorAll('.settings-item').forEach(el=>el.classList.remove('active'));
+    document.getElementById('settingsPanel').classList.add('hidden');
+
+    // Quay lại đúng khu vực: đã chọn chương/đề thì về câu hỏi, chưa thì về quản lý môn/chương
+    if (currentChapter){
+        showQuestionsPanel();
+    } else {
+        showSubjectManager();
+    }
+}
+
+function pickSetColor(color){
+    document.querySelectorAll('#setColorRow .color-swatch').forEach(el=>{
+        el.classList.toggle('selected', el.dataset.color === color);
+    });
+    updateSetPreview();
+}
+
+function updateSetPreview(){
+    const icon = document.getElementById('setCardIcon').value.trim() || 'fa-solid fa-star';
+    const title = document.getElementById('setCardTitle').value.trim() || '—';
+    const subtitle = document.getElementById('setCardSubtitle').value.trim() || '';
+    const selected = document.querySelector('#setColorRow .color-swatch.selected');
+    const color = selected ? selected.dataset.color : 'indigo';
+
+    document.getElementById('setPreviewIco').innerHTML = `<i class="${escapeHtml(icon)}"></i>`;
+    document.getElementById('setPreviewIco').className = 'prev-ico color-swatch ' + color;
+    document.getElementById('setPreviewTitle').innerText = title;
+    document.getElementById('setPreviewSubtitle').innerText = subtitle;
+}
+['setCardIcon','setCardTitle','setCardSubtitle'].forEach(id=>{
+    document.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateSetPreview);
+    });
+});
+
+async function saveSiteSetting(){
+    if (!currentSetKey) return;
+    let payload;
+    if (currentSetKey === 'home_hero'){
+        payload = {
+            eyebrow: document.getElementById('setHeroEyebrow').value.trim(),
+            title: document.getElementById('setHeroTitle').value.trim(),
+            desc: document.getElementById('setHeroDesc').value.trim(),
+        };
+    } else {
+        const selected = document.querySelector('#setColorRow .color-swatch.selected');
+        payload = {
+            icon: document.getElementById('setCardIcon').value.trim(),
+            color: selected ? selected.dataset.color : 'indigo',
+            title: document.getElementById('setCardTitle').value.trim(),
+            subtitle: document.getElementById('setCardSubtitle').value.trim(),
+            link: document.getElementById('setCardLink').value.trim(),
+        };
+    }
+
+    const { error } = await sb.from('site_settings')
+        .upsert({ key: currentSetKey, payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+
+    const msgEl = document.getElementById('setSaveMsg');
+    if (error){
+        msgEl.style.color = 'var(--red)';
+        msgEl.innerText = 'Lỗi: ' + error.message;
+    } else {
+        msgEl.style.color = 'var(--green)';
+        msgEl.innerText = '✔ Đã lưu. Trang chủ sẽ hiện nội dung mới ngay khi tải lại.';
+        setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4000);
+    }
+}
 
 checkSession();
 </script>

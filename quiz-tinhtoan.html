@@ -588,6 +588,7 @@ function clearState(){
 
 // ── DATA (nạp động từ Supabase) ──
 let Q = [];
+let showExpl = true; // môn có bật hiển thị giải thích đáp án hay không (tùy chọn ở trang admin)
 
 async function loadQuiz(){
   const subjectId = getParam('subject') || getParam('subject_id') || getParam('mon');
@@ -607,6 +608,7 @@ async function loadQuiz(){
     showState(`<div class="state-ico">⚠️</div><div class="state-title">Không tìm thấy môn học</div><div class="state-desc">Vui lòng quay lại <a href="index.html">trang chủ</a> để chọn môn khác.</div>`, true);
     return;
   }
+  showExpl = subject.show_explanation !== false;
 
   const { data: chapterRow } = await sb.from('chapters').select('*')
     .eq('subject_id', subjectId).eq('chapter', chapter).single();
@@ -758,12 +760,12 @@ function renderQ() {
     const tag = isCorrect ? 'Chính xác!' : `Sai — Đáp án đúng: ${LABELS[q.c]}. ${q.o[q.c]}`;
     explain = `<div class="explain ${cls}">
       <div class="explain-ico">${ico}</div>
-      <div><div class="explain-tag">${tag}</div><div class="explain-body">${q.g}</div></div>
+      <div><div class="explain-tag">${tag}</div>${showExpl ? `<div class="explain-body">${q.g}</div>` : ''}</div>
     </div>`;
   } else if (isHint) {
     explain = `<div class="explain hint">
       <div class="explain-ico">💡</div>
-      <div><div class="explain-tag">Đáp án đúng: ${LABELS[q.c]}</div><div class="explain-body"><strong>${q.o[q.c]}</strong><br><br>${q.g}</div></div>
+      <div><div class="explain-tag">Đáp án đúng: ${LABELS[q.c]}</div><div class="explain-body"><strong>${q.o[q.c]}</strong>${showExpl ? `<br><br>${q.g}` : ''}</div></div>
     </div>`;
   }
 
@@ -834,7 +836,7 @@ function renderSum() {
       <div class="ral-header"><span class="ral-num">Câu ${i + 1}</span><span class="${badgeCls}">${badge}</span></div>
       <div class="ral-question">${q.t}</div>
       <div class="ral-opts">${opts}</div>
-      <div class="ral-explain">💬 ${q.g}</div>
+      ${showExpl ? `<div class="ral-explain">💬 ${q.g}</div>` : ''}
     </div>`;
   }).join('');
 

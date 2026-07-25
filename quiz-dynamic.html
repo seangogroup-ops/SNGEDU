@@ -183,6 +183,7 @@
     let isSubmitted = false;
     let timeLeft = 3600;
     let timerInterval;
+    let showExpl = true; // môn có bật hiển thị giải thích đáp án hay không (tùy chọn ở trang admin)
 
     const qContainer = document.getElementById('questions-container');
     const navGrid = document.getElementById('nav-grid');
@@ -193,6 +194,13 @@
             qContainer.innerHTML = `<div class="state-msg"><i class="fa-solid fa-triangle-exclamation"></i>Thiếu thông tin đề thi (subject/chapter) trên đường dẫn.</div>`;
             return;
         }
+
+        const { data: subjectRow } = await sb
+            .from('subjects')
+            .select('show_explanation')
+            .eq('id', subjectId)
+            .single();
+        showExpl = !subjectRow || subjectRow.show_explanation !== false;
 
         const { data, error } = await sb
             .from('questions')
@@ -243,9 +251,9 @@
                 <div class="q-title">${q.label}</div>
                 <div class="q-content">${q.content}</div>
                 <div class="options-wrapper">${optsHtml}</div>
-                <div class="explanation-box" id="ex-${i}">
+                ${showExpl ? `<div class="explanation-box" id="ex-${i}">
                     <b><i class="fa-solid fa-lightbulb"></i> Giải thích:</b><br>${q.explanation}
-                </div>
+                </div>` : ''}
             `;
             qContainer.appendChild(card);
 
@@ -297,7 +305,7 @@
             const exBox = document.getElementById(`ex-${i}`);
             const navBtn = document.getElementById(`nav-${i}`);
 
-            exBox.classList.add('show');
+            exBox?.classList.add('show');
             correctLabel.classList.add('is-correct');
 
             if (selected) {

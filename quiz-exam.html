@@ -192,6 +192,7 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 
 // database[i] = { key, name, questions:[{q,opts,ci,ex}] } — nạp động từ Supabase, thay cho mảng chữ cứng của file gốc
 let database = [];
+let showExpl = true; // môn có bật hiển thị giải thích đáp án hay không (tùy chọn ở trang admin)
 let exam = [], submitted = false, timeLeft = 3600, timerID = null, answered = 0;
 
 async function init(){
@@ -206,6 +207,7 @@ async function init(){
         showState(`<i class="fa-solid fa-circle-exclamation"></i>Không tìm thấy môn học này.<br>Vui lòng quay lại <a href="index.html">trang chủ</a>.`);
         return;
     }
+    showExpl = subject.show_explanation !== false;
 
     const { data: chapRows, error: chapErr } = await sb.from('chapters')
         .select('*').eq('subject_id', subjectId).order('order_no');
@@ -347,7 +349,7 @@ function render(){
                     <div class="opt-t">${o}</div>
                 </label>`).join('')}
             </div>
-            <div class="ex-box" id="ex-${i}"><b><i class="fa-solid fa-lightbulb" style="color:#f59e0b"></i> Giải thích:</b><br>${q.ex||'Không có giải thích.'}</div>`;
+            ${showExpl ? `<div class="ex-box" id="ex-${i}"><b><i class="fa-solid fa-lightbulb" style="color:#f59e0b"></i> Giải thích:</b><br>${q.ex||'Không có giải thích.'}</div>` : ''}`;
         qc.appendChild(card);
         const btn = document.createElement('div');
         btn.className='nav-btn'; btn.id='nav-'+i; btn.textContent=i+1;
@@ -377,7 +379,7 @@ function submitExam(){
     let ok=0, bad=0, skip=0;
     exam.forEach((q,i) => {
         const sel = document.querySelector(`input[name="q${i}"]:checked`);
-        document.getElementById('ex-'+i).classList.add('show');
+        document.getElementById('ex-'+i)?.classList.add('show');
         document.getElementById('L-'+i+'-'+q.ci).classList.add('ok');
         const nav = document.getElementById('nav-'+i);
         if (sel){

@@ -428,7 +428,7 @@
             <div class="mark">S</div>
             <div class="name">SNG EDU</div>
         </a>
-        <nav class="side-nav">
+        <nav class="side-nav" id="sideNav">
             <a class="side-link active" href="#" data-tab="home"><i class="fa-solid fa-house"></i>Trang chủ</a>
             <a class="side-link" href="#" data-tab="doc"><i class="fa-solid fa-folder-open"></i>Tài liệu</a>
             <a class="side-link" href="#" data-tab="quiz"><i class="fa-solid fa-list-check"></i>Trắc nghiệm</a>
@@ -544,22 +544,20 @@
         <div class="doc-cat" data-cat="free">
             <div class="doc-cat-head">
                 <div class="doc-cat-name"><i class="fa-solid fa-gift" style="color:var(--green)"></i> Tài liệu miễn phí</div>
-                <span class="doc-count">0 tài liệu</span>
+                <span class="doc-count" id="docFreeCount">Đang tải...</span>
             </div>
-            <div class="empty-state small">
-                <div class="empty-icon" style="background:var(--green-bg); color:var(--green)"><i class="fa-solid fa-folder-open"></i></div>
-                <div class="empty-title">Chưa có tài liệu miễn phí</div>
+            <div id="docFreeGrid">
+                <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
             </div>
         </div>
 
         <div class="doc-cat" data-cat="paid">
             <div class="doc-cat-head">
                 <div class="doc-cat-name"><i class="fa-solid fa-lock" style="color:var(--amber)"></i> Tài liệu trả phí</div>
-                <span class="doc-count">0 tài liệu</span>
+                <span class="doc-count" id="docPaidCount">Đang tải...</span>
             </div>
-            <div class="empty-state small">
-                <div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-crown"></i></div>
-                <div class="empty-title">Chưa có tài liệu trả phí</div>
+            <div id="docPaidGrid">
+                <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
             </div>
         </div>
     </section>
@@ -567,32 +565,16 @@
     <!-- ============ TAB: CÔNG CỤ ============ -->
     <section class="tab-panel" id="panel-tool" style="display:none">
         <div class="sec-head"><h2>Công cụ</h2></div>
-        <div class="grid">
-            <a class="card locked" href="#" data-locked="true" data-subject="tool-dethi" data-subject-name="Đề thi ngẫu nhiên">
-                <div class="card-top"><div class="icon-chip" style="background:var(--green-bg); color:var(--green)"><i class="fa-solid fa-shuffle"></i></div></div>
-                <div class="card-title">Đề thi ngẫu nhiên</div>
-                <div class="badge-row"><i class="fa-regular fa-clock"></i> Sắp ra mắt</div>
-            </a>
-            <a class="card locked" href="#" data-locked="true" data-subject="tool-flashcard" data-subject-name="Flashcard ôn nhanh">
-                <div class="card-top"><div class="icon-chip" style="background:var(--brand-bg); color:var(--brand)"><i class="fa-solid fa-clone"></i></div></div>
-                <div class="card-title">Flashcard ôn nhanh</div>
-                <div class="badge-row"><i class="fa-regular fa-clock"></i> Sắp ra mắt</div>
-            </a>
-            <a class="card locked" href="#" data-locked="true" data-subject="tool-thongke" data-subject-name="Thống kê kết quả">
-                <div class="card-top"><div class="icon-chip" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-chart-line"></i></div></div>
-                <div class="card-title">Thống kê kết quả</div>
-                <div class="badge-row"><i class="fa-regular fa-clock"></i> Sắp ra mắt</div>
-            </a>
+        <div id="toolGrid" class="grid">
+            <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
         </div>
     </section>
 
     <!-- ============ TAB: SẢN PHẨM ============ -->
     <section class="tab-panel" id="panel-product" style="display:none">
         <div class="sec-head"><h2>Sản phẩm</h2></div>
-        <div class="empty-state">
-            <div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-bag-shopping"></i></div>
-            <div class="empty-title">Chưa có sản phẩm nào</div>
-            <div class="empty-sub">Gói tài liệu, khoá ôn thi nâng cao sẽ sớm ra mắt tại đây.</div>
+        <div id="productGrid">
+            <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
         </div>
     </section>
 
@@ -882,6 +864,143 @@
     }
     loadHeroSettings();
 
+    // ---------------- TÀI LIỆU / CÔNG CỤ / SẢN PHẨM — nội dung động, quản lý ở trang admin (site_settings) ----------------
+    async function fetchSiteSettingPayload(key, fallback){
+        try{
+            const { data, error } = await sb.from('site_settings').select('*').eq('key', key).single();
+            if (error || !data || !data.payload) return fallback;
+            return data.payload;
+        }catch(e){ return fallback; }
+    }
+
+    const DEFAULT_DOC_CONTENT = { free: [], paid: [] };
+    const DEFAULT_TOOL_CONTENT = { items: [
+        { id:'t1', icon:'fa-solid fa-shuffle',    color:'green',  title:'Đề thi ngẫu nhiên',  desc:'', status:'soon', link:'' },
+        { id:'t2', icon:'fa-solid fa-clone',      color:'indigo', title:'Flashcard ôn nhanh', desc:'', status:'soon', link:'' },
+        { id:'t3', icon:'fa-solid fa-chart-line', color:'amber',  title:'Thống kê kết quả',   desc:'', status:'soon', link:'' }
+    ]};
+    const DEFAULT_PRODUCT_CONTENT = { items: [] };
+
+    function docItemCardHtml(item, isPaid){
+        const href = item.link || '#';
+        const sizeBadge = item.size ? `<div class="badge-row"><i class="fa-solid fa-file-lines"></i> ${escapeHtmlHome(item.size)}</div>` : '';
+        return `
+            <a class="card" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
+                ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
+                <div class="card-top"><div class="icon-chip" style="background:${isPaid ? 'var(--amber-bg)' : 'var(--green-bg)'}; color:${isPaid ? 'var(--amber)' : 'var(--green)'}"><i class="fa-solid ${isPaid ? 'fa-lock' : 'fa-file-lines'}"></i></div></div>
+                <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
+                ${sizeBadge}
+                <div class="status-text" style="color:${isPaid ? 'var(--amber)' : 'var(--green)'}">${escapeHtmlHome(item.desc || (isPaid ? 'Tài liệu trả phí' : 'Tài liệu miễn phí'))}</div>
+            </a>`;
+    }
+
+    async function renderDocContent(){
+        const payload = await fetchSiteSettingPayload('doc_content', DEFAULT_DOC_CONTENT);
+        const free = Array.isArray(payload.free) ? payload.free : [];
+        const paid = Array.isArray(payload.paid) ? payload.paid : [];
+
+        const freeGrid = document.getElementById('docFreeGrid');
+        const paidGrid = document.getElementById('docPaidGrid');
+        const freeCount = document.getElementById('docFreeCount');
+        const paidCount = document.getElementById('docPaidCount');
+        if (freeCount) freeCount.textContent = free.length + ' tài liệu';
+        if (paidCount) paidCount.textContent = paid.length + ' tài liệu';
+
+        freeGrid.innerHTML = free.length
+            ? `<div class="grid">${free.map(it => docItemCardHtml(it, false)).join('')}</div>`
+            : `<div class="empty-state small"><div class="empty-icon" style="background:var(--green-bg); color:var(--green)"><i class="fa-solid fa-folder-open"></i></div><div class="empty-title">Chưa có tài liệu miễn phí</div></div>`;
+
+        paidGrid.innerHTML = paid.length
+            ? `<div class="grid">${paid.map(it => docItemCardHtml(it, true)).join('')}</div>`
+            : `<div class="empty-state small"><div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-crown"></i></div><div class="empty-title">Chưa có tài liệu trả phí</div></div>`;
+    }
+
+    function toolItemCardHtml(item){
+        const style = QL_COLOR_MAP[item.color] || QL_COLOR_MAP.indigo;
+        const isReady = item.status === 'ready';
+        const cls = isReady ? 'card' : 'card locked';
+        const lockedAttrs = isReady ? '' : `data-locked="true" data-subject="tool-${escapeHtmlHome(item.id)}" data-subject-name="${escapeHtmlHome(item.title || '')}"`;
+        const href = isReady && item.link ? item.link : '#';
+        const badge = isReady
+            ? (item.desc ? `<div class="badge-row"><i class="fa-solid fa-circle-check"></i> ${escapeHtmlHome(item.desc)}</div>` : '')
+            : `<div class="badge-row"><i class="fa-regular fa-clock"></i> Sắp ra mắt</div>`;
+        return `
+            <a class="${cls}" href="${escapeHtmlHome(href)}" ${lockedAttrs} ${isReady && item.link ? 'target="_blank" rel="noopener"' : ''}>
+                ${isReady ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
+                <div class="card-top"><div class="icon-chip" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(item.icon || 'fa-solid fa-toolbox')}"></i></div></div>
+                <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
+                ${badge}
+            </a>`;
+    }
+
+    async function renderToolContent(){
+        const payload = await fetchSiteSettingPayload('tool_content', DEFAULT_TOOL_CONTENT);
+        const items = Array.isArray(payload.items) ? payload.items : [];
+        const grid = document.getElementById('toolGrid');
+        if (!items.length){
+            grid.innerHTML = `<div class="empty-state"><div class="empty-icon" style="background:var(--brand-bg); color:var(--brand)"><i class="fa-solid fa-toolbox"></i></div><div class="empty-title">Chưa có công cụ nào</div></div>`;
+        } else {
+            grid.innerHTML = items.map(toolItemCardHtml).join('');
+            bindLockedCards();
+        }
+    }
+
+    function productItemCardHtml(item){
+        const style = QL_COLOR_MAP[item.color] || QL_COLOR_MAP.indigo;
+        const href = item.link || '#';
+        return `
+            <a class="card" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
+                ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
+                <div class="card-top"><div class="icon-chip" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(item.icon || 'fa-solid fa-bag-shopping')}"></i></div></div>
+                <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
+                ${item.desc ? `<div class="badge-row"><i class="fa-solid fa-circle-info"></i> ${escapeHtmlHome(item.desc)}</div>` : ''}
+                ${item.price ? `<div class="status-text" style="color:${style.fg}">${escapeHtmlHome(item.price)}</div>` : ''}
+            </a>`;
+    }
+
+    async function renderProductContent(){
+        const payload = await fetchSiteSettingPayload('product_content', DEFAULT_PRODUCT_CONTENT);
+        const items = Array.isArray(payload.items) ? payload.items : [];
+        const grid = document.getElementById('productGrid');
+        if (!items.length){
+            grid.innerHTML = `<div class="empty-state"><div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-bag-shopping"></i></div><div class="empty-title">Chưa có sản phẩm nào</div><div class="empty-sub">Gói tài liệu, khoá ôn thi nâng cao sẽ sớm ra mắt tại đây.</div></div>`;
+        } else {
+            grid.innerHTML = `<div class="grid">${items.map(productItemCardHtml).join('')}</div>`;
+        }
+    }
+
+    // ---------------- MENU ĐIỀU HƯỚNG — ẩn/hiện + sắp xếp thứ tự tab, quản lý ở trang admin (site_settings) ----------------
+    const NAV_TABS_DEFAULT = [
+        { key:'home',    label:'Trang chủ',   icon:'fa-solid fa-house' },
+        { key:'doc',     label:'Tài liệu',    icon:'fa-solid fa-folder-open' },
+        { key:'quiz',    label:'Trắc nghiệm', icon:'fa-solid fa-list-check' },
+        { key:'tool',    label:'Công cụ',     icon:'fa-solid fa-toolbox' },
+        { key:'product', label:'Sản phẩm',    icon:'fa-solid fa-bag-shopping' },
+        { key:'support', label:'Hỗ trợ',      icon:'fa-solid fa-headset' }
+    ];
+
+    async function loadNavTabsConfig(){
+        const payload = await fetchSiteSettingPayload('nav_tabs', null);
+        if (!payload || !Array.isArray(payload.tabs) || !payload.tabs.length) return NAV_TABS_DEFAULT.map(t => Object.assign({ visible:true }, t));
+        const saved = payload.tabs;
+        const merged = saved
+            .filter(t => NAV_TABS_DEFAULT.some(d => d.key === t.key))
+            .map(t => {
+                const def = NAV_TABS_DEFAULT.find(d => d.key === t.key);
+                return { key:t.key, label:t.label || def.label, icon:def.icon, visible: t.visible !== false };
+            });
+        NAV_TABS_DEFAULT.forEach(d => { if (!merged.some(t => t.key === d.key)) merged.push(Object.assign({ visible:true }, d)); });
+        return merged;
+    }
+
+    function renderSideNav(tabsConfig){
+        let visible = tabsConfig.filter(t => t.visible);
+        if (!visible.length) visible = [Object.assign({ visible:true }, NAV_TABS_DEFAULT[0])]; // an toàn: không để menu trống hoàn toàn
+        const nav = document.getElementById('sideNav');
+        nav.innerHTML = visible.map((t,i) => `<a class="side-link${i===0 ? ' active' : ''}" href="#" data-tab="${t.key}"><i class="${t.icon}"></i>${escapeHtmlHome(t.label)}</a>`).join('');
+        return visible;
+    }
+
     // ---------------- TRUY CẬP NHANH — hoàn toàn động, quản lý (thêm/sửa/xóa/đổi tên/sắp xếp) ở trang admin ----------------
     const QL_COLOR_MAP = {
         indigo: { bg:'var(--brand-bg)', fg:'var(--brand)' },
@@ -932,9 +1051,12 @@
         });
     }
     renderQuickGrid();
+    renderDocContent();
+    renderToolContent();
+    renderProductContent();
 
     const panels = { home:'panel-home', quiz:'panel-quiz', doc:'panel-doc', tool:'panel-tool', product:'panel-product', support:'panel-support' };
-    const titles = {
+    const TAB_TITLES = {
         home:    ['Trang chủ', ''],
         quiz:    ['Trắc nghiệm', ''],
         doc:     ['Tài liệu', ''],
@@ -946,10 +1068,11 @@
 
     function goTab(key, opts){
         opts = opts || {};
+        if (!panels[key]) key = 'home';
         Object.values(panels).forEach(id => document.getElementById(id).style.display = 'none');
         document.getElementById(panels[key]).style.display = '';
         document.querySelectorAll('.side-link[data-tab]').forEach(el => el.classList.toggle('active', el.dataset.tab === key));
-        const [t, sub] = titles[key];
+        const [t, sub] = TAB_TITLES[key] || [key, ''];
         topbarTitle.innerHTML = t + '<span>' + sub + '</span>';
         window.scrollTo({top:0, behavior:'smooth'});
 
@@ -959,26 +1082,34 @@
         }
     }
 
-    document.querySelectorAll('.side-link[data-tab]').forEach(el=>{
-        el.addEventListener('click', e=>{ e.preventDefault(); goTab(el.dataset.tab); });
-    });
     document.querySelectorAll('[data-go]').forEach(el=>{
         el.addEventListener('click', ()=> goTab(el.dataset.go));
     });
-
-    // Thiết lập trạng thái ban đầu trong lịch sử trình duyệt
-    (function initHistory(){
-        const hashTab = location.hash.replace('#', '');
-        const startTab = panels[hashTab] ? hashTab : 'home';
-        history.replaceState({ tab: startTab }, '', location.pathname + (startTab === 'home' ? '' : '#' + startTab));
-        if(startTab !== 'home'){ goTab(startTab, { fromPopState:true }); }
-    })();
 
     // Bấm nút "Quay lại" của trình duyệt sẽ chuyển tab thay vì thoát hẳn trang
     window.addEventListener('popstate', e=>{
         const key = (e.state && e.state.tab) || 'home';
         goTab(key, { fromPopState:true });
     });
+
+    // ---------------- Dựng menu điều hướng theo cấu hình admin (ẩn/hiện + thứ tự), rồi khởi tạo tab ban đầu ----------------
+    (async function initSideNav(){
+        const tabsConfig = await loadNavTabsConfig();
+        tabsConfig.forEach(t => { TAB_TITLES[t.key] = [t.label, '']; });
+        const visibleTabs = renderSideNav(tabsConfig);
+
+        document.querySelectorAll('.side-link[data-tab]').forEach(el=>{
+            el.addEventListener('click', e=>{ e.preventDefault(); goTab(el.dataset.tab); });
+        });
+
+        // Thiết lập trạng thái ban đầu trong lịch sử trình duyệt, chỉ dùng tab đang hiển thị trong menu
+        const hashTab = location.hash.replace('#', '');
+        const visibleKeys = visibleTabs.map(t => t.key);
+        const defaultTab = visibleKeys.includes('home') ? 'home' : (visibleKeys[0] || 'home');
+        const startTab = (panels[hashTab] && visibleKeys.includes(hashTab)) ? hashTab : defaultTab;
+        history.replaceState({ tab: startTab }, '', location.pathname + (startTab === 'home' ? '' : '#' + startTab));
+        goTab(startTab, { fromPopState:true });
+    })();
 
     const themeBtn = document.getElementById('themeToggle');
     themeBtn.addEventListener('click', ()=>{

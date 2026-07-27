@@ -651,17 +651,23 @@ textarea{resize:vertical;}
                 <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
                     <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
                 </div>
-                <div class="side-item settings-item" id="nav_doc" onclick="showComingSoon('doc')">
+                <div class="side-item settings-item" id="navQuickLinks" onclick="showQuickLinksManager()">
+                    <span class="set-ico">⚡</span><span class="name">Truy cập nhanh</span>
+                </div>
+                <div class="side-item settings-item" id="nav_doc" onclick="showContentManager('doc')">
                     <span class="set-ico">📁</span><span class="name">Tài liệu</span>
                 </div>
                 <div class="side-item settings-item active" id="navSubjectMgr" onclick="showSubjectManager()">
                     <span class="set-ico">📝</span><span class="name">Trắc nghiệm</span>
                 </div>
-                <div class="side-item settings-item" id="nav_tool" onclick="showComingSoon('tool')">
+                <div class="side-item settings-item" id="nav_tool" onclick="showContentManager('tool')">
                     <span class="set-ico">🧰</span><span class="name">Công cụ</span>
                 </div>
-                <div class="side-item settings-item" id="nav_product" onclick="showComingSoon('product')">
+                <div class="side-item settings-item" id="nav_product" onclick="showContentManager('product')">
                     <span class="set-ico">🛍️</span><span class="name">Sản phẩm</span>
+                </div>
+                <div class="side-item settings-item" id="navTabsMgr" onclick="showNavTabsManager()">
+                    <span class="set-ico">🧭</span><span class="name">Menu điều hướng</span>
                 </div>
                 <div class="side-item settings-item" id="navGeneralSettings" onclick="showGeneralSettings()">
                     <span class="set-ico">⚙️</span><span class="name">Cài đặt</span>
@@ -814,6 +820,27 @@ textarea{resize:vertical;}
                 <p class="hint" id="comingSoonHint">Mục này sẽ sớm có trong bản cập nhật tiếp theo.</p>
             </div>
             <div class="empty-state" style="padding:40px 14px;text-align:center;">Chưa cần cập nhật ở bước này — mục quản lý nội dung riêng sẽ được thêm sau.</div>
+        </div>
+
+        <!-- ================= QUẢN LÝ NỘI DUNG: TÀI LIỆU / CÔNG CỤ / SẢN PHẨM ================= -->
+        <div id="contentManagerPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2><span id="cmHeaderIcon">📁</span> <span id="cmHeaderTitle">Tài liệu</span></h2>
+                <p class="hint" id="cmHeaderHint"></p>
+            </div>
+            <div id="cmListsWrap"></div>
+        </div>
+
+        <!-- ================= MENU ĐIỀU HƯỚNG: ẨN/HIỆN + SẮP XẾP TAB TRANG CHỦ ================= -->
+        <div id="navTabsPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>🧭 Menu điều hướng</h2>
+                <p class="hint">Ẩn/hiện và kéo thả để sắp xếp thứ tự các tab hiển thị ở menu bên trái trên trang chủ. Tab bị ẩn vẫn có thể mở qua thẻ "Truy cập nhanh" hoặc đường dẫn trực tiếp, chỉ không xuất hiện trên menu.</p>
+            </div>
+            <div class="subj-mgr-col" style="max-width:460px;">
+                <div id="navTabsList" class="side-list subj-mgr-list"></div>
+                <div class="hint" id="navTabsMsg" style="margin-top:10px;min-height:1.2em;"></div>
+            </div>
         </div>
 
         <div id="generalSettingsPanel" class="hidden">
@@ -1107,7 +1134,7 @@ function showAdmin(email){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'quickLinksPanel', 'generalSettingsPanel', 'comingSoonPanel'];
+const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'quickLinksPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'navTabsPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -2619,6 +2646,411 @@ enableDragReorder('chapterList', '.side-item', el => el.dataset.chapter, () => c
 enableDragReorder('qList', '.q-item', el => Number(el.dataset.id), null, reorderQuestions);
 enableDragReorder('quickLinkList', '.side-item', el => el.dataset.id, null, reorderQuickLinks);
 
+// ============================================================================
+// QUẢN LÝ NỘI DUNG: TÀI LIỆU / CÔNG CỤ / SẢN PHẨM
+// Cả 3 mục đều lưu trong bảng site_settings (key/payload JSON) — không cần bảng mới.
+//   doc_content     -> { free: [...], paid: [...] }
+//   tool_content    -> { items: [...] }
+//   product_content -> { items: [...] }
+// Mỗi phần tử: { id, icon, color, title, desc, link, size?/status?/price? }
+// ============================================================================
+const CONTENT_COLOR_OPTIONS = ['indigo','purple','green','amber','blue','red'];
+
+const CONTENT_DEFAULTS = {
+    doc_content: { free: [], paid: [] },
+    tool_content: { items: [
+        { id:'t1', icon:'fa-solid fa-shuffle',    color:'green',  title:'Đề thi ngẫu nhiên',  desc:'', status:'soon', link:'' },
+        { id:'t2', icon:'fa-solid fa-clone',      color:'indigo', title:'Flashcard ôn nhanh', desc:'', status:'soon', link:'' },
+        { id:'t3', icon:'fa-solid fa-chart-line', color:'amber',  title:'Thống kê kết quả',   desc:'', status:'soon', link:'' }
+    ]},
+    product_content: { items: [] }
+};
+
+// subKey -> { settingsKey, arrayField, items, editingId, meta }
+const contentLists = {};
+function registerContentList(subKey, settingsKey, arrayField, meta){
+    contentLists[subKey] = { settingsKey, arrayField, items: [], editingId: null, meta };
+}
+registerContentList('doc_free', 'doc_content', 'free', {
+    label:'Tài liệu miễn phí', icon:'fa-solid fa-gift', color:'green', defaultIcon:'fa-solid fa-file-lines',
+    extraField:{ key:'size', label:'Dung lượng / định dạng', placeholder:'VD: PDF · 2.4MB' },
+    linkLabel:'Đường dẫn tải tài liệu', linkPlaceholder:'https://... (Google Drive, v.v.)'
+});
+registerContentList('doc_paid', 'doc_content', 'paid', {
+    label:'Tài liệu trả phí', icon:'fa-solid fa-lock', color:'amber', defaultIcon:'fa-solid fa-crown',
+    extraField:{ key:'size', label:'Dung lượng / định dạng', placeholder:'VD: PDF · 5.1MB' },
+    linkLabel:'Đường dẫn tải tài liệu', linkPlaceholder:'https://...'
+});
+registerContentList('tool_items', 'tool_content', 'items', {
+    label:'Công cụ', icon:'fa-solid fa-toolbox', color:'indigo', defaultIcon:'fa-solid fa-toolbox',
+    statusField:true,
+    linkLabel:'Đường dẫn (khi đã "Sẵn sàng")', linkPlaceholder:'https://... hoặc ten-file.html'
+});
+registerContentList('product_items', 'product_content', 'items', {
+    label:'Sản phẩm', icon:'fa-solid fa-bag-shopping', color:'indigo', defaultIcon:'fa-solid fa-bag-shopping',
+    extraField:{ key:'price', label:'Giá / nhãn phụ', placeholder:'VD: 49.000đ hoặc "Mới ra mắt"' },
+    linkLabel:'Đường dẫn (nếu có)', linkPlaceholder:'https://...'
+});
+
+const CONTENT_MANAGER_GROUPS = {
+    doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu miễn phí và trả phí hiển thị ở tab "Tài liệu" trên trang chủ.', subKeys:['doc_free','doc_paid'] },
+    tool:    { title:'Công cụ',   icon:'🧰',  hint:'Quản lý các thẻ công cụ hiển thị ở tab "Công cụ" trên trang chủ.', subKeys:['tool_items'] },
+    product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ.', subKeys:['product_items'] }
+};
+
+function contentColorSwatchesHtml(subKey){
+    return CONTENT_COLOR_OPTIONS.map(c => `<div class="color-swatch ${c}" data-color="${c}" onclick="pickContentColor('${subKey}','${c}')">🎨</div>`).join('');
+}
+
+function contentBlockHtml(subKey){
+    const meta = contentLists[subKey].meta;
+    return `
+    <div class="cm-block" style="margin-bottom:26px;">
+        <div class="subj-mgr-grid">
+            <div class="subj-mgr-col" style="max-width:460px;">
+                <div class="subj-mgr-col-head">
+                    <h4><i class="${meta.icon}"></i> ${meta.label}</h4>
+                    <button class="side-add" onclick="openContentForm('${subKey}')">+ Thêm</button>
+                </div>
+                <div id="cmList_${subKey}" class="side-list subj-mgr-list"></div>
+            </div>
+            <div class="subj-mgr-col">
+                <div id="cmForm_${subKey}" class="mini-form">
+                    <div id="cmFormTitle_${subKey}" class="mini-form-title">Thêm ${meta.label.toLowerCase()}</div>
+                    <label>Icon (mã lớp Font Awesome)</label>
+                    <input id="cmIcon_${subKey}" placeholder="${escapeHtml(meta.defaultIcon)}" oninput="updateContentPreview('${subKey}')">
+                    <div class="hint" style="margin:2px 0 0;">Xem mã icon tại <a href="https://fontawesome.com/search" target="_blank" rel="noopener">fontawesome.com/search</a>.</div>
+                    <label style="margin-top:10px;">Màu icon</label>
+                    <div class="color-swatch-row" id="cmColorRow_${subKey}">${contentColorSwatchesHtml(subKey)}</div>
+                    <label>Tiêu đề</label>
+                    <input id="cmTitle_${subKey}" placeholder="Tiêu đề" oninput="updateContentPreview('${subKey}')">
+                    <label>Mô tả ngắn</label>
+                    <input id="cmDesc_${subKey}" placeholder="Mô tả ngắn (không bắt buộc)" oninput="updateContentPreview('${subKey}')">
+                    ${meta.extraField ? `
+                    <label>${escapeHtml(meta.extraField.label)}</label>
+                    <input id="cmExtra_${subKey}" placeholder="${escapeHtml(meta.extraField.placeholder)}">` : ''}
+                    ${meta.statusField ? `
+                    <label>Trạng thái</label>
+                    <select id="cmStatus_${subKey}">
+                        <option value="soon">Sắp ra mắt (khoá, chưa bấm được)</option>
+                        <option value="ready">Sẵn sàng (mở khoá, bấm được)</option>
+                    </select>` : ''}
+                    <label>${escapeHtml(meta.linkLabel)}</label>
+                    <input id="cmLink_${subKey}" placeholder="${escapeHtml(meta.linkPlaceholder)}">
+                    <div class="settings-preview">
+                        <div class="prev-ico" id="cmPreviewIco_${subKey}"><i class="fa-solid fa-star"></i></div>
+                        <div class="prev-text"><b id="cmPreviewTitle_${subKey}">Tiêu đề</b><span id="cmPreviewDesc_${subKey}">Mô tả</span></div>
+                    </div>
+                    <div class="mini-actions">
+                        <button class="btn-mini-save" onclick="saveContentItem('${subKey}')">Lưu</button>
+                        <button class="btn-mini-cancel" onclick="closeContentForm('${subKey}')">Hủy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+async function showContentManager(type){
+    const group = CONTENT_MANAGER_GROUPS[type];
+    if (!group) return;
+    showAdminPanel('contentManagerPanel', 'nav_' + type);
+    document.getElementById('cmHeaderIcon').textContent = group.icon;
+    document.getElementById('cmHeaderTitle').textContent = group.title;
+    document.getElementById('cmHeaderHint').textContent = group.hint;
+    document.getElementById('cmListsWrap').innerHTML = group.subKeys.map(contentBlockHtml).join('');
+
+    for (const subKey of group.subKeys){
+        await loadContentList(subKey);
+        enableDragReorder('cmList_' + subKey, '.side-item', el => el.dataset.id, null, (fromId, toId) => reorderContentList(subKey, fromId, toId));
+    }
+}
+
+async function loadContentList(subKey){
+    const cfg = contentLists[subKey];
+    const { data, error } = await sb.from('site_settings').select('*').eq('key', cfg.settingsKey).single();
+    if (error && error.code !== 'PGRST116') showMsg('Lỗi tải ' + cfg.meta.label.toLowerCase() + ': ' + error.message, 'err');
+    let payload = (data && data.payload) ? data.payload : null;
+    if (!payload) payload = CONTENT_DEFAULTS[cfg.settingsKey] || {};
+    const arr = Array.isArray(payload[cfg.arrayField]) ? payload[cfg.arrayField] : [];
+    cfg.items = arr.map(x => Object.assign({}, x));
+    cfg.items.forEach(it => { if (!it.id) it.id = 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); });
+    renderContentList(subKey);
+}
+
+function contentItemRowHtml(subKey, item){
+    const cfg = contentLists[subKey].meta;
+    const color = item.color || cfg.color || 'indigo';
+    const icon = item.icon || cfg.defaultIcon;
+    let extraLabel = '';
+    if (cfg.statusField){
+        extraLabel = item.status === 'ready' ? ' · Sẵn sàng' : ' · Sắp ra mắt';
+    } else if (cfg.extraField && item[cfg.extraField.key]){
+        extraLabel = ' · ' + escapeHtml(item[cfg.extraField.key]);
+    }
+    return `
+        <div class="side-item" data-id="${item.id}">
+            <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
+            <span class="prev-ico color-swatch ${color}" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="${escapeHtml(icon)}"></i></span>
+            <span class="name">${escapeHtml(item.title || '(chưa đặt tên)')}<span class="hint-inline">${extraLabel}</span></span>
+            <span class="right-cluster">
+                <span class="menu-wrap">
+                    <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleContentMenu('${subKey}','${item.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+                    <div class="menu-drop hidden" id="cmmenu-${subKey}-${item.id}">
+                        <button onclick="event.stopPropagation(); closeAllContentMenus(); editContentItem('${subKey}','${item.id}')">✏️ Sửa</button>
+                        <button onclick="event.stopPropagation(); closeAllContentMenus(); deleteContentItem('${subKey}','${item.id}')">🗑️ Xóa</button>
+                    </div>
+                </span>
+            </span>
+        </div>`;
+}
+function renderContentList(subKey){
+    const cfg = contentLists[subKey];
+    const box = document.getElementById('cmList_' + subKey);
+    if (!box) return;
+    if (!cfg.items.length){ box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Chưa có ${cfg.meta.label.toLowerCase()} nào. Bấm "+ Thêm" để tạo mục đầu tiên.</div>`; return; }
+    box.innerHTML = cfg.items.map(it => contentItemRowHtml(subKey, it)).join('');
+}
+function toggleContentMenu(subKey, id, btn){
+    const menu = document.getElementById('cmmenu-' + subKey + '-' + id);
+    const wasHidden = menu.classList.contains('hidden');
+    closeAllContentMenus();
+    if (wasHidden && btn){
+        const rect = btn.getBoundingClientRect();
+        menu.style.top = (rect.bottom + 4) + 'px';
+        menu.style.left = 'auto';
+        menu.style.right = (window.innerWidth - rect.right) + 'px';
+        menu.classList.remove('hidden');
+    }
+}
+function closeAllContentMenus(){
+    document.querySelectorAll('[id^="cmmenu-"]').forEach(el => el.classList.add('hidden'));
+}
+document.addEventListener('click', () => closeAllContentMenus());
+
+async function reorderContentList(subKey, fromId, toId){
+    const cfg = contentLists[subKey];
+    if (!fromId || !toId || fromId === toId) return;
+    const fromIdx = cfg.items.findIndex(x => String(x.id) === String(fromId));
+    const toIdx = cfg.items.findIndex(x => String(x.id) === String(toId));
+    if (fromIdx < 0 || toIdx < 0) return;
+    const reordered = cfg.items.slice();
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    cfg.items = reordered;
+    renderContentList(subKey);
+    const err = await saveContentList(subKey);
+    if (err) showMsg('Lỗi lưu thứ tự: ' + err.message, 'err');
+}
+
+function pickContentColor(subKey, color){
+    document.querySelectorAll('#cmColorRow_' + subKey + ' .color-swatch').forEach(el=>{
+        el.classList.toggle('selected', el.dataset.color === color);
+    });
+    updateContentPreview(subKey);
+}
+function updateContentPreview(subKey){
+    const cfg = contentLists[subKey];
+    const iconEl = document.getElementById('cmIcon_' + subKey);
+    const titleEl = document.getElementById('cmTitle_' + subKey);
+    const descEl = document.getElementById('cmDesc_' + subKey);
+    if (!iconEl || !titleEl || !descEl) return;
+    const icon = iconEl.value.trim() || cfg.meta.defaultIcon;
+    const title = titleEl.value.trim() || '—';
+    const desc = descEl.value.trim() || '';
+    const selected = document.querySelector('#cmColorRow_' + subKey + ' .color-swatch.selected');
+    const color = selected ? selected.dataset.color : (cfg.meta.color || 'indigo');
+    document.getElementById('cmPreviewIco_' + subKey).innerHTML = `<i class="${escapeHtml(icon)}"></i>`;
+    document.getElementById('cmPreviewIco_' + subKey).className = 'prev-ico color-swatch ' + color;
+    document.getElementById('cmPreviewTitle_' + subKey).innerText = title;
+    document.getElementById('cmPreviewDesc_' + subKey).innerText = desc;
+}
+
+function openContentForm(subKey){
+    const cfg = contentLists[subKey];
+    cfg.editingId = null;
+    document.getElementById('cmFormTitle_' + subKey).innerText = 'Thêm ' + cfg.meta.label.toLowerCase();
+    document.getElementById('cmIcon_' + subKey).value = '';
+    document.getElementById('cmTitle_' + subKey).value = '';
+    document.getElementById('cmDesc_' + subKey).value = '';
+    const extraEl = document.getElementById('cmExtra_' + subKey); if (extraEl) extraEl.value = '';
+    const statusEl = document.getElementById('cmStatus_' + subKey); if (statusEl) statusEl.value = 'soon';
+    document.getElementById('cmLink_' + subKey).value = '';
+    pickContentColor(subKey, cfg.meta.color || 'indigo');
+    updateContentPreview(subKey);
+    document.getElementById('cmForm_' + subKey).classList.add('show');
+}
+function closeContentForm(subKey){
+    contentLists[subKey].editingId = null;
+    const form = document.getElementById('cmForm_' + subKey);
+    if (form) form.classList.remove('show');
+}
+function editContentItem(subKey, id){
+    const cfg = contentLists[subKey];
+    const item = cfg.items.find(x => String(x.id) === String(id));
+    if (!item) return;
+    cfg.editingId = id;
+    document.getElementById('cmFormTitle_' + subKey).innerText = 'Sửa ' + cfg.meta.label.toLowerCase();
+    document.getElementById('cmIcon_' + subKey).value = item.icon || '';
+    document.getElementById('cmTitle_' + subKey).value = item.title || '';
+    document.getElementById('cmDesc_' + subKey).value = item.desc || '';
+    const extraEl = document.getElementById('cmExtra_' + subKey);
+    if (extraEl && cfg.meta.extraField) extraEl.value = item[cfg.meta.extraField.key] || '';
+    const statusEl = document.getElementById('cmStatus_' + subKey);
+    if (statusEl && cfg.meta.statusField) statusEl.value = item.status || 'soon';
+    document.getElementById('cmLink_' + subKey).value = item.link || '';
+    pickContentColor(subKey, item.color || cfg.meta.color || 'indigo');
+    updateContentPreview(subKey);
+    document.getElementById('cmForm_' + subKey).classList.add('show');
+    document.getElementById('cmTitle_' + subKey).focus();
+}
+async function saveContentItem(subKey){
+    const cfg = contentLists[subKey];
+    const icon = document.getElementById('cmIcon_' + subKey).value.trim() || cfg.meta.defaultIcon;
+    const title = document.getElementById('cmTitle_' + subKey).value.trim();
+    const desc = document.getElementById('cmDesc_' + subKey).value.trim();
+    const link = document.getElementById('cmLink_' + subKey).value.trim();
+    const selected = document.querySelector('#cmColorRow_' + subKey + ' .color-swatch.selected');
+    const color = selected ? selected.dataset.color : (cfg.meta.color || 'indigo');
+    if (!title) return showMsg('Nhập tiêu đề.', 'err');
+
+    const item = { id: cfg.editingId || ('i' + Date.now().toString(36) + Math.random().toString(36).slice(2,6)), icon, color, title, desc, link };
+    if (cfg.meta.extraField){
+        const extraEl = document.getElementById('cmExtra_' + subKey);
+        item[cfg.meta.extraField.key] = extraEl ? extraEl.value.trim() : '';
+    }
+    if (cfg.meta.statusField){
+        item.status = document.getElementById('cmStatus_' + subKey).value;
+    }
+
+    const wasEditing = cfg.editingId;
+    if (wasEditing){
+        const idx = cfg.items.findIndex(x => String(x.id) === String(cfg.editingId));
+        if (idx >= 0) cfg.items[idx] = item;
+    } else {
+        cfg.items.push(item);
+    }
+
+    renderContentList(subKey);
+    closeContentForm(subKey);
+    const err = await saveContentList(subKey);
+    if (err) showMsg('Lỗi lưu: ' + err.message, 'err');
+    else showMsg((wasEditing ? 'Đã cập nhật ' : 'Đã thêm ') + cfg.meta.label.toLowerCase() + ' "' + title + '".', 'ok');
+}
+function deleteContentItem(subKey, id){
+    const cfg = contentLists[subKey];
+    const item = cfg.items.find(x => String(x.id) === String(id));
+    const title = item ? item.title : '';
+    showConfirm(
+        'Xóa ' + cfg.meta.label.toLowerCase() + '?',
+        `Xóa "${title}"? Mục sẽ biến mất khỏi trang chủ ngay. Không thể hoàn tác.`,
+        async () => {
+            cfg.items = cfg.items.filter(x => String(x.id) !== String(id));
+            renderContentList(subKey);
+            const err = await saveContentList(subKey);
+            if (err) showMsg('Lỗi xóa: ' + err.message, 'err');
+            else showMsg('Đã xóa.', 'ok');
+        }
+    );
+}
+async function saveContentList(subKey){
+    const cfg = contentLists[subKey];
+    // Tải lại payload mới nhất trước khi ghi, để không đè mất mảng còn lại
+    // (vd: doc_content chứa cả free & paid trong cùng 1 dòng).
+    const { data } = await sb.from('site_settings').select('*').eq('key', cfg.settingsKey).single();
+    const payload = (data && data.payload) ? data.payload : Object.assign({}, CONTENT_DEFAULTS[cfg.settingsKey] || {});
+    payload[cfg.arrayField] = cfg.items;
+    const { error } = await sb.from('site_settings')
+        .upsert({ key: cfg.settingsKey, payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    return error;
+}
+
+// ============================================================================
+// MENU ĐIỀU HƯỚNG (nav_tabs) — ẩn/hiện + kéo thả sắp xếp thứ tự các tab trang chủ
+// ============================================================================
+const NAV_TABS_DEFAULT = [
+    { key:'home',    label:'Trang chủ',   icon:'🏠' },
+    { key:'doc',     label:'Tài liệu',    icon:'📁' },
+    { key:'quiz',    label:'Trắc nghiệm', icon:'📝' },
+    { key:'tool',    label:'Công cụ',     icon:'🧰' },
+    { key:'product', label:'Sản phẩm',    icon:'🛍️' },
+    { key:'support', label:'Hỗ trợ',      icon:'🎧' }
+];
+let navTabsState = [];
+
+async function showNavTabsManager(){
+    showAdminPanel('navTabsPanel', 'navTabsMgr');
+    document.getElementById('navTabsMsg').innerText = '';
+    const { data, error } = await sb.from('site_settings').select('*').eq('key', 'nav_tabs').single();
+    if (error && error.code !== 'PGRST116') showMsg('Lỗi tải menu điều hướng: ' + error.message, 'err');
+    const saved = (data && data.payload && Array.isArray(data.payload.tabs)) ? data.payload.tabs : null;
+    if (saved && saved.length){
+        const merged = saved
+            .filter(t => NAV_TABS_DEFAULT.some(d => d.key === t.key))
+            .map(t => {
+                const def = NAV_TABS_DEFAULT.find(d => d.key === t.key);
+                return { key:t.key, label:t.label || def.label, icon:def.icon, visible: t.visible !== false };
+            });
+        NAV_TABS_DEFAULT.forEach(d => { if (!merged.some(t => t.key === d.key)) merged.push(Object.assign({ visible:true }, d)); });
+        navTabsState = merged;
+    } else {
+        navTabsState = NAV_TABS_DEFAULT.map(t => Object.assign({ visible:true }, t));
+    }
+    renderNavTabsList();
+}
+function navTabRowHtml(t){
+    return `
+        <div class="side-item" data-id="${t.key}">
+            <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
+            <span class="set-ico">${t.icon}</span>
+            <span class="name">${escapeHtml(t.label)}</span>
+            <span class="right-cluster">
+                <button class="side-add" style="padding:5px 10px;" onclick="toggleNavTabVisible('${t.key}')">${t.visible ? '👁️ Đang hiện' : '🚫 Đang ẩn'}</button>
+            </span>
+        </div>`;
+}
+function renderNavTabsList(){
+    document.getElementById('navTabsList').innerHTML = navTabsState.map(navTabRowHtml).join('');
+}
+function toggleNavTabVisible(key){
+    const t = navTabsState.find(x => x.key === key);
+    if (!t) return;
+    const visibleCount = navTabsState.filter(x => x.visible).length;
+    if (t.visible && visibleCount <= 1){
+        showMsg('Phải để hiện ít nhất 1 tab trên menu.', 'err');
+        return;
+    }
+    t.visible = !t.visible;
+    renderNavTabsList();
+    saveNavTabs();
+}
+async function reorderNavTabs(fromId, toId){
+    if (!fromId || !toId || fromId === toId) return;
+    const fromIdx = navTabsState.findIndex(t => t.key === fromId);
+    const toIdx = navTabsState.findIndex(t => t.key === toId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const reordered = navTabsState.slice();
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    navTabsState = reordered;
+    renderNavTabsList();
+    saveNavTabs();
+}
+async function saveNavTabs(){
+    const { error } = await sb.from('site_settings')
+        .upsert({ key:'nav_tabs', payload:{ tabs: navTabsState }, updated_at: new Date().toISOString() }, { onConflict:'key' });
+    const msgEl = document.getElementById('navTabsMsg');
+    if (error){
+        msgEl.style.color = 'var(--red)';
+        msgEl.innerText = 'Lỗi: ' + error.message;
+    } else {
+        msgEl.style.color = 'var(--green)';
+        msgEl.innerText = '✔ Đã lưu. Trang chủ sẽ cập nhật ngay khi tải lại.';
+        setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4000);
+    }
+}
+enableDragReorder('navTabsList', '.side-item', el => el.dataset.id, null, reorderNavTabs);
+
 // ---------- CÀI ĐẶT TRANG CHỦ (site_settings) ----------
 let currentSetKey = null;
 let currentSetPayload = null;
@@ -2634,11 +3066,10 @@ async function openSettingsPanel(key){
         el.classList.toggle('active', el.dataset.setkey === key);
     });
 
-    document.getElementById('subjectManagerPanel').classList.add('hidden');
-    document.getElementById('mainAppArea').classList.add('hidden');
-    document.getElementById('quickLinksPanel').classList.add('hidden');
-    document.getElementById('generalSettingsPanel').classList.add('hidden');
-    document.getElementById('settingsPanel').classList.remove('hidden');
+    ADMIN_PANEL_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', id !== 'settingsPanel');
+    });
     document.getElementById('setSaveMsg').innerText = '';
 
     const meta = SETTINGS_META[key] || { title:'Cài đặt', hint:'' };

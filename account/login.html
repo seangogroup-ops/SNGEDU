@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đăng nhập · SNG EDU</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+    :root{
+        --bg:#0b0b17; --card:#12121f; --border:#23233a; --text:#e9e9f5; --muted:#8a8aa3;
+        --brand:#6a63f6; --brand-bg:#211f45; --red:#ef4444; --green:#16a34a;
+    }
+    *{box-sizing:border-box;}
+    body{
+        margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+        background:var(--bg); color:var(--text);
+        font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+        padding:20px;
+    }
+    .card{
+        width:100%; max-width:400px; background:var(--card); border:1px solid var(--border);
+        border-radius:20px; padding:32px 28px;
+    }
+    .logo{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+    .logo-badge{
+        width:38px;height:38px;border-radius:11px;background:var(--brand);
+        display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;
+    }
+    .logo-name{font-weight:800;font-size:1.05rem;}
+    h1{font-size:1.35rem;margin:0 0 6px;}
+    p.sub{color:var(--muted);font-size:.88rem;margin:0 0 24px;}
+    label{display:block;font-size:.82rem;color:var(--muted);margin:14px 0 6px;}
+    input{
+        width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--border);
+        background:#0e0e1c; color:var(--text); font-size:.92rem; outline:none;
+    }
+    input:focus{border-color:var(--brand);}
+    .pw-wrap{position:relative;}
+    .pw-wrap input{padding-right:40px;}
+    .pw-toggle{
+        position:absolute; right:10px; top:50%; transform:translateY(-50%);
+        background:none; border:none; color:var(--muted); cursor:pointer; font-size:.95rem;
+    }
+    .btn-primary{
+        width:100%; margin-top:22px; padding:12px; border:none; border-radius:10px;
+        background:var(--brand); color:#fff; font-weight:700; font-size:.94rem; cursor:pointer;
+    }
+    .btn-primary:disabled{opacity:.6; cursor:not-allowed;}
+    .switch-row{margin-top:18px; text-align:center; font-size:.85rem; color:var(--muted);}
+    .switch-row a{color:var(--brand); text-decoration:none; font-weight:600; cursor:pointer;}
+    .msg{margin-top:14px; font-size:.85rem; padding:10px 12px; border-radius:10px; display:none;}
+    .msg.err{display:block; background:rgba(239,68,68,.12); color:#f87171;}
+    .msg.ok{display:block; background:rgba(22,163,74,.12); color:#4ade80;}
+    .back-home{
+        display:inline-flex; align-items:center; gap:6px; color:var(--muted); text-decoration:none;
+        font-size:.85rem; margin-bottom:18px;
+    }
+    .back-home:hover{color:var(--text);}
+    .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div class="card">
+    <a class="back-home" href="../index.html"><i class="fa-solid fa-arrow-left"></i> Về trang chủ</a>
+
+    <div class="logo">
+        <div class="logo-badge">S</div>
+        <div class="logo-name">SNG EDU</div>
+    </div>
+
+    <!-- ĐĂNG NHẬP -->
+    <div id="loginView">
+        <h1>Đăng nhập</h1>
+        <p class="sub">Đăng nhập để dùng Trắc nghiệm, Tài liệu, Công cụ và các mục khác.</p>
+
+        <label>Email</label>
+        <input id="loginEmail" type="email" placeholder="ban@email.com" autocomplete="email">
+
+        <label>Mật khẩu</label>
+        <div class="pw-wrap">
+            <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="pw-toggle" onclick="togglePw('loginPassword', this)"><i class="fa-regular fa-eye"></i></button>
+        </div>
+
+        <button class="btn-primary" id="loginBtn" onclick="doLogin()">Đăng nhập</button>
+        <div class="msg" id="loginMsg"></div>
+
+        <div class="switch-row">Chưa có tài khoản? <a onclick="showView('register')">Đăng ký ngay</a></div>
+    </div>
+
+    <!-- ĐĂNG KÝ -->
+    <div id="registerView" class="hidden">
+        <h1>Tạo tài khoản</h1>
+        <p class="sub">Tạo tài khoản miễn phí để bắt đầu ôn tập.</p>
+
+        <label>Họ và tên</label>
+        <input id="regName" type="text" placeholder="Nguyễn Văn A" autocomplete="name">
+
+        <label>Email</label>
+        <input id="regEmail" type="email" placeholder="ban@email.com" autocomplete="email">
+
+        <label>Mật khẩu</label>
+        <div class="pw-wrap">
+            <input id="regPassword" type="password" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
+            <button type="button" class="pw-toggle" onclick="togglePw('regPassword', this)"><i class="fa-regular fa-eye"></i></button>
+        </div>
+
+        <label>Nhập lại mật khẩu</label>
+        <input id="regPassword2" type="password" placeholder="••••••••" autocomplete="new-password">
+
+        <button class="btn-primary" id="registerBtn" onclick="doRegister()">Đăng ký</button>
+        <div class="msg" id="registerMsg"></div>
+
+        <div class="switch-row">Đã có tài khoản? <a onclick="showView('login')">Đăng nhập</a></div>
+    </div>
+
+    <!-- ĐÃ ĐĂNG NHẬP -->
+    <div id="loggedInView" class="hidden">
+        <h1>Bạn đã đăng nhập</h1>
+        <p class="sub">Đang đăng nhập với <b id="loggedInEmail">—</b></p>
+        <button class="btn-primary" onclick="location.href='../index.html'">Vào trang chủ</button>
+        <button class="btn-primary" style="background:#1b1b2e;color:var(--text);margin-top:10px;border:1px solid var(--border);" onclick="doLogout()">Đăng xuất</button>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Nếu URL có ?next=... thì sau khi đăng nhập/đăng ký xong sẽ quay lại đúng trang đó
+const params = new URLSearchParams(location.search);
+const nextUrl = params.get('next') || '../index.html';
+
+function showView(name){
+    document.getElementById('loginView').classList.toggle('hidden', name !== 'login');
+    document.getElementById('registerView').classList.toggle('hidden', name !== 'register');
+    document.getElementById('loggedInView').classList.toggle('hidden', name !== 'loggedIn');
+}
+
+function togglePw(id, btn){
+    const input = document.getElementById(id);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password'){ input.type = 'text'; icon.className = 'fa-regular fa-eye-slash'; }
+    else { input.type = 'password'; icon.className = 'fa-regular fa-eye'; }
+}
+
+function showMsg(id, text, type){
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'msg ' + type;
+}
+
+async function doLogin(){
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) return showMsg('loginMsg', 'Nhập đầy đủ email và mật khẩu.', 'err');
+
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = 'Đang đăng nhập...';
+
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+
+    btn.disabled = false; btn.textContent = 'Đăng nhập';
+
+    if (error){
+        showMsg('loginMsg', 'Sai email hoặc mật khẩu.', 'err');
+        return;
+    }
+    showMsg('loginMsg', '✔ Đăng nhập thành công, đang chuyển hướng...', 'ok');
+    setTimeout(() => { location.href = nextUrl; }, 600);
+}
+
+async function doRegister(){
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const password2 = document.getElementById('regPassword2').value;
+
+    if (!name || !email || !password) return showMsg('registerMsg', 'Nhập đầy đủ thông tin.', 'err');
+    if (password.length < 6) return showMsg('registerMsg', 'Mật khẩu tối thiểu 6 ký tự.', 'err');
+    if (password !== password2) return showMsg('registerMsg', 'Mật khẩu nhập lại không khớp.', 'err');
+
+    const btn = document.getElementById('registerBtn');
+    btn.disabled = true; btn.textContent = 'Đang tạo tài khoản...';
+
+    const { data, error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { full_name: name } }
+    });
+
+    btn.disabled = false; btn.textContent = 'Đăng ký';
+
+    if (error){
+        showMsg('registerMsg', error.message.includes('already registered') ? 'Email này đã được đăng ký.' : ('Lỗi: ' + error.message), 'err');
+        return;
+    }
+
+    // Lưu hồ sơ (nếu bảng public.profiles đã được tạo — bỏ qua lỗi nếu chưa có)
+    if (data.user){
+        try{
+            await sb.from('profiles').upsert({ id: data.user.id, full_name: name });
+        }catch(e){ /* bảng chưa tồn tại thì thôi, không chặn đăng ký */ }
+    }
+
+    if (data.session){
+        showMsg('registerMsg', '✔ Tạo tài khoản thành công, đang chuyển hướng...', 'ok');
+        setTimeout(() => { location.href = nextUrl; }, 600);
+    } else {
+        showMsg('registerMsg', '✔ Tạo tài khoản thành công! Kiểm tra email để xác nhận trước khi đăng nhập.', 'ok');
+    }
+}
+
+async function doLogout(){
+    await sb.auth.signOut();
+    showView('login');
+}
+
+(async function init(){
+    const { data: { session } } = await sb.auth.getSession();
+    if (session){
+        document.getElementById('loggedInEmail').textContent = session.user.email || '';
+        showView('loggedIn');
+    } else {
+        showView('login');
+    }
+})();
+</script>
+</body>
+</html>

@@ -690,6 +690,52 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // ---------------- ĐĂNG NHẬP / ĐĂNG KÝ — chỉ chặn ở Trắc nghiệm, Tài liệu, Công cụ, Sản phẩm ----------------
+    // Trang chủ và Hỗ trợ luôn xem tự do, không cần đăng nhập.
+    const GATED_TABS = ['quiz', 'doc', 'tool', 'product'];
+    let currentSession = null;
+
+    function loginUrl(nextKey){
+        const next = location.pathname + (nextKey && nextKey !== 'home' ? '#' + nextKey : '');
+        return 'account/login.html?next=' + encodeURIComponent(next);
+    }
+
+    function updateAccountUI(){
+        const sideName = document.querySelector('.side-user .u-name');
+        const sideSub = document.querySelector('.side-user .u-sub');
+        const sideAvatar = document.querySelector('.side-avatar');
+        const topAvatar = document.querySelector('.avatar-btn');
+        if (!sideName) return;
+
+        if (currentSession){
+            const email = currentSession.user.email || '';
+            const initial = (email.trim()[0] || 'U').toUpperCase();
+            sideName.textContent = email.split('@')[0];
+            sideSub.textContent = 'Nhấn để đăng xuất';
+            if (sideAvatar) sideAvatar.firstChild.textContent = initial;
+            if (topAvatar) topAvatar.firstChild.textContent = initial;
+        } else {
+            sideName.textContent = 'Khách';
+            sideSub.textContent = 'Nhấn để đăng nhập';
+            if (sideAvatar) sideAvatar.firstChild.textContent = 'K';
+            if (topAvatar) topAvatar.firstChild.textContent = 'K';
+        }
+    }
+
+    async function handleAccountClick(){
+        if (currentSession){
+            if (confirm('Đăng xuất khỏi tài khoản ' + (currentSession.user.email || '') + '?')){
+                await sb.auth.signOut();
+                currentSession = null;
+                updateAccountUI();
+            }
+        } else {
+            location.href = loginUrl(currentTabKey);
+        }
+    }
+
+    let currentTabKey = 'home';
+
     // Icon/màu riêng cho các mã môn quen thuộc (chỉ để đẹp hơn, KHÔNG bắt buộc phải tồn tại).
     // Môn có mã không nằm trong danh sách này vẫn hiện bình thường, chỉ lấy icon/màu xoay vòng ở PALETTE bên dưới.
     const ICON_BY_ID = {
@@ -1072,6 +1118,13 @@
     function goTab(key, opts){
         opts = opts || {};
         if (!panels[key]) key = 'home';
+
+        if (GATED_TABS.includes(key) && !currentSession){
+            location.href = loginUrl(key);
+            return;
+        }
+
+        currentTabKey = key;
         Object.values(panels).forEach(id => document.getElementById(id).style.display = 'none');
         document.getElementById(panels[key]).style.display = '';
         document.querySelectorAll('.side-link[data-tab]').forEach(el => el.classList.toggle('active', el.dataset.tab === key));
@@ -1097,6 +1150,22 @@
 
     // ---------------- Dựng menu điều hướng theo cấu hình admin (ẩn/hiện + thứ tự), rồi khởi tạo tab ban đầu ----------------
     (async function initSideNav(){
+        const { data: { session } } = await sb.auth.getSession();
+        currentSession = session;
+        updateAccountUI();
+
+        const sideUserEl = document.querySelector('.side-user');
+        const topAvatarEl = document.querySelector('.avatar-btn');
+        if (sideUserEl) sideUserEl.style.cursor = 'pointer';
+        if (topAvatarEl) topAvatarEl.style.cursor = 'pointer';
+        if (sideUserEl) sideUserEl.addEventListener('click', handleAccountClick);
+        if (topAvatarEl) topAvatarEl.addEventListener('click', handleAccountClick);
+
+        sb.auth.onAuthStateChange((_event, session) => {
+            currentSession = session;
+            updateAccountUI();
+        });
+
         const tabsConfig = await loadNavTabsConfig();
         tabsConfig.forEach(t => { TAB_TITLES[t.key] = [t.label, '']; });
         const visibleTabs = renderSideNav(tabsConfig);
@@ -1110,6 +1179,11 @@
         const visibleKeys = visibleTabs.map(t => t.key);
         const defaultTab = visibleKeys.includes('home') ? 'home' : (visibleKeys[0] || 'home');
         const startTab = (panels[hashTab] && visibleKeys.includes(hashTab)) ? hashTab : defaultTab;
+
+        if (GATED_TABS.includes(startTab) && !currentSession){
+            location.href = loginUrl(startTab);
+            return;
+        }
         history.replaceState({ tab: startTab }, '', location.pathname + (startTab === 'home' ? '' : '#' + startTab));
         goTab(startTab, { fromPopState:true });
     })();

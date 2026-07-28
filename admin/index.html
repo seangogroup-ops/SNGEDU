@@ -651,9 +651,6 @@ textarea{resize:vertical;}
                 <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
                     <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
                 </div>
-                <div class="side-item settings-item" id="navQuickLinks" onclick="showQuickLinksManager()">
-                    <span class="set-ico">⚡</span><span class="name">Truy cập nhanh</span>
-                </div>
                 <div class="side-item settings-item" id="nav_doc" onclick="showContentManager('doc')">
                     <span class="set-ico">📁</span><span class="name">Tài liệu</span>
                 </div>
@@ -665,9 +662,6 @@ textarea{resize:vertical;}
                 </div>
                 <div class="side-item settings-item" id="nav_product" onclick="showContentManager('product')">
                     <span class="set-ico">🛍️</span><span class="name">Sản phẩm</span>
-                </div>
-                <div class="side-item settings-item" id="navTabsMgr" onclick="showNavTabsManager()">
-                    <span class="set-ico">🧭</span><span class="name">Menu điều hướng</span>
                 </div>
                 <div class="side-item settings-item" id="navGeneralSettings" onclick="showGeneralSettings()">
                     <span class="set-ico">⚙️</span><span class="name">Cài đặt</span>
@@ -757,63 +751,6 @@ textarea{resize:vertical;}
             </div>
         </div>
 
-        <div id="quickLinksPanel" class="hidden">
-            <div class="subj-mgr-head">
-                <h2>⚡ Truy cập nhanh (trang chủ)</h2>
-                <p class="hint">Các thẻ hiển thị ở mục "Truy cập nhanh" trên trang chủ. Kéo thả để đổi thứ tự, thêm/sửa/xóa/đổi tên thoải mái.</p>
-            </div>
-            <div class="subj-mgr-grid">
-                <div class="subj-mgr-col" style="max-width:460px;">
-                    <div class="subj-mgr-col-head">
-                        <h4>Danh sách thẻ</h4>
-                        <button class="side-add" onclick="openQuickLinkForm()">+ Thêm thẻ</button>
-                    </div>
-                    <div id="quickLinkList" class="side-list subj-mgr-list"></div>
-                </div>
-
-                <div class="subj-mgr-col">
-                    <div id="quickLinkForm" class="mini-form">
-                        <div id="quickLinkFormTitle" class="mini-form-title">Thêm thẻ</div>
-                        <label>Icon (mã lớp Font Awesome)</label>
-                        <input id="qlIcon" placeholder="fa-solid fa-list-check">
-                        <div class="hint" style="margin:2px 0 0;">Xem mã icon tại <a href="https://fontawesome.com/search" target="_blank" rel="noopener">fontawesome.com/search</a>, copy đúng class (vd: fa-solid fa-briefcase).</div>
-                        <label style="margin-top:10px;">Màu icon</label>
-                        <div class="color-swatch-row" id="qlColorRow">
-                            <div class="color-swatch indigo" data-color="indigo" onclick="pickQlColor('indigo')">🎨</div>
-                            <div class="color-swatch purple" data-color="purple" onclick="pickQlColor('purple')">🎨</div>
-                            <div class="color-swatch green" data-color="green" onclick="pickQlColor('green')">🎨</div>
-                            <div class="color-swatch amber" data-color="amber" onclick="pickQlColor('amber')">🎨</div>
-                            <div class="color-swatch blue" data-color="blue" onclick="pickQlColor('blue')">🎨</div>
-                            <div class="color-swatch red" data-color="red" onclick="pickQlColor('red')">🎨</div>
-                        </div>
-                        <label>Tiêu đề thẻ</label>
-                        <input id="qlTitle" placeholder="Ôn tập trắc nghiệm">
-                        <label>Mô tả ngắn</label>
-                        <input id="qlSubtitle" placeholder="Chọn học phần">
-                        <label>Bấm vào thẻ sẽ đi tới</label>
-                        <select id="qlLink">
-                            <option value="home">Trang chủ</option>
-                            <option value="doc">Tài liệu</option>
-                            <option value="quiz">Trắc nghiệm</option>
-                            <option value="tool">Công cụ</option>
-                            <option value="product">Sản phẩm</option>
-                            <option value="support">Hỗ trợ</option>
-                            <option value="__custom">Đường dẫn khác (URL/file)…</option>
-                        </select>
-                        <input id="qlLinkCustom" class="hidden" placeholder="https://... hoặc ten-file.html" style="margin-top:8px;">
-                        <div class="settings-preview">
-                            <div class="prev-ico" id="qlPreviewIco"><i class="fa-solid fa-list-check"></i></div>
-                            <div class="prev-text"><b id="qlPreviewTitle">Tiêu đề</b><span id="qlPreviewSubtitle">Mô tả</span></div>
-                        </div>
-                        <div class="mini-actions">
-                            <button class="btn-mini-save" onclick="saveQuickLink()">Lưu</button>
-                            <button class="btn-mini-cancel" onclick="closeQuickLinkForm()">Hủy</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div id="comingSoonPanel" class="hidden">
             <div class="subj-mgr-head">
                 <h2><span id="comingSoonIcon">📁</span> <span id="comingSoonTitle">Tài liệu</span></h2>
@@ -831,26 +768,21 @@ textarea{resize:vertical;}
             <div id="cmListsWrap"></div>
         </div>
 
-        <!-- ================= MENU ĐIỀU HƯỚNG: ẨN/HIỆN + SẮP XẾP TAB TRANG CHỦ ================= -->
-        <div id="navTabsPanel" class="hidden">
-            <div class="subj-mgr-head">
-                <h2>🧭 Menu điều hướng</h2>
-                <p class="hint">Ẩn/hiện và kéo thả để sắp xếp thứ tự các tab hiển thị ở menu bên trái trên trang chủ. Tab bị ẩn vẫn có thể mở qua thẻ "Truy cập nhanh" hoặc đường dẫn trực tiếp, chỉ không xuất hiện trên menu.</p>
-            </div>
-            <div class="subj-mgr-col" style="max-width:460px;">
-                <div id="navTabsList" class="side-list subj-mgr-list"></div>
-                <div class="hint" id="navTabsMsg" style="margin-top:10px;min-height:1.2em;"></div>
-            </div>
-        </div>
-
         <div id="generalSettingsPanel" class="hidden">
             <div class="subj-mgr-head">
                 <h2>⚙️ Cài đặt</h2>
-                <p class="hint">Thẻ "Hỗ trợ" trên trang chủ, thông tin tài khoản và đổi mật khẩu đăng nhập.</p>
+                <p class="hint">Menu điều hướng, thẻ "Hỗ trợ" trên trang chủ, thông tin tài khoản và đổi mật khẩu đăng nhập.</p>
             </div>
             <div class="subj-mgr-grid">
                 <div class="subj-mgr-col" style="max-width:460px;">
                     <div class="settings-form-card">
+                        <h3>🧭 Menu điều hướng</h3>
+                        <p class="hint">Ẩn/hiện và kéo thả để sắp xếp thứ tự các tab hiển thị ở menu bên trái trên trang chủ. Tab bị ẩn vẫn có thể mở qua thẻ "Truy cập nhanh" hoặc đường dẫn trực tiếp, chỉ không xuất hiện trên menu.</p>
+                        <div id="navTabsList" class="side-list subj-mgr-list"></div>
+                        <div class="hint" id="navTabsMsg" style="margin-top:10px;min-height:1.2em;"></div>
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
                         <h3>Thẻ "Hỗ trợ" (trang chủ)</h3>
                         <p class="hint">Hiển thị ở mục Truy cập nhanh trên trang chủ.</p>
                         <label>Icon (mã lớp Font Awesome)</label>
@@ -947,6 +879,61 @@ textarea{resize:vertical;}
                 <div style="display:flex;gap:10px;margin-top:18px;">
                     <button class="btn-primary" onclick="saveSiteSetting()">Lưu thay đổi</button>
                     <span id="setSaveMsg" style="align-self:center;font-size:.85rem;color:var(--green);"></span>
+                </div>
+            </div>
+
+            <div class="subj-mgr-head" style="margin-top:30px;">
+                <h2>⚡ Truy cập nhanh</h2>
+                <p class="hint">Các thẻ hiển thị ở mục "Truy cập nhanh" trên trang chủ, ngay bên dưới khối giới thiệu ở trên. Kéo thả để đổi thứ tự, thêm/sửa/xóa/đổi tên thoải mái.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col" style="max-width:460px;">
+                    <div class="subj-mgr-col-head">
+                        <h4>Danh sách thẻ</h4>
+                        <button class="side-add" onclick="openQuickLinkForm()">+ Thêm thẻ</button>
+                    </div>
+                    <div id="quickLinkList" class="side-list subj-mgr-list"></div>
+                </div>
+
+                <div class="subj-mgr-col">
+                    <div id="quickLinkForm" class="mini-form">
+                        <div id="quickLinkFormTitle" class="mini-form-title">Thêm thẻ</div>
+                        <label>Icon (mã lớp Font Awesome)</label>
+                        <input id="qlIcon" placeholder="fa-solid fa-list-check">
+                        <div class="hint" style="margin:2px 0 0;">Xem mã icon tại <a href="https://fontawesome.com/search" target="_blank" rel="noopener">fontawesome.com/search</a>, copy đúng class (vd: fa-solid fa-briefcase).</div>
+                        <label style="margin-top:10px;">Màu icon</label>
+                        <div class="color-swatch-row" id="qlColorRow">
+                            <div class="color-swatch indigo" data-color="indigo" onclick="pickQlColor('indigo')">🎨</div>
+                            <div class="color-swatch purple" data-color="purple" onclick="pickQlColor('purple')">🎨</div>
+                            <div class="color-swatch green" data-color="green" onclick="pickQlColor('green')">🎨</div>
+                            <div class="color-swatch amber" data-color="amber" onclick="pickQlColor('amber')">🎨</div>
+                            <div class="color-swatch blue" data-color="blue" onclick="pickQlColor('blue')">🎨</div>
+                            <div class="color-swatch red" data-color="red" onclick="pickQlColor('red')">🎨</div>
+                        </div>
+                        <label>Tiêu đề thẻ</label>
+                        <input id="qlTitle" placeholder="Ôn tập trắc nghiệm">
+                        <label>Mô tả ngắn</label>
+                        <input id="qlSubtitle" placeholder="Chọn học phần">
+                        <label>Bấm vào thẻ sẽ đi tới</label>
+                        <select id="qlLink">
+                            <option value="home">Trang chủ</option>
+                            <option value="doc">Tài liệu</option>
+                            <option value="quiz">Trắc nghiệm</option>
+                            <option value="tool">Công cụ</option>
+                            <option value="product">Sản phẩm</option>
+                            <option value="support">Hỗ trợ</option>
+                            <option value="__custom">Đường dẫn khác (URL/file)…</option>
+                        </select>
+                        <input id="qlLinkCustom" class="hidden" placeholder="https://... hoặc ten-file.html" style="margin-top:8px;">
+                        <div class="settings-preview">
+                            <div class="prev-ico" id="qlPreviewIco"><i class="fa-solid fa-list-check"></i></div>
+                            <div class="prev-text"><b id="qlPreviewTitle">Tiêu đề</b><span id="qlPreviewSubtitle">Mô tả</span></div>
+                        </div>
+                        <div class="mini-actions">
+                            <button class="btn-mini-save" onclick="saveQuickLink()">Lưu</button>
+                            <button class="btn-mini-cancel" onclick="closeQuickLinkForm()">Hủy</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1134,7 +1121,7 @@ function showAdmin(email){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'quickLinksPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'navTabsPanel'];
+const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -1162,11 +1149,6 @@ function showSubjectManager(){
 function showQuestionsPanel(){
     showAdminPanel('mainAppArea', 'navSubjectMgr');
 }
-function showQuickLinksManager(){
-    showAdminPanel('quickLinksPanel', 'navQuickLinks');
-    closeQuickLinkForm();
-    loadQuickLinks();
-}
 function showGeneralSettings(){
     showAdminPanel('generalSettingsPanel', 'navGeneralSettings');
     const emailEl = document.getElementById('genAccountEmail');
@@ -1176,6 +1158,7 @@ function showGeneralSettings(){
     document.getElementById('genNewPasswordConfirm').value = '';
     document.getElementById('genPassMsg').innerText = '';
     loadSupportCard();
+    loadNavTabsList();
 }
 
 // ---------- Thẻ "Hỗ trợ" (trang chủ) — quản lý ngay trong tab Cài đặt, dùng chung bảng quick_links ----------
@@ -2671,15 +2654,19 @@ const contentLists = {};
 function registerContentList(subKey, settingsKey, arrayField, meta){
     contentLists[subKey] = { settingsKey, arrayField, items: [], editingId: null, meta };
 }
+const DOC_BUCKET = 'tai-lieu';
+const DOC_ALLOWED_EXT = ['pdf','doc','docx'];
+const DOC_MAX_SIZE = 20 * 1024 * 1024; // 20MB
+
 registerContentList('doc_free', 'doc_content', 'free', {
     label:'Tài liệu miễn phí', icon:'fa-solid fa-gift', color:'green', defaultIcon:'fa-solid fa-file-lines',
     extraField:{ key:'size', label:'Dung lượng / định dạng', placeholder:'VD: PDF · 2.4MB' },
-    linkLabel:'Đường dẫn tải tài liệu', linkPlaceholder:'https://... (Google Drive, v.v.)'
+    upload:true, linkLabel:'File tài liệu (PDF hoặc Word)'
 });
 registerContentList('doc_paid', 'doc_content', 'paid', {
     label:'Tài liệu trả phí', icon:'fa-solid fa-lock', color:'amber', defaultIcon:'fa-solid fa-crown',
     extraField:{ key:'size', label:'Dung lượng / định dạng', placeholder:'VD: PDF · 5.1MB' },
-    linkLabel:'Đường dẫn tải tài liệu', linkPlaceholder:'https://...'
+    upload:true, linkLabel:'File tài liệu (PDF hoặc Word)'
 });
 registerContentList('tool_items', 'tool_content', 'items', {
     label:'Công cụ', icon:'fa-solid fa-toolbox', color:'indigo', defaultIcon:'fa-solid fa-toolbox',
@@ -2693,7 +2680,7 @@ registerContentList('product_items', 'product_content', 'items', {
 });
 
 const CONTENT_MANAGER_GROUPS = {
-    doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu miễn phí và trả phí hiển thị ở tab "Tài liệu" trên trang chủ.', subKeys:['doc_free','doc_paid'] },
+    doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu miễn phí và trả phí hiển thị ở tab "Tài liệu" trên trang chủ. Tải file PDF/Word lên trực tiếp, không cần link ngoài.', subKeys:['doc_free','doc_paid'] },
     tool:    { title:'Công cụ',   icon:'🧰',  hint:'Quản lý các thẻ công cụ hiển thị ở tab "Công cụ" trên trang chủ.', subKeys:['tool_items'] },
     product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ.', subKeys:['product_items'] }
 };
@@ -2736,7 +2723,17 @@ function contentBlockHtml(subKey){
                         <option value="ready">Sẵn sàng (mở khoá, bấm được)</option>
                     </select>` : ''}
                     <label>${escapeHtml(meta.linkLabel)}</label>
+                    ${meta.upload ? `
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <input type="file" id="cmFile_${subKey}" accept=".pdf,.doc,.docx" style="display:none;" onchange="onContentFileSelected('${subKey}')">
+                        <button type="button" class="side-add" onclick="document.getElementById('cmFile_${subKey}').click()">📎 Chọn file</button>
+                        <span class="hint-inline" id="cmFileName_${subKey}"></span>
+                    </div>
+                    <div class="hint" id="cmUploadHint_${subKey}" style="margin-top:4px;">Chỉ hỗ trợ .pdf, .doc, .docx — tối đa 20MB.</div>
+                    <input type="hidden" id="cmLink_${subKey}" value="">
+                    ` : `
                     <input id="cmLink_${subKey}" placeholder="${escapeHtml(meta.linkPlaceholder)}">
+                    `}
                     <div class="settings-preview">
                         <div class="prev-ico" id="cmPreviewIco_${subKey}"><i class="fa-solid fa-star"></i></div>
                         <div class="prev-text"><b id="cmPreviewTitle_${subKey}">Tiêu đề</b><span id="cmPreviewDesc_${subKey}">Mô tả</span></div>
@@ -2866,6 +2863,92 @@ function updateContentPreview(subKey){
     document.getElementById('cmPreviewDesc_' + subKey).innerText = desc;
 }
 
+function formatFileSize(bytes){
+    if (bytes >= 1024*1024) return (bytes/1024/1024).toFixed(1) + 'MB';
+    if (bytes >= 1024) return Math.round(bytes/1024) + 'KB';
+    return bytes + 'B';
+}
+function fileNameFromUrl(url){
+    if (!url) return '';
+    try{
+        const clean = url.split('?')[0];
+        const last = decodeURIComponent(clean.split('/').pop() || '');
+        return last.replace(/^\d+-/, ''); // bỏ tiền tố "1699999999-" (timestamp) khi hiển thị
+    }catch(e){ return url; }
+}
+function storagePathFromPublicUrl(url, bucket){
+    if (!url) return null;
+    const marker = '/object/public/' + bucket + '/';
+    const idx = url.indexOf(marker);
+    if (idx === -1) return null;
+    try{ return decodeURIComponent(url.slice(idx + marker.length)); }catch(e){ return url.slice(idx + marker.length); }
+}
+function resetContentUploadUI(subKey, existingLink){
+    const fileInput = document.getElementById('cmFile_' + subKey);
+    if (fileInput) fileInput.value = '';
+    const nameEl = document.getElementById('cmFileName_' + subKey);
+    const hintEl = document.getElementById('cmUploadHint_' + subKey);
+    if (nameEl) nameEl.textContent = existingLink ? ('📄 ' + fileNameFromUrl(existingLink) + ' (đang dùng)') : '';
+    if (hintEl){
+        hintEl.style.color = '';
+        hintEl.textContent = existingLink
+            ? 'Chọn file mới để thay thế file hiện tại (không bắt buộc).'
+            : 'Chỉ hỗ trợ .pdf, .doc, .docx — tối đa 20MB.';
+    }
+}
+async function onContentFileSelected(subKey){
+    const cfg = contentLists[subKey];
+    const fileInput = document.getElementById('cmFile_' + subKey);
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const nameEl = document.getElementById('cmFileName_' + subKey);
+    const hintEl = document.getElementById('cmUploadHint_' + subKey);
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+
+    if (!DOC_ALLOWED_EXT.includes(ext)){
+        showMsg('Chỉ hỗ trợ file PDF hoặc Word (.pdf, .doc, .docx).', 'err');
+        fileInput.value = '';
+        return;
+    }
+    if (file.size > DOC_MAX_SIZE){
+        showMsg('File quá lớn (tối đa 20MB).', 'err');
+        fileInput.value = '';
+        return;
+    }
+
+    if (hintEl){ hintEl.style.color = ''; hintEl.textContent = ''; }
+    if (nameEl) nameEl.textContent = '⏳ Đang tải lên...';
+
+    const oldLink = document.getElementById('cmLink_' + subKey).value;
+    const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const path = subKey + '/' + Date.now() + '-' + safeName;
+
+    const { error: upErr } = await sb.storage.from(DOC_BUCKET).upload(path, file, { upsert: false });
+    if (upErr){
+        if (nameEl) nameEl.textContent = '';
+        showMsg('Lỗi tải file lên: ' + upErr.message, 'err');
+        fileInput.value = '';
+        return;
+    }
+
+    const { data: pub } = sb.storage.from(DOC_BUCKET).getPublicUrl(path);
+    document.getElementById('cmLink_' + subKey).value = pub.publicUrl;
+    if (nameEl) nameEl.textContent = '📄 ' + file.name;
+    if (hintEl){ hintEl.style.color = 'var(--green)'; hintEl.textContent = '✔ Đã tải lên. Bấm "Lưu" để hoàn tất.'; }
+
+    // Tự điền "Dung lượng / định dạng" nếu người quản trị chưa nhập
+    const extraEl = document.getElementById('cmExtra_' + subKey);
+    if (extraEl && !extraEl.value.trim()) extraEl.value = ext.toUpperCase() + ' · ' + formatFileSize(file.size);
+    updateContentPreview(subKey);
+
+    // Xóa file cũ trên storage nếu đang thay thế (best-effort, không chặn UI)
+    if (oldLink){
+        const oldPath = storagePathFromPublicUrl(oldLink, DOC_BUCKET);
+        if (oldPath) sb.storage.from(DOC_BUCKET).remove([oldPath]).catch(()=>{});
+    }
+}
+
 function openContentForm(subKey){
     const cfg = contentLists[subKey];
     cfg.editingId = null;
@@ -2876,6 +2959,7 @@ function openContentForm(subKey){
     const extraEl = document.getElementById('cmExtra_' + subKey); if (extraEl) extraEl.value = '';
     const statusEl = document.getElementById('cmStatus_' + subKey); if (statusEl) statusEl.value = 'soon';
     document.getElementById('cmLink_' + subKey).value = '';
+    if (cfg.meta.upload) resetContentUploadUI(subKey, '');
     pickContentColor(subKey, cfg.meta.color || 'indigo');
     updateContentPreview(subKey);
     document.getElementById('cmForm_' + subKey).classList.add('show');
@@ -2899,6 +2983,7 @@ function editContentItem(subKey, id){
     const statusEl = document.getElementById('cmStatus_' + subKey);
     if (statusEl && cfg.meta.statusField) statusEl.value = item.status || 'soon';
     document.getElementById('cmLink_' + subKey).value = item.link || '';
+    if (cfg.meta.upload) resetContentUploadUI(subKey, item.link || '');
     pickContentColor(subKey, item.color || cfg.meta.color || 'indigo');
     updateContentPreview(subKey);
     document.getElementById('cmForm_' + subKey).classList.add('show');
@@ -2945,6 +3030,10 @@ function deleteContentItem(subKey, id){
         'Xóa ' + cfg.meta.label.toLowerCase() + '?',
         `Xóa "${title}"? Mục sẽ biến mất khỏi trang chủ ngay. Không thể hoàn tác.`,
         async () => {
+            if (cfg.meta.upload && item && item.link){
+                const path = storagePathFromPublicUrl(item.link, DOC_BUCKET);
+                if (path) sb.storage.from(DOC_BUCKET).remove([path]).catch(()=>{});
+            }
             cfg.items = cfg.items.filter(x => String(x.id) !== String(id));
             renderContentList(subKey);
             const err = await saveContentList(subKey);
@@ -2978,8 +3067,7 @@ const NAV_TABS_DEFAULT = [
 ];
 let navTabsState = [];
 
-async function showNavTabsManager(){
-    showAdminPanel('navTabsPanel', 'navTabsMgr');
+async function loadNavTabsList(){
     document.getElementById('navTabsMsg').innerText = '';
     const { data, error } = await sb.from('site_settings').select('*').eq('key', 'nav_tabs').single();
     if (error && error.code !== 'PGRST116') showMsg('Lỗi tải menu điều hướng: ' + error.message, 'err');
@@ -3056,7 +3144,7 @@ let currentSetKey = null;
 let currentSetPayload = null;
 
 const SETTINGS_META = {
-    home_hero: { title: 'Trang chủ — Khối giới thiệu (Hero)', hint: 'Nội dung khối lớn ở đầu trang chủ.' },
+    home_hero: { title: 'Trang chủ', hint: 'Khối giới thiệu (hero) ở đầu trang chủ, và các thẻ Truy cập nhanh bên dưới nó.' },
 };
 
 async function openSettingsPanel(key){
@@ -3071,6 +3159,8 @@ async function openSettingsPanel(key){
         if (el) el.classList.toggle('hidden', id !== 'settingsPanel');
     });
     document.getElementById('setSaveMsg').innerText = '';
+    closeQuickLinkForm();
+    loadQuickLinks();
 
     const meta = SETTINGS_META[key] || { title:'Cài đặt', hint:'' };
     document.getElementById('setFormTitle').innerText = meta.title;

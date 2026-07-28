@@ -1552,12 +1552,11 @@ async function loadQuickLinks(){
     renderQuickLinkList();
 }
 function quickLinkItemHtml(q){
-    const linkLabel = QL_TAB_LABELS[q.link] || q.link;
     return `
         <div class="side-item" data-id="${q.id}">
             <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
             <span class="prev-ico color-swatch ${q.color || 'indigo'}" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="${escapeHtml(q.icon || 'fa-solid fa-star')}"></i></span>
-            <span class="name">${escapeHtml(q.title)}<span class="hint-inline"> · ${escapeHtml(linkLabel)}</span></span>
+            <span class="name">${escapeHtml(q.title)}</span>
             <span class="right-cluster">
                 <span class="menu-wrap">
                     <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleQuickLinkMenu('${q.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
@@ -2657,6 +2656,7 @@ function registerContentList(subKey, settingsKey, arrayField, meta){
 const DOC_BUCKET = 'tai-lieu';
 const DOC_ALLOWED_EXT = ['pdf','doc','docx'];
 const DOC_MAX_SIZE = 20 * 1024 * 1024; // 20MB
+const DOC_IMAGE_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 registerContentList('doc_free', 'doc_content', 'free', {
     label:'Tài liệu miễn phí', icon:'fa-solid fa-gift', color:'green', defaultIcon:'fa-solid fa-file-lines',
@@ -2731,6 +2731,16 @@ function contentBlockHtml(subKey){
                     </div>
                     <div class="hint" id="cmUploadHint_${subKey}" style="margin-top:4px;">Chỉ hỗ trợ .pdf, .doc, .docx — tối đa 20MB.</div>
                     <input type="hidden" id="cmLink_${subKey}" value="">
+
+                    <label style="margin-top:10px;">Ảnh bìa (tuỳ chọn)</label>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <input type="file" id="cmImage_${subKey}" accept="image/*" style="display:none;" onchange="onContentImageSelected('${subKey}')">
+                        <button type="button" class="side-add" onclick="document.getElementById('cmImage_${subKey}').click()">🖼️ Chọn ảnh</button>
+                        <span class="hint-inline" id="cmImageName_${subKey}"></span>
+                        <button type="button" class="btn-mini-cancel" id="cmImageRemoveBtn_${subKey}" style="display:none;padding:4px 10px;" onclick="removeContentImage('${subKey}')">Xóa ảnh</button>
+                    </div>
+                    <div class="hint" style="margin-top:4px;">Hiện làm ảnh đại diện cho thẻ trên trang chủ thay vì icon. Không bắt buộc — tối đa 5MB.</div>
+                    <input type="hidden" id="cmImageUrl_${subKey}" value="">
                     ` : `
                     <input id="cmLink_${subKey}" placeholder="${escapeHtml(meta.linkPlaceholder)}">
                     `}
@@ -2785,10 +2795,13 @@ function contentItemRowHtml(subKey, item){
     } else if (cfg.extraField && item[cfg.extraField.key]){
         extraLabel = ' · ' + escapeHtml(item[cfg.extraField.key]);
     }
+    const thumbHtml = item.image
+        ? `<img src="${escapeHtml(item.image)}" style="width:26px;height:26px;min-width:26px;border-radius:8px;object-fit:cover;">`
+        : `<span class="prev-ico color-swatch ${color}" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="${escapeHtml(icon)}"></i></span>`;
     return `
         <div class="side-item" data-id="${item.id}">
             <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
-            <span class="prev-ico color-swatch ${color}" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="${escapeHtml(icon)}"></i></span>
+            ${thumbHtml}
             <span class="name">${escapeHtml(item.title || '(chưa đặt tên)')}<span class="hint-inline">${extraLabel}</span></span>
             <span class="right-cluster">
                 <span class="menu-wrap">
@@ -2883,7 +2896,7 @@ function storagePathFromPublicUrl(url, bucket){
     if (idx === -1) return null;
     try{ return decodeURIComponent(url.slice(idx + marker.length)); }catch(e){ return url.slice(idx + marker.length); }
 }
-function resetContentUploadUI(subKey, existingLink){
+function resetContentUploadUI(subKey, existingLink, existingImage){
     const fileInput = document.getElementById('cmFile_' + subKey);
     if (fileInput) fileInput.value = '';
     const nameEl = document.getElementById('cmFileName_' + subKey);
@@ -2894,6 +2907,72 @@ function resetContentUploadUI(subKey, existingLink){
         hintEl.textContent = existingLink
             ? 'Chọn file mới để thay thế file hiện tại (không bắt buộc).'
             : 'Chỉ hỗ trợ .pdf, .doc, .docx — tối đa 20MB.';
+    }
+
+    const imgInput = document.getElementById('cmImage_' + subKey);
+    if (imgInput) imgInput.value = '';
+    const imgUrlEl = document.getElementById('cmImageUrl_' + subKey);
+    if (imgUrlEl) imgUrlEl.value = existingImage || '';
+    const imgNameEl = document.getElementById('cmImageName_' + subKey);
+    if (imgNameEl) imgNameEl.textContent = existingImage ? ('🖼️ ' + fileNameFromUrl(existingImage) + ' (đang dùng)') : '';
+    const imgRemoveBtn = document.getElementById('cmImageRemoveBtn_' + subKey);
+    if (imgRemoveBtn) imgRemoveBtn.style.display = existingImage ? '' : 'none';
+}
+async function onContentImageSelected(subKey){
+    const imgInput = document.getElementById('cmImage_' + subKey);
+    const file = imgInput.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')){
+        showMsg('Vui lòng chọn một file ảnh.', 'err');
+        imgInput.value = '';
+        return;
+    }
+    if (file.size > DOC_IMAGE_MAX_SIZE){
+        showMsg('Ảnh quá lớn (tối đa 5MB).', 'err');
+        imgInput.value = '';
+        return;
+    }
+
+    const nameEl = document.getElementById('cmImageName_' + subKey);
+    if (nameEl) nameEl.textContent = '⏳ Đang tải lên...';
+
+    const oldImage = document.getElementById('cmImageUrl_' + subKey).value;
+    const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const path = subKey + '-covers/' + Date.now() + '-' + safeName;
+
+    const { error: upErr } = await sb.storage.from(DOC_BUCKET).upload(path, file, { upsert: false });
+    if (upErr){
+        if (nameEl) nameEl.textContent = '';
+        showMsg('Lỗi tải ảnh lên: ' + upErr.message, 'err');
+        imgInput.value = '';
+        return;
+    }
+
+    const { data: pub } = sb.storage.from(DOC_BUCKET).getPublicUrl(path);
+    document.getElementById('cmImageUrl_' + subKey).value = pub.publicUrl;
+    if (nameEl) nameEl.textContent = '🖼️ ' + file.name;
+    const removeBtn = document.getElementById('cmImageRemoveBtn_' + subKey);
+    if (removeBtn) removeBtn.style.display = '';
+
+    if (oldImage){
+        const oldPath = storagePathFromPublicUrl(oldImage, DOC_BUCKET);
+        if (oldPath) sb.storage.from(DOC_BUCKET).remove([oldPath]).catch(()=>{});
+    }
+}
+function removeContentImage(subKey){
+    const imgUrlEl = document.getElementById('cmImageUrl_' + subKey);
+    const oldImage = imgUrlEl ? imgUrlEl.value : '';
+    if (imgUrlEl) imgUrlEl.value = '';
+    const imgInput = document.getElementById('cmImage_' + subKey);
+    if (imgInput) imgInput.value = '';
+    const nameEl = document.getElementById('cmImageName_' + subKey);
+    if (nameEl) nameEl.textContent = '';
+    const removeBtn = document.getElementById('cmImageRemoveBtn_' + subKey);
+    if (removeBtn) removeBtn.style.display = 'none';
+    if (oldImage){
+        const oldPath = storagePathFromPublicUrl(oldImage, DOC_BUCKET);
+        if (oldPath) sb.storage.from(DOC_BUCKET).remove([oldPath]).catch(()=>{});
     }
 }
 async function onContentFileSelected(subKey){
@@ -2959,7 +3038,7 @@ function openContentForm(subKey){
     const extraEl = document.getElementById('cmExtra_' + subKey); if (extraEl) extraEl.value = '';
     const statusEl = document.getElementById('cmStatus_' + subKey); if (statusEl) statusEl.value = 'soon';
     document.getElementById('cmLink_' + subKey).value = '';
-    if (cfg.meta.upload) resetContentUploadUI(subKey, '');
+    if (cfg.meta.upload) resetContentUploadUI(subKey, '', '');
     pickContentColor(subKey, cfg.meta.color || 'indigo');
     updateContentPreview(subKey);
     document.getElementById('cmForm_' + subKey).classList.add('show');
@@ -2983,7 +3062,7 @@ function editContentItem(subKey, id){
     const statusEl = document.getElementById('cmStatus_' + subKey);
     if (statusEl && cfg.meta.statusField) statusEl.value = item.status || 'soon';
     document.getElementById('cmLink_' + subKey).value = item.link || '';
-    if (cfg.meta.upload) resetContentUploadUI(subKey, item.link || '');
+    if (cfg.meta.upload) resetContentUploadUI(subKey, item.link || '', item.image || '');
     pickContentColor(subKey, item.color || cfg.meta.color || 'indigo');
     updateContentPreview(subKey);
     document.getElementById('cmForm_' + subKey).classList.add('show');
@@ -3000,6 +3079,10 @@ async function saveContentItem(subKey){
     if (!title) return showMsg('Nhập tiêu đề.', 'err');
 
     const item = { id: cfg.editingId || ('i' + Date.now().toString(36) + Math.random().toString(36).slice(2,6)), icon, color, title, desc, link };
+    if (cfg.meta.upload){
+        const imgUrlEl = document.getElementById('cmImageUrl_' + subKey);
+        item.image = imgUrlEl ? imgUrlEl.value.trim() : '';
+    }
     if (cfg.meta.extraField){
         const extraEl = document.getElementById('cmExtra_' + subKey);
         item[cfg.meta.extraField.key] = extraEl ? extraEl.value.trim() : '';
@@ -3033,6 +3116,10 @@ function deleteContentItem(subKey, id){
             if (cfg.meta.upload && item && item.link){
                 const path = storagePathFromPublicUrl(item.link, DOC_BUCKET);
                 if (path) sb.storage.from(DOC_BUCKET).remove([path]).catch(()=>{});
+            }
+            if (cfg.meta.upload && item && item.image){
+                const imgPath = storagePathFromPublicUrl(item.image, DOC_BUCKET);
+                if (imgPath) sb.storage.from(DOC_BUCKET).remove([imgPath]).catch(()=>{});
             }
             cfg.items = cfg.items.filter(x => String(x.id) !== String(id));
             renderContentList(subKey);

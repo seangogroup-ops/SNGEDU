@@ -884,10 +884,13 @@
     function docItemCardHtml(item, isPaid){
         const href = item.link || '#';
         const sizeBadge = item.size ? `<div class="badge-row"><i class="fa-solid fa-file-lines"></i> ${escapeHtmlHome(item.size)}</div>` : '';
+        const topHtml = item.image
+            ? `<img src="${escapeHtmlHome(item.image)}" alt="" style="width:100%;height:110px;object-fit:cover;border-radius:12px;margin-bottom:10px;">`
+            : `<div class="card-top"><div class="icon-chip" style="background:${isPaid ? 'var(--amber-bg)' : 'var(--green-bg)'}; color:${isPaid ? 'var(--amber)' : 'var(--green)'}"><i class="fa-solid ${isPaid ? 'fa-lock' : 'fa-file-lines'}"></i></div></div>`;
         return `
             <a class="card" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
                 ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
-                <div class="card-top"><div class="icon-chip" style="background:${isPaid ? 'var(--amber-bg)' : 'var(--green-bg)'}; color:${isPaid ? 'var(--amber)' : 'var(--green)'}"><i class="fa-solid ${isPaid ? 'fa-lock' : 'fa-file-lines'}"></i></div></div>
+                ${topHtml}
                 <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
                 ${sizeBadge}
                 <div class="status-text" style="color:${isPaid ? 'var(--amber)' : 'var(--green)'}">${escapeHtmlHome(item.desc || (isPaid ? 'Tài liệu trả phí' : 'Tài liệu miễn phí'))}</div>

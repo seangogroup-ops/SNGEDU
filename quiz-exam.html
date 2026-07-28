@@ -177,6 +177,15 @@ const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ---------------- Bắt buộc đăng nhập mới xem được trang này ----------------
+(async function requireLogin(){
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session){
+        const next = location.pathname + location.search;
+        location.href = 'account/login.html?next=' + encodeURIComponent(next);
+    }
+})();
+
 const params = new URLSearchParams(location.search);
 const subjectId = params.get('subject') || params.get('subject_id') || params.get('mon');
 

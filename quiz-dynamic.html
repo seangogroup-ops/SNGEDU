@@ -194,6 +194,15 @@
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // ---------------- Bắt buộc đăng nhập mới xem được trang này ----------------
+    (async function requireLogin(){
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session){
+            const next = location.pathname + location.search;
+            location.href = 'account/login.html?next=' + encodeURIComponent(next);
+        }
+    })();
+
     // Lấy subject + chapter từ URL, vd: quiz-dynamic.html?subject=KTCT&chapter=1-40
     const params = new URLSearchParams(location.search);
     const subjectId = params.get('subject');

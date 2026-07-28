@@ -690,9 +690,8 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ---------------- ĐĂNG NHẬP / ĐĂNG KÝ — chỉ chặn ở Trắc nghiệm, Tài liệu, Công cụ, Sản phẩm ----------------
-    // Trang chủ và Hỗ trợ luôn xem tự do, không cần đăng nhập.
-    const GATED_TABS = ['quiz', 'doc', 'tool', 'product'];
+    // ---------------- ĐĂNG NHẬP / ĐĂNG KÝ — chặn TẤT CẢ các tab, phải đăng nhập mới xem được bất kỳ mục nào ----------------
+    const GATED_TABS = ['home', 'quiz', 'doc', 'tool', 'product', 'support'];
     let currentSession = null;
 
     function loginUrl(nextKey){

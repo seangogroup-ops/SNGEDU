@@ -663,6 +663,9 @@ textarea{resize:vertical;}
                 <div class="side-item settings-item" id="nav_product" onclick="showContentManager('product')">
                     <span class="set-ico">🛍️</span><span class="name">Sản phẩm</span>
                 </div>
+                <div class="side-item settings-item" id="navAccounts" onclick="showAccountsManager()">
+                    <span class="set-ico">👤</span><span class="name">Tài khoản</span>
+                </div>
                 <div class="side-item settings-item" id="navGeneralSettings" onclick="showGeneralSettings()">
                     <span class="set-ico">⚙️</span><span class="name">Cài đặt</span>
                 </div>
@@ -760,6 +763,20 @@ textarea{resize:vertical;}
         </div>
 
         <!-- ================= QUẢN LÝ NỘI DUNG: TÀI LIỆU / CÔNG CỤ / SẢN PHẨM ================= -->
+        <!-- ================= QUẢN LÝ TÀI KHOẢN (đăng ký từ account/login.html) ================= -->
+        <div id="accountsPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>👤 Tài khoản</h2>
+                <p class="hint">Danh sách người dùng đã đăng ký qua trang đăng nhập. Xoá, khoá đăng nhập, đặt lại mật khẩu hộ hoặc sửa tên hiển thị.</p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+                <input id="acctSearch" placeholder="Tìm theo email hoặc tên..." style="max-width:280px;" oninput="renderAccountsList()">
+                <button class="side-add" onclick="loadAccountsList()">↻ Tải lại</button>
+                <span class="hint" id="acctCount" style="margin:0;"></span>
+            </div>
+            <div id="acctListWrap" class="side-list subj-mgr-list" style="max-height:none;"></div>
+        </div>
+
         <div id="contentManagerPanel" class="hidden">
             <div class="subj-mgr-head">
                 <h2><span id="cmHeaderIcon">📁</span> <span id="cmHeaderTitle">Tài liệu</span></h2>
@@ -1121,7 +1138,7 @@ function showAdmin(email){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel'];
+const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -3225,6 +3242,154 @@ async function saveNavTabs(){
     }
 }
 enableDragReorder('navTabsList', '.side-item', el => el.dataset.id, null, reorderNavTabs);
+
+// ============================================================================
+// QUẢN LÝ TÀI KHOẢN — gọi Edge Function "admin-users" (giữ service_role key an toàn phía server)
+// ============================================================================
+const EDGE_FUNCTION_URL = SUPABASE_URL + '/functions/v1/admin-users';
+let accountsCache = [];
+
+async function callAdminUsersFn(payload){
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { showMsg('Phiên đăng nhập admin đã hết hạn, hãy đăng nhập lại.', 'err'); return { error: 'no session' }; }
+    try{
+        const res = await fetch(EDGE_FUNCTION_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + session.access_token,
+                'apikey': SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify(payload)
+        });
+        const body = await res.json();
+        if (!res.ok) return { error: body.error || ('Lỗi HTTP ' + res.status) };
+        return body;
+    }catch(e){
+        return { error: 'Không gọi được server (kiểm tra Edge Function đã deploy chưa): ' + e.message };
+    }
+}
+
+async function showAccountsManager(){
+    showAdminPanel('accountsPanel', 'navAccounts');
+    document.getElementById('acctSearch').value = '';
+    await loadAccountsList();
+}
+
+async function loadAccountsList(){
+    document.getElementById('acctListWrap').innerHTML = `<div class="empty-state" style="padding:20px;">Đang tải...</div>`;
+    const result = await callAdminUsersFn({ action:'list' });
+    if (result.error){
+        document.getElementById('acctListWrap').innerHTML = `<div class="empty-state" style="padding:20px;color:var(--red);">${escapeHtml(result.error)}</div>`;
+        document.getElementById('acctCount').innerText = '';
+        return;
+    }
+    accountsCache = result.users || [];
+    accountsCache.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    document.getElementById('acctCount').innerText = accountsCache.length + ' tài khoản';
+    renderAccountsList();
+}
+
+function fmtDate(iso){
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' });
+}
+
+function renderAccountsList(){
+    const q = (document.getElementById('acctSearch').value || '').trim().toLowerCase();
+    const list = accountsCache.filter(u =>
+        !q || (u.email || '').toLowerCase().includes(q) || (u.full_name || '').toLowerCase().includes(q)
+    );
+    const wrap = document.getElementById('acctListWrap');
+    if (!list.length){
+        wrap.innerHTML = `<div class="empty-state" style="padding:20px;">Không có tài khoản nào khớp.</div>`;
+        return;
+    }
+    wrap.innerHTML = list.map(u => {
+        const isBanned = u.banned_until && new Date(u.banned_until) > new Date();
+        const initial = (u.email || 'U')[0].toUpperCase();
+        return `
+        <div class="side-item" data-id="${u.id}" style="cursor:default;">
+            <span class="prev-ico color-swatch ${isBanned ? 'red' : 'indigo'}" style="width:32px;height:32px;min-width:32px;font-size:.8rem;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;color:#fff;font-weight:700;">${escapeHtml(initial)}</span>
+            <span class="name" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;">
+                <b>${escapeHtml(u.full_name || '(chưa đặt tên)')}</b>
+                <span class="hint-inline" style="margin:0;">${escapeHtml(u.email || '')} · Đăng ký ${fmtDate(u.created_at)}${isBanned ? ' · <span style=\"color:var(--red)\">Đã khoá</span>' : ''}</span>
+            </span>
+            <span class="right-cluster">
+                <span class="menu-wrap">
+                    <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleAcctMenu('${u.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+                    <div class="menu-drop hidden" id="acctmenu-${u.id}">
+                        <button onclick="event.stopPropagation(); closeAllAcctMenus(); renameAccount('${u.id}')">✏️ Đổi tên hiển thị</button>
+                        <button onclick="event.stopPropagation(); closeAllAcctMenus(); resetAccountPassword('${u.id}')">🔑 Đặt lại mật khẩu</button>
+                        <button onclick="event.stopPropagation(); closeAllAcctMenus(); toggleBanAccount('${u.id}', ${!isBanned})">${isBanned ? '🔓 Mở khoá đăng nhập' : '🔒 Khoá đăng nhập'}</button>
+                        <button onclick="event.stopPropagation(); closeAllAcctMenus(); deleteAccount('${u.id}')">🗑️ Xóa tài khoản</button>
+                    </div>
+                </span>
+            </span>
+        </div>`;
+    }).join('');
+}
+
+function toggleAcctMenu(id, btn){
+    const menu = document.getElementById('acctmenu-' + id);
+    const wasHidden = menu.classList.contains('hidden');
+    closeAllAcctMenus();
+    if (wasHidden && btn){
+        const rect = btn.getBoundingClientRect();
+        menu.style.top = (rect.bottom + 4) + 'px';
+        menu.style.left = 'auto';
+        menu.style.right = (window.innerWidth - rect.right) + 'px';
+        menu.classList.remove('hidden');
+    }
+}
+function closeAllAcctMenus(){
+    document.querySelectorAll('[id^="acctmenu-"]').forEach(el => el.classList.add('hidden'));
+}
+document.addEventListener('click', () => closeAllAcctMenus());
+
+async function renameAccount(userId){
+    const u = accountsCache.find(x => x.id === userId);
+    const name = prompt('Tên hiển thị mới:', u ? u.full_name : '');
+    if (name === null) return;
+    const result = await callAdminUsersFn({ action:'update_name', userId, fullName: name.trim() });
+    if (result.error) return showMsg('Lỗi: ' + result.error, 'err');
+    showMsg('Đã cập nhật tên hiển thị.', 'ok');
+    loadAccountsList();
+}
+async function resetAccountPassword(userId){
+    const pass = prompt('Nhập mật khẩu mới cho tài khoản này (tối thiểu 6 ký tự):');
+    if (pass === null) return;
+    if (pass.length < 6) return showMsg('Mật khẩu mới phải từ 6 ký tự.', 'err');
+    const result = await callAdminUsersFn({ action:'reset_password', userId, newPassword: pass });
+    if (result.error) return showMsg('Lỗi: ' + result.error, 'err');
+    showMsg('Đã đặt lại mật khẩu.', 'ok');
+}
+function toggleBanAccount(userId, banned){
+    showConfirm(
+        banned ? 'Khoá đăng nhập?' : 'Mở khoá đăng nhập?',
+        banned ? 'Tài khoản này sẽ không đăng nhập được nữa cho tới khi bạn mở khoá lại.' : 'Tài khoản này sẽ đăng nhập lại được bình thường.',
+        async () => {
+            const result = await callAdminUsersFn({ action:'ban', userId, banned });
+            if (result.error) return showMsg('Lỗi: ' + result.error, 'err');
+            showMsg(banned ? 'Đã khoá tài khoản.' : 'Đã mở khoá tài khoản.', 'ok');
+            loadAccountsList();
+        }
+    );
+}
+function deleteAccount(userId){
+    const u = accountsCache.find(x => x.id === userId);
+    showConfirm(
+        'Xóa tài khoản?',
+        `Xóa vĩnh viễn tài khoản "${u ? u.email : ''}"? Không thể hoàn tác.`,
+        async () => {
+            const result = await callAdminUsersFn({ action:'delete', userId });
+            if (result.error) return showMsg('Lỗi: ' + result.error, 'err');
+            showMsg('Đã xóa tài khoản.', 'ok');
+            loadAccountsList();
+        }
+    );
+}
 
 // ---------- CÀI ĐẶT TRANG CHỦ (site_settings) ----------
 let currentSetKey = null;

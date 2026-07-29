@@ -115,10 +115,16 @@
     .side-user:hover{ background:#f2f3f8; }
     .side-avatar{
         width:36px; height:36px; border-radius:50%;
-        background:linear-gradient(135deg, #ffb37a, #ff7a9c);
+        background:linear-gradient(135deg, var(--brand), #7c5cfc);
         display:flex; align-items:center; justify-content:center;
         color:#fff; font-weight:800; font-size:.85rem; flex-shrink:0;
+        box-shadow:0 0 0 2px var(--card), 0 0 0 3px rgba(79,107,255,.35);
     }
+    .side-avatar.is-guest, .avatar-btn.is-guest{
+        background:linear-gradient(135deg, #9aa0b1, #6f7488);
+        box-shadow:0 0 0 2px var(--card), 0 0 0 3px rgba(154,160,177,.3);
+    }
+    .side-avatar .avt-content, .avatar-btn .avt-content{ display:flex; align-items:center; justify-content:center; width:100%; height:100%; }
     .side-user .u-name{ font-size:.86rem; font-weight:700; line-height:1.3; }
     .side-user .u-sub{ font-size:.74rem; color:var(--ink-mute); }
 
@@ -135,12 +141,13 @@
     .topbar-right{ display:flex; align-items:center; gap:14px; }
     .topbar .avatar-btn{
         width:38px; height:38px; border-radius:50%;
-        background:linear-gradient(135deg, #ffb37a, #ff7a9c);
+        background:linear-gradient(135deg, var(--brand), #7c5cfc);
         display:flex; align-items:center; justify-content:center;
         color:#fff; font-weight:800; font-size:.88rem; cursor:pointer; flex-shrink:0;
         border:2px solid var(--card); box-shadow:0 0 0 1px var(--line);
-        position:relative;
+        position:relative; transition:transform .18s ease, box-shadow .18s ease;
     }
+    .topbar .avatar-btn:hover{ transform:translateY(-1px); box-shadow:0 0 0 1px var(--brand); }
     .avatar-btn .online-dot, .side-avatar .online-dot{
         position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:50%;
         background:var(--green); border:2px solid var(--card);
@@ -164,6 +171,85 @@
         font-weight:600; font-size:.82rem;
         padding:8px 14px; border-radius:999px;
     }
+
+    /* ---------------- account modal (thông tin / lịch sử / đăng xuất) ---------------- */
+    .acc-overlay{
+        position:fixed; inset:0; background:rgba(10,11,18,.5); backdrop-filter:blur(2px);
+        display:none; align-items:center; justify-content:center; z-index:200; padding:16px;
+    }
+    .acc-overlay.show{ display:flex; }
+    .acc-modal{
+        width:100%; max-width:380px; background:var(--card); border:1px solid var(--line);
+        border-radius:20px; box-shadow:var(--shadow-hov); overflow:hidden;
+        animation:accPop .18s ease;
+    }
+    @keyframes accPop{ from{ opacity:0; transform:scale(.96) translateY(6px); } to{ opacity:1; transform:none; } }
+    .acc-modal-head{
+        display:flex; align-items:center; gap:12px; padding:20px 20px 16px;
+        border-bottom:1px solid var(--line); position:relative;
+    }
+    .acc-modal-avatar{
+        width:52px; height:52px; border-radius:50%; flex-shrink:0;
+        background:linear-gradient(135deg, var(--brand), #7c5cfc);
+        display:flex; align-items:center; justify-content:center;
+        color:#fff; font-weight:800; font-size:1.2rem;
+    }
+    .acc-modal-name{ font-weight:800; font-size:1rem; line-height:1.3; word-break:break-word; }
+    .acc-modal-sub{ font-size:.78rem; color:var(--ink-mute); margin-top:2px; }
+    .acc-modal-close{
+        position:absolute; top:14px; right:14px; width:28px; height:28px; border-radius:50%;
+        border:none; background:transparent; color:var(--ink-mute); cursor:pointer;
+        display:flex; align-items:center; justify-content:center; font-size:.85rem;
+        transition:background .15s ease, color .15s ease;
+    }
+    .acc-modal-close:hover{ background:var(--brand-bg); color:var(--brand); }
+    .acc-tabs{ display:flex; gap:4px; padding:12px 16px 0; }
+    .acc-tab{
+        flex:1; border:none; background:transparent; padding:9px 10px; border-radius:10px;
+        font-family:inherit; font-weight:700; font-size:.82rem; color:var(--ink-mute); cursor:pointer;
+        transition:background .15s ease, color .15s ease;
+    }
+    .acc-tab:hover{ color:var(--ink-soft); }
+    .acc-tab.active{ background:var(--brand-bg); color:var(--brand); }
+    .acc-body{ padding:16px 20px 4px; min-height:120px; max-height:320px; overflow-y:auto; }
+    .acc-panel{ display:none; }
+    .acc-panel.active{ display:block; }
+    .acc-info-row{
+        display:flex; align-items:center; justify-content:space-between; gap:10px;
+        padding:11px 0; border-bottom:1px solid var(--line); font-size:.85rem;
+    }
+    .acc-info-row:last-child{ border-bottom:none; }
+    .acc-info-row .label{ color:var(--ink-mute); font-weight:600; }
+    .acc-info-row .value{ color:var(--ink); font-weight:700; text-align:right; word-break:break-word; }
+    .acc-history-item{
+        display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);
+    }
+    .acc-history-item:last-child{ border-bottom:none; }
+    .acc-history-icon{
+        width:34px; height:34px; border-radius:10px; flex-shrink:0;
+        background:var(--brand-bg); color:var(--brand);
+        display:flex; align-items:center; justify-content:center; font-size:.85rem;
+    }
+    .acc-history-title{ font-size:.84rem; font-weight:700; }
+    .acc-history-meta{ font-size:.74rem; color:var(--ink-mute); margin-top:1px; }
+    .acc-history-score{ margin-left:auto; font-weight:800; font-size:.9rem; color:var(--brand); flex-shrink:0; }
+    .acc-empty{
+        display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px;
+        padding:26px 10px 20px; color:var(--ink-mute);
+    }
+    .acc-empty i{ font-size:1.6rem; color:var(--ink-mute); opacity:.6; }
+    .acc-empty p{ font-size:.82rem; line-height:1.5; }
+    .acc-loading{ text-align:center; padding:26px 10px; color:var(--ink-mute); font-size:.85rem; }
+    .acc-foot{ padding:14px 20px 20px; }
+    .acc-logout-btn{
+        width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+        background:#fdeeee; color:#e5484d; border:none; border-radius:12px;
+        padding:12px; font-family:inherit; font-weight:700; font-size:.86rem; cursor:pointer;
+        transition:background .15s ease;
+    }
+    html[data-theme="dark"] .acc-logout-btn{ background:#3a2020; color:#ff7875; }
+    .acc-logout-btn:hover{ background:#fadadd; }
+    html[data-theme="dark"] .acc-logout-btn:hover{ background:#472525; }
 
     .wrap{ max-width:1180px; width:100%; margin:0 auto; padding:36px 28px 60px; flex:1; display:flex; flex-direction:column; }
 
@@ -438,7 +524,7 @@
         </nav>
         <div class="side-foot">
             <div class="side-user">
-                <div class="side-avatar">K<span class="online-dot"></span></div>
+                <div class="side-avatar is-guest"><span class="avt-content"><i class="fa-solid fa-user"></i></span><span class="online-dot"></span></div>
                 <div>
                     <div class="u-name">Khách</div>
                     <div class="u-sub">Nhấn để xem hồ sơ</div>
@@ -457,7 +543,7 @@
                     <i class="fa-solid fa-moon"></i>
                     <i class="fa-solid fa-sun"></i>
                 </button>
-                <div class="avatar-btn">K<span class="online-dot"></span></div>
+                <div class="avatar-btn is-guest"><span class="avt-content"><i class="fa-solid fa-user"></i></span><span class="online-dot"></span></div>
             </div>
         </div>
 
@@ -637,6 +723,44 @@
     <button class="toast-btn" id="toastBtn" type="button">Quan tâm</button>
 </div>
 
+<div class="acc-overlay" id="accOverlay">
+    <div class="acc-modal" role="dialog" aria-modal="true" aria-label="Tài khoản">
+        <div class="acc-modal-head">
+            <div class="acc-modal-avatar" id="accAvatar">K</div>
+            <div>
+                <div class="acc-modal-name" id="accName">Khách</div>
+                <div class="acc-modal-sub" id="accSub"></div>
+            </div>
+            <button class="acc-modal-close" id="accClose" type="button" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="acc-tabs">
+            <button class="acc-tab active" data-acctab="info" type="button">Thông tin</button>
+            <button class="acc-tab" data-acctab="history" type="button">Lịch sử</button>
+        </div>
+        <div class="acc-body">
+            <div class="acc-panel active" id="accPanel-info">
+                <div class="acc-info-row"><span class="label">Email</span><span class="value" id="accInfoEmail">—</span></div>
+                <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="accInfoName">—</span></div>
+                <div class="acc-info-row"><span class="label">Tham gia từ</span><span class="value" id="accInfoJoined">—</span></div>
+                <div class="acc-info-row"><span class="label">Trạng thái</span><span class="value" style="color:var(--green)">Đã xác thực</span></div>
+            </div>
+            <div class="acc-panel" id="accPanel-history">
+                <div class="acc-loading" id="accHistoryLoading">Đang tải lịch sử...</div>
+                <div id="accHistoryList" style="display:none"></div>
+                <div class="acc-empty" id="accHistoryEmpty" style="display:none">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <p>Chưa có lịch sử ôn tập nào.<br>Hãy bắt đầu làm trắc nghiệm để lưu lại tiến trình của bạn!</p>
+                </div>
+            </div>
+        </div>
+        <div class="acc-foot">
+            <button class="acc-logout-btn" id="accLogoutBtn" type="button">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     const toast = document.getElementById('toast');
     const toastMsg = document.getElementById('toastMsg');
@@ -711,28 +835,127 @@
             const email = currentSession.user.email || '';
             const initial = (email.trim()[0] || 'U').toUpperCase();
             sideName.textContent = email.split('@')[0];
-            sideSub.textContent = 'Nhấn để đăng xuất';
-            if (sideAvatar) sideAvatar.firstChild.textContent = initial;
-            if (topAvatar) topAvatar.firstChild.textContent = initial;
+            sideSub.textContent = 'Nhấn để xem hồ sơ';
+            [sideAvatar, topAvatar].forEach(el=>{
+                if (!el) return;
+                el.classList.remove('is-guest');
+                const c = el.querySelector('.avt-content');
+                if (c) c.textContent = initial;
+            });
         } else {
             sideName.textContent = 'Khách';
             sideSub.textContent = 'Nhấn để đăng nhập';
-            if (sideAvatar) sideAvatar.firstChild.textContent = 'K';
-            if (topAvatar) topAvatar.firstChild.textContent = 'K';
+            [sideAvatar, topAvatar].forEach(el=>{
+                if (!el) return;
+                el.classList.add('is-guest');
+                const c = el.querySelector('.avt-content');
+                if (c) c.innerHTML = '<i class="fa-solid fa-user"></i>';
+            });
         }
     }
 
-    async function handleAccountClick(){
+    function handleAccountClick(){
         if (currentSession){
-            if (confirm('Đăng xuất khỏi tài khoản ' + (currentSession.user.email || '') + '?')){
-                await sb.auth.signOut();
-                currentSession = null;
-                updateAccountUI();
-            }
+            openAccountModal();
         } else {
             location.href = loginUrl(currentTabKey);
         }
     }
+
+    // ---------------- Bảng thông tin tài khoản (thông tin / lịch sử / đăng xuất) ----------------
+    const accOverlay = document.getElementById('accOverlay');
+    const accClose = document.getElementById('accClose');
+    const accLogoutBtn = document.getElementById('accLogoutBtn');
+    let accHistoryLoaded = false;
+
+    function openAccountModal(){
+        if (!currentSession || !accOverlay) return;
+        const user = currentSession.user;
+        const email = user.email || '';
+        const initial = (email.trim()[0] || 'U').toUpperCase();
+        const displayName = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || email.split('@')[0];
+        const joined = user.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : '—';
+
+        document.getElementById('accAvatar').textContent = initial;
+        document.getElementById('accName').textContent = displayName;
+        document.getElementById('accSub').textContent = email;
+        document.getElementById('accInfoEmail').textContent = email || '—';
+        document.getElementById('accInfoName').textContent = displayName || '—';
+        document.getElementById('accInfoJoined').textContent = joined;
+
+        switchAccTab('info');
+        accOverlay.classList.add('show');
+        accHistoryLoaded = false;
+    }
+
+    function closeAccountModal(){
+        if (accOverlay) accOverlay.classList.remove('show');
+    }
+
+    function switchAccTab(tab){
+        document.querySelectorAll('.acc-tab').forEach(b=> b.classList.toggle('active', b.dataset.acctab === tab));
+        document.querySelectorAll('.acc-panel').forEach(p=> p.classList.toggle('active', p.id === 'accPanel-' + tab));
+        if (tab === 'history' && !accHistoryLoaded){
+            loadAccountHistory();
+        }
+    }
+
+    async function loadAccountHistory(){
+        accHistoryLoaded = true;
+        const loadingEl = document.getElementById('accHistoryLoading');
+        const listEl = document.getElementById('accHistoryList');
+        const emptyEl = document.getElementById('accHistoryEmpty');
+        loadingEl.style.display = 'block';
+        listEl.style.display = 'none';
+        emptyEl.style.display = 'none';
+
+        let rows = [];
+        try{
+            // Bảng lịch sử làm bài (nếu đã được thiết lập ở phía Supabase); nếu chưa có, sẽ rơi vào trạng thái rỗng bên dưới.
+            const { data, error } = await sb
+                .from('quiz_history')
+                .select('*')
+                .eq('user_id', currentSession.user.id)
+                .order('created_at', { ascending:false })
+                .limit(20);
+            if (!error && Array.isArray(data)) rows = data;
+        }catch(e){ rows = []; }
+
+        loadingEl.style.display = 'none';
+        if (!rows.length){
+            emptyEl.style.display = 'flex';
+            return;
+        }
+        listEl.style.display = 'block';
+        listEl.innerHTML = rows.map(r=>{
+            const title = r.subject_name || r.subject || 'Bài trắc nghiệm';
+            const date = r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '';
+            const score = (r.score !== undefined && r.score !== null) ? r.score : '';
+            return `<div class="acc-history-item">
+                <div class="acc-history-icon"><i class="fa-solid fa-list-check"></i></div>
+                <div>
+                    <div class="acc-history-title">${title}</div>
+                    <div class="acc-history-meta">${date}</div>
+                </div>
+                <div class="acc-history-score">${score}</div>
+            </div>`;
+        }).join('');
+    }
+
+    document.querySelectorAll('.acc-tab').forEach(btn=>{
+        btn.addEventListener('click', ()=> switchAccTab(btn.dataset.acctab));
+    });
+    if (accClose) accClose.addEventListener('click', closeAccountModal);
+    if (accOverlay) accOverlay.addEventListener('click', e=>{ if (e.target === accOverlay) closeAccountModal(); });
+    document.addEventListener('keydown', e=>{ if (e.key === 'Escape') closeAccountModal(); });
+    if (accLogoutBtn) accLogoutBtn.addEventListener('click', async ()=>{
+        accLogoutBtn.disabled = true;
+        await sb.auth.signOut();
+        currentSession = null;
+        updateAccountUI();
+        closeAccountModal();
+        accLogoutBtn.disabled = false;
+    });
 
     let currentTabKey = 'home';
 

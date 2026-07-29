@@ -3,129 +3,319 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+    try{
+        var savedTheme = localStorage.getItem('sng-theme');
+        if(savedTheme === 'dark' || savedTheme === 'light'){
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }else{
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    }catch(e){}
+</script>
 <title>Đăng nhập · SNG EDU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
     :root{
-        --bg:#0b0b17; --card:#12121f; --border:#23233a; --text:#e9e9f5; --muted:#8a8aa3;
-        --brand:#6a63f6; --brand-bg:#211f45; --red:#ef4444; --green:#16a34a;
+        --bg:        #eef2f9;
+        --card:      #ffffff;
+        --line:      #dde3ef;
+        --ink:       #131b2e;
+        --ink-soft:  #4d5673;
+        --ink-mute:  #8791a8;
+        --green:     #17b26a;
+        --green-bg:  #e7f9f0;
+        --red:       #e5484d;
+        --red-bg:    #fdeeee;
+        --brand:     #0b2e6b;
+        --brand2:    #14509e;
+        --brand-bg:  #e6edfb;
+        --shadow:    0 1px 2px rgba(20,30,60,.05), 0 8px 24px -12px rgba(20,30,60,.12);
+        --shadow-hov:0 4px 10px rgba(20,30,60,.06), 0 20px 40px -16px rgba(20,30,60,.2);
     }
-    *{box-sizing:border-box;}
+    html[data-theme="dark"]{
+        --bg:        #14151c;
+        --card:      #1c1e28;
+        --line:      #2c2f3c;
+        --ink:       #f0f1f6;
+        --ink-soft:  #a2a7ba;
+        --ink-mute:  #6f7488;
+        --green:     #2ed392;
+        --green-bg:  #163a2c;
+        --red:       #ff7875;
+        --red-bg:    #3a2020;
+        --brand:     #2c62b0;
+        --brand2:    #4a86d6;
+        --brand-bg:  #17263f;
+        --shadow:    0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
+        --shadow-hov:0 4px 10px rgba(0,0,0,.25), 0 20px 40px -16px rgba(0,0,0,.6);
+    }
+    *{ box-sizing:border-box; }
+    html{ transition:background .25s ease; }
     body{
-        margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-        background:var(--bg); color:var(--text);
-        font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-        padding:20px;
+        margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+        font-family:'Be Vietnam Pro', sans-serif;
+        display:flex; align-items:stretch; justify-content:center;
+        transition:background .25s ease, color .25s ease;
     }
-    .card{
-        width:100%; max-width:400px; background:var(--card); border:1px solid var(--border);
-        border-radius:20px; padding:32px 28px;
+    @media (prefers-reduced-motion: reduce){
+        *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
     }
-    .logo{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+
+    .theme-toggle{
+        position:fixed; top:20px; right:20px; z-index:20;
+        width:40px; height:40px; border-radius:50%;
+        border:1px solid var(--line); background:var(--card); cursor:pointer;
+        display:flex; align-items:center; justify-content:center;
+        color:var(--ink-soft); font-size:.95rem;
+        transition:background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .theme-toggle:hover{ background:var(--brand-bg); color:var(--brand); }
+    .theme-toggle .fa-sun{ display:none; }
+    html[data-theme="dark"] .theme-toggle .fa-sun{ display:inline; }
+    html[data-theme="dark"] .theme-toggle .fa-moon{ display:none; }
+
+    /* ---------- layout shell ---------- */
+    .shell{ display:flex; width:100%; max-width:1080px; margin:0 auto; min-height:100vh; }
+
+    /* ---------- left brand panel ---------- */
+    .brand-panel{
+        flex:1; position:relative; overflow:hidden; display:flex; flex-direction:column;
+        justify-content:space-between; padding:40px 44px;
+        background:linear-gradient(155deg, var(--brand) 0%, var(--brand2) 100%);
+        color:#fff;
+    }
+    .brand-top .logo{ display:flex; align-items:center; gap:10px; }
     .logo-badge{
-        width:38px;height:38px;border-radius:11px;background:var(--brand);
-        display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;
+        width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,.16);
+        display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff;
+        border:1px solid rgba(255,255,255,.3);
     }
-    .logo-name{font-weight:800;font-size:1.05rem;}
-    h1{font-size:1.35rem;margin:0 0 6px;}
-    p.sub{color:var(--muted);font-size:.88rem;margin:0 0 24px;}
-    label{display:block;font-size:.82rem;color:var(--muted);margin:14px 0 6px;}
+    .logo-name{ font-weight:800; font-size:1.02rem; letter-spacing:.2px; }
+
+    .brand-mid{ position:relative; flex:1; display:flex; align-items:center; }
+    .brand-copy h2{ font-size:1.7rem; line-height:1.35; margin:0 0 12px; font-weight:800; max-width:360px; }
+    .brand-copy p{ font-size:.92rem; line-height:1.6; color:rgba(255,255,255,.82); max-width:340px; margin:0; }
+
+    /* signature: floating quiz answer-sheet cards */
+    .quiz-stack{ position:absolute; right:-30px; bottom:56px; width:260px; height:260px; pointer-events:none; }
+    .quiz-card{
+        position:absolute; width:220px; border-radius:16px; background:rgba(255,255,255,.1);
+        border:1px solid rgba(255,255,255,.22); padding:16px 18px; backdrop-filter:blur(2px);
+        box-shadow:0 20px 40px -20px rgba(0,0,0,.35);
+    }
+    .quiz-card.c1{ top:0; left:10px; transform:rotate(-9deg); opacity:.55; }
+    .quiz-card.c2{ top:36px; left:36px; transform:rotate(-2deg); opacity:.8; }
+    .quiz-card.c3{ top:74px; left:60px; transform:rotate(6deg); }
+    .quiz-card .qline{ height:7px; border-radius:4px; background:rgba(255,255,255,.35); margin-bottom:9px; }
+    .quiz-card .qline.short{ width:55%; }
+    .quiz-card .opts{ display:flex; gap:8px; margin-top:12px; }
+    .quiz-opt{
+        width:24px; height:24px; border-radius:50%; border:1.5px solid rgba(255,255,255,.55);
+        display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:700; color:rgba(255,255,255,.75);
+    }
+    .quiz-opt.correct{ background:#fff; color:var(--brand2); border-color:#fff; }
+
+    .brand-bottom{ position:relative; display:flex; flex-wrap:wrap; gap:10px; }
+    .brand-chip{
+        display:flex; align-items:center; gap:8px; padding:9px 14px; border-radius:999px;
+        background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.24);
+        font-size:.78rem; font-weight:700; color:#fff; backdrop-filter:blur(2px);
+    }
+    .brand-chip i{ font-size:.78rem; opacity:.9; }
+
+    /* ---------- right form panel ---------- */
+    .form-panel{
+        width:440px; flex-shrink:0; background:var(--card); border-left:1px solid var(--line);
+        display:flex; align-items:center; justify-content:center; padding:40px 36px;
+        box-shadow:var(--shadow);
+    }
+    .form-inner{ width:100%; max-width:340px; }
+
+    .back-home{
+        display:inline-flex; align-items:center; gap:6px; color:var(--ink-mute); text-decoration:none;
+        font-size:.83rem; margin-bottom:20px; font-weight:600;
+    }
+    .back-home:hover{ color:var(--brand); }
+
+    h1{ font-size:1.4rem; margin:0 0 6px; font-weight:800; }
+    p.sub{ color:var(--ink-mute); font-size:.87rem; margin:0 0 26px; line-height:1.5; }
+
+    label{ display:block; font-size:.8rem; font-weight:700; color:var(--ink-soft); margin:14px 0 6px; }
     input{
-        width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--border);
-        background:#0e0e1c; color:var(--text); font-size:.92rem; outline:none;
+        width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line);
+        background:var(--bg); color:var(--ink); font-size:.9rem; outline:none; font-family:inherit;
+        transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;
     }
-    input:focus{border-color:var(--brand);}
-    .pw-wrap{position:relative;}
-    .pw-wrap input{padding-right:40px;}
+    input::placeholder{ color:var(--ink-mute); }
+    input:focus{ border-color:var(--brand); background:var(--card); box-shadow:0 0 0 3px var(--brand-bg); }
+
+    .pw-wrap{ position:relative; }
+    .pw-wrap input{ padding-right:42px; }
     .pw-toggle{
-        position:absolute; right:10px; top:50%; transform:translateY(-50%);
-        background:none; border:none; color:var(--muted); cursor:pointer; font-size:.95rem;
+        position:absolute; right:4px; top:50%; transform:translateY(-50%);
+        width:32px; height:32px; background:none; border:none; color:var(--ink-mute); cursor:pointer; font-size:.92rem;
+        border-radius:8px; display:flex; align-items:center; justify-content:center;
     }
+    .pw-toggle:hover{ color:var(--brand); background:var(--brand-bg); }
+
     .btn-primary{
         width:100%; margin-top:22px; padding:12px; border:none; border-radius:10px;
-        background:var(--brand); color:#fff; font-weight:700; font-size:.94rem; cursor:pointer;
+        background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff; font-weight:700;
+        font-size:.92rem; cursor:pointer; font-family:inherit;
+        transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
     }
-    .btn-primary:disabled{opacity:.6; cursor:not-allowed;}
-    .switch-row{margin-top:18px; text-align:center; font-size:.85rem; color:var(--muted);}
-    .switch-row a{color:var(--brand); text-decoration:none; font-weight:600; cursor:pointer;}
-    .msg{margin-top:14px; font-size:.85rem; padding:10px 12px; border-radius:10px; display:none;}
-    .msg.err{display:block; background:rgba(239,68,68,.12); color:#f87171;}
-    .msg.ok{display:block; background:rgba(22,163,74,.12); color:#4ade80;}
-    .back-home{
-        display:inline-flex; align-items:center; gap:6px; color:var(--muted); text-decoration:none;
-        font-size:.85rem; margin-bottom:18px;
+    .btn-primary:hover:not(:disabled){ transform:translateY(-1px); box-shadow:0 10px 20px -10px rgba(79,107,255,.55); }
+    .btn-primary:disabled{ opacity:.6; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    .btn-ghost{
+        width:100%; margin-top:10px; padding:12px; border-radius:10px; font-family:inherit;
+        background:transparent; color:var(--ink); border:1px solid var(--line); font-weight:700; font-size:.92rem; cursor:pointer;
+        transition:background .15s ease;
     }
-    .back-home:hover{color:var(--text);}
-    .hidden{display:none !important;}
+    .btn-ghost:hover{ background:var(--brand-bg); color:var(--brand); border-color:var(--brand-bg); }
+
+    .switch-row{ margin-top:20px; text-align:center; font-size:.85rem; color:var(--ink-mute); }
+    .switch-row a{ color:var(--brand); text-decoration:none; font-weight:700; cursor:pointer; }
+    .switch-row a:hover{ text-decoration:underline; }
+
+    .msg{ margin-top:14px; font-size:.83rem; padding:10px 12px; border-radius:10px; display:none; align-items:center; gap:8px; font-weight:600; }
+    .msg.err{ display:flex; background:var(--red-bg); color:var(--red); }
+    .msg.ok{ display:flex; background:var(--green-bg); color:var(--green); }
+
+    .logged-icon{
+        width:52px; height:52px; border-radius:50%; background:var(--green-bg); color:var(--green);
+        display:flex; align-items:center; justify-content:center; font-size:1.3rem; margin-bottom:16px;
+    }
+
+    .hidden{ display:none !important; }
+
+    @media (max-width: 860px){
+        .brand-panel{ display:none; }
+        .form-panel{ width:100%; border-left:none; }
+    }
 </style>
 </head>
 <body>
 
-<div class="card">
-    <a class="back-home" href="../index.html"><i class="fa-solid fa-arrow-left"></i> Về trang chủ</a>
+<button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
+    <i class="fa-solid fa-moon"></i>
+    <i class="fa-solid fa-sun"></i>
+</button>
 
-    <div class="logo">
-        <div class="logo-badge">S</div>
-        <div class="logo-name">SNG EDU</div>
-    </div>
+<div class="shell">
 
-    <!-- ĐĂNG NHẬP -->
-    <div id="loginView">
-        <h1>Đăng nhập</h1>
-        <p class="sub">Đăng nhập để dùng Trắc nghiệm, Tài liệu, Công cụ và các mục khác.</p>
-
-        <label>Email</label>
-        <input id="loginEmail" type="email" placeholder="ban@email.com" autocomplete="email">
-
-        <label>Mật khẩu</label>
-        <div class="pw-wrap">
-            <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
-            <button type="button" class="pw-toggle" onclick="togglePw('loginPassword', this)"><i class="fa-regular fa-eye"></i></button>
+    <!-- BRAND PANEL -->
+    <div class="brand-panel">
+        <div class="brand-top">
+            <div class="logo">
+                <div class="logo-name">SNG EDU</div>
+            </div>
         </div>
 
-        <button class="btn-primary" id="loginBtn" onclick="doLogin()">Đăng nhập</button>
-        <div class="msg" id="loginMsg"></div>
-
-        <div class="switch-row">Chưa có tài khoản? <a onclick="showView('register')">Đăng ký ngay</a></div>
-    </div>
-
-    <!-- ĐĂNG KÝ -->
-    <div id="registerView" class="hidden">
-        <h1>Tạo tài khoản</h1>
-        <p class="sub">Tạo tài khoản miễn phí để bắt đầu ôn tập.</p>
-
-        <label>Tên tài khoản</label>
-        <input id="regName" type="text" placeholder="vd: hocvien2025" autocomplete="name">
-
-        <label>Email</label>
-        <input id="regEmail" type="email" placeholder="ban@email.com" autocomplete="email">
-
-        <label>Mật khẩu</label>
-        <div class="pw-wrap">
-            <input id="regPassword" type="password" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
-            <button type="button" class="pw-toggle" onclick="togglePw('regPassword', this)"><i class="fa-regular fa-eye"></i></button>
+        <div class="brand-mid">
+            <div class="brand-copy">
+                <h2>Không gian tri thức, mở ra cơ hội.</h2>
+                <p>SNG EDU — trải nghiệm ôn luyện hiện đại với ngân hàng câu hỏi, tài liệu và công cụ tính toán được cập nhật liên tục.</p>
+            </div>
+            <div class="quiz-stack">
+                <div class="quiz-card c1">
+                    <div class="qline"></div>
+                    <div class="qline short"></div>
+                </div>
+                <div class="quiz-card c2">
+                    <div class="qline"></div>
+                    <div class="qline short"></div>
+                </div>
+                <div class="quiz-card c3">
+                    <div class="qline"></div>
+                    <div class="qline short"></div>
+                    <div class="opts">
+                        <div class="quiz-opt">A</div>
+                        <div class="quiz-opt correct"><i class="fa-solid fa-check"></i></div>
+                        <div class="quiz-opt">C</div>
+                        <div class="quiz-opt">D</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <label>Nhập lại mật khẩu</label>
-        <div class="pw-wrap">
-            <input id="regPassword2" type="password" placeholder="••••••••" autocomplete="new-password">
-            <button type="button" class="pw-toggle" onclick="togglePw('regPassword2', this)"><i class="fa-regular fa-eye"></i></button>
+        <div class="brand-bottom">
+            <div class="brand-chip"><i class="fa-solid fa-database"></i> Ngân hàng câu hỏi</div>
+            <div class="brand-chip"><i class="fa-solid fa-book-open"></i> Tài liệu học tập</div>
+            <div class="brand-chip"><i class="fa-solid fa-calculator"></i> Công cụ tính toán</div>
         </div>
-
-        <button class="btn-primary" id="registerBtn" onclick="doRegister()">Đăng ký</button>
-        <div class="msg" id="registerMsg"></div>
-
-        <div class="switch-row">Đã có tài khoản? <a onclick="showView('login')">Đăng nhập</a></div>
     </div>
 
-    <!-- ĐÃ ĐĂNG NHẬP -->
-    <div id="loggedInView" class="hidden">
-        <h1>Bạn đã đăng nhập</h1>
-        <p class="sub">Đang đăng nhập với <b id="loggedInEmail">—</b></p>
-        <button class="btn-primary" onclick="location.href='../index.html'">Vào trang chủ</button>
-        <button class="btn-primary" style="background:#1b1b2e;color:var(--text);margin-top:10px;border:1px solid var(--border);" onclick="doLogout()">Đăng xuất</button>
+    <!-- FORM PANEL -->
+    <div class="form-panel">
+        <div class="form-inner">
+            <a class="back-home" href="../index.html"><i class="fa-solid fa-arrow-left"></i> Về trang chủ</a>
+
+            <!-- ĐĂNG NHẬP -->
+            <div id="loginView">
+                <h1>Đăng nhập</h1>
+                <p class="sub">Đăng nhập để dùng Trắc nghiệm, Tài liệu, Công cụ và các mục khác.</p>
+
+                <label>Email</label>
+                <input id="loginEmail" type="email" placeholder="ban@email.com" autocomplete="email">
+
+                <label>Mật khẩu</label>
+                <div class="pw-wrap">
+                    <input id="loginPassword" type="password" placeholder="Nhập mật khẩu" autocomplete="current-password">
+                    <button type="button" class="pw-toggle" onclick="togglePw('loginPassword', this)"><i class="fa-solid fa-eye"></i></button>
+                </div>
+
+                <button class="btn-primary" id="loginBtn" onclick="doLogin()">Đăng nhập</button>
+                <div class="msg" id="loginMsg"></div>
+
+                <div class="switch-row">Chưa có tài khoản? <a onclick="showView('register')">Đăng ký ngay</a></div>
+            </div>
+
+            <!-- ĐĂNG KÝ -->
+            <div id="registerView" class="hidden">
+                <h1>Tạo tài khoản</h1>
+                <p class="sub">Tạo tài khoản miễn phí để bắt đầu ôn tập.</p>
+
+                <label>Tên tài khoản</label>
+                <input id="regName" type="text" placeholder="Nhập tên tài khoản" autocomplete="name">
+
+                <label>Email</label>
+                <input id="regEmail" type="email" placeholder="ban@email.com" autocomplete="email">
+
+                <label>Mật khẩu</label>
+                <div class="pw-wrap">
+                    <input id="regPassword" type="password" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
+                    <button type="button" class="pw-toggle" onclick="togglePw('regPassword', this)"><i class="fa-solid fa-eye"></i></button>
+                </div>
+
+                <label>Nhập lại mật khẩu</label>
+                <div class="pw-wrap">
+                    <input id="regPassword2" type="password" placeholder="Nhập lại mật khẩu" autocomplete="new-password">
+                    <button type="button" class="pw-toggle" onclick="togglePw('regPassword2', this)"><i class="fa-solid fa-eye"></i></button>
+                </div>
+
+                <button class="btn-primary" id="registerBtn" onclick="doRegister()">Đăng ký</button>
+                <div class="msg" id="registerMsg"></div>
+
+                <div class="switch-row">Đã có tài khoản? <a onclick="showView('login')">Đăng nhập</a></div>
+            </div>
+
+            <!-- ĐÃ ĐĂNG NHẬP -->
+            <div id="loggedInView" class="hidden">
+                <div class="logged-icon"><i class="fa-solid fa-check"></i></div>
+                <h1>Bạn đã đăng nhập</h1>
+                <p class="sub">Đang đăng nhập với <b id="loggedInEmail" style="color:var(--ink);">—</b></p>
+                <button class="btn-primary" onclick="location.href='../index.html'">Vào trang chủ</button>
+                <button class="btn-ghost" onclick="doLogout()">Đăng xuất</button>
+            </div>
+        </div>
     </div>
+
 </div>
 
 <script>
@@ -137,6 +327,14 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const params = new URLSearchParams(location.search);
 const nextUrl = params.get('next') || '../index.html';
 
+const themeBtn = document.getElementById('themeToggle');
+themeBtn.addEventListener('click', ()=>{
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem('sng-theme', next); }catch(e){}
+});
+
 function showView(name){
     document.getElementById('loginView').classList.toggle('hidden', name !== 'login');
     document.getElementById('registerView').classList.toggle('hidden', name !== 'register');
@@ -146,13 +344,13 @@ function showView(name){
 function togglePw(id, btn){
     const input = document.getElementById(id);
     const icon = btn.querySelector('i');
-    if (input.type === 'password'){ input.type = 'text'; icon.className = 'fa-regular fa-eye-slash'; }
-    else { input.type = 'password'; icon.className = 'fa-regular fa-eye'; }
+    if (input.type === 'password'){ input.type = 'text'; icon.className = 'fa-solid fa-eye-slash'; }
+    else { input.type = 'password'; icon.className = 'fa-solid fa-eye'; }
 }
 
-function showMsg(id, text, type){
+function showMsg(id, html, type){
     const el = document.getElementById(id);
-    el.textContent = text;
+    el.innerHTML = html;
     el.className = 'msg ' + type;
 }
 
@@ -166,14 +364,13 @@ async function doLogin(){
 
     const { error } = await sb.auth.signInWithPassword({ email, password });
 
-    btn.disabled = false; btn.textContent = 'Đăng nhập';
-
     if (error){
+        btn.disabled = false; btn.textContent = 'Đăng nhập';
         showMsg('loginMsg', 'Sai email hoặc mật khẩu.', 'err');
         return;
     }
-    showMsg('loginMsg', '✔ Đăng nhập thành công, đang chuyển hướng...', 'ok');
-    setTimeout(() => { location.href = nextUrl; }, 600);
+    showMsg('loginMsg', '<i class="fa-solid fa-circle-check"></i> Đăng nhập thành công.', 'ok');
+    location.href = nextUrl;
 }
 
 async function doRegister(){
@@ -194,14 +391,12 @@ async function doRegister(){
         options: { data: { full_name: name } }
     });
 
-    btn.disabled = false; btn.textContent = 'Đăng ký';
-
     if (error){
+        btn.disabled = false; btn.textContent = 'Đăng ký';
         showMsg('registerMsg', error.message.includes('already registered') ? 'Email này đã được đăng ký.' : ('Lỗi: ' + error.message), 'err');
         return;
     }
 
-    // Lưu hồ sơ (nếu bảng public.profiles đã được tạo — bỏ qua lỗi nếu chưa có)
     if (data.user){
         try{
             await sb.from('profiles').upsert({ id: data.user.id, full_name: name });
@@ -209,10 +404,11 @@ async function doRegister(){
     }
 
     if (data.session){
-        showMsg('registerMsg', '✔ Tạo tài khoản thành công, đang chuyển hướng...', 'ok');
-        setTimeout(() => { location.href = nextUrl; }, 600);
+        showMsg('registerMsg', '<i class="fa-solid fa-circle-check"></i> Tạo tài khoản thành công.', 'ok');
+        location.href = nextUrl;
     } else {
-        showMsg('registerMsg', '✔ Tạo tài khoản thành công! Kiểm tra email để xác nhận trước khi đăng nhập.', 'ok');
+        btn.disabled = false; btn.textContent = 'Đăng ký';
+        showMsg('registerMsg', '<i class="fa-solid fa-circle-check"></i> Tạo tài khoản thành công! Kiểm tra email để xác nhận trước khi đăng nhập.', 'ok');
     }
 }
 

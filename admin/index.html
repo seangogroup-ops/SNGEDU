@@ -1094,6 +1094,13 @@ textarea{resize:vertical;}
                         <button type="button" class="acct-chip" data-shape="square" onclick="pickBannerShape('square')">⬛ Vuông</button>
                     </div>
 
+                    <label>Kích thước</label>
+                    <div class="acct-filter-chips" id="setBannerSizeRow">
+                        <button type="button" class="acct-chip" data-size="sm" onclick="pickBannerSize('sm')">🔹 Nhỏ</button>
+                        <button type="button" class="acct-chip" data-size="md" onclick="pickBannerSize('md')">🔸 Vừa</button>
+                        <button type="button" class="acct-chip" data-size="lg" onclick="pickBannerSize('lg')">🔶 Lớn</button>
+                    </div>
+
                     <label>Hiệu ứng</label>
                     <div class="acct-filter-chips" id="setBannerEffectRow">
                         <button type="button" class="acct-chip" data-effect="subtle" onclick="pickBannerEffect('subtle')">✨ Nhẹ nhàng</button>
@@ -3790,6 +3797,7 @@ let currentSetKey = null;
 let currentSetPayload = null;
 let bannerColor = 'amber';
 let bannerShape = 'pill';
+let bannerSize = 'md';
 let bannerEffect = 'subtle';
 
 const SETTINGS_META = {
@@ -3851,6 +3859,7 @@ async function openSettingsPanel(key){
         document.getElementById('setBannerIconRight').value = currentSetPayload.iconRight || '';
         pickBannerColor(currentSetPayload.color || 'amber');
         pickBannerShape(currentSetPayload.shape || 'pill');
+        pickBannerSize(currentSetPayload.size || 'md');
         pickBannerEffect(currentSetPayload.effect || 'subtle');
         updateBannerPreview();
     } else {
@@ -3916,6 +3925,11 @@ const BANNER_COLOR_STYLES = {
     indigo: { bg:'#1d1c3a', border:'#5f5ef0', text:'#a5a4ff', glow:'79,78,224' },
 };
 const BANNER_SHAPE_RADIUS = { pill:'999px', rounded:'14px', square:'6px' };
+const BANNER_SIZE_STYLES = {
+    sm: { pad:'9px 16px',  font:'10.5px', icon:'14px', arrow:'13px', gap:'8px' },
+    md: { pad:'13px 22px', font:'12.5px', icon:'16px', arrow:'15px', gap:'10px' },
+    lg: { pad:'17px 30px', font:'14.5px', icon:'19px', arrow:'18px', gap:'12px' },
+};
 
 function pickBannerColor(color){
     bannerColor = color;
@@ -3928,6 +3942,13 @@ function pickBannerShape(shape){
     bannerShape = shape;
     document.querySelectorAll('#setBannerShapeRow .acct-chip').forEach(el=>{
         el.classList.toggle('active', el.dataset.shape === shape);
+    });
+    updateBannerPreview();
+}
+function pickBannerSize(size){
+    bannerSize = size;
+    document.querySelectorAll('#setBannerSizeRow .acct-chip').forEach(el=>{
+        el.classList.toggle('active', el.dataset.size === size);
     });
     updateBannerPreview();
 }
@@ -3957,14 +3978,21 @@ function updateBannerPreview(text, underline){
 
     const style = BANNER_COLOR_STYLES[bannerColor] || BANNER_COLOR_STYLES.amber;
     const radius = BANNER_SHAPE_RADIUS[bannerShape] || BANNER_SHAPE_RADIUS.pill;
+    const size = BANNER_SIZE_STYLES[bannerSize] || BANNER_SIZE_STYLES.md;
     const wrap = document.getElementById('setBannerPreviewWrap');
     const iconLeftEl = document.getElementById('setBannerPreviewIconLeft');
     const iconRightEl = document.getElementById('setBannerPreviewIconRight');
+    const textEl = document.getElementById('setBannerPreview');
     wrap.style.background = style.bg;
     wrap.style.borderColor = style.border;
     wrap.style.borderRadius = radius;
     wrap.style.setProperty('--rbpv-glow', style.glow);
-    document.getElementById('setBannerPreview').style.color = style.text;
+    wrap.style.padding = size.pad;
+    wrap.style.gap = size.gap;
+    textEl.style.color = style.text;
+    textEl.style.fontSize = size.font;
+    iconLeftEl.style.fontSize = size.icon;
+    iconRightEl.style.fontSize = size.arrow;
 
     // reset toàn bộ animation trước khi gán lại, tránh giữ hiệu ứng cũ khi đổi lựa chọn liên tục
     wrap.style.animation = 'none';
@@ -4019,6 +4047,7 @@ async function saveSiteSetting(){
             iconRight: document.getElementById('setBannerIconRight').value.trim(),
             color: bannerColor,
             shape: bannerShape,
+            size: bannerSize,
             effect: bannerEffect,
         };
     } else {

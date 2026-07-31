@@ -230,28 +230,69 @@
     .state-card a{ color:var(--accent); font-weight:700; text-decoration:none; }
     .state-card a:hover{ text-decoration:underline; }
 
-    /* ---------------- report banner ---------------- */
+    /* ---------------- report banner (màu / kiểu dáng / hiệu ứng tuỳ biến qua class) ---------------- */
     .report-banner{
         display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
-        background:var(--amber-bg); border:1.5px solid var(--amber);
-        border-radius:20px; padding:13px 22px; margin:clamp(28px, 5vw, 36px) auto 0; width:fit-content; max-width:100%;
+        background:var(--rb-bg, var(--amber-bg)); border:1.5px solid var(--rb-border, var(--amber));
+        border-radius:var(--rb-radius, 20px); padding:13px 22px; margin:clamp(28px, 5vw, 36px) auto 0; width:fit-content; max-width:100%;
         text-decoration:none; position:relative;
         box-shadow:var(--shadow);
-        animation: bannerGlow 2s ease-in-out infinite;
     }
     @media (hover:hover){ .report-banner:hover{ transform:translateY(-1px) scale(1.015); box-shadow:var(--shadow-hov); } }
     .report-banner:active{ transform:scale(.98); }
-    .report-banner .icon{ font-size:16px; flex-shrink:0; display:inline-block; animation: iconShake 1.8s ease-in-out infinite; }
+    .report-banner .icon{ font-size:16px; flex-shrink:0; display:inline-block; }
     .report-banner span:not(.icon):not(.arrow){
-        color:#8a5a06; font-size:12.5px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; text-align:center;
+        color:var(--rb-text, #8a5a06); font-size:12.5px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; text-align:center;
     }
-    html[data-theme="dark"] .report-banner span:not(.icon):not(.arrow){ color:var(--amber); }
+    html[data-theme="dark"] .report-banner span:not(.icon):not(.arrow){ color:var(--rb-text-dark, var(--amber)); }
     .report-banner span u{ text-decoration-thickness:2px; }
-    .report-banner .arrow{ font-size:15px; flex-shrink:0; animation: arrowNudge 1s ease-in-out infinite; }
+    .report-banner .arrow{ font-size:15px; flex-shrink:0; }
+
+    /* ----- màu sắc ----- */
+    .report-banner--amber{ --rb-bg:var(--amber-bg); --rb-border:var(--amber); --rb-text:#8a5a06; --rb-text-dark:var(--amber); --rb-glow:245,165,36; }
+    .report-banner--blue{ --rb-bg:#e7f0ff; --rb-border:#2563eb; --rb-text:#1d4ed8; --rb-text-dark:#8ab4ff; --rb-glow:37,99,235; }
+    html[data-theme="dark"] .report-banner--blue{ --rb-bg:#152238; --rb-border:#3b6fdb; }
+    .report-banner--green{ --rb-bg:#e7f9f0; --rb-border:#16a34a; --rb-text:#0f7a37; --rb-text-dark:#4ade80; --rb-glow:22,163,74; }
+    html[data-theme="dark"] .report-banner--green{ --rb-bg:#123521; --rb-border:#1e9750; }
+    .report-banner--red{ --rb-bg:#fdeaea; --rb-border:#dc2626; --rb-text:#b91c1c; --rb-text-dark:#f87171; --rb-glow:220,38,38; }
+    html[data-theme="dark"] .report-banner--red{ --rb-bg:#391414; --rb-border:#c62d2d; }
+    .report-banner--purple{ --rb-bg:#f1ecfe; --rb-border:#8b5cf6; --rb-text:#6d28d9; --rb-text-dark:#c4b5fd; --rb-glow:139,92,246; }
+    html[data-theme="dark"] .report-banner--purple{ --rb-bg:#241c3d; --rb-border:#9a72f2; }
+    .report-banner--indigo{ --rb-bg:#ecebfe; --rb-border:#4f4ee0; --rb-text:#3c3ab8; --rb-text-dark:#a5a4ff; --rb-glow:79,78,224; }
+    html[data-theme="dark"] .report-banner--indigo{ --rb-bg:#1d1c3a; --rb-border:#5f5ef0; }
+
+    /* ----- kiểu dáng ----- */
+    .report-banner--pill{ --rb-radius:999px; }
+    .report-banner--rounded{ --rb-radius:14px; }
+    .report-banner--square{ --rb-radius:6px; }
+
+    /* ----- hiệu ứng ----- */
+    .report-banner--effect-subtle{ animation: bannerGlow 2s ease-in-out infinite; }
+    .report-banner--effect-subtle .icon{ animation: iconShake 1.8s ease-in-out infinite; }
+    .report-banner--effect-subtle .arrow{ animation: arrowNudge 1s ease-in-out infinite; }
+
+    .report-banner--effect-pulse{ animation: bannerPulse 1.4s ease-in-out infinite; }
+    .report-banner--effect-pulse .arrow{ animation: arrowNudge 1s ease-in-out infinite; }
+
+    .report-banner--effect-shake{ animation: bannerShake 2.4s ease-in-out infinite; }
+    .report-banner--effect-shake .icon{ animation: iconShake 1.8s ease-in-out infinite; }
+
+    .report-banner--effect-none{ animation:none; }
+    .report-banner--effect-none .icon, .report-banner--effect-none .arrow{ animation:none; }
+
     @keyframes arrowNudge{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(4px); } }
     @keyframes bannerGlow{
-        0%,100%{ box-shadow:var(--shadow), 0 0 0 0 rgba(245,165,36,.4); }
-        50%{ box-shadow:var(--shadow-hov), 0 0 0 9px rgba(245,165,36,0); }
+        0%,100%{ box-shadow:var(--shadow), 0 0 0 0 rgba(var(--rb-glow, 245,165,36),.4); }
+        50%{ box-shadow:var(--shadow-hov), 0 0 0 9px rgba(var(--rb-glow, 245,165,36),0); }
+    }
+    @keyframes bannerPulse{
+        0%,100%{ transform:scale(1); box-shadow:var(--shadow), 0 0 0 0 rgba(var(--rb-glow, 245,165,36),.55); }
+        50%{ transform:scale(1.045); box-shadow:var(--shadow-hov), 0 0 0 12px rgba(var(--rb-glow, 245,165,36),0); }
+    }
+    @keyframes bannerShake{
+        0%,8%,100%{ transform:rotate(0deg) translateX(0); }
+        2%{ transform:rotate(-2deg) translateX(-1px); } 4%{ transform:rotate(2deg) translateX(1px); }
+        6%{ transform:rotate(-1.5deg) translateX(-1px); }
     }
     @keyframes iconShake{
         0%,60%,100%{ transform:rotate(0deg); }
@@ -259,7 +300,7 @@
         85%{ transform:rotate(-7deg); } 92%{ transform:rotate(4deg); }
     }
     @media (prefers-reduced-motion: reduce){
-        .report-banner, .report-banner .icon, .report-banner .arrow{ animation:none; }
+        .report-banner, .report-banner *{ animation:none !important; }
     }
 
     footer{
@@ -327,10 +368,10 @@
 
     <div id="content"><div class="state-card"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải dữ liệu môn học...</div></div>
 
-    <a href="https://forms.gle/CMZj35G3BMGfo1AZ8" target="_blank" rel="noopener" class="report-banner" id="reportBanner">
-        <span class="icon">🔔</span>
+    <a href="https://forms.gle/CMZj35G3BMGfo1AZ8" target="_blank" rel="noopener" class="report-banner report-banner--amber report-banner--pill report-banner--effect-subtle" id="reportBanner">
+        <span class="icon" id="reportBannerIconLeft">🔔</span>
         <span id="reportBannerText">Gặp câu hỏi sai? <u>Click vào đây</u> góp ý giúp tôi!</span>
-        <span class="arrow">👉</span>
+        <span class="arrow" id="reportBannerIconRight">👉</span>
     </a>
 
     <footer id="siteFooter">SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải</footer>
@@ -351,13 +392,20 @@ async function loadFooterSettings(){
 loadFooterSettings();
 
 // ---------------- BANNER "GẶP CÂU HỎI SAI" — đọc từ Supabase site_settings ----------------
+const REPORT_BANNER_COLORS  = ['amber','blue','green','red','purple','indigo'];
+const REPORT_BANNER_SHAPES  = ['pill','rounded','square'];
+const REPORT_BANNER_EFFECTS = ['subtle','pulse','shake','none'];
+
 async function loadReportBannerSettings(){
     const { data, error } = await sb.from('site_settings').select('*').eq('key', 'report_banner').single();
-    if (error || !data || !data.payload) return; // chưa cấu hình -> giữ nội dung tĩnh mặc định
+    if (error || !data || !data.payload) return; // chưa cấu hình -> giữ nội dung + giao diện mặc định (amber/pill/subtle)
     const b = data.payload;
     const linkEl = document.getElementById('reportBanner');
     const textEl = document.getElementById('reportBannerText');
+    const iconLeftEl = document.getElementById('reportBannerIconLeft');
+    const iconRightEl = document.getElementById('reportBannerIconRight');
     if (!linkEl || !textEl) return;
+
     if (b.link) linkEl.href = b.link;
     if (b.text){
         let html = escapeHtmlBanner(b.text);
@@ -366,6 +414,22 @@ async function loadReportBannerSettings(){
             html = html.replace(u, '<u>' + u + '</u>');
         }
         textEl.innerHTML = html;
+    }
+    if (b.iconLeft && iconLeftEl) iconLeftEl.textContent = b.iconLeft;
+    if (b.iconRight && iconRightEl) iconRightEl.textContent = b.iconRight;
+
+    // Áp màu / kiểu dáng / hiệu ứng tuỳ biến qua class — nếu payload không có giá trị hợp lệ thì giữ nguyên class mặc định đã có sẵn trong HTML
+    if (b.color && REPORT_BANNER_COLORS.includes(b.color)){
+        linkEl.classList.remove(...REPORT_BANNER_COLORS.map(c => 'report-banner--' + c));
+        linkEl.classList.add('report-banner--' + b.color);
+    }
+    if (b.shape && REPORT_BANNER_SHAPES.includes(b.shape)){
+        linkEl.classList.remove(...REPORT_BANNER_SHAPES.map(s => 'report-banner--' + s));
+        linkEl.classList.add('report-banner--' + b.shape);
+    }
+    if (b.effect && REPORT_BANNER_EFFECTS.includes(b.effect)){
+        linkEl.classList.remove(...REPORT_BANNER_EFFECTS.map(e => 'report-banner--effect-' + e));
+        linkEl.classList.add('report-banner--effect-' + b.effect);
     }
 }
 function escapeHtmlBanner(s){

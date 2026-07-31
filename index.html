@@ -711,7 +711,7 @@
         </div>
     </section>
 
-    <footer>SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải</footer>
+    <footer id="siteFooter">SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải</footer>
 
         </div>
     </div>
@@ -1133,6 +1133,15 @@
         if (hero.desc)    document.getElementById('heroDesc').textContent = hero.desc;
     }
     loadHeroSettings();
+
+    // ---------------- CHÂN TRANG — đọc từ Supabase site_settings, đồng bộ mọi trang ----------------
+    async function loadFooterSettings(){
+        const { data, error } = await sb.from('site_settings').select('*').eq('key', 'site_footer').single();
+        if (error || !data || !data.payload || !data.payload.text) return; // chưa cấu hình -> giữ chữ mặc định
+        const el = document.getElementById('siteFooter');
+        if (el) el.textContent = data.payload.text;
+    }
+    loadFooterSettings();
 
     // ---------------- TÀI LIỆU / CÔNG CỤ / SẢN PHẨM — nội dung động, quản lý ở trang admin (site_settings) ----------------
     async function fetchSiteSettingPayload(key, fallback){

@@ -815,6 +815,9 @@ textarea{resize:vertical;}
                 <div class="side-item settings-item" id="nav_product" onclick="showContentManager('product')">
                     <span class="set-ico">🛍️</span><span class="name">Sản phẩm</span>
                 </div>
+                <div class="side-item settings-item" id="nav_pro" onclick="showContentManager('pro')">
+                    <span class="set-ico">👑</span><span class="name">Gói Pro</span>
+                </div>
                 <div class="side-item settings-item" id="navAccounts" onclick="showAccountsManager()">
                     <span class="set-ico">👤</span><span class="name">Tài khoản</span>
                 </div>
@@ -1048,8 +1051,6 @@ textarea{resize:vertical;}
                     <input id="setHeroEyebrow" placeholder="Mác – Lênin">
                     <label>Tiêu đề chính</label>
                     <input id="setHeroTitle" placeholder="Ôn tập trắc nghiệm...">
-                    <label>Mô tả</label>
-                    <textarea id="setHeroDesc" rows="3" placeholder="Chọn một chương bên dưới..."></textarea>
                 </div>
 
                 <div id="setFieldsFooter" class="hidden">
@@ -2956,7 +2957,8 @@ const CONTENT_DEFAULTS = {
         { id:'t2', icon:'fa-solid fa-clone',      color:'indigo', title:'Flashcard ôn nhanh', desc:'', status:'soon', link:'' },
         { id:'t3', icon:'fa-solid fa-chart-line', color:'amber',  title:'Thống kê kết quả',   desc:'', status:'soon', link:'' }
     ]},
-    product_content: { items: [] }
+    product_content: { items: [] },
+    pro_content: { items: [] }
 };
 
 // subKey -> { settingsKey, arrayField, items, editingId, meta }
@@ -2989,11 +2991,17 @@ registerContentList('product_items', 'product_content', 'items', {
     extraField:{ key:'price', label:'Giá / nhãn phụ', placeholder:'VD: 49.000đ hoặc "Mới ra mắt"' },
     linkLabel:'Đường dẫn (nếu có)', linkPlaceholder:'https://...'
 });
+registerContentList('pro_items', 'pro_content', 'items', {
+    label:'Gói Pro', icon:'fa-solid fa-crown', color:'amber', defaultIcon:'fa-solid fa-crown',
+    extraField:{ key:'price', label:'Giá / chu kỳ', placeholder:'VD: 49.000đ / tháng' },
+    linkLabel:'Đường dẫn mua (Zalo, Momo, link thanh toán...)', linkPlaceholder:'https://zalo.me/... hoặc link thanh toán'
+});
 
 const CONTENT_MANAGER_GROUPS = {
     doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu miễn phí và trả phí hiển thị ở tab "Tài liệu" trên trang chủ. Tải file PDF/Word lên trực tiếp, không cần link ngoài.', subKeys:['doc_free','doc_paid'] },
     tool:    { title:'Công cụ',   icon:'🧰',  hint:'Quản lý các thẻ công cụ hiển thị ở tab "Công cụ" trên trang chủ.', subKeys:['tool_items'] },
-    product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ.', subKeys:['product_items'] }
+    product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ.', subKeys:['product_items'] },
+    pro:     { title:'Gói Pro',   icon:'👑',  hint:'Quản lý các gói Pro hiển thị ở tab "Tài khoản & Gói Pro" trên trang chủ. Chọn màu "amber" để đánh dấu gói "Phổ biến nhất". Đường dẫn mua nên trỏ tới Zalo/Momo/link thanh toán của bạn — SNG EDU chưa có cổng thanh toán tự động, nên sau khi khách chuyển khoản, bạn vào mục "Tài khoản" bên dưới để gán gói Premium thủ công cho họ.', subKeys:['pro_items'] }
 };
 
 function contentColorSwatchesHtml(subKey){
@@ -3461,6 +3469,7 @@ const NAV_TABS_DEFAULT = [
     { key:'quiz',    label:'Trắc nghiệm', icon:'📝' },
     { key:'tool',    label:'Công cụ',     icon:'🧰' },
     { key:'product', label:'Sản phẩm',    icon:'🛍️' },
+    { key:'account', label:'Tài khoản', icon:'👑' },
     { key:'support', label:'Hỗ trợ',      icon:'🎧' }
 ];
 let navTabsState = [];
@@ -3877,7 +3886,6 @@ async function openSettingsPanel(key){
         document.getElementById('setHeroPageTitle').value = currentSetPayload.pageTitle || '';
         document.getElementById('setHeroEyebrow').value = currentSetPayload.eyebrow || '';
         document.getElementById('setHeroTitle').value = currentSetPayload.title || '';
-        document.getElementById('setHeroDesc').value = currentSetPayload.desc || '';
     } else if (isFooter){
         const defaultFooter = 'SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải';
         document.getElementById('setFooterText').value = currentSetPayload.text || '';
@@ -4065,7 +4073,6 @@ async function saveSiteSetting(){
             pageTitle: document.getElementById('setHeroPageTitle').value.trim(),
             eyebrow: document.getElementById('setHeroEyebrow').value.trim(),
             title: document.getElementById('setHeroTitle').value.trim(),
-            desc: document.getElementById('setHeroDesc').value.trim(),
         };
     } else if (currentSetKey === 'site_footer'){
         payload = {

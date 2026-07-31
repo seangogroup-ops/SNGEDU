@@ -680,6 +680,12 @@ textarea{resize:vertical;}
 .acct-action-card .aac-desc{font-size:.79rem;color:var(--gray);line-height:1.4;}
 .acct-action-card.danger .aac-title{color:var(--red);}
 
+@keyframes rbpvGlow{ 0%,100%{ box-shadow:0 0 0 0 rgba(245,165,36,.4); } 50%{ box-shadow:0 0 0 9px rgba(245,165,36,0); } }
+@keyframes rbpvIconShake{ 0%,60%,100%{ transform:rotate(0deg); } 65%{ transform:rotate(-14deg); } 75%{ transform:rotate(11deg); } 85%{ transform:rotate(-7deg); } 92%{ transform:rotate(4deg); } }
+@keyframes rbpvArrowNudge{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(4px); } }
+@keyframes rbpvPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.035); } }
+@keyframes rbpvShake{ 0%,84%,100%{ transform:translateX(0); } 86%{ transform:translateX(-4px); } 89%{ transform:translateX(4px); } 92%{ transform:translateX(-3px); } 95%{ transform:translateX(3px); } 98%{ transform:translateX(0); } }
+
 /* =========================================================================
    MOBILE OVERRIDES — đặt cuối cùng trong <style> để thắng cascade tự nhiên
    (rule cùng độ ưu tiên, đứng sau sẽ thắng — không cần !important).
@@ -1065,13 +1071,46 @@ textarea{resize:vertical;}
                     <input id="setBannerText" placeholder="Gặp câu hỏi sai? Click vào đây góp ý giúp tôi!">
                     <label>Cụm từ cần gạch chân (phải trùng khớp với nội dung ở trên)</label>
                     <input id="setBannerUnderline" placeholder="Click vào đây">
-                    <div class="hint" style="margin:2px 0 10px;">Banner này hiện ở trang danh sách môn học (mon-hoc.html), phía dưới danh sách chương.</div>
-                    <div style="margin-top:16px;padding:15px 17px;border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);">
+
+                    <label>Icon trái</label>
+                    <input id="setBannerIconLeft" placeholder="🔔" maxlength="4" style="max-width:100px;">
+                    <label>Icon phải</label>
+                    <input id="setBannerIconRight" placeholder="👉" maxlength="4" style="max-width:100px;">
+
+                    <label>Màu sắc</label>
+                    <div class="color-swatch-row" id="setBannerColorRow">
+                        <div class="color-swatch amber" data-color="amber" onclick="pickBannerColor('amber')">🎨</div>
+                        <div class="color-swatch blue" data-color="blue" onclick="pickBannerColor('blue')">🎨</div>
+                        <div class="color-swatch green" data-color="green" onclick="pickBannerColor('green')">🎨</div>
+                        <div class="color-swatch red" data-color="red" onclick="pickBannerColor('red')">🎨</div>
+                        <div class="color-swatch purple" data-color="purple" onclick="pickBannerColor('purple')">🎨</div>
+                        <div class="color-swatch indigo" data-color="indigo" onclick="pickBannerColor('indigo')">🎨</div>
+                    </div>
+
+                    <label>Kiểu dáng</label>
+                    <div class="acct-filter-chips" id="setBannerShapeRow">
+                        <button type="button" class="acct-chip" data-shape="pill" onclick="pickBannerShape('pill')">💊 Viên nhộng</button>
+                        <button type="button" class="acct-chip" data-shape="rounded" onclick="pickBannerShape('rounded')">▢ Bo góc</button>
+                        <button type="button" class="acct-chip" data-shape="square" onclick="pickBannerShape('square')">⬛ Vuông</button>
+                    </div>
+
+                    <label>Hiệu ứng</label>
+                    <div class="acct-filter-chips" id="setBannerEffectRow">
+                        <button type="button" class="acct-chip" data-effect="subtle" onclick="pickBannerEffect('subtle')">✨ Nhẹ nhàng</button>
+                        <button type="button" class="acct-chip" data-effect="pulse" onclick="pickBannerEffect('pulse')">💓 Nhấp nháy</button>
+                        <button type="button" class="acct-chip" data-effect="shake" onclick="pickBannerEffect('shake')">📳 Rung lắc</button>
+                        <button type="button" class="acct-chip" data-effect="none" onclick="pickBannerEffect('none')">⏸️ Đứng yên</button>
+                    </div>
+
+                    <div class="hint" style="margin:12px 0 0;">Banner này hiện ở trang danh sách môn học (mon-hoc.html), phía dưới danh sách chương.</div>
+                    <div style="margin-top:14px;padding:15px 17px;border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);">
                         <div class="hint" style="text-transform:uppercase;font-size:.7rem;font-weight:700;letter-spacing:.05em;margin-bottom:8px;">Xem trước</div>
-                        <div style="background:#241d10;border:1px solid #b8860b;border-radius:999px;padding:14px 22px;display:flex;align-items:center;gap:10px;justify-content:center;">
-                            <span style="font-size:16px;">🔔</span>
-                            <span id="setBannerPreview" style="color:#f5c065;font-weight:800;font-size:.85rem;">Gặp câu hỏi sai? <u>Click vào đây</u> góp ý giúp tôi!</span>
-                            <span style="font-size:15px;">👉</span>
+                        <div style="background:var(--navy);border-radius:var(--radius-sm);padding:20px;text-align:center;">
+                            <span id="setBannerPreviewWrap" style="display:inline-flex;align-items:center;gap:10px;justify-content:center;background:#241d10;border:1.5px solid #b8860b;border-radius:999px;padding:13px 22px;">
+                                <span id="setBannerPreviewIconLeft" style="font-size:16px;">🔔</span>
+                                <span id="setBannerPreview" style="color:#f5c065;font-weight:800;font-size:.78rem;letter-spacing:.3px;text-transform:uppercase;">Gặp câu hỏi sai? <u>Click vào đây</u> góp ý giúp tôi!</span>
+                                <span id="setBannerPreviewIconRight" style="font-size:15px;">👉</span>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -3749,6 +3788,9 @@ function deleteAccount(userId){
 // ---------- CÀI ĐẶT TRANG CHỦ (site_settings) ----------
 let currentSetKey = null;
 let currentSetPayload = null;
+let bannerColor = 'amber';
+let bannerShape = 'pill';
+let bannerEffect = 'subtle';
 
 const SETTINGS_META = {
     home_hero: { title: 'Trang chủ', hint: 'Khối giới thiệu (hero) ở đầu trang chủ, và các thẻ Truy cập nhanh bên dưới nó.' },
@@ -3805,7 +3847,12 @@ async function openSettingsPanel(key){
         document.getElementById('setBannerLink').value = currentSetPayload.link || '';
         document.getElementById('setBannerText').value = currentSetPayload.text || '';
         document.getElementById('setBannerUnderline').value = currentSetPayload.underline || '';
-        updateBannerPreview(currentSetPayload.text || defaultText, currentSetPayload.underline || defaultUnderline);
+        document.getElementById('setBannerIconLeft').value = currentSetPayload.iconLeft || '';
+        document.getElementById('setBannerIconRight').value = currentSetPayload.iconRight || '';
+        pickBannerColor(currentSetPayload.color || 'amber');
+        pickBannerShape(currentSetPayload.shape || 'pill');
+        pickBannerEffect(currentSetPayload.effect || 'subtle');
+        updateBannerPreview();
     } else {
         document.getElementById('setCardIcon').value = currentSetPayload.icon || '';
         document.getElementById('setCardTitle').value = currentSetPayload.title || '';

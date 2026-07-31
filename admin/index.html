@@ -3462,27 +3462,44 @@ function renderAccountsList(){
         const isBanned = u.banned_until && new Date(u.banned_until) > new Date();
         const initial = (u.email || 'U')[0].toUpperCase();
         return `
-        <div class="acct-row ${isBanned ? 'banned' : ''}" data-id="${u.id}">
+        <div class="acct-row ${isBanned ? 'banned' : ''}" data-id="${u.id}" onclick="openAccountDetail('${u.id}')" style="cursor:pointer;">
             <span class="acct-avatar">${escapeHtml(initial)}</span>
             <span class="acct-info">
                 <span class="acct-name">${escapeHtml(u.full_name || '(chưa đặt tên)')}<span class="acct-badge ${isBanned ? 'banned' : 'active'}">${isBanned ? 'Đã khoá' : 'Hoạt động'}</span></span>
                 <span class="acct-meta">${escapeHtml(u.email || '')}<span class="dot-sep">·</span>Đăng ký ${fmtDate(u.created_at)}</span>
             </span>
             <span class="acct-row-actions">
-                <button class="acct-btn-pwd" onclick="openPasswordModal('${u.id}')" title="Xem / đặt mật khẩu cho khách">
-                    🔑 <span class="lbl-full">Mật khẩu</span>
-                </button>
-                <span class="menu-wrap">
-                    <button class="icon-edit" title="Tùy chọn khác" onclick="event.stopPropagation(); toggleAcctMenu('${u.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
-                    <div class="menu-drop acct-menu-drop hidden" id="acctmenu-${u.id}">
-                        <button onclick="event.stopPropagation(); closeAllAcctMenus(); openRenameModal('${u.id}')">✏️ Đổi tên hiển thị</button>
-                        <button onclick="event.stopPropagation(); closeAllAcctMenus(); toggleBanAccount('${u.id}', ${!isBanned})">${isBanned ? '🔓 Mở khoá đăng nhập' : '🔒 Khoá đăng nhập'}</button>
-                        <button class="danger" onclick="event.stopPropagation(); closeAllAcctMenus(); deleteAccount('${u.id}')">🗑️ Xóa tài khoản</button>
-                    </div>
-                </span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--gray);"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </span>
         </div>`;
     }).join('');
+}
+
+// ---------- MODAL: chi tiết tài khoản (bấm vào 1 dòng để mở) ----------
+function openAccountDetail(userId){
+    const u = accountsCache.find(x => x.id === userId);
+    if (!u) return;
+    const isBanned = u.banned_until && new Date(u.banned_until) > new Date();
+    const initial = (u.email || 'U')[0].toUpperCase();
+    document.getElementById('acctFormBox').innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="acct-avatar" style="width:46px;height:46px;font-size:1.05rem;${isBanned ? 'background:linear-gradient(135deg,#dc2626,#f87171);' : ''}">${escapeHtml(initial)}</span>
+            <div style="min-width:0;">
+                <div style="font-weight:800;font-size:1rem;color:var(--text);">${escapeHtml(u.full_name || '(chưa đặt tên)')}</div>
+                <div style="font-size:.82rem;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(u.email || '')}</div>
+            </div>
+        </div>
+        <p class="acct-form-target" style="margin-top:-6px;">Đăng ký ${fmtDate(u.created_at)} · <span style="color:${isBanned ? 'var(--red)' : 'var(--green)'};font-weight:700;">${isBanned ? 'Đã khoá đăng nhập' : 'Đang hoạt động'}</span></p>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
+            <button class="btn-acct-save" style="background:var(--accent-soft);color:var(--accent);text-align:left;padding:12px 14px;display:flex;align-items:center;gap:9px;" onclick="closeAcctFormModal(); openPasswordModal('${u.id}')">🔑 Xem / đặt mật khẩu</button>
+            <button class="btn-acct-cancel" style="text-align:left;padding:12px 14px;display:flex;align-items:center;gap:9px;" onclick="closeAcctFormModal(); openRenameModal('${u.id}')">✏️ Đổi tên hiển thị</button>
+            <button class="btn-acct-cancel" style="text-align:left;padding:12px 14px;display:flex;align-items:center;gap:9px;" onclick="closeAcctFormModal(); toggleBanAccount('${u.id}', ${!isBanned})">${isBanned ? '🔓 Mở khoá truy cập' : '🔒 Khoá truy cập'}</button>
+            <button style="text-align:left;padding:12px 14px;display:flex;align-items:center;gap:9px;background:var(--red-bg);color:var(--red);" onclick="closeAcctFormModal(); deleteAccount('${u.id}')">🗑️ Xoá tài khoản</button>
+        </div>
+        <div class="acct-form-actions" style="margin-top:16px;">
+            <button class="btn-acct-cancel" onclick="closeAcctFormModal()">Đóng</button>
+        </div>`;
+    document.getElementById('acctFormOverlay').classList.remove('hidden');
 }
 
 function toggleAcctMenu(id, btn){

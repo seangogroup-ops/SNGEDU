@@ -791,6 +791,9 @@ textarea{resize:vertical;}
                 <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
                     <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
                 </div>
+                <div class="side-item settings-item" data-setkey="site_footer" onclick="openSettingsPanel('site_footer')">
+                    <span class="set-ico">📄</span><span class="name">Chân trang</span>
+                </div>
                 <div class="side-item settings-item" id="nav_doc" onclick="showContentManager('doc')">
                     <span class="set-ico">📁</span><span class="name">Tài liệu</span>
                 </div>
@@ -1040,6 +1043,18 @@ textarea{resize:vertical;}
                     <textarea id="setHeroDesc" rows="3" placeholder="Chọn một chương bên dưới..."></textarea>
                 </div>
 
+                <div id="setFieldsFooter" class="hidden">
+                    <label>Nội dung chân trang</label>
+                    <input id="setFooterText" placeholder="SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải">
+                    <div class="hint" style="margin:2px 0 10px;">Dòng chữ này hiện ở chân trang trên TẤT CẢ các trang (trang chủ, danh sách môn học...) — sửa một lần, mọi trang tự cập nhật giống nhau.</div>
+                    <div style="margin-top:16px;padding:15px 17px;border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);">
+                        <div class="hint" style="text-transform:uppercase;font-size:.7rem;font-weight:700;letter-spacing:.05em;margin-bottom:8px;">Xem trước</div>
+                        <div style="background:var(--navy);border-radius:var(--radius-sm);padding:16px;text-align:center;">
+                            <span id="setFooterPreview" style="color:#9aa1c4;font-size:.85rem;">SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="setFieldsCard" class="hidden">
                     <label>Icon (mã lớp Font Awesome)</label>
                     <input id="setCardIcon" placeholder="fa-solid fa-list-check">
@@ -1071,6 +1086,7 @@ textarea{resize:vertical;}
                 </div>
             </div>
 
+            <div id="quickLinksSection">
             <div class="subj-mgr-head" style="margin-top:30px;">
                 <h2>⚡ Truy cập nhanh</h2>
                 <p class="hint">Các thẻ hiển thị ở mục "Truy cập nhanh" trên trang chủ, ngay bên dưới khối giới thiệu ở trên. Kéo thả để đổi thứ tự, thêm/sửa/xóa/đổi tên thoải mái.</p>
@@ -1124,6 +1140,7 @@ textarea{resize:vertical;}
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
 
@@ -3714,6 +3731,7 @@ let currentSetPayload = null;
 
 const SETTINGS_META = {
     home_hero: { title: 'Trang chủ', hint: 'Khối giới thiệu (hero) ở đầu trang chủ, và các thẻ Truy cập nhanh bên dưới nó.' },
+    site_footer: { title: 'Chân trang', hint: 'Dòng chữ bản quyền / chân trang, dùng chung và đồng bộ trên mọi trang.' },
 };
 
 async function openSettingsPanel(key){
@@ -3736,8 +3754,11 @@ async function openSettingsPanel(key){
     document.getElementById('setFormHint').innerText = meta.hint;
 
     const isHero = key === 'home_hero';
+    const isFooter = key === 'site_footer';
     document.getElementById('setFieldsHero').classList.toggle('hidden', !isHero);
-    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero);
+    document.getElementById('setFieldsFooter').classList.toggle('hidden', !isFooter);
+    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero || isFooter);
+    document.getElementById('quickLinksSection').classList.toggle('hidden', isFooter);
 
     const { data, error } = await sb.from('site_settings').select('*').eq('key', key).single();
     if (error && error.code !== 'PGRST116'){
@@ -3750,6 +3771,10 @@ async function openSettingsPanel(key){
         document.getElementById('setHeroEyebrow').value = currentSetPayload.eyebrow || '';
         document.getElementById('setHeroTitle').value = currentSetPayload.title || '';
         document.getElementById('setHeroDesc').value = currentSetPayload.desc || '';
+    } else if (isFooter){
+        const defaultFooter = 'SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải';
+        document.getElementById('setFooterText').value = currentSetPayload.text || '';
+        document.getElementById('setFooterPreview').innerText = currentSetPayload.text || defaultFooter;
     } else {
         document.getElementById('setCardIcon').value = currentSetPayload.icon || '';
         document.getElementById('setCardTitle').value = currentSetPayload.title || '';
@@ -3798,6 +3823,12 @@ function updateSetPreview(){
         if (el) el.addEventListener('input', updateSetPreview);
     });
 });
+document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('setFooterText');
+    if (el) el.addEventListener('input', () => {
+        document.getElementById('setFooterPreview').innerText = el.value.trim() || 'SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải';
+    });
+});
 
 async function saveSiteSetting(){
     if (!currentSetKey) return;
@@ -3808,6 +3839,10 @@ async function saveSiteSetting(){
             eyebrow: document.getElementById('setHeroEyebrow').value.trim(),
             title: document.getElementById('setHeroTitle').value.trim(),
             desc: document.getElementById('setHeroDesc').value.trim(),
+        };
+    } else if (currentSetKey === 'site_footer'){
+        payload = {
+            text: document.getElementById('setFooterText').value.trim(),
         };
     } else {
         const selected = document.querySelector('#setColorRow .color-swatch.selected');
@@ -3829,7 +3864,7 @@ async function saveSiteSetting(){
         msgEl.innerText = 'Lỗi: ' + error.message;
     } else {
         msgEl.style.color = 'var(--green)';
-        msgEl.innerText = '✔ Đã lưu. Trang chủ sẽ hiện nội dung mới ngay khi tải lại.';
+        msgEl.innerText = '✔ Đã lưu. Các trang liên quan sẽ hiện nội dung mới ngay khi tải lại.';
         setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4000);
     }
 }

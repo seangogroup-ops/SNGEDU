@@ -327,9 +327,9 @@
 
     <div id="content"><div class="state-card"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải dữ liệu môn học...</div></div>
 
-    <a href="https://forms.gle/CMZj35G3BMGfo1AZ8" target="_blank" rel="noopener" class="report-banner">
+    <a href="https://forms.gle/CMZj35G3BMGfo1AZ8" target="_blank" rel="noopener" class="report-banner" id="reportBanner">
         <span class="icon">🔔</span>
-        <span>Gặp câu hỏi sai? <u>Click vào đây</u> góp ý giúp tôi!</span>
+        <span id="reportBannerText">Gặp câu hỏi sai? <u>Click vào đây</u> góp ý giúp tôi!</span>
         <span class="arrow">👉</span>
     </a>
 
@@ -349,6 +349,29 @@ async function loadFooterSettings(){
     if (el) el.textContent = data.payload.text;
 }
 loadFooterSettings();
+
+// ---------------- BANNER "GẶP CÂU HỎI SAI" — đọc từ Supabase site_settings ----------------
+async function loadReportBannerSettings(){
+    const { data, error } = await sb.from('site_settings').select('*').eq('key', 'report_banner').single();
+    if (error || !data || !data.payload) return; // chưa cấu hình -> giữ nội dung tĩnh mặc định
+    const b = data.payload;
+    const linkEl = document.getElementById('reportBanner');
+    const textEl = document.getElementById('reportBannerText');
+    if (!linkEl || !textEl) return;
+    if (b.link) linkEl.href = b.link;
+    if (b.text){
+        let html = escapeHtmlBanner(b.text);
+        if (b.underline){
+            const u = escapeHtmlBanner(b.underline);
+            html = html.replace(u, '<u>' + u + '</u>');
+        }
+        textEl.innerHTML = html;
+    }
+}
+function escapeHtmlBanner(s){
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+loadReportBannerSettings();
 
 // ---------------- Bắt buộc đăng nhập mới xem được trang này ----------------
 (async function requireLogin(){

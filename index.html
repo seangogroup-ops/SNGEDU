@@ -286,6 +286,7 @@
     .hero-eyebrow::before{ content:''; width:6px; height:6px; border-radius:50%; background:var(--brand); flex-shrink:0; }
     .hero-card h1{ font-size:2rem; font-weight:800; line-height:1.24; margin-bottom:12px; max-width:460px; letter-spacing:-.01em; }
     .hero-card p{ color:var(--ink-soft); font-size:.94rem; line-height:1.65; max-width:430px; margin-bottom:20px; }
+    .hero-text{ transition: opacity .25s ease; }
 
     .avatar-group{
         display:inline-flex; align-items:center; gap:10px;
@@ -554,7 +555,7 @@
 
         <div class="hero">
             <div class="hero-card">
-                <div class="hero-text">
+                <div class="hero-text" id="heroText" style="opacity:0;">
                     <div class="hero-eyebrow" id="heroEyebrow">SNG EDU - Không gian tri thức cộng đồng</div>
                     <h1 id="heroTitle">Mở kho tài liệu, bắt đầu ôn tập ngay hôm nay</h1>
                     <p id="heroDesc">Nơi tri thức được chọn lọc và sẻ chia — từng tài liệu đều đến từ cộng đồng, được sàng lọc kỹ để đảm bảo chất lượng. Không chỉ là kho lưu trữ, đây là không gian để bạn kết nối, học hỏi và phát triển bản thân mỗi ngày. 📚 Giao diện gọn gàng, trực quan, giúp bạn tìm đúng tài liệu cần trong tích tắc — nhanh, mượt và hiệu quả. 🚀</p>
@@ -1124,13 +1125,29 @@
 
     // ---------------- KHỐI GIỚI THIỆU (hero) — đọc từ Supabase site_settings ----------------
     async function loadHeroSettings(){
-        const { data, error } = await sb.from('site_settings').select('*').eq('key', 'home_hero').single();
-        if (error || !data || !data.payload) return; // chưa cấu hình -> giữ nội dung tĩnh mặc định
-        const hero = data.payload;
-        if (hero.pageTitle) document.title = hero.pageTitle;
-        if (hero.eyebrow) document.getElementById('heroEyebrow').textContent = hero.eyebrow;
-        if (hero.title)   document.getElementById('heroTitle').textContent = hero.title;
-        if (hero.desc)    document.getElementById('heroDesc').textContent = hero.desc;
+        let revealed = false;
+        const reveal = () => {
+            if (revealed) return;
+            revealed = true;
+            const el = document.getElementById('heroText');
+            if (el) el.style.opacity = '1';
+        };
+        // Phòng khi mạng chậm/treo lâu -> vẫn hiện chữ mặc định ra sau 2.5s, không để trắng mãi
+        const safetyTimer = setTimeout(reveal, 2500);
+        try{
+            const { data, error } = await sb.from('site_settings').select('*').eq('key', 'home_hero').single();
+            if (error || !data || !data.payload) return; // chưa cấu hình -> giữ nội dung tĩnh mặc định
+            const hero = data.payload;
+            if (hero.pageTitle) document.title = hero.pageTitle;
+            if (hero.eyebrow) document.getElementById('heroEyebrow').textContent = hero.eyebrow;
+            if (hero.title)   document.getElementById('heroTitle').textContent = hero.title;
+            if (hero.desc)    document.getElementById('heroDesc').textContent = hero.desc;
+        } finally {
+            // Chỉ hiện chữ ra SAU KHI đã biết chắc nội dung cuối cùng (mặc định hoặc tuỳ chỉnh)
+            // -> tránh hiện tượng nháy chữ mặc định rồi đổi sang chữ tuỳ chỉnh khi tải trang.
+            clearTimeout(safetyTimer);
+            reveal();
+        }
     }
     loadHeroSettings();
 

@@ -427,6 +427,12 @@
     }
     .card:hover, .card:focus-visible{ transform:translateY(-4px); box-shadow:var(--shadow-hov); border-color:#dfe2ee; }
     .card.locked{ opacity:.88; }
+    .card.pro-highlight{ border-color:var(--amber); box-shadow:0 0 0 2px var(--amber-bg); }
+    .pro-ribbon{
+        position:absolute; top:14px; right:-30px; transform:rotate(35deg);
+        background:linear-gradient(135deg,#f5a524,#ffbd4a); color:#5a3c05;
+        font-size:.68rem; font-weight:800; padding:3px 34px;
+    }
 
     .card-top{ display:flex; align-items:flex-start; justify-content:space-between; }
     .icon-chip{
@@ -555,6 +561,7 @@
             <a class="side-link" href="#" data-tab="quiz"><i class="fa-solid fa-list-check"></i>Trắc nghiệm</a>
             <a class="side-link" href="#" data-tab="tool"><i class="fa-solid fa-toolbox"></i>Công cụ</a>
             <a class="side-link" href="#" data-tab="product"><i class="fa-solid fa-bag-shopping"></i>Sản phẩm</a>
+            <a class="side-link" href="#" data-tab="account"><i class="fa-solid fa-crown"></i>Tài khoản</a>
             <a class="side-link" href="#" data-tab="support"><i class="fa-solid fa-headset"></i>Hỗ trợ</a>
         </nav>
         <div class="side-foot">
@@ -592,7 +599,6 @@
                 <div class="hero-text" id="heroText" style="opacity:0;">
                     <div class="hero-eyebrow" id="heroEyebrow">SNG EDU - Không gian tri thức cộng đồng</div>
                     <h1 id="heroTitle">Mở kho tài liệu, bắt đầu ôn tập ngay hôm nay</h1>
-                    <p id="heroDesc">Nơi tri thức được chọn lọc và sẻ chia — từng tài liệu đều đến từ cộng đồng, được sàng lọc kỹ để đảm bảo chất lượng. Không chỉ là kho lưu trữ, đây là không gian để bạn kết nối, học hỏi và phát triển bản thân mỗi ngày. 📚 Giao diện gọn gàng, trực quan, giúp bạn tìm đúng tài liệu cần trong tích tắc — nhanh, mượt và hiệu quả. 🚀</p>
                     <div class="avatar-group">
                         <div class="avatar-stack">
                             <div class="mini-avt" style="background:#4f6bff">H</div>
@@ -695,6 +701,22 @@
     <section class="tab-panel" id="panel-product" style="display:none">
         <div class="sec-head"><h2>Sản phẩm</h2></div>
         <div id="productGrid">
+            <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
+        </div>
+    </section>
+
+    <!-- ============ TAB: TÀI KHOẢN & GÓI PRO ============ -->
+    <section class="tab-panel" id="panel-account" style="display:none">
+        <div class="sec-head"><h2>Thông tin tài khoản</h2></div>
+        <div style="background:var(--card); border:1px solid var(--line); border-radius:20px; padding:22px 24px; margin-bottom:28px;">
+            <div class="acc-info-row"><span class="label">Email</span><span class="value" id="acctPageEmail">—</span></div>
+            <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="acctPageName">—</span></div>
+            <div class="acc-info-row"><span class="label">Tham gia từ</span><span class="value" id="acctPageJoined">—</span></div>
+            <div class="acc-info-row"><span class="label">Gói hiện tại</span><span class="value"><span class="acc-plan-badge" id="acctPagePlanBadge">Miễn phí</span></span></div>
+        </div>
+
+        <div class="sec-head"><h2>Nâng cấp gói Pro</h2></div>
+        <div id="proGrid" class="grid">
             <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
         </div>
     </section>
@@ -865,7 +887,7 @@
 
     // ---------------- ĐĂNG NHẬP / ĐĂNG KÝ — chỉ chặn khi bấm vào Trắc nghiệm, Tài liệu, Công cụ, Sản phẩm ----------------
     // Trang chủ và Hỗ trợ luôn hiện tự do trước, không bị chuyển trang ngay.
-    const GATED_TABS = ['quiz', 'doc', 'tool', 'product'];
+    const GATED_TABS = ['quiz', 'doc', 'tool', 'product', 'account'];
     let currentSession = null;
 
     function loginUrl(nextKey){
@@ -1267,7 +1289,6 @@
             if (hero.pageTitle) document.title = hero.pageTitle;
             if (hero.eyebrow) document.getElementById('heroEyebrow').textContent = hero.eyebrow;
             if (hero.title)   document.getElementById('heroTitle').textContent = hero.title;
-            if (hero.desc)    document.getElementById('heroDesc').textContent = hero.desc;
         } finally {
             // Chỉ hiện chữ ra SAU KHI đã biết chắc nội dung cuối cùng (mặc định hoặc tuỳ chỉnh)
             // -> tránh hiện tượng nháy chữ mặc định rồi đổi sang chữ tuỳ chỉnh khi tải trang.
@@ -1302,6 +1323,7 @@
         { id:'t3', icon:'fa-solid fa-chart-line', color:'amber',  title:'Thống kê kết quả',   desc:'', status:'soon', link:'' }
     ]};
     const DEFAULT_PRODUCT_CONTENT = { items: [] };
+    const DEFAULT_PRO_CONTENT = { items: [] };
 
     function docItemCardHtml(item, isPaid){
         const href = item.link || '#';
@@ -1394,6 +1416,68 @@
         }
     }
 
+    // ---------------- GÓI PRO — quản lý ở trang admin (site_settings: pro_content), giống Sản phẩm ----------------
+    function proItemCardHtml(item){
+        const style = QL_COLOR_MAP[item.color] || QL_COLOR_MAP.indigo;
+        const href = item.link || '#';
+        const isHighlight = item.color === 'amber';
+        return `
+            <a class="card${isHighlight ? ' pro-highlight' : ''}" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
+                ${isHighlight ? '<div class="pro-ribbon">Phổ biến nhất</div>' : ''}
+                ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
+                <div class="card-top"><div class="icon-chip" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(item.icon || 'fa-solid fa-crown')}"></i></div></div>
+                <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
+                ${item.desc ? `<div class="badge-row"><i class="fa-solid fa-circle-info"></i> ${escapeHtmlHome(item.desc)}</div>` : ''}
+                ${item.price ? `<div class="status-text" style="color:${style.fg}">${escapeHtmlHome(item.price)}</div>` : ''}
+            </a>`;
+    }
+
+    async function renderProContent(){
+        const payload = await fetchSiteSettingPayload('pro_content', DEFAULT_PRO_CONTENT);
+        const items = Array.isArray(payload.items) ? payload.items : [];
+        const grid = document.getElementById('proGrid');
+        if (!grid) return;
+        if (!items.length){
+            grid.innerHTML = `<div class="empty-state"><div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-crown"></i></div><div class="empty-title">Chưa có gói Pro nào</div><div class="empty-sub">Vào trang admin &gt; Gói Pro để thêm gói đầu tiên.</div></div>`;
+        } else {
+            grid.innerHTML = items.map(proItemCardHtml).join('');
+        }
+    }
+
+    // ---------------- Đổ dữ liệu tài khoản đang đăng nhập vào tab "Tài khoản & Gói Pro" ----------------
+    function renderAccountPanelInfo(){
+        if (!document.getElementById('panel-account')) return;
+        const emailEl = document.getElementById('acctPageEmail');
+        const nameEl = document.getElementById('acctPageName');
+        const joinedEl = document.getElementById('acctPageJoined');
+        const badgeEl = document.getElementById('acctPagePlanBadge');
+        if (!emailEl) return;
+
+        if (!currentSession){
+            emailEl.textContent = '—'; nameEl.textContent = '—'; joinedEl.textContent = '—';
+            badgeEl.textContent = 'Miễn phí'; badgeEl.className = 'acc-plan-badge';
+            return;
+        }
+        const user = currentSession.user;
+        const email = user.email || '';
+        const displayName = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || email.split('@')[0];
+        const joined = user.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : '—';
+        emailEl.textContent = email || '—';
+        nameEl.textContent = displayName || '—';
+        joinedEl.textContent = joined;
+
+        const meta = user.user_metadata || {};
+        const premiumUntil = meta.premium_until ? new Date(meta.premium_until) : null;
+        const isPremiumActive = meta.plan === 'premium' && (!premiumUntil || premiumUntil > new Date());
+        if (isPremiumActive){
+            badgeEl.textContent = premiumUntil ? `Premium — hết hạn ${premiumUntil.toLocaleDateString('vi-VN')}` : 'Premium — Đang hoạt động';
+            badgeEl.className = 'acc-plan-badge premium';
+        } else {
+            badgeEl.textContent = 'Miễn phí';
+            badgeEl.className = 'acc-plan-badge';
+        }
+    }
+
     // ---------------- MENU ĐIỀU HƯỚNG — ẩn/hiện + sắp xếp thứ tự tab, quản lý ở trang admin (site_settings) ----------------
     const NAV_TABS_DEFAULT = [
         { key:'home',    label:'Trang chủ',   icon:'fa-solid fa-house' },
@@ -1401,6 +1485,7 @@
         { key:'quiz',    label:'Trắc nghiệm', icon:'fa-solid fa-list-check' },
         { key:'tool',    label:'Công cụ',     icon:'fa-solid fa-toolbox' },
         { key:'product', label:'Sản phẩm',    icon:'fa-solid fa-bag-shopping' },
+        { key:'account', label:'Tài khoản', icon:'fa-solid fa-crown' },
         { key:'support', label:'Hỗ trợ',      icon:'fa-solid fa-headset' }
     ];
 
@@ -1435,7 +1520,7 @@
         blue:   { bg:'#e8f3ff',         fg:'#0068ff' },
         red:    { bg:'#fde8e8',         fg:'#dc2626' }
     };
-    const QL_KNOWN_TABS = ['home', 'doc', 'quiz', 'tool', 'product', 'support'];
+    const QL_KNOWN_TABS = ['home', 'doc', 'quiz', 'tool', 'product', 'account', 'support'];
 
     function quickTileHtml(q){
         const style = QL_COLOR_MAP[q.color] || QL_COLOR_MAP.indigo;
@@ -1479,14 +1564,16 @@
     renderDocContent();
     renderToolContent();
     renderProductContent();
+    renderProContent();
 
-    const panels = { home:'panel-home', quiz:'panel-quiz', doc:'panel-doc', tool:'panel-tool', product:'panel-product', support:'panel-support' };
+    const panels = { home:'panel-home', quiz:'panel-quiz', doc:'panel-doc', tool:'panel-tool', product:'panel-product', account:'panel-account', support:'panel-support' };
     const TAB_TITLES = {
         home:    ['Trang chủ', ''],
         quiz:    ['Trắc nghiệm', ''],
         doc:     ['Tài liệu', ''],
         tool:    ['Công cụ', ''],
         product: ['Sản phẩm', ''],
+        account: ['Tài khoản', ''],
         support: ['Hỗ trợ', '']
     };
     const topbarTitle = document.querySelector('.topbar-title');
@@ -1503,6 +1590,7 @@
         currentTabKey = key;
         Object.values(panels).forEach(id => document.getElementById(id).style.display = 'none');
         document.getElementById(panels[key]).style.display = '';
+        if (key === 'account') renderAccountPanelInfo();
         document.querySelectorAll('.side-link[data-tab]').forEach(el => el.classList.toggle('active', el.dataset.tab === key));
         const [t, sub] = TAB_TITLES[key] || [key, ''];
         topbarTitle.innerHTML = t + '<span>' + sub + '</span>';
@@ -1540,6 +1628,7 @@
         sb.auth.onAuthStateChange((_event, session) => {
             currentSession = session;
             updateAccountUI();
+            renderAccountPanelInfo();
         });
 
         const tabsConfig = await loadNavTabsConfig();

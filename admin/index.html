@@ -1029,6 +1029,9 @@ textarea{resize:vertical;}
                 <p class="hint" id="setFormHint">Nội dung này hiển thị ở trang chủ.</p>
 
                 <div id="setFieldsHero" class="hidden">
+                    <label>Tiêu đề tab trình duyệt (thẻ &lt;title&gt;)</label>
+                    <input id="setHeroPageTitle" placeholder="SNG EDU — Không gian tri thức cộng đồng">
+                    <div class="hint" style="margin:2px 0 10px;">Chữ hiện trên tab trình duyệt và khi chia sẻ link (Google, Zalo, Facebook...). Nếu để trống, web dùng tiêu đề mặc định.</div>
                     <label>Dòng nhỏ phía trên (eyebrow)</label>
                     <input id="setHeroEyebrow" placeholder="Mác – Lênin">
                     <label>Tiêu đề chính</label>
@@ -3538,7 +3541,7 @@ function openAccountDetail(userId){
         <div class="acct-detail-grid">
             <div class="acct-action-card pwd" onclick="openPasswordModal('${u.id}')">
                 <span class="aac-ico">🔑</span>
-                <span class="aac-title">Xem / đặt mật khẩu</span>
+                <span class="aac-title">Đặt lại mật khẩu</span>
                 <span class="aac-desc">Đặt mật khẩu mới cho khách và gửi cho họ để đăng nhập lại.</span>
             </div>
             <div class="acct-action-card rename" onclick="openRenameModal('${u.id}')">
@@ -3628,7 +3631,7 @@ function openPasswordModal(userId){
     if (!u) return;
     const suggested = genStrongPassword();
     document.getElementById('acctFormBox').innerHTML = `
-        <h4>🔑 Mật khẩu tài khoản</h4>
+        <h4>🔑 Đặt lại mật khẩu</h4>
         <p class="acct-form-target">Tài khoản <b>${escapeHtml(u.email || '')}</b></p>
         <label style="margin-top:0;">Mật khẩu mới cho khách</label>
         <div class="acct-pwd-field">
@@ -3743,6 +3746,7 @@ async function openSettingsPanel(key){
     currentSetPayload = (data && data.payload) ? data.payload : {};
 
     if (isHero){
+        document.getElementById('setHeroPageTitle').value = currentSetPayload.pageTitle || '';
         document.getElementById('setHeroEyebrow').value = currentSetPayload.eyebrow || '';
         document.getElementById('setHeroTitle').value = currentSetPayload.title || '';
         document.getElementById('setHeroDesc').value = currentSetPayload.desc || '';
@@ -3800,6 +3804,7 @@ async function saveSiteSetting(){
     let payload;
     if (currentSetKey === 'home_hero'){
         payload = {
+            pageTitle: document.getElementById('setHeroPageTitle').value.trim(),
             eyebrow: document.getElementById('setHeroEyebrow').value.trim(),
             title: document.getElementById('setHeroTitle').value.trim(),
             desc: document.getElementById('setHeroDesc').value.trim(),

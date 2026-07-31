@@ -794,6 +794,9 @@ textarea{resize:vertical;}
                 <div class="side-item settings-item" data-setkey="site_footer" onclick="openSettingsPanel('site_footer')">
                     <span class="set-ico">📄</span><span class="name">Chân trang</span>
                 </div>
+                <div class="side-item settings-item" data-setkey="report_banner" onclick="openSettingsPanel('report_banner')">
+                    <span class="set-ico">🔔</span><span class="name">Banner góp ý</span>
+                </div>
                 <div class="side-item settings-item" id="nav_doc" onclick="showContentManager('doc')">
                     <span class="set-ico">📁</span><span class="name">Tài liệu</span>
                 </div>
@@ -1051,6 +1054,24 @@ textarea{resize:vertical;}
                         <div class="hint" style="text-transform:uppercase;font-size:.7rem;font-weight:700;letter-spacing:.05em;margin-bottom:8px;">Xem trước</div>
                         <div style="background:var(--navy);border-radius:var(--radius-sm);padding:16px;text-align:center;">
                             <span id="setFooterPreview" style="color:#9aa1c4;font-size:.85rem;">SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="setFieldsBanner" class="hidden">
+                    <label>Link đích (bấm vào banner sẽ mở link này)</label>
+                    <input id="setBannerLink" placeholder="https://forms.gle/...">
+                    <label>Nội dung banner</label>
+                    <input id="setBannerText" placeholder="Gặp câu hỏi sai? Click vào đây góp ý giúp tôi!">
+                    <label>Cụm từ cần gạch chân (phải trùng khớp với nội dung ở trên)</label>
+                    <input id="setBannerUnderline" placeholder="Click vào đây">
+                    <div class="hint" style="margin:2px 0 10px;">Banner này hiện ở trang danh sách môn học (mon-hoc.html), phía dưới danh sách chương.</div>
+                    <div style="margin-top:16px;padding:15px 17px;border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);">
+                        <div class="hint" style="text-transform:uppercase;font-size:.7rem;font-weight:700;letter-spacing:.05em;margin-bottom:8px;">Xem trước</div>
+                        <div style="background:#241d10;border:1px solid #b8860b;border-radius:999px;padding:14px 22px;display:flex;align-items:center;gap:10px;justify-content:center;">
+                            <span style="font-size:16px;">🔔</span>
+                            <span id="setBannerPreview" style="color:#f5c065;font-weight:800;font-size:.85rem;">Gặp câu hỏi sai? <u>Click vào đây</u> góp ý giúp tôi!</span>
+                            <span style="font-size:15px;">👉</span>
                         </div>
                     </div>
                 </div>
@@ -3732,6 +3753,7 @@ let currentSetPayload = null;
 const SETTINGS_META = {
     home_hero: { title: 'Trang chủ', hint: 'Khối giới thiệu (hero) ở đầu trang chủ, và các thẻ Truy cập nhanh bên dưới nó.' },
     site_footer: { title: 'Chân trang', hint: 'Dòng chữ bản quyền / chân trang, dùng chung và đồng bộ trên mọi trang.' },
+    report_banner: { title: 'Banner góp ý', hint: 'Banner "Gặp câu hỏi sai?" ở trang danh sách môn học — chỉnh chữ và link đích.' },
 };
 
 async function openSettingsPanel(key){
@@ -3755,10 +3777,12 @@ async function openSettingsPanel(key){
 
     const isHero = key === 'home_hero';
     const isFooter = key === 'site_footer';
+    const isBanner = key === 'report_banner';
     document.getElementById('setFieldsHero').classList.toggle('hidden', !isHero);
     document.getElementById('setFieldsFooter').classList.toggle('hidden', !isFooter);
-    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero || isFooter);
-    document.getElementById('quickLinksSection').classList.toggle('hidden', isFooter);
+    document.getElementById('setFieldsBanner').classList.toggle('hidden', !isBanner);
+    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero || isFooter || isBanner);
+    document.getElementById('quickLinksSection').classList.toggle('hidden', isFooter || isBanner);
 
     const { data, error } = await sb.from('site_settings').select('*').eq('key', key).single();
     if (error && error.code !== 'PGRST116'){
@@ -3775,6 +3799,13 @@ async function openSettingsPanel(key){
         const defaultFooter = 'SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải';
         document.getElementById('setFooterText').value = currentSetPayload.text || '';
         document.getElementById('setFooterPreview').innerText = currentSetPayload.text || defaultFooter;
+    } else if (isBanner){
+        const defaultText = 'Gặp câu hỏi sai? Click vào đây góp ý giúp tôi!';
+        const defaultUnderline = 'Click vào đây';
+        document.getElementById('setBannerLink').value = currentSetPayload.link || '';
+        document.getElementById('setBannerText').value = currentSetPayload.text || '';
+        document.getElementById('setBannerUnderline').value = currentSetPayload.underline || '';
+        updateBannerPreview(currentSetPayload.text || defaultText, currentSetPayload.underline || defaultUnderline);
     } else {
         document.getElementById('setCardIcon').value = currentSetPayload.icon || '';
         document.getElementById('setCardTitle').value = currentSetPayload.title || '';
@@ -3829,6 +3860,22 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('setFooterPreview').innerText = el.value.trim() || 'SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải';
     });
 });
+function updateBannerPreview(text, underline){
+    const defaultText = 'Gặp câu hỏi sai? Click vào đây góp ý giúp tôi!';
+    let html = escapeHtml(text || defaultText);
+    const u = (underline || '').trim();
+    if (u && html.includes(escapeHtml(u))){
+        html = html.replace(escapeHtml(u), '<u>' + escapeHtml(u) + '</u>');
+    }
+    document.getElementById('setBannerPreview').innerHTML = html;
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const t = document.getElementById('setBannerText');
+    const u = document.getElementById('setBannerUnderline');
+    const handler = () => updateBannerPreview(t.value, u.value);
+    if (t) t.addEventListener('input', handler);
+    if (u) u.addEventListener('input', handler);
+});
 
 async function saveSiteSetting(){
     if (!currentSetKey) return;
@@ -3843,6 +3890,12 @@ async function saveSiteSetting(){
     } else if (currentSetKey === 'site_footer'){
         payload = {
             text: document.getElementById('setFooterText').value.trim(),
+        };
+    } else if (currentSetKey === 'report_banner'){
+        payload = {
+            link: document.getElementById('setBannerLink').value.trim(),
+            text: document.getElementById('setBannerText').value.trim(),
+            underline: document.getElementById('setBannerUnderline').value.trim(),
         };
     } else {
         const selected = document.querySelector('#setColorRow .color-swatch.selected');

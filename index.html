@@ -251,6 +251,40 @@
     .acc-logout-btn:hover{ background:#fadadd; }
     html[data-theme="dark"] .acc-logout-btn:hover{ background:#472525; }
 
+    /* ----- gói sử dụng (Miễn phí / Premium) ----- */
+    .acc-plan-badge{
+        display:inline-flex; align-items:center; gap:5px; padding:3px 11px; border-radius:999px;
+        font-size:.74rem; font-weight:800; background:#eef0f8; color:var(--ink-soft);
+    }
+    html[data-theme="dark"] .acc-plan-badge{ background:#2c2f3c; color:var(--ink-soft); }
+    .acc-plan-badge.premium{ background:linear-gradient(135deg,#f5a524,#ffbd4a); color:#5a3c05; }
+    .acc-plan-badge.premium::before{ content:'👑'; }
+
+    /* ----- đổi mật khẩu ----- */
+    .acc-changepw-btn{
+        width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+        background:var(--brand-bg); color:var(--brand); border:none; border-radius:12px;
+        padding:11px; font-family:inherit; font-weight:700; font-size:.84rem; cursor:pointer;
+        margin-top:14px; transition:background .15s ease, color .15s ease;
+    }
+    .acc-changepw-btn:hover{ background:var(--brand); color:#fff; }
+    .acc-pw-form{ margin-top:12px; display:flex; flex-direction:column; gap:8px; animation:accPop .15s ease; }
+    .acc-pw-form input{
+        width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+        background:var(--bg); color:var(--ink); font-family:inherit; font-size:.85rem;
+    }
+    .acc-pw-form input:focus{ outline:none; border-color:var(--brand); }
+    .acc-pw-msg{ font-size:.78rem; min-height:1.1em; font-weight:600; }
+    .acc-pw-msg.err{ color:#e5484d; }
+    .acc-pw-msg.ok{ color:var(--green); }
+    .acc-pw-actions{ display:flex; gap:8px; }
+    .acc-pw-actions button{ flex:1; padding:10px; border-radius:10px; border:none; font-family:inherit; font-weight:700; font-size:.82rem; cursor:pointer; transition:background .15s ease; }
+    .acc-pw-cancel{ background:var(--bg); color:var(--ink-soft); border:1px solid var(--line); }
+    .acc-pw-cancel:hover{ background:var(--line); }
+    .acc-pw-save{ background:var(--brand); color:#fff; }
+    .acc-pw-save:hover{ background:#3d59e6; }
+    .acc-pw-save:disabled{ opacity:.6; cursor:not-allowed; }
+
     .wrap{ max-width:1180px; width:100%; margin:0 auto; padding:36px 28px 60px; flex:1; display:flex; flex-direction:column; }
 
     /* ---------------- hero row ---------------- */
@@ -743,7 +777,21 @@
                 <div class="acc-info-row"><span class="label">Email</span><span class="value" id="accInfoEmail">—</span></div>
                 <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="accInfoName">—</span></div>
                 <div class="acc-info-row"><span class="label">Tham gia từ</span><span class="value" id="accInfoJoined">—</span></div>
+                <div class="acc-info-row"><span class="label">Gói sử dụng</span><span class="value"><span class="acc-plan-badge" id="accPlanBadge">Miễn phí</span></span></div>
                 <div class="acc-info-row"><span class="label">Trạng thái</span><span class="value" style="color:var(--green)">Đã xác thực</span></div>
+
+                <button class="acc-changepw-btn" id="accChangePwBtn" type="button">
+                    <i class="fa-solid fa-key"></i> Đổi mật khẩu
+                </button>
+                <div class="acc-pw-form" id="accPwForm" style="display:none;">
+                    <input type="password" id="accPwNew" placeholder="Mật khẩu mới (ít nhất 6 ký tự)" autocomplete="new-password">
+                    <input type="password" id="accPwConfirm" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password">
+                    <div class="acc-pw-msg" id="accPwMsg"></div>
+                    <div class="acc-pw-actions">
+                        <button type="button" class="acc-pw-cancel" id="accPwCancel">Huỷ</button>
+                        <button type="button" class="acc-pw-save" id="accPwSave">Lưu mật khẩu mới</button>
+                    </div>
+                </div>
             </div>
             <div class="acc-panel" id="accPanel-history">
                 <div class="acc-loading" id="accHistoryLoading">Đang tải lịch sử...</div>
@@ -884,6 +932,25 @@
         document.getElementById('accInfoName').textContent = displayName || '—';
         document.getElementById('accInfoJoined').textContent = joined;
 
+        // ----- Gói sử dụng: đọc từ user_metadata.plan (giá trị 'premium' | để trống/khác = miễn phí) -----
+        // premium_until (nếu có) là hạn dùng Premium, dạng ISO date -> hết hạn thì tự về Miễn phí.
+        const meta = user.user_metadata || {};
+        const premiumUntil = meta.premium_until ? new Date(meta.premium_until) : null;
+        const isPremiumActive = meta.plan === 'premium' && (!premiumUntil || premiumUntil > new Date());
+        const planBadge = document.getElementById('accPlanBadge');
+        if (planBadge){
+            if (isPremiumActive){
+                planBadge.textContent = premiumUntil
+                    ? `Premium — hết hạn ${premiumUntil.toLocaleDateString('vi-VN')}`
+                    : 'Premium — Đang hoạt động';
+                planBadge.className = 'acc-plan-badge premium';
+            } else {
+                planBadge.textContent = 'Miễn phí';
+                planBadge.className = 'acc-plan-badge';
+            }
+        }
+        closePwForm();
+
         switchAccTab('info');
         accOverlay.classList.add('show');
         accHistoryLoaded = false;
@@ -956,6 +1023,65 @@
         updateAccountUI();
         closeAccountModal();
         accLogoutBtn.disabled = false;
+    });
+
+    // ---------------- Đổi mật khẩu (ngay trong tab Thông tin) ----------------
+    const accChangePwBtn = document.getElementById('accChangePwBtn');
+    const accPwForm = document.getElementById('accPwForm');
+    const accPwNew = document.getElementById('accPwNew');
+    const accPwConfirm = document.getElementById('accPwConfirm');
+    const accPwMsg = document.getElementById('accPwMsg');
+    const accPwSave = document.getElementById('accPwSave');
+    const accPwCancel = document.getElementById('accPwCancel');
+
+    function closePwForm(){
+        if (!accPwForm) return;
+        accPwForm.style.display = 'none';
+        if (accPwNew) accPwNew.value = '';
+        if (accPwConfirm) accPwConfirm.value = '';
+        if (accPwMsg){ accPwMsg.textContent = ''; accPwMsg.className = 'acc-pw-msg'; }
+    }
+
+    if (accChangePwBtn) accChangePwBtn.addEventListener('click', ()=>{
+        const willOpen = accPwForm.style.display === 'none';
+        closePwForm();
+        if (willOpen){
+            accPwForm.style.display = 'flex';
+            accPwNew.focus();
+        }
+    });
+    if (accPwCancel) accPwCancel.addEventListener('click', closePwForm);
+
+    if (accPwSave) accPwSave.addEventListener('click', async ()=>{
+        const pw1 = accPwNew.value;
+        const pw2 = accPwConfirm.value;
+        accPwMsg.className = 'acc-pw-msg';
+
+        if (pw1.length < 6){
+            accPwMsg.textContent = 'Mật khẩu phải có ít nhất 6 ký tự.';
+            accPwMsg.classList.add('err');
+            return;
+        }
+        if (pw1 !== pw2){
+            accPwMsg.textContent = 'Mật khẩu nhập lại không khớp.';
+            accPwMsg.classList.add('err');
+            return;
+        }
+
+        accPwSave.disabled = true;
+        accPwSave.textContent = 'Đang lưu...';
+        const { error } = await sb.auth.updateUser({ password: pw1 });
+        accPwSave.disabled = false;
+        accPwSave.textContent = 'Lưu mật khẩu mới';
+
+        if (error){
+            accPwMsg.textContent = 'Lỗi: ' + error.message;
+            accPwMsg.classList.add('err');
+        } else {
+            accPwMsg.textContent = '✔ Đổi mật khẩu thành công!';
+            accPwMsg.classList.add('ok');
+            setTimeout(closePwForm, 2000);
+        }
     });
 
     let currentTabKey = 'home';

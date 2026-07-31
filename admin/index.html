@@ -646,6 +646,40 @@ textarea{resize:vertical;}
 #acctFormMsg.err{color:var(--red);}
 #acctFormMsg.ok{color:var(--green);}
 
+/* ---------- TRANG CHI TIẾT TÀI KHOẢN (thay cho popup) ---------- */
+.acct-detail-back{
+    display:inline-flex;align-items:center;gap:6px;background:none;border:none;padding:0;
+    color:var(--gray);font-weight:700;font-size:.85rem;margin-bottom:16px;font-family:var(--font-display);
+}
+.acct-detail-back:hover{color:var(--accent);}
+.acct-detail-back svg{width:16px;height:16px;}
+.acct-detail-head{
+    display:flex;align-items:center;gap:16px;background:var(--white);border:1px solid var(--border);
+    border-radius:var(--radius-lg);padding:20px 22px;box-shadow:var(--shadow-xs);margin-bottom:16px;flex-wrap:wrap;
+}
+.acct-detail-head .acct-avatar{width:56px;height:56px;font-size:1.3rem;border-radius:14px;}
+.acct-detail-head .adh-info{flex:1;min-width:180px;}
+.acct-detail-head .adh-info .adh-name{font-weight:800;font-size:1.12rem;color:var(--text);}
+.acct-detail-head .adh-info .adh-email{font-size:.86rem;color:var(--gray);margin-top:2px;}
+.acct-detail-head .adh-info .adh-meta{font-size:.8rem;color:var(--gray);margin-top:6px;}
+.acct-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+.acct-action-card{
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;
+    box-shadow:var(--shadow-xs);cursor:pointer;transition:box-shadow .12s ease,border-color .12s ease,transform .12s ease;
+    display:flex;flex-direction:column;gap:8px;
+}
+.acct-action-card:hover{box-shadow:var(--shadow-sm);border-color:#d7daed;transform:translateY(-1px);}
+.acct-action-card .aac-ico{
+    width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;
+}
+.acct-action-card.pwd .aac-ico{background:var(--accent-soft);color:var(--accent);}
+.acct-action-card.rename .aac-ico{background:var(--bg);color:var(--gray);}
+.acct-action-card.lock .aac-ico{background:var(--amber-bg);color:var(--amber);}
+.acct-action-card.danger .aac-ico{background:var(--red-bg);color:var(--red);}
+.acct-action-card .aac-title{font-weight:700;font-size:.92rem;color:var(--text);}
+.acct-action-card .aac-desc{font-size:.79rem;color:var(--gray);line-height:1.4;}
+.acct-action-card.danger .aac-title{color:var(--red);}
+
 /* =========================================================================
    MOBILE OVERRIDES — đặt cuối cùng trong <style> để thắng cascade tự nhiên
    (rule cùng độ ưu tiên, đứng sau sẽ thắng — không cần !important).
@@ -873,39 +907,43 @@ textarea{resize:vertical;}
         <div id="accountsPanel" class="hidden">
             <div class="subj-mgr-head">
                 <h2>👤 Tài khoản</h2>
-                <p class="hint">Danh sách người dùng đã đăng ký qua trang đăng nhập. Xem trạng thái, đặt mật khẩu hộ khách, khoá đăng nhập, sửa tên hiển thị hoặc xoá tài khoản.</p>
+                <p class="hint">Danh sách người dùng đã đăng ký qua trang đăng nhập. Bấm vào một tài khoản để xem chi tiết và thao tác.</p>
             </div>
 
-            <div class="acct-stats">
-                <div class="acct-stat-card total">
-                    <span class="ico">👥</span>
-                    <div><div class="num" id="acctStatTotal">0</div><div class="lbl">Tổng số tài khoản</div></div>
+            <div id="acctListView">
+                <div class="acct-stats">
+                    <div class="acct-stat-card total">
+                        <span class="ico">👥</span>
+                        <div><div class="num" id="acctStatTotal">0</div><div class="lbl">Tổng số tài khoản</div></div>
+                    </div>
+                    <div class="acct-stat-card active">
+                        <span class="ico">✅</span>
+                        <div><div class="num" id="acctStatActive">0</div><div class="lbl">Đang hoạt động</div></div>
+                    </div>
+                    <div class="acct-stat-card banned">
+                        <span class="ico">🔒</span>
+                        <div><div class="num" id="acctStatBanned">0</div><div class="lbl">Đã khoá đăng nhập</div></div>
+                    </div>
                 </div>
-                <div class="acct-stat-card active">
-                    <span class="ico">✅</span>
-                    <div><div class="num" id="acctStatActive">0</div><div class="lbl">Đang hoạt động</div></div>
+
+                <div class="acct-toolbar">
+                    <div class="acct-search-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input id="acctSearch" placeholder="Tìm theo email hoặc tên..." oninput="renderAccountsList()">
+                    </div>
+                    <div class="acct-filter-chips" id="acctFilterChips">
+                        <button class="acct-chip active" data-f="all" onclick="setAcctFilter('all')">Tất cả</button>
+                        <button class="acct-chip" data-f="active" onclick="setAcctFilter('active')">Đang hoạt động</button>
+                        <button class="acct-chip" data-f="banned" onclick="setAcctFilter('banned')">Đã khoá</button>
+                    </div>
+                    <button class="side-add" onclick="loadAccountsList()">↻ Tải lại</button>
                 </div>
-                <div class="acct-stat-card banned">
-                    <span class="ico">🔒</span>
-                    <div><div class="num" id="acctStatBanned">0</div><div class="lbl">Đã khoá đăng nhập</div></div>
-                </div>
+                <p class="hint" id="acctCount" style="margin:0 0 12px;"></p>
+
+                <div id="acctListWrap" class="acct-list"></div>
             </div>
 
-            <div class="acct-toolbar">
-                <div class="acct-search-wrap">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input id="acctSearch" placeholder="Tìm theo email hoặc tên..." oninput="renderAccountsList()">
-                </div>
-                <div class="acct-filter-chips" id="acctFilterChips">
-                    <button class="acct-chip active" data-f="all" onclick="setAcctFilter('all')">Tất cả</button>
-                    <button class="acct-chip" data-f="active" onclick="setAcctFilter('active')">Đang hoạt động</button>
-                    <button class="acct-chip" data-f="banned" onclick="setAcctFilter('banned')">Đã khoá</button>
-                </div>
-                <button class="side-add" onclick="loadAccountsList()">↻ Tải lại</button>
-            </div>
-            <p class="hint" id="acctCount" style="margin:0 0 12px;"></p>
-
-            <div id="acctListWrap" class="acct-list"></div>
+            <div id="acctDetailView" class="hidden"></div>
         </div>
 
         <div id="contentManagerPanel" class="hidden">
@@ -3410,6 +3448,7 @@ async function callAdminUsersFn(payload){
 async function showAccountsManager(){
     showAdminPanel('accountsPanel', 'navAccounts');
     document.getElementById('acctSearch').value = '';
+    closeAccountDetail();
     await loadAccountsList();
 }
 
@@ -3476,30 +3515,55 @@ function renderAccountsList(){
 }
 
 // ---------- MODAL: chi tiết tài khoản (bấm vào 1 dòng để mở) ----------
+// ---------- TRANG CHI TIẾT TÀI KHOẢN (bấm vào 1 dòng để "đi vào" trang riêng) ----------
 function openAccountDetail(userId){
     const u = accountsCache.find(x => x.id === userId);
     if (!u) return;
     const isBanned = u.banned_until && new Date(u.banned_until) > new Date();
     const initial = (u.email || 'U')[0].toUpperCase();
-    document.getElementById('acctFormBox').innerHTML = `
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-            <span class="acct-avatar" style="width:46px;height:46px;font-size:1.05rem;${isBanned ? 'background:linear-gradient(135deg,#dc2626,#f87171);' : ''}">${escapeHtml(initial)}</span>
-            <div style="min-width:0;">
-                <div style="font-weight:800;font-size:1rem;color:var(--text);">${escapeHtml(u.full_name || '(chưa đặt tên)')}</div>
-                <div style="font-size:.82rem;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(u.email || '')}</div>
+
+    document.getElementById('acctDetailView').innerHTML = `
+        <button class="acct-detail-back" onclick="closeAccountDetail()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            Quay lại danh sách
+        </button>
+        <div class="acct-detail-head">
+            <span class="acct-avatar" style="${isBanned ? 'background:linear-gradient(135deg,#dc2626,#f87171);' : ''}">${escapeHtml(initial)}</span>
+            <div class="adh-info">
+                <div class="adh-name">${escapeHtml(u.full_name || '(chưa đặt tên)')}</div>
+                <div class="adh-email">${escapeHtml(u.email || '')}</div>
+                <div class="adh-meta">Đăng ký ${fmtDate(u.created_at)} · <span style="color:${isBanned ? 'var(--red)' : 'var(--green)'};font-weight:700;">${isBanned ? 'Đã khoá đăng nhập' : 'Đang hoạt động'}</span></div>
             </div>
         </div>
-        <p class="acct-form-target" style="margin-top:-6px;">Đăng ký ${fmtDate(u.created_at)} · <span style="color:${isBanned ? 'var(--red)' : 'var(--green)'};font-weight:700;">${isBanned ? 'Đã khoá đăng nhập' : 'Đang hoạt động'}</span></p>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
-            <button class="btn-acct-save" style="background:var(--accent-soft);color:var(--accent);text-align:left;padding:12px 14px;display:flex;align-items:center;gap:9px;" onclick="closeAcctFormModal(); openPasswordModal('${u.id}')">🔑 Xem / đặt mật khẩu</button>
-            <button class="btn-acct-cancel" style="text-align:left;padding:12px 14px;display:flex;align-items:center;gap:9px;" onclick="closeAcctFormModal(); openRenameModal('${u.id}')">✏️ Đổi tên hiển thị</button>
-            <button class="btn-acct-cancel" style="text-align:left;padding:12px 14px;display:flex;align-items:center;gap:9px;" onclick="closeAcctFormModal(); toggleBanAccount('${u.id}', ${!isBanned})">${isBanned ? '🔓 Mở khoá truy cập' : '🔒 Khoá truy cập'}</button>
-            <button style="text-align:left;padding:12px 14px;display:flex;align-items:center;gap:9px;background:var(--red-bg);color:var(--red);" onclick="closeAcctFormModal(); deleteAccount('${u.id}')">🗑️ Xoá tài khoản</button>
-        </div>
-        <div class="acct-form-actions" style="margin-top:16px;">
-            <button class="btn-acct-cancel" onclick="closeAcctFormModal()">Đóng</button>
+        <div class="acct-detail-grid">
+            <div class="acct-action-card pwd" onclick="openPasswordModal('${u.id}')">
+                <span class="aac-ico">🔑</span>
+                <span class="aac-title">Xem / đặt mật khẩu</span>
+                <span class="aac-desc">Đặt mật khẩu mới cho khách và gửi cho họ để đăng nhập lại.</span>
+            </div>
+            <div class="acct-action-card rename" onclick="openRenameModal('${u.id}')">
+                <span class="aac-ico">✏️</span>
+                <span class="aac-title">Đổi tên hiển thị</span>
+                <span class="aac-desc">Sửa tên hiển thị của tài khoản này trên hệ thống.</span>
+            </div>
+            <div class="acct-action-card lock" onclick="toggleBanAccount('${u.id}', ${!isBanned})">
+                <span class="aac-ico">${isBanned ? '🔓' : '🔒'}</span>
+                <span class="aac-title">${isBanned ? 'Mở khoá truy cập' : 'Khoá truy cập'}</span>
+                <span class="aac-desc">${isBanned ? 'Cho phép tài khoản này đăng nhập lại bình thường.' : 'Tài khoản sẽ không đăng nhập được cho tới khi mở khoá lại.'}</span>
+            </div>
+            <div class="acct-action-card danger" onclick="deleteAccount('${u.id}')">
+                <span class="aac-ico">🗑️</span>
+                <span class="aac-title">Xoá tài khoản</span>
+                <span class="aac-desc">Xoá vĩnh viễn tài khoản này. Không thể hoàn tác.</span>
+            </div>
         </div>`;
-    document.getElementById('acctFormOverlay').classList.remove('hidden');
+
+    document.getElementById('acctListView').classList.add('hidden');
+    document.getElementById('acctDetailView').classList.remove('hidden');
+}
+function closeAccountDetail(){
+    document.getElementById('acctDetailView').classList.add('hidden');
+    document.getElementById('acctListView').classList.remove('hidden');
 }
 
 function toggleAcctMenu(id, btn){
@@ -3543,7 +3607,8 @@ async function submitRenameAccount(userId){
     if (result.error){ msg.className='err'; msg.innerText = 'Lỗi: ' + result.error; return; }
     closeAcctFormModal();
     showMsg('Đã cập nhật tên hiển thị.', 'ok');
-    loadAccountsList();
+    await loadAccountsList();
+    if (!document.getElementById('acctDetailView').classList.contains('hidden')) openAccountDetail(userId);
 }
 
 // ---------- MODAL: xem / đặt mật khẩu cho khách ----------
@@ -3620,6 +3685,7 @@ function toggleBanAccount(userId, banned){
             const result = await callAdminUsersFn({ action:'ban', userId, banned });
             if (result.error) return showMsg('Lỗi: ' + result.error, 'err');
             showMsg(banned ? 'Đã khoá tài khoản.' : 'Đã mở khoá tài khoản.', 'ok');
+            closeAccountDetail();
             loadAccountsList();
         }
     );
@@ -3633,6 +3699,7 @@ function deleteAccount(userId){
             const result = await callAdminUsersFn({ action:'delete', userId });
             if (result.error) return showMsg('Lỗi: ' + result.error, 'err');
             showMsg('Đã xóa tài khoản.', 'ok');
+            closeAccountDetail();
             loadAccountsList();
         }
     );

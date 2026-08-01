@@ -544,7 +544,7 @@ textarea{resize:vertical;}
    Panel này nằm trên nền trắng, không bọc trong .subj-mgr-col, nên trước đây
    .side-item/.menu-drop dùng style tối màu thiết kế cho sidebar bị lộ ra
    giữa nền trắng -> nhìn lệch tông, xấu. Toàn bộ khối dưới đây tự viết riêng. */
-.acct-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+.acct-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px;}
 @media (max-width:640px){.acct-stats{grid-template-columns:1fr;}}
 .acct-stat-card{
     background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);
@@ -597,6 +597,10 @@ textarea{resize:vertical;}
 }
 .acct-badge.active{background:var(--green-bg);color:var(--green);}
 .acct-badge.banned{background:var(--red-bg);color:var(--red);}
+.acct-badge.pro{background:linear-gradient(135deg,#fff3d6,#ffe6a8);color:#9a6300;}
+.acct-meta .balance-val{font-weight:700;color:var(--text);}
+.acct-stat-card.pro .ico{background:#fff3d6;color:#9a6300;}
+.acct-stat-card.balance .ico{background:var(--accent-soft);color:var(--accent);}
 .acct-row-actions{flex:0 0 auto;display:flex;align-items:center;gap:6px;}
 .acct-btn-pwd{
     background:var(--accent-soft);color:var(--accent);padding:8px 12px;font-size:.8rem;white-space:nowrap;
@@ -672,6 +676,8 @@ textarea{resize:vertical;}
 .acct-action-card .aac-ico{
     width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;
 }
+.acct-action-card.pro .aac-ico{background:#fff3d6;color:#9a6300;}
+.acct-action-card.balance .aac-ico{background:var(--green-bg);color:var(--green);}
 .acct-action-card.pwd .aac-ico{background:var(--accent-soft);color:var(--accent);}
 .acct-action-card.rename .aac-ico{background:var(--bg);color:var(--gray);}
 .acct-action-card.lock .aac-ico{background:var(--amber-bg);color:var(--amber);}
@@ -939,6 +945,14 @@ textarea{resize:vertical;}
                         <span class="ico">🔒</span>
                         <div><div class="num" id="acctStatBanned">0</div><div class="lbl">Đã khoá đăng nhập</div></div>
                     </div>
+                    <div class="acct-stat-card pro">
+                        <span class="ico">👑</span>
+                        <div><div class="num" id="acctStatPro">0</div><div class="lbl">Đang dùng Pro</div></div>
+                    </div>
+                    <div class="acct-stat-card balance">
+                        <span class="ico">💰</span>
+                        <div><div class="num" id="acctStatBalance">0</div><div class="lbl">Tổng số dư (đ)</div></div>
+                    </div>
                 </div>
 
                 <div class="acct-toolbar">
@@ -950,6 +964,7 @@ textarea{resize:vertical;}
                         <button class="acct-chip active" data-f="all" onclick="setAcctFilter('all')">Tất cả</button>
                         <button class="acct-chip" data-f="active" onclick="setAcctFilter('active')">Đang hoạt động</button>
                         <button class="acct-chip" data-f="banned" onclick="setAcctFilter('banned')">Đã khoá</button>
+                        <button class="acct-chip" data-f="pro" onclick="setAcctFilter('pro')">Đang Pro</button>
                     </div>
                     <button class="side-add" onclick="loadAccountsList()">↻ Tải lại</button>
                 </div>
@@ -3929,9 +3944,13 @@ async function loadAccountsList(){
     document.getElementById('acctCount').innerText = accountsCache.length + ' tài khoản';
 
     const bannedCount = accountsCache.filter(u => u.banned_until && new Date(u.banned_until) > new Date()).length;
+    const proCount = accountsCache.filter(u => isAcctPro(u)).length;
+    const totalBalance = accountsCache.reduce((sum, u) => sum + (Number(u.balance) || 0), 0);
     document.getElementById('acctStatTotal').innerText = accountsCache.length;
     document.getElementById('acctStatBanned').innerText = bannedCount;
     document.getElementById('acctStatActive').innerText = accountsCache.length - bannedCount;
+    document.getElementById('acctStatPro').innerText = proCount;
+    document.getElementById('acctStatBalance').innerText = totalBalance.toLocaleString('vi-VN');
 
     renderAccountsList();
 }
@@ -3948,12 +3967,20 @@ function fmtDate(iso){
     return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' });
 }
 
+function isAcctPro(u){
+    return !!(u.premium_until && new Date(u.premium_until) > new Date());
+}
+function fmtMoney(n){
+    return (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
+}
+
 function renderAccountsList(){
     const q = (document.getElementById('acctSearch').value || '').trim().toLowerCase();
     const list = accountsCache.filter(u => {
         const isBanned = u.banned_until && new Date(u.banned_until) > new Date();
         if (acctFilter === 'active' && isBanned) return false;
         if (acctFilter === 'banned' && !isBanned) return false;
+        if (acctFilter === 'pro' && !isAcctPro(u)) return false;
         return !q || (u.email || '').toLowerCase().includes(q) || (u.full_name || '').toLowerCase().includes(q);
     });
     const wrap = document.getElementById('acctListWrap');
@@ -3963,13 +3990,14 @@ function renderAccountsList(){
     }
     wrap.innerHTML = list.map(u => {
         const isBanned = u.banned_until && new Date(u.banned_until) > new Date();
+        const isPro = isAcctPro(u);
         const initial = (u.email || 'U')[0].toUpperCase();
         return `
         <div class="acct-row ${isBanned ? 'banned' : ''}" data-id="${u.id}" onclick="openAccountDetail('${u.id}')" style="cursor:pointer;">
             <span class="acct-avatar">${escapeHtml(initial)}</span>
             <span class="acct-info">
-                <span class="acct-name">${escapeHtml(u.full_name || '(chưa đặt tên)')}<span class="acct-badge ${isBanned ? 'banned' : 'active'}">${isBanned ? 'Đã khoá' : 'Hoạt động'}</span></span>
-                <span class="acct-meta">${escapeHtml(u.email || '')}<span class="dot-sep">·</span>Đăng ký ${fmtDate(u.created_at)}</span>
+                <span class="acct-name">${escapeHtml(u.full_name || '(chưa đặt tên)')}<span class="acct-badge ${isBanned ? 'banned' : 'active'}">${isBanned ? 'Đã khoá' : 'Hoạt động'}</span>${isPro ? '<span class="acct-badge pro">👑 Pro</span>' : ''}</span>
+                <span class="acct-meta">${escapeHtml(u.email || '')}<span class="dot-sep">·</span>Đăng ký ${fmtDate(u.created_at)}<span class="dot-sep">·</span>Số dư <span class="balance-val">${fmtMoney(u.balance)}</span></span>
             </span>
             <span class="acct-row-actions">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--gray);"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -3984,6 +4012,7 @@ function openAccountDetail(userId){
     const u = accountsCache.find(x => x.id === userId);
     if (!u) return;
     const isBanned = u.banned_until && new Date(u.banned_until) > new Date();
+    const isPro = isAcctPro(u);
     const initial = (u.email || 'U')[0].toUpperCase();
 
     document.getElementById('acctDetailView').innerHTML = `
@@ -3994,12 +4023,23 @@ function openAccountDetail(userId){
         <div class="acct-detail-head">
             <span class="acct-avatar" style="${isBanned ? 'background:linear-gradient(135deg,#dc2626,#f87171);' : ''}">${escapeHtml(initial)}</span>
             <div class="adh-info">
-                <div class="adh-name">${escapeHtml(u.full_name || '(chưa đặt tên)')}</div>
+                <div class="adh-name">${escapeHtml(u.full_name || '(chưa đặt tên)')}${isPro ? '<span class="acct-badge pro" style="margin-left:8px;">👑 Pro</span>' : ''}</div>
                 <div class="adh-email">${escapeHtml(u.email || '')}</div>
                 <div class="adh-meta">Đăng ký ${fmtDate(u.created_at)} · <span style="color:${isBanned ? 'var(--red)' : 'var(--green)'};font-weight:700;">${isBanned ? 'Đã khoá đăng nhập' : 'Đang hoạt động'}</span></div>
+                <div class="adh-meta">Số dư: <span class="balance-val">${fmtMoney(u.balance)}</span> · Pro: <b style="color:${isPro ? 'var(--green)' : 'var(--gray)'};">${isPro ? ('còn hạn tới ' + fmtDate(u.premium_until)) : 'chưa/không dùng Pro'}</b></div>
             </div>
         </div>
         <div class="acct-detail-grid">
+            <div class="acct-action-card pro" onclick="openProModal('${u.id}')">
+                <span class="aac-ico">👑</span>
+                <span class="aac-title">Nâng cấp / Quản lý Pro</span>
+                <span class="aac-desc">Kích hoạt, gia hạn theo gói có sẵn, đặt số ngày tuỳ ý hoặc huỷ Pro thủ công.</span>
+            </div>
+            <div class="acct-action-card balance" onclick="openBalanceModal('${u.id}')">
+                <span class="aac-ico">💰</span>
+                <span class="aac-title">Cộng / trừ số dư</span>
+                <span class="aac-desc">Điều chỉnh số dư tài khoản này, có lưu lại lịch sử và lý do.</span>
+            </div>
             <div class="acct-action-card pwd" onclick="openPasswordModal('${u.id}')">
                 <span class="aac-ico">🔑</span>
                 <span class="aac-title">Đặt lại mật khẩu</span>
@@ -4167,6 +4207,161 @@ function deleteAccount(userId){
             loadAccountsList();
         }
     );
+}
+
+// ---------- MODAL: nâng cấp / quản lý Pro thủ công ----------
+async function openProModal(userId){
+    const u = accountsCache.find(x => x.id === userId);
+    if (!u) return;
+    const isPro = isAcctPro(u);
+    const packages = await loadProPackagesCache();
+    const pkgOptions = packages.length
+        ? packages.map(p => `<option value="${p.id}">${escapeHtml(p.name)} — ${fmtMoney(p.price)} / ${p.duration_days} ngày</option>`).join('')
+        : '<option value="" disabled>(Chưa có gói nào trong pro_packages)</option>';
+
+    document.getElementById('acctFormBox').innerHTML = `
+        <h4>👑 Quản lý Pro</h4>
+        <p class="acct-form-target">Tài khoản <b>${escapeHtml(u.email || '')}</b> — hiện tại: <b style="color:${isPro ? 'var(--green)' : 'var(--gray)'};">${isPro ? ('Pro tới ' + fmtDate(u.premium_until)) : 'Chưa dùng Pro'}</b></p>
+
+        <label style="margin-top:0;">Cách nâng cấp</label>
+        <div class="acct-filter-chips" id="proModeChips">
+            <button type="button" class="acct-chip active" data-mode="plan" onclick="pickProMode('plan')">Theo gói có sẵn</button>
+            <button type="button" class="acct-chip" data-mode="days" onclick="pickProMode('days')">Số ngày tuỳ ý</button>
+            <button type="button" class="acct-chip" data-mode="set_date" onclick="pickProMode('set_date')">Chọn ngày hết hạn</button>
+        </div>
+
+        <div id="proModePlan">
+            <label>Chọn gói</label>
+            <select id="proPlanSelect">${pkgOptions}</select>
+        </div>
+        <div id="proModeDays" class="hidden">
+            <label>Số ngày cộng thêm</label>
+            <input id="proDaysInput" type="number" min="1" value="30" placeholder="Ví dụ: 30">
+        </div>
+        <div id="proModeSetDate" class="hidden">
+            <label>Hết hạn vào ngày</label>
+            <input id="proDateInput" type="date">
+        </div>
+
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-weight:600;color:var(--text);margin-top:14px;">
+            <input type="checkbox" id="proResetFromNow" style="width:auto;">
+            Tính lại từ hôm nay (bỏ qua hạn Pro hiện có, mặc định là cộng dồn thêm)
+        </label>
+
+        <div id="acctFormMsg"></div>
+        <div class="acct-form-actions">
+            <button class="btn-acct-cancel" onclick="closeAcctFormModal()">Hủy</button>
+            <button class="btn-acct-save" onclick="submitSetPro('${userId}')">Kích hoạt / Gia hạn</button>
+        </div>
+        ${isPro ? `<button class="acct-action-card danger" style="margin-top:14px;width:100%;text-align:center;" onclick="submitRevokePro('${userId}')">
+            <span class="aac-title" style="color:var(--red);">🚫 Huỷ Pro ngay (chuyển về Miễn phí)</span>
+        </button>` : ''}
+    `;
+    document.getElementById('acctFormOverlay').classList.remove('hidden');
+}
+function pickProMode(mode){
+    document.querySelectorAll('#proModeChips .acct-chip').forEach(el => el.classList.toggle('active', el.dataset.mode === mode));
+    document.getElementById('proModePlan').classList.toggle('hidden', mode !== 'plan');
+    document.getElementById('proModeDays').classList.toggle('hidden', mode !== 'days');
+    document.getElementById('proModeSetDate').classList.toggle('hidden', mode !== 'set_date');
+}
+async function submitSetPro(userId){
+    const mode = document.querySelector('#proModeChips .acct-chip.active').dataset.mode;
+    const msg = document.getElementById('acctFormMsg');
+    const payload = { action:'set_pro', userId, mode, resetFromNow: document.getElementById('proResetFromNow').checked };
+    if (mode === 'plan'){
+        const sel = document.getElementById('proPlanSelect');
+        if (!sel.value){ msg.className='err'; msg.innerText = 'Chưa có gói Pro nào để chọn.'; return; }
+        payload.planId = sel.value;
+    } else if (mode === 'days'){
+        payload.days = Number(document.getElementById('proDaysInput').value);
+        if (!payload.days || payload.days <= 0){ msg.className='err'; msg.innerText = 'Nhập số ngày hợp lệ.'; return; }
+    } else if (mode === 'set_date'){
+        payload.date = document.getElementById('proDateInput').value;
+        if (!payload.date){ msg.className='err'; msg.innerText = 'Chọn ngày hết hạn.'; return; }
+    }
+    const result = await callAdminUsersFn(payload);
+    if (result.error){ msg.className='err'; msg.innerText = 'Lỗi: ' + result.error; return; }
+    closeAcctFormModal();
+    showMsg('Đã cập nhật Pro cho tài khoản.', 'ok');
+    await loadAccountsList();
+    if (!document.getElementById('acctDetailView').classList.contains('hidden')) openAccountDetail(userId);
+}
+function submitRevokePro(userId){
+    showConfirm(
+        'Huỷ Pro?',
+        'Tài khoản này sẽ chuyển về Miễn phí ngay lập tức.',
+        async () => {
+            const result = await callAdminUsersFn({ action:'set_pro', userId, mode:'revoke' });
+            if (result.error) return showMsg('Lỗi: ' + result.error, 'err');
+            closeAcctFormModal();
+            showMsg('Đã huỷ Pro.', 'ok');
+            await loadAccountsList();
+            if (!document.getElementById('acctDetailView').classList.contains('hidden')) openAccountDetail(userId);
+        }
+    );
+}
+
+// ---------- MODAL: cộng / trừ số dư tài khoản ----------
+async function openBalanceModal(userId){
+    const u = accountsCache.find(x => x.id === userId);
+    if (!u) return;
+    document.getElementById('acctFormBox').innerHTML = `
+        <h4>💰 Cộng / trừ số dư</h4>
+        <p class="acct-form-target">Tài khoản <b>${escapeHtml(u.email || '')}</b> — số dư hiện tại: <b class="balance-val">${fmtMoney(u.balance)}</b></p>
+
+        <label style="margin-top:0;">Thao tác</label>
+        <div class="acct-filter-chips" id="balModeChips">
+            <button type="button" class="acct-chip active" data-mode="add" onclick="pickBalMode('add')">➕ Cộng tiền</button>
+            <button type="button" class="acct-chip" data-mode="sub" onclick="pickBalMode('sub')">➖ Trừ tiền</button>
+        </div>
+
+        <label>Số tiền (VND)</label>
+        <input id="balAmountInput" type="number" min="1" step="1000" placeholder="Ví dụ: 50000">
+
+        <label>Lý do / ghi chú (không bắt buộc)</label>
+        <input id="balNoteInput" placeholder="Ví dụ: Tặng do hỗ trợ lỗi hệ thống">
+
+        <div id="balHistoryWrap" class="hint" style="margin-top:10px;">Đang tải lịch sử...</div>
+
+        <div id="acctFormMsg"></div>
+        <div class="acct-form-actions">
+            <button class="btn-acct-cancel" onclick="closeAcctFormModal()">Hủy</button>
+            <button class="btn-acct-save" onclick="submitAdjustBalance('${userId}')">Xác nhận</button>
+        </div>
+    `;
+    document.getElementById('acctFormOverlay').classList.remove('hidden');
+    document.getElementById('balAmountInput').focus();
+
+    const hist = await callAdminUsersFn({ action:'balance_history', userId });
+    const histWrap = document.getElementById('balHistoryWrap');
+    if (!histWrap) return; // modal có thể đã bị đóng trước khi tải xong
+    if (hist.error || !hist.transactions || !hist.transactions.length){
+        histWrap.innerText = 'Chưa có lịch sử cộng/trừ tiền.';
+        return;
+    }
+    histWrap.innerHTML = '<b style="color:var(--text);">Lịch sử gần đây:</b><br>' + hist.transactions.map(t => {
+        const sign = t.amount > 0 ? '+' : '';
+        const color = t.amount > 0 ? 'var(--green)' : 'var(--red)';
+        return `<span style="color:${color};font-weight:700;">${sign}${fmtMoney(t.amount)}</span> · còn ${fmtMoney(t.balance_after)} · ${fmtDate(t.created_at)}${t.note ? (' · ' + escapeHtml(t.note)) : ''}`;
+    }).join('<br>');
+}
+function pickBalMode(mode){
+    document.querySelectorAll('#balModeChips .acct-chip').forEach(el => el.classList.toggle('active', el.dataset.mode === mode));
+}
+async function submitAdjustBalance(userId){
+    const mode = document.querySelector('#balModeChips .acct-chip.active').dataset.mode;
+    const raw = Number(document.getElementById('balAmountInput').value);
+    const msg = document.getElementById('acctFormMsg');
+    if (!raw || raw <= 0){ msg.className='err'; msg.innerText = 'Nhập số tiền hợp lệ (lớn hơn 0).'; return; }
+    const amount = mode === 'sub' ? -Math.abs(raw) : Math.abs(raw);
+    const note = document.getElementById('balNoteInput').value.trim();
+    const result = await callAdminUsersFn({ action:'adjust_balance', userId, amount, note });
+    if (result.error){ msg.className='err'; msg.innerText = 'Lỗi: ' + result.error; return; }
+    closeAcctFormModal();
+    showMsg('Đã cập nhật số dư: ' + fmtMoney(result.balance), 'ok');
+    await loadAccountsList();
+    if (!document.getElementById('acctDetailView').classList.contains('hidden')) openAccountDetail(userId);
 }
 
 // ---------- CÀI ĐẶT TRANG CHỦ (site_settings) ----------

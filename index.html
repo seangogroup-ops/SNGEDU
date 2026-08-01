@@ -970,19 +970,8 @@
                 planBadge.className = 'acc-plan-badge';
             }
         }
-        // ----- Số dư: số ngày Premium còn lại (cộng dồn mỗi lần mua thêm) -----
-        const balanceRow = document.getElementById('accBalanceRow');
-        const balanceValue = document.getElementById('accBalanceValue');
-        if (balanceRow && balanceValue){
-            if (isPremiumActive && premiumUntil){
-                const msLeft = premiumUntil - new Date();
-                const daysLeft = Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
-                balanceValue.textContent = `${daysLeft} ngày còn lại`;
-                balanceRow.style.display = '';
-            } else {
-                balanceRow.style.display = 'none';
-            }
-        }
+        // ----- Số dư: số dư tiền (VNĐ) của tài khoản, lấy từ bảng profiles -----
+        loadAndRenderBalance(user.id, 'accBalanceRow', 'accBalanceValue');
         closePwForm();
 
         switchAccTab('info');
@@ -1507,18 +1496,23 @@
             badgeEl.className = 'acc-plan-badge';
         }
 
-        // ----- Số dư: số ngày Premium còn lại (cộng dồn mỗi lần mua thêm) -----
-        const balanceRow = document.getElementById('acctPageBalanceRow');
-        const balanceValue = document.getElementById('acctPageBalanceValue');
-        if (balanceRow && balanceValue){
-            if (isPremiumActive && premiumUntil){
-                const msLeft = premiumUntil - new Date();
-                const daysLeft = Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
-                balanceValue.textContent = `${daysLeft} ngày còn lại`;
-                balanceRow.style.display = '';
-            } else {
-                balanceRow.style.display = 'none';
-            }
+        // ----- Số dư: số dư tiền (VNĐ) của tài khoản, lấy từ bảng profiles -----
+        loadAndRenderBalance(user.id, 'acctPageBalanceRow', 'acctPageBalanceValue');
+    }
+
+    // ---------------- Số dư tiền (VNĐ) — đọc từ bảng profiles.balance ----------------
+    async function loadAndRenderBalance(userId, rowId, valueId){
+        const row = document.getElementById(rowId);
+        const valueEl = document.getElementById(valueId);
+        if (!row || !valueEl) return;
+        try{
+            const { data, error } = await sb.from('profiles').select('balance').eq('id', userId).maybeSingle();
+            if (error) throw error;
+            const balance = Number(data && data.balance) || 0;
+            valueEl.textContent = balance.toLocaleString('vi-VN') + 'đ';
+            row.style.display = '';
+        }catch(e){
+            row.style.display = 'none';
         }
     }
 

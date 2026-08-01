@@ -104,10 +104,30 @@ aside{
     margin:0 0 9px;padding:0 4px;display:flex;justify-content:space-between;align-items:center;
 }
 .side-list{display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto;}
-/* Menu "Cài đặt trang chủ" trong sidebar: danh sách cố định 5 mục, không cần giới hạn chiều cao/cuộn riêng
-   (trước đây ăn chung max-height:220px của .side-list khiến mục cuối bị giấu, tạo ô cuộn nhỏ trông như vỡ UI)
-   FIX-SIDEBAR-CUTOFF-V2 */
-#settingsNavList{max-height:none !important;overflow-y:visible !important;overflow:visible !important;}
+/* Sidebar admin: nhóm gọn theo danh mục (Trang chủ / Nội dung / Kinh doanh / Hệ thống) dạng accordion,
+   thay cho danh sách phẳng 14 mục dài lê thê trước đây. */
+#settingsNavList{max-height:none !important;overflow-y:visible !important;overflow:visible !important;gap:2px;}
+.side-group{margin-bottom:1px;}
+.side-group-head{
+    display:flex;align-items:center;gap:9px;padding:9px 9px 9px 11px;border-radius:var(--radius-sm);
+    cursor:pointer;user-select:none;color:#9aa1c4;transition:background .12s ease,color .12s ease;
+}
+.side-group-head:hover{background:var(--navy-2);color:#fff;}
+.side-group-head .sg-ico{font-size:.86rem;flex:0 0 auto;width:16px;text-align:center;}
+.side-group-head .sg-label{
+    font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;flex:1;min-width:0;
+    font-family:var(--font-display);
+}
+.side-group-head .sg-chevron{font-size:.62rem;color:#565e82;transition:transform .18s ease;flex:0 0 auto;font-style:normal;}
+.side-group.open>.side-group-head .sg-chevron{transform:rotate(90deg);}
+.side-group.open>.side-group-head{color:#fff;}
+.side-group-body{
+    overflow:hidden;max-height:0;transition:max-height .22s ease;
+    display:flex;flex-direction:column;gap:3px;padding-left:3px;
+}
+.side-group.open>.side-group-body{max-height:340px;padding-top:2px;padding-bottom:4px;}
+.side-group-body .side-item.settings-item{padding-top:8px;padding-bottom:8px;padding-left:9px;font-size:.84rem;}
+.side-group-body .side-item.settings-item .set-ico{width:21px;height:21px;font-size:.68rem;}
 .side-item{
     padding:10px 9px 10px 11px;border-radius:var(--radius-sm);font-size:.87rem;cursor:pointer;
     display:flex;justify-content:space-between;align-items:center;gap:6px;color:var(--navy-text);
@@ -823,47 +843,82 @@ textarea{resize:vertical;}
 
         <div class="side-section">
             <div class="side-list" id="settingsNavList">
-                <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
-                    <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
+                <div class="side-group" data-group="home">
+                    <div class="side-group-head" onclick="toggleSideGroup('home')">
+                        <span class="sg-ico">🏠</span><span class="sg-label">Trang chủ</span>
+                        <i class="sg-chevron">▸</i>
+                    </div>
+                    <div class="side-group-body">
+                        <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
+                            <span class="set-ico">🏠</span><span class="name">Ảnh bìa &amp; giới thiệu</span>
+                        </div>
+                        <div class="side-item settings-item" data-setkey="home_texts" onclick="openSettingsPanel('home_texts')">
+                            <span class="set-ico">✏️</span><span class="name">Chữ trang chủ</span>
+                        </div>
+                        <div class="side-item settings-item" id="navFeatured" onclick="showFeaturedManager()">
+                            <span class="set-ico">⭐</span><span class="name">Ghim nổi bật</span>
+                        </div>
+                        <div class="side-item settings-item" data-setkey="site_footer" onclick="openSettingsPanel('site_footer')">
+                            <span class="set-ico">📄</span><span class="name">Chân trang</span>
+                        </div>
+                        <div class="side-item settings-item" data-setkey="report_banner" onclick="openSettingsPanel('report_banner')">
+                            <span class="set-ico">🔔</span><span class="name">Banner góp ý</span>
+                        </div>
+                        <div class="side-item settings-item" data-setkey="promo_banner" onclick="openSettingsPanel('promo_banner')">
+                            <span class="set-ico">⏱️</span><span class="name">Banner Premium</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="side-item settings-item" data-setkey="home_texts" onclick="openSettingsPanel('home_texts')">
-                    <span class="set-ico">✏️</span><span class="name">Chữ trang chủ</span>
+
+                <div class="side-group" data-group="content">
+                    <div class="side-group-head" onclick="toggleSideGroup('content')">
+                        <span class="sg-ico">📚</span><span class="sg-label">Nội dung</span>
+                        <i class="sg-chevron">▸</i>
+                    </div>
+                    <div class="side-group-body">
+                        <div class="side-item settings-item" id="nav_doc" onclick="showContentManager('doc')">
+                            <span class="set-ico">📁</span><span class="name">Tài liệu</span>
+                        </div>
+                        <div class="side-item settings-item active" id="navSubjectMgr" onclick="showSubjectManager()">
+                            <span class="set-ico">📝</span><span class="name">Trắc nghiệm</span>
+                        </div>
+                        <div class="side-item settings-item" id="nav_tool" onclick="showContentManager('tool')">
+                            <span class="set-ico">🧰</span><span class="name">Công cụ</span>
+                        </div>
+                        <div class="side-item settings-item" id="nav_product" onclick="showContentManager('product')">
+                            <span class="set-ico">🛍️</span><span class="name">Sản phẩm</span>
+                        </div>
+                        <div class="side-item settings-item" id="nav_support" onclick="showContentManager('support')">
+                            <span class="set-ico">🆘</span><span class="name">Hỗ trợ</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="side-item settings-item" id="navFeatured" onclick="showFeaturedManager()">
-                    <span class="set-ico">⭐</span><span class="name">Ghim nổi bật</span>
+
+                <div class="side-group" data-group="business">
+                    <div class="side-group-head" onclick="toggleSideGroup('business')">
+                        <span class="sg-ico">💼</span><span class="sg-label">Kinh doanh</span>
+                        <i class="sg-chevron">▸</i>
+                    </div>
+                    <div class="side-group-body">
+                        <div class="side-item settings-item" id="navSepayPkg" onclick="showSepayPackages()">
+                            <span class="set-ico">👑</span><span class="name">Gói Pro</span>
+                        </div>
+                        <div class="side-item settings-item" id="navAccounts" onclick="showAccountsManager()">
+                            <span class="set-ico">👤</span><span class="name">Tài khoản</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="side-item settings-item" data-setkey="site_footer" onclick="openSettingsPanel('site_footer')">
-                    <span class="set-ico">📄</span><span class="name">Chân trang</span>
-                </div>
-                <div class="side-item settings-item" data-setkey="report_banner" onclick="openSettingsPanel('report_banner')">
-                    <span class="set-ico">🔔</span><span class="name">Banner góp ý</span>
-                </div>
-                <div class="side-item settings-item" data-setkey="promo_banner" onclick="openSettingsPanel('promo_banner')">
-                    <span class="set-ico">⏱️</span><span class="name">Banner Premium</span>
-                </div>
-                <div class="side-item settings-item" id="nav_doc" onclick="showContentManager('doc')">
-                    <span class="set-ico">📁</span><span class="name">Tài liệu</span>
-                </div>
-                <div class="side-item settings-item active" id="navSubjectMgr" onclick="showSubjectManager()">
-                    <span class="set-ico">📝</span><span class="name">Trắc nghiệm</span>
-                </div>
-                <div class="side-item settings-item" id="nav_tool" onclick="showContentManager('tool')">
-                    <span class="set-ico">🧰</span><span class="name">Công cụ</span>
-                </div>
-                <div class="side-item settings-item" id="nav_product" onclick="showContentManager('product')">
-                    <span class="set-ico">🛍️</span><span class="name">Sản phẩm</span>
-                </div>
-                <div class="side-item settings-item" id="nav_support" onclick="showContentManager('support')">
-                    <span class="set-ico">🆘</span><span class="name">Hỗ trợ</span>
-                </div>
-                <div class="side-item settings-item" id="navSepayPkg" onclick="showSepayPackages()">
-                    <span class="set-ico">👑</span><span class="name">Gói Pro</span>
-                </div>
-                <div class="side-item settings-item" id="navAccounts" onclick="showAccountsManager()">
-                    <span class="set-ico">👤</span><span class="name">Tài khoản</span>
-                </div>
-                <div class="side-item settings-item" id="navGeneralSettings" onclick="showGeneralSettings()">
-                    <span class="set-ico">⚙️</span><span class="name">Cài đặt</span>
+
+                <div class="side-group" data-group="system">
+                    <div class="side-group-head" onclick="toggleSideGroup('system')">
+                        <span class="sg-ico">⚙️</span><span class="sg-label">Hệ thống</span>
+                        <i class="sg-chevron">▸</i>
+                    </div>
+                    <div class="side-group-body">
+                        <div class="side-item settings-item" id="navGeneralSettings" onclick="showGeneralSettings()">
+                            <span class="set-ico">⚙️</span><span class="name">Cài đặt</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1601,6 +1656,43 @@ let editingSubjectId = null;
 let editingChapterId = null;
 let editingChapterOldCode = null; // mã chương gốc trước khi sửa, dùng để cascade cập nhật câu hỏi nếu đổi mã
 
+// ---------- SIDEBAR: nhóm menu dạng accordion (Trang chủ / Nội dung / Kinh doanh / Hệ thống) ----------
+const SIDE_GROUP_KEY = 'sng_admin_nav_groups';
+function getSideGroupState(){
+    try{
+        const raw = localStorage.getItem(SIDE_GROUP_KEY);
+        if (raw) return JSON.parse(raw);
+    }catch(e){}
+    return null;
+}
+function saveSideGroupState(){
+    const state = {};
+    document.querySelectorAll('.side-group').forEach(el => { state[el.dataset.group] = el.classList.contains('open'); });
+    try{ localStorage.setItem(SIDE_GROUP_KEY, JSON.stringify(state)); }catch(e){}
+}
+function toggleSideGroup(key, forceOpen){
+    const el = document.querySelector('.side-group[data-group="' + key + '"]');
+    if (!el) return;
+    const open = forceOpen !== undefined ? forceOpen : !el.classList.contains('open');
+    el.classList.toggle('open', open);
+    saveSideGroupState();
+}
+function initSideGroups(){
+    const state = getSideGroupState();
+    document.querySelectorAll('.side-group').forEach(el => {
+        const key = el.dataset.group;
+        // Chưa từng lưu trạng thái -> mặc định chỉ mở nhóm "Nội dung" (chứa màn hình mặc định "Trắc nghiệm")
+        const isOpen = state ? !!state[key] : (key === 'content');
+        el.classList.toggle('open', isOpen);
+    });
+}
+function expandGroupOfActiveNavItem(){
+    const active = document.querySelector('#settingsNavList .settings-item.active');
+    const group = active ? active.closest('.side-group') : null;
+    if (group && !group.classList.contains('open')) toggleSideGroup(group.dataset.group, true);
+}
+initSideGroups();
+
 // ---------- AUTH ----------
 // Chỉ tài khoản có profiles.role = 'admin' mới được vào trang admin.
 // Lưu ý: đây là lớp chặn ở giao diện. Lớp chặn THẬT SỰ nằm ở RLS trên Supabase
@@ -1659,6 +1751,7 @@ function showAdmin(email){
     renderOptionForm();
     loadSubjects();
     restoreLastAdminPanel();
+    expandGroupOfActiveNavItem();
 }
 
 // ---------- GHI NHỚ MÀN HÌNH ĐANG XEM — load lại trang (F5) sẽ quay về đúng màn đó thay vì luôn về "Trắc nghiệm" ----------

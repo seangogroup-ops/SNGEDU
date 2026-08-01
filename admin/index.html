@@ -818,6 +818,9 @@ textarea{resize:vertical;}
                 <div class="side-item settings-item" id="nav_pro" onclick="showContentManager('pro')">
                     <span class="set-ico">👑</span><span class="name">Gói Pro</span>
                 </div>
+                <div class="side-item settings-item" id="navSepayPkg" onclick="showSepayPackages()">
+                    <span class="set-ico">💳</span><span class="name">Gói thanh toán (SePay)</span>
+                </div>
                 <div class="side-item settings-item" id="navAccounts" onclick="showAccountsManager()">
                     <span class="set-ico">👤</span><span class="name">Tài khoản</span>
                 </div>
@@ -967,6 +970,46 @@ textarea{resize:vertical;}
                 <p class="hint" id="cmHeaderHint"></p>
             </div>
             <div id="cmListsWrap"></div>
+        </div>
+
+        <!-- ================= QUẢN LÝ GÓI THANH TOÁN TỰ ĐỘNG (bảng pro_packages, dùng cho SePay) ================= -->
+        <div id="sepayPackagesPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>💳 Gói thanh toán (SePay)</h2>
+                <p class="hint">Đây là bảng giá gốc (bảng <code>pro_packages</code>) mà cổng thanh toán SePay dùng để tính tiền — sửa giá ở đây thay vì trong Supabase. Ở mục "Gói Pro", khi bạn chọn một gói trong danh sách này cho thẻ giới thiệu, nút "Mua ngay" sẽ mở thẳng cổng SePay với đúng số tiền bên dưới.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col" style="max-width:460px;">
+                    <div class="subj-mgr-col-head">
+                        <h4><i class="fa-solid fa-credit-card"></i> Danh sách gói</h4>
+                        <button class="side-add" onclick="openSepayPackageForm()">+ Thêm gói</button>
+                    </div>
+                    <div id="sepayPkgList" class="side-list subj-mgr-list"></div>
+                    <p class="hint" id="sepayPkgMsg" style="margin-top:10px;min-height:1.2em;"></p>
+                </div>
+                <div class="subj-mgr-col">
+                    <div id="sepayPkgForm" class="mini-form hidden">
+                        <div class="mini-form-title" id="sepayPkgFormTitle">Thêm gói</div>
+                        <input type="hidden" id="sepayPkgId" value="">
+                        <label>Tên gói</label>
+                        <input id="sepayPkgName" placeholder="VD: Gói Premium 1 tháng">
+                        <label style="margin-top:10px;">Giá (VNĐ)</label>
+                        <input id="sepayPkgPrice" type="number" min="0" step="1000" placeholder="VD: 99000">
+                        <div class="hint" style="margin-top:4px;">Nhập số nguyên, không có dấu chấm. VD: 99000 = 99.000đ.</div>
+                        <label style="margin-top:10px;">Thời hạn (số ngày)</label>
+                        <input id="sepayPkgDuration" type="number" min="1" step="1" placeholder="VD: 30">
+                        <div class="hint" style="margin-top:4px;">VD: 30 = 1 tháng, 365 = 1 năm, 7 = 1 tuần.</div>
+                        <label style="margin-top:10px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="sepayPkgActive" style="width:auto;" checked>
+                            <span>Đang hoạt động (hiển thị cho khách chọn mua)</span>
+                        </label>
+                        <div class="mini-actions">
+                            <button class="btn-mini-save" onclick="saveSepayPackage()">Lưu</button>
+                            <button class="btn-mini-cancel" onclick="closeSepayPackageForm()">Hủy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="generalSettingsPanel" class="hidden">
@@ -1434,7 +1477,7 @@ function showAdmin(email){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel'];
+const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -3366,6 +3409,134 @@ async function loadProPackagesCache(force){
     const { data, error } = await sb.from('pro_packages').select('id, name, price, duration_days').order('price', { ascending:true });
     proPackagesCache = (!error && data) ? data : [];
     return proPackagesCache;
+}
+
+// ---------- QUẢN LÝ GÓI THANH TOÁN TỰ ĐỘNG (bảng pro_packages) ----------
+function showSepayPackages(){
+    showAdminPanel('sepayPackagesPanel', 'navSepayPkg');
+    closeSepayPackageForm();
+    loadSepayPackagesList();
+}
+async function loadSepayPackagesList(){
+    const box = document.getElementById('sepayPkgList');
+    const msgEl = document.getElementById('sepayPkgMsg');
+    msgEl.innerText = '';
+    box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Đang tải...</div>`;
+    const { data, error } = await sb.from('pro_packages').select('id, name, price, duration_days, active').order('price', { ascending:true });
+    if (error){
+        box.innerHTML = '';
+        msgEl.style.color = '#e5484d';
+        msgEl.innerText = 'Lỗi tải danh sách gói: ' + error.message;
+        return;
+    }
+    renderSepayPackagesList(data || []);
+    // Đồng bộ lại cache dùng cho dropdown ở mục "Gói Pro"
+    await loadProPackagesCache(true);
+}
+function sepayPkgRowHtml(pkg){
+    const priceText = Number(pkg.price || 0).toLocaleString('vi-VN') + 'đ';
+    const durationText = formatDurationAdmin(pkg.duration_days);
+    const activeBadge = pkg.active === false
+        ? '<span class="hint-inline" style="color:#e5484d;"> · Đang ẩn</span>'
+        : '';
+    return `
+        <div class="side-item" data-id="${pkg.id}">
+            <span class="prev-ico color-swatch amber" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="fa-solid fa-credit-card"></i></span>
+            <span class="name">${escapeHtml(pkg.name || '(chưa đặt tên)')}<span class="hint-inline"> · ${priceText} / ${durationText}${activeBadge}</span></span>
+            <span class="right-cluster">
+                <span class="menu-wrap">
+                    <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleSepayPkgMenu('${pkg.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
+                    <div class="menu-drop hidden" id="sepaypkgmenu-${pkg.id}">
+                        <button onclick="event.stopPropagation(); closeAllSepayPkgMenus(); openSepayPackageForm('${pkg.id}')">✏️ Sửa</button>
+                        <button onclick="event.stopPropagation(); closeAllSepayPkgMenus(); deleteSepayPackage('${pkg.id}')">🗑️ Xóa</button>
+                    </div>
+                </span>
+            </span>
+        </div>`;
+}
+function renderSepayPackagesList(rows){
+    const box = document.getElementById('sepayPkgList');
+    if (!rows.length){ box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Chưa có gói nào. Bấm "+ Thêm gói" để tạo gói đầu tiên.</div>`; return; }
+    box.innerHTML = rows.map(sepayPkgRowHtml).join('');
+    sepayPkgListCache = rows;
+}
+let sepayPkgListCache = [];
+function toggleSepayPkgMenu(id, btn){
+    const menu = document.getElementById('sepaypkgmenu-' + id);
+    const wasHidden = menu.classList.contains('hidden');
+    closeAllSepayPkgMenus();
+    if (wasHidden && btn){
+        const rect = btn.getBoundingClientRect();
+        menu.style.top = (rect.bottom + 4) + 'px';
+        menu.style.left = 'auto';
+        menu.style.right = (window.innerWidth - rect.right) + 'px';
+        menu.classList.remove('hidden');
+    }
+}
+function closeAllSepayPkgMenus(){
+    document.querySelectorAll('[id^="sepaypkgmenu-"]').forEach(el => el.classList.add('hidden'));
+}
+document.addEventListener('click', () => closeAllSepayPkgMenus());
+
+function openSepayPackageForm(id){
+    const form = document.getElementById('sepayPkgForm');
+    const title = document.getElementById('sepayPkgFormTitle');
+    const pkg = id ? sepayPkgListCache.find(p => String(p.id) === String(id)) : null;
+    document.getElementById('sepayPkgId').value = pkg ? pkg.id : '';
+    document.getElementById('sepayPkgName').value = pkg ? pkg.name : '';
+    document.getElementById('sepayPkgPrice').value = pkg ? pkg.price : '';
+    document.getElementById('sepayPkgDuration').value = pkg ? pkg.duration_days : '';
+    document.getElementById('sepayPkgActive').checked = pkg ? (pkg.active !== false) : true;
+    title.innerText = pkg ? ('Sửa gói: ' + pkg.name) : 'Thêm gói mới';
+    form.classList.remove('hidden');
+    document.getElementById('sepayPkgName').focus();
+}
+function closeSepayPackageForm(){
+    const form = document.getElementById('sepayPkgForm');
+    if (form) form.classList.add('hidden');
+}
+async function saveSepayPackage(){
+    const msgEl = document.getElementById('sepayPkgMsg');
+    const id = document.getElementById('sepayPkgId').value;
+    const name = document.getElementById('sepayPkgName').value.trim();
+    const price = Number(document.getElementById('sepayPkgPrice').value);
+    const duration_days = Number(document.getElementById('sepayPkgDuration').value);
+    const active = document.getElementById('sepayPkgActive').checked;
+
+    if (!name){ showMsg('Vui lòng nhập tên gói.', 'err'); return; }
+    if (!price || price <= 0){ showMsg('Vui lòng nhập giá hợp lệ (lớn hơn 0).', 'err'); return; }
+    if (!duration_days || duration_days <= 0){ showMsg('Vui lòng nhập thời hạn hợp lệ (số ngày, lớn hơn 0).', 'err'); return; }
+
+    const payload = { name, price, duration_days, active };
+    let error;
+    if (id){
+        ({ error } = await sb.from('pro_packages').update(payload).eq('id', id));
+    } else {
+        ({ error } = await sb.from('pro_packages').insert(payload));
+    }
+    if (error){
+        msgEl.style.color = '#e5484d';
+        msgEl.innerText = 'Lỗi lưu gói: ' + error.message;
+        showMsg('Lỗi lưu gói: ' + error.message, 'err');
+        return;
+    }
+    closeSepayPackageForm();
+    showMsg((id ? 'Đã cập nhật gói "' : 'Đã thêm gói "') + name + '".', 'ok');
+    loadSepayPackagesList();
+}
+function deleteSepayPackage(id){
+    const pkg = sepayPkgListCache.find(p => String(p.id) === String(id));
+    const name = pkg ? pkg.name : '';
+    showConfirm(
+        'Xóa gói thanh toán?',
+        `Xóa "${name}"? Nếu gói này đang được gán cho một thẻ "Gói Pro", nút "Mua ngay" của thẻ đó sẽ ngừng hoạt động cho tới khi bạn gán lại gói khác. Không thể hoàn tác.`,
+        async () => {
+            const { error } = await sb.from('pro_packages').delete().eq('id', id);
+            if (error){ showMsg('Lỗi xóa: ' + error.message, 'err'); return; }
+            showMsg('Đã xóa gói "' + name + '".', 'ok');
+            loadSepayPackagesList();
+        }
+    );
 }
 function formatDurationAdmin(days){
     days = Number(days);

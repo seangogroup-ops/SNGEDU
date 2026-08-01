@@ -833,6 +833,9 @@ textarea{resize:vertical;}
                 <div class="side-item settings-item" id="nav_product" onclick="showContentManager('product')">
                     <span class="set-ico">🛍️</span><span class="name">Sản phẩm</span>
                 </div>
+                <div class="side-item settings-item" id="nav_support" onclick="showContentManager('support')">
+                    <span class="set-ico">🆘</span><span class="name">Hỗ trợ</span>
+                </div>
                 <div class="side-item settings-item" id="navSepayPkg" onclick="showSepayPackages()">
                     <span class="set-ico">👑</span><span class="name">Gói Pro</span>
                 </div>
@@ -992,6 +995,17 @@ textarea{resize:vertical;}
             <div class="subj-mgr-head">
                 <h2><span id="cmHeaderIcon">📁</span> <span id="cmHeaderTitle">Tài liệu</span></h2>
                 <p class="hint" id="cmHeaderHint"></p>
+            </div>
+            <div id="supportIntroBlock" class="mini-form show hidden" style="max-width:620px; margin-bottom:26px; display:flex;">
+                <div class="mini-form-title">Khối giới thiệu đầu trang</div>
+                <label>Tiêu đề</label>
+                <input id="supportIntroTitleInput" placeholder="VD: Kẹt chỗ nào, nhắn liền chỗ đó 👋">
+                <label>Mô tả</label>
+                <textarea id="supportIntroDescInput" rows="3" placeholder="Mô tả ngắn hiển thị dưới tiêu đề"></textarea>
+                <div class="mini-actions">
+                    <button class="btn-mini-save" onclick="saveSupportIntro()">Lưu</button>
+                </div>
+                <div id="supportIntroMsg" class="hint" style="margin-top:6px;"></div>
             </div>
             <div id="cmListsWrap"></div>
         </div>
@@ -1572,7 +1586,25 @@ function showAdmin(email){
     document.getElementById('userEmail').innerText = email;
     renderOptionForm();
     loadSubjects();
-    showSubjectManager();
+    restoreLastAdminPanel();
+}
+
+// ---------- GHI NHỚ MÀN HÌNH ĐANG XEM — load lại trang (F5) sẽ quay về đúng màn đó thay vì luôn về "Trắc nghiệm" ----------
+const ADMIN_LAST_PANEL_KEY = 'sng_admin_last_panel';
+function rememberAdminPanel(key){
+    try{ localStorage.setItem(ADMIN_LAST_PANEL_KEY, key); }catch(e){}
+}
+function restoreLastAdminPanel(){
+    let last = null;
+    try{ last = localStorage.getItem(ADMIN_LAST_PANEL_KEY); }catch(e){}
+    if (last){
+        if (last.startsWith('settings:')) return openSettingsPanel(last.slice(9));
+        if (last.startsWith('content:'))  return showContentManager(last.slice(8));
+        if (last === 'sepayPkg')          return showSepayPackages();
+        if (last === 'accounts')          return showAccountsManager();
+        if (last === 'generalSettings')   return showGeneralSettings();
+    }
+    showSubjectManager(); // mặc định (và trường hợp last === 'subjectMgr')
 }
 
 // ---------- CHUYỂN ĐỔI GIỮA 3 KHU VỰC CHÍNH ----------
@@ -1602,12 +1634,14 @@ function showComingSoon(key){
     document.getElementById('comingSoonHint').innerText = meta.hint;
 }
 function showSubjectManager(){
+    rememberAdminPanel('subjectMgr');
     showAdminPanel('subjectManagerPanel', 'navSubjectMgr');
 }
 function showQuestionsPanel(){
     showAdminPanel('mainAppArea', 'navSubjectMgr');
 }
 function showGeneralSettings(){
+    rememberAdminPanel('generalSettings');
     showAdminPanel('generalSettingsPanel', 'navGeneralSettings');
     const emailEl = document.getElementById('genAccountEmail');
     const sideEmailEl = document.getElementById('userEmail');
@@ -3105,7 +3139,20 @@ const CONTENT_DEFAULTS = {
         { id:'t3', icon:'fa-solid fa-chart-line', color:'amber',  title:'Thống kê kết quả',   desc:'', status:'soon', link:'' }
     ]},
     product_content: { items: [] },
-    pro_content: { items: [] }
+    pro_content: { items: [] },
+    support_content: {
+        intro_title: 'Kẹt chỗ nào, nhắn liền chỗ đó 👋',
+        intro_desc: 'Báo lỗi câu hỏi, góp ý tính năng, hay chỉ đơn giản chưa hiểu một đáp án nào đó trong đề — đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.',
+        contacts: [
+            { id:'c1', icon:'fa-solid fa-comment-dots', color:'blue',  title:'Nhắn Zalo',          desc:'Nhấn để mở Zalo chat', status_label:'Phản hồi trong ngày', link:'https://zalo.me/0825160035' },
+            { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi biểu mẫu góp ý', desc:'Google Form',          status_label:'Báo lỗi & đề xuất',    link:'https://forms.gle/dLLMdpZttmZWYmuRA' }
+        ],
+        faq: [
+            { id:'f1', title:'Tài liệu và trắc nghiệm trên SNG EDU có mất phí không?', desc:'Toàn bộ học phần đang mở đều miễn phí 100%. Các gói nâng cao (nếu có trong tương lai) sẽ được thông báo rõ trước khi ra mắt, không tự động trừ phí.' },
+            { id:'f2', title:'Phát hiện câu hỏi hoặc đáp án bị sai thì báo ở đâu?', desc:'Gửi qua Zalo kèm ảnh chụp câu hỏi, hoặc điền vào Form góp ý ở trên — đội ngũ sẽ kiểm tra và cập nhật trong thời gian sớm nhất.' },
+            { id:'f3', title:'Khi nào các học phần "Sắp ra mắt" sẽ mở?', desc:'Bạn có thể bấm nút "Quan tâm" ngay trên thẻ học phần đó — hệ thống sẽ ghi nhận và ưu tiên biên soạn theo mức độ quan tâm.' }
+        ]
+    }
 };
 
 // subKey -> { settingsKey, arrayField, items, editingId, meta }
@@ -3138,6 +3185,16 @@ registerContentList('product_items', 'product_content', 'items', {
     extraField:{ key:'price', label:'Giá / nhãn phụ', placeholder:'VD: 49.000đ hoặc "Mới ra mắt"' },
     linkLabel:'Đường dẫn (nếu có)', linkPlaceholder:'https://...'
 });
+registerContentList('support_contacts', 'support_content', 'contacts', {
+    label:'Kênh liên hệ', icon:'fa-solid fa-headset', color:'indigo', defaultIcon:'fa-solid fa-comment-dots',
+    extraField:{ key:'status_label', label:'Dòng trạng thái (chữ màu, hiện dưới cùng thẻ)', placeholder:'VD: Phản hồi trong ngày' },
+    linkLabel:'Đường dẫn (Zalo, Google Form...)', linkPlaceholder:'https://...'
+});
+registerContentList('support_faq', 'support_content', 'faq', {
+    label:'Câu hỏi thường gặp', icon:'fa-solid fa-circle-question', color:'indigo', defaultIcon:'fa-solid fa-circle-question',
+    hideIconColor:true, hideLink:true, descTextarea:true,
+    titleLabel:'Câu hỏi', descLabel:'Câu trả lời'
+});
 registerContentList('pro_items', 'pro_content', 'items', {
     label:'Gói Pro', icon:'fa-solid fa-crown', color:'amber', defaultIcon:'fa-solid fa-crown',
     extraField:{ key:'price', label:'Giá / chu kỳ', placeholder:'VD: 49.000đ / tháng' },
@@ -3149,7 +3206,8 @@ const CONTENT_MANAGER_GROUPS = {
     doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu miễn phí và trả phí hiển thị ở tab "Tài liệu" trên trang chủ. Tải file PDF/Word lên trực tiếp, không cần link ngoài.', subKeys:['doc_free','doc_paid'] },
     tool:    { title:'Công cụ',   icon:'🧰',  hint:'Quản lý các thẻ công cụ hiển thị ở tab "Công cụ" trên trang chủ.', subKeys:['tool_items'] },
     product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ.', subKeys:['product_items'] },
-    pro:     { title:'Gói Pro',   icon:'👑',  hint:'Quản lý các gói Pro hiển thị ở tab "Tài khoản & Gói Pro" trên trang chủ. Chọn màu "amber" để đánh dấu gói "Phổ biến nhất". Mục "Gói thanh toán tự động (SePay)" cho phép chọn gói tương ứng trong bảng giá tự động — khi đã chọn, thẻ sẽ hiện nút "Mua ngay" mở thẳng cổng SePay thay vì link ngoài. Nếu để trống, thẻ vẫn hoạt động theo kiểu cũ: trỏ ra Zalo/Momo, sau khi khách chuyển khoản bạn vào mục "Tài khoản" bên dưới để gán Premium thủ công.', subKeys:['pro_items'] }
+    pro:     { title:'Gói Pro',   icon:'👑',  hint:'Quản lý các gói Pro hiển thị ở tab "Tài khoản & Gói Pro" trên trang chủ. Chọn màu "amber" để đánh dấu gói "Phổ biến nhất". Mục "Gói thanh toán tự động (SePay)" cho phép chọn gói tương ứng trong bảng giá tự động — khi đã chọn, thẻ sẽ hiện nút "Mua ngay" mở thẳng cổng SePay thay vì link ngoài. Nếu để trống, thẻ vẫn hoạt động theo kiểu cũ: trỏ ra Zalo/Momo, sau khi khách chuyển khoản bạn vào mục "Tài khoản" bên dưới để gán Premium thủ công.', subKeys:['pro_items'] },
+    support: { title:'Hỗ trợ',    icon:'🆘',  hint:'Quản lý nội dung tab "Hỗ trợ" trên trang chủ: khối giới thiệu đầu trang, các kênh liên hệ (Zalo, Form...) và danh sách câu hỏi thường gặp.', subKeys:['support_contacts','support_faq'], intro:true }
 };
 
 function contentColorSwatchesHtml(subKey){
@@ -3171,15 +3229,18 @@ function contentBlockHtml(subKey){
             <div class="subj-mgr-col">
                 <div id="cmForm_${subKey}" class="mini-form">
                     <div id="cmFormTitle_${subKey}" class="mini-form-title">Thêm ${meta.label.toLowerCase()}</div>
+                    ${meta.hideIconColor ? '' : `
                     <label>Icon (mã lớp Font Awesome)</label>
                     <input id="cmIcon_${subKey}" placeholder="${escapeHtml(meta.defaultIcon)}" oninput="updateContentPreview('${subKey}')">
                     <div class="hint" style="margin:2px 0 0;">Xem mã icon tại <a href="https://fontawesome.com/search" target="_blank" rel="noopener">fontawesome.com/search</a>.</div>
                     <label style="margin-top:10px;">Màu icon</label>
-                    <div class="color-swatch-row" id="cmColorRow_${subKey}">${contentColorSwatchesHtml(subKey)}</div>
-                    <label>Tiêu đề</label>
-                    <input id="cmTitle_${subKey}" placeholder="Tiêu đề" oninput="updateContentPreview('${subKey}')">
-                    <label>Mô tả ngắn</label>
-                    <input id="cmDesc_${subKey}" placeholder="Mô tả ngắn (không bắt buộc)" oninput="updateContentPreview('${subKey}')">
+                    <div class="color-swatch-row" id="cmColorRow_${subKey}">${contentColorSwatchesHtml(subKey)}</div>`}
+                    <label>${escapeHtml(meta.titleLabel || 'Tiêu đề')}</label>
+                    <input id="cmTitle_${subKey}" placeholder="${escapeHtml(meta.titleLabel || 'Tiêu đề')}" oninput="updateContentPreview('${subKey}')">
+                    <label>${escapeHtml(meta.descLabel || 'Mô tả ngắn')}</label>
+                    ${meta.descTextarea
+                        ? `<textarea id="cmDesc_${subKey}" rows="4" placeholder="${escapeHtml(meta.descLabel || 'Mô tả')}" oninput="updateContentPreview('${subKey}')"></textarea>`
+                        : `<input id="cmDesc_${subKey}" placeholder="${escapeHtml(meta.descLabel || 'Mô tả ngắn (không bắt buộc)')}" oninput="updateContentPreview('${subKey}')">`}
                     ${meta.extraField ? `
                     <label>${escapeHtml(meta.extraField.label)}</label>
                     <input id="cmExtra_${subKey}" placeholder="${escapeHtml(meta.extraField.placeholder)}">` : ''}
@@ -3189,6 +3250,7 @@ function contentBlockHtml(subKey){
                         <option value="soon">Sắp ra mắt (khoá, chưa bấm được)</option>
                         <option value="ready">Sẵn sàng (mở khoá, bấm được)</option>
                     </select>` : ''}
+                    ${meta.hideLink ? '' : `
                     <label>${escapeHtml(meta.linkLabel)}</label>
                     ${meta.upload ? `
                     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -3210,7 +3272,7 @@ function contentBlockHtml(subKey){
                     <input type="hidden" id="cmImageUrl_${subKey}" value="">
                     ` : `
                     <input id="cmLink_${subKey}" placeholder="${escapeHtml(meta.linkPlaceholder)}">
-                    `}
+                    `}`}
                     ${meta.planField ? `
                     <label style="margin-top:10px;">Gói thanh toán tự động (SePay)</label>
                     <select id="cmPlan_${subKey}" onchange="onContentPlanChanged('${subKey}')"><option value="">— Đang tải danh sách gói... —</option></select>
@@ -3233,11 +3295,15 @@ function contentBlockHtml(subKey){
 async function showContentManager(type){
     const group = CONTENT_MANAGER_GROUPS[type];
     if (!group) return;
+    rememberAdminPanel('content:' + type);
     showAdminPanel('contentManagerPanel', 'nav_' + type);
     document.getElementById('cmHeaderIcon').textContent = group.icon;
     document.getElementById('cmHeaderTitle').textContent = group.title;
     document.getElementById('cmHeaderHint').textContent = group.hint;
     document.getElementById('cmListsWrap').innerHTML = group.subKeys.map(contentBlockHtml).join('');
+
+    document.getElementById('supportIntroBlock').classList.toggle('hidden', !group.intro);
+    if (group.intro) await loadSupportIntro();
 
     const planSubKeys = group.subKeys.filter(k => contentLists[k].meta.planField);
     if (planSubKeys.length){
@@ -3339,17 +3405,20 @@ function pickContentColor(subKey, color){
 }
 function updateContentPreview(subKey){
     const cfg = contentLists[subKey];
-    const iconEl = document.getElementById('cmIcon_' + subKey);
     const titleEl = document.getElementById('cmTitle_' + subKey);
     const descEl = document.getElementById('cmDesc_' + subKey);
-    if (!iconEl || !titleEl || !descEl) return;
-    const icon = iconEl.value.trim() || cfg.meta.defaultIcon;
+    if (!titleEl || !descEl) return;
+    const iconEl = document.getElementById('cmIcon_' + subKey);
+    const icon = iconEl ? (iconEl.value.trim() || cfg.meta.defaultIcon) : cfg.meta.defaultIcon;
     const title = titleEl.value.trim() || '—';
     const desc = descEl.value.trim() || '';
     const selected = document.querySelector('#cmColorRow_' + subKey + ' .color-swatch.selected');
     const color = selected ? selected.dataset.color : (cfg.meta.color || 'indigo');
-    document.getElementById('cmPreviewIco_' + subKey).innerHTML = `<i class="${escapeHtml(icon)}"></i>`;
-    document.getElementById('cmPreviewIco_' + subKey).className = 'prev-ico color-swatch ' + color;
+    const prevIco = document.getElementById('cmPreviewIco_' + subKey);
+    if (prevIco){
+        prevIco.innerHTML = `<i class="${escapeHtml(icon)}"></i>`;
+        prevIco.className = 'prev-ico color-swatch ' + color;
+    }
     document.getElementById('cmPreviewTitle_' + subKey).innerText = title;
     document.getElementById('cmPreviewDesc_' + subKey).innerText = desc;
 }
@@ -3520,6 +3589,7 @@ const SEPAY_PKG_SELECT_FULL = 'id, name, description, price, duration_days, icon
 let sepayPkgSchemaOk = true; // false nếu bảng pro_packages chưa chạy migration 0002 (thiếu cột hiển thị)
 
 function showSepayPackages(){
+    rememberAdminPanel('sepayPkg');
     showAdminPanel('sepayPackagesPanel', 'navSepayPkg');
     const colorRow = document.getElementById('sepayPkgColorRow');
     if (colorRow && !colorRow.innerHTML.trim()) colorRow.innerHTML = sepayPkgColorSwatchesHtml();
@@ -3758,16 +3828,16 @@ function openContentForm(subKey){
     const cfg = contentLists[subKey];
     cfg.editingId = null;
     document.getElementById('cmFormTitle_' + subKey).innerText = 'Thêm ' + cfg.meta.label.toLowerCase();
-    document.getElementById('cmIcon_' + subKey).value = '';
+    const iconEl = document.getElementById('cmIcon_' + subKey); if (iconEl) iconEl.value = '';
     document.getElementById('cmTitle_' + subKey).value = '';
     document.getElementById('cmDesc_' + subKey).value = '';
     const extraEl = document.getElementById('cmExtra_' + subKey); if (extraEl) extraEl.value = '';
     const statusEl = document.getElementById('cmStatus_' + subKey); if (statusEl) statusEl.value = 'soon';
-    document.getElementById('cmLink_' + subKey).value = '';
-    document.getElementById('cmLink_' + subKey).disabled = false;
+    const linkEl = document.getElementById('cmLink_' + subKey);
+    if (linkEl){ linkEl.value = ''; linkEl.disabled = false; }
     if (cfg.meta.planField) refreshPlanSelect(subKey, '');
     if (cfg.meta.upload) resetContentUploadUI(subKey, '', '');
-    pickContentColor(subKey, cfg.meta.color || 'indigo');
+    if (!cfg.meta.hideIconColor) pickContentColor(subKey, cfg.meta.color || 'indigo');
     updateContentPreview(subKey);
     document.getElementById('cmForm_' + subKey).classList.add('show');
 }
@@ -3782,32 +3852,34 @@ function editContentItem(subKey, id){
     if (!item) return;
     cfg.editingId = id;
     document.getElementById('cmFormTitle_' + subKey).innerText = 'Sửa ' + cfg.meta.label.toLowerCase();
-    document.getElementById('cmIcon_' + subKey).value = item.icon || '';
+    const iconEl = document.getElementById('cmIcon_' + subKey); if (iconEl) iconEl.value = item.icon || '';
     document.getElementById('cmTitle_' + subKey).value = item.title || '';
     document.getElementById('cmDesc_' + subKey).value = item.desc || '';
     const extraEl = document.getElementById('cmExtra_' + subKey);
     if (extraEl && cfg.meta.extraField) extraEl.value = item[cfg.meta.extraField.key] || '';
     const statusEl = document.getElementById('cmStatus_' + subKey);
     if (statusEl && cfg.meta.statusField) statusEl.value = item.status || 'soon';
-    document.getElementById('cmLink_' + subKey).value = item.link || '';
-    document.getElementById('cmLink_' + subKey).disabled = false;
+    const linkEl = document.getElementById('cmLink_' + subKey);
+    if (linkEl){ linkEl.value = item.link || ''; linkEl.disabled = false; }
     if (cfg.meta.planField) refreshPlanSelect(subKey, item.plan_id || '');
     if (cfg.meta.upload) resetContentUploadUI(subKey, item.link || '', item.image || '');
-    pickContentColor(subKey, item.color || cfg.meta.color || 'indigo');
+    if (!cfg.meta.hideIconColor) pickContentColor(subKey, item.color || cfg.meta.color || 'indigo');
     updateContentPreview(subKey);
     document.getElementById('cmForm_' + subKey).classList.add('show');
     document.getElementById('cmTitle_' + subKey).focus();
 }
 async function saveContentItem(subKey){
     const cfg = contentLists[subKey];
-    const icon = document.getElementById('cmIcon_' + subKey).value.trim() || cfg.meta.defaultIcon;
+    const iconEl = document.getElementById('cmIcon_' + subKey);
+    const icon = iconEl ? (iconEl.value.trim() || cfg.meta.defaultIcon) : cfg.meta.defaultIcon;
     const title = document.getElementById('cmTitle_' + subKey).value.trim();
     const desc = document.getElementById('cmDesc_' + subKey).value.trim();
-    const link = document.getElementById('cmLink_' + subKey).value.trim();
+    const linkEl = document.getElementById('cmLink_' + subKey);
+    const link = linkEl ? linkEl.value.trim() : '';
     const planId = cfg.meta.planField ? (document.getElementById('cmPlan_' + subKey).value || '') : '';
     const selected = document.querySelector('#cmColorRow_' + subKey + ' .color-swatch.selected');
     const color = selected ? selected.dataset.color : (cfg.meta.color || 'indigo');
-    if (!title) return showMsg('Nhập tiêu đề.', 'err');
+    if (!title) return showMsg('Nhập ' + (cfg.meta.titleLabel || 'tiêu đề').toLowerCase() + '.', 'err');
 
     const item = { id: cfg.editingId || ('i' + Date.now().toString(36) + Math.random().toString(36).slice(2,6)), icon, color, title, desc, link };
     if (cfg.meta.planField) item.plan_id = planId || null;
@@ -3871,6 +3943,35 @@ async function saveContentList(subKey){
     const { error } = await sb.from('site_settings')
         .upsert({ key: cfg.settingsKey, payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     return error;
+}
+
+// ---------- KHỐI GIỚI THIỆU ĐẦU TAB "HỖ TRỢ" (site_settings key 'support_content', field intro_title/intro_desc) ----------
+async function loadSupportIntro(){
+    const { data } = await sb.from('site_settings').select('*').eq('key', 'support_content').single();
+    const payload = (data && data.payload) ? data.payload : CONTENT_DEFAULTS.support_content;
+    document.getElementById('supportIntroTitleInput').value = payload.intro_title || '';
+    document.getElementById('supportIntroDescInput').value = payload.intro_desc || '';
+    document.getElementById('supportIntroMsg').innerText = '';
+}
+async function saveSupportIntro(){
+    const intro_title = document.getElementById('supportIntroTitleInput').value.trim();
+    const intro_desc = document.getElementById('supportIntroDescInput').value.trim();
+    const msgEl = document.getElementById('supportIntroMsg');
+    const { data } = await sb.from('site_settings').select('*').eq('key', 'support_content').single();
+    const payload = (data && data.payload) ? data.payload : Object.assign({}, CONTENT_DEFAULTS.support_content);
+    payload.intro_title = intro_title;
+    payload.intro_desc = intro_desc;
+    const { error } = await sb.from('site_settings')
+        .upsert({ key: 'support_content', payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error){
+        msgEl.style.color = '#e5484d';
+        msgEl.innerText = 'Lỗi lưu: ' + error.message;
+        showMsg('Lỗi lưu khối giới thiệu: ' + error.message, 'err');
+    } else {
+        msgEl.style.color = 'var(--green)';
+        msgEl.innerText = '✔ Đã lưu.';
+        showMsg('Đã cập nhật khối giới thiệu tab Hỗ trợ.', 'ok');
+    }
 }
 
 // ============================================================================
@@ -4069,6 +4170,7 @@ async function callAdminUsersFn(payload){
 }
 
 async function showAccountsManager(){
+    rememberAdminPanel('accounts');
     showAdminPanel('accountsPanel', 'navAccounts');
     document.getElementById('acctSearch').value = '';
     closeAccountDetail();
@@ -4524,6 +4626,7 @@ const SETTINGS_META = {
 };
 
 async function openSettingsPanel(key){
+    rememberAdminPanel('settings:' + key);
     document.querySelectorAll('#settingsNavList .settings-item').forEach(el => el.classList.remove('active'));
     currentSetKey = key;
     document.querySelectorAll('.settings-item').forEach(el=>{

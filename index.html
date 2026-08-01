@@ -1622,7 +1622,6 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     function readyCardHtml(subject, style, num, pinned){
         return `
             <a class="card${pinned ? ' pinned' : ''}" href="mon-hoc.html?subject=${encodeURIComponent(subject.id)}">
-                ${pinned ? '<div class="pin-ribbon">★ GHIM</div>' : ''}
                 <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                 <div class="card-top">
                     <div class="icon-chip" style="background:${style.bg}; color:${style.color}"><i class="fa-solid ${style.icon}"></i></div>
@@ -1638,7 +1637,6 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     function maintenanceCardHtml(subject, style, num, pinned){
         return `
             <a class="card locked${pinned ? ' pinned' : ''}" href="#" data-locked="true" data-subject="${subject.id.toLowerCase()}" data-subject-name="${escapeHtmlHome(subject.name)}" data-locked-msg="“${escapeHtmlHome(subject.name)}” đang bảo trì, quay lại sau nhé.">
-                ${pinned ? '<div class="pin-ribbon">★ GHIM</div>' : ''}
                 <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                 <div class="card-top">
                     <div class="icon-chip" style="background:${style.bg}; color:${style.color}"><i class="fa-solid ${style.icon}"></i></div>
@@ -1654,7 +1652,6 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     function pendingCardHtml(subject, style, num, pinned){
         return `
             <a class="card locked${pinned ? ' pinned' : ''}" href="#" data-locked="true" data-subject="${subject.id.toLowerCase()}" data-subject-name="${escapeHtmlHome(subject.name)}">
-                ${pinned ? '<div class="pin-ribbon">★ GHIM</div>' : ''}
                 <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                 <div class="card-top">
                     <div class="icon-chip" style="background:${style.bg}; color:${style.color}"><i class="fa-solid ${style.icon}"></i></div>

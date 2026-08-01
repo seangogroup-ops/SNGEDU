@@ -256,6 +256,9 @@
         display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);
     }
     .acc-history-item:last-child{ border-bottom:none; }
+    a.acc-history-item{ text-decoration:none; color:inherit; cursor:pointer; border-radius:10px; transition:background .15s ease; }
+    a.acc-history-item:hover{ background:var(--brand-bg); padding-left:8px; padding-right:8px; margin:0 -8px; }
+    .acc-history-arrow{ margin-left:auto; color:var(--ink-mute); font-size:.8rem; flex-shrink:0; }
     .acc-history-icon{
         width:34px; height:34px; border-radius:10px; flex-shrink:0;
         background:var(--brand-bg); color:var(--brand);
@@ -2458,16 +2461,16 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         if (row.order_type === 'subscription'){
             const pkgNameById = {};
             (proUpgradeItems || []).forEach(p => { pkgNameById[p.id] = p.name; });
-            return { icon:'fa-crown', title: pkgNameById[row.plan_id] || 'Gói Premium' };
+            return { icon:'fa-crown', title: pkgNameById[row.plan_id] || 'Gói Premium', link:null };
         }
         if (row.order_type === 'document'){
             const doc = DOC_PAID_ITEMS_MAP[String(row.course_id)];
-            return { icon:'fa-file-lines', title: (doc && doc.title) || 'Tài liệu' };
+            return { icon:'fa-file-lines', title: (doc && doc.title) || 'Tài liệu', link: (doc && doc.link) || null };
         }
         if (row.order_type === 'course'){
-            return { icon:'fa-graduation-cap', title:'Khoá học' };
+            return { icon:'fa-graduation-cap', title:'Khoá học', link:null };
         }
-        return { icon:'fa-receipt', title: row.invoice_number || 'Đơn hàng' };
+        return { icon:'fa-receipt', title: row.invoice_number || 'Đơn hàng', link:null };
     }
 
     function orderHistoryItemHtml(row){
@@ -2475,14 +2478,22 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const dateSrc = row.paid_at || row.created_at;
         const dateText = dateSrc ? new Date(dateSrc).toLocaleString('vi-VN') : '';
         const amountText = Number(row.amount || 0).toLocaleString('vi-VN') + 'đ';
-        return `<div class="acc-history-item">
+        const inner = `
             <div class="acc-history-icon"><i class="fa-solid ${meta.icon}"></i></div>
             <div>
                 <div class="acc-history-title">${escapeHtmlHome(meta.title)} — ${amountText}</div>
                 <div class="acc-history-meta">${escapeHtmlHome(dateText)}</div>
             </div>
-            <span class="acct-order-status paid">Đã thanh toán</span>
-        </div>`;
+            <span class="acct-order-status paid">Đã thanh toán</span>`;
+
+        // Nếu tra ra được link tài sản (vd. link tải tài liệu) -> cho bấm vào mở luôn, giống thẻ tài liệu đã mua.
+        if (meta.link){
+            return `<a class="acc-history-item" href="${escapeHtmlHome(meta.link)}" target="_blank" rel="noopener">
+                ${inner}
+                <i class="fa-solid fa-arrow-up-right-from-square acc-history-arrow"></i>
+            </a>`;
+        }
+        return `<div class="acc-history-item">${inner}</div>`;
     }
 
     // Lịch sử mua tài liệu (hiển thị ngay trong tab Tài liệu, chỉ đơn thành công)
@@ -2542,13 +2553,13 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     // ---------------- MENU ĐIỀU HƯỚNG — ẩn/hiện + sắp xếp thứ tự tab, quản lý ở trang admin (site_settings) ----------------
     const NAV_TABS_DEFAULT = [
         { key:'home',    label:'Trang chủ',   icon:'fa-solid fa-house' },
+        { key:'support', label:'Hỗ trợ',      icon:'fa-solid fa-headset' },
         { key:'doc',     label:'Tài liệu',    icon:'fa-solid fa-folder-open' },
         { key:'quiz',    label:'Trắc nghiệm', icon:'fa-solid fa-list-check' },
         { key:'tool',    label:'Công cụ',     icon:'fa-solid fa-toolbox' },
         { key:'product', label:'Sản phẩm',    icon:'fa-solid fa-bag-shopping' },
         { key:'account', label:'Tài khoản', icon:'fa-solid fa-crown' },
-        { key:'history', label:'Lịch sử mua hàng', icon:'fa-solid fa-receipt' },
-        { key:'support', label:'Hỗ trợ',      icon:'fa-solid fa-headset' }
+        { key:'history', label:'Lịch sử mua hàng', icon:'fa-solid fa-receipt' }
     ];
 
     async function loadNavTabsConfig(){

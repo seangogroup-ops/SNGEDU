@@ -2,7 +2,9 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14151c" media="(prefers-color-scheme: dark)">
 <script>
     try{
         var savedTheme = localStorage.getItem('sng-theme');
@@ -13,29 +15,31 @@
         }
     }catch(e){}
 </script>
-<title>Đăng nhập · SNG EDU</title>
+<title>Chọn chương/đề · SNG EDU</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
 <style>
     :root{
-        --bg:        #eef2f9;
+        --bg:        #f5f7fb;
         --card:      #ffffff;
-        --line:      #dde3ef;
-        --ink:       #131b2e;
-        --ink-soft:  #4d5673;
-        --ink-mute:  #8791a8;
+        --line:      #e8eaf1;
+        --ink:       #1f2433;
+        --ink-soft:  #6b7180;
+        --ink-mute:  #9aa0b1;
         --green:     #17b26a;
         --green-bg:  #e7f9f0;
-        --red:       #e5484d;
-        --red-bg:    #fdeeee;
-        --brand:     #0b2e6b;
-        --brand2:    #14509e;
-        --brand-bg:  #e6edfb;
-        --shadow:    0 1px 2px rgba(20,30,60,.05), 0 8px 24px -12px rgba(20,30,60,.12);
-        --shadow-hov:0 4px 10px rgba(20,30,60,.06), 0 20px 40px -16px rgba(20,30,60,.2);
+        --amber:     #f5a524;
+        --amber-bg:  #fef3e0;
+        --brand:     #4f6bff;
+        --brand-bg:  #eef1ff;
+        --accent:    #4f6bff;
+        --accent-bg: #eef1ff;
+        --shadow:    0 1px 2px rgba(20,22,40,.04), 0 8px 24px -12px rgba(20,22,40,.08);
+        --shadow-hov:0 4px 10px rgba(20,22,40,.05), 0 20px 40px -16px rgba(20,22,40,.16);
     }
     html[data-theme="dark"]{
         --bg:        #14151c;
@@ -46,317 +50,290 @@
         --ink-mute:  #6f7488;
         --green:     #2ed392;
         --green-bg:  #163a2c;
-        --red:       #ff7875;
-        --red-bg:    #3a2020;
-        --brand:     #2c62b0;
-        --brand2:    #4a86d6;
-        --brand-bg:  #17263f;
+        --amber:     #ffbd4a;
+        --amber-bg:  #3a2e12;
+        --brand:     #7b93ff;
+        --brand-bg:  #232a4d;
         --shadow:    0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
         --shadow-hov:0 4px 10px rgba(0,0,0,.25), 0 20px 40px -16px rgba(0,0,0,.6);
     }
-    *{ box-sizing:border-box; }
-    html{ transition:background .25s ease; }
+    html{ transition: background .25s ease; }
+    *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+    body, header, .chapter-card, .hero-card, .report-banner, .state-card{
+        transition: background .25s ease, border-color .25s ease, color .25s ease, box-shadow .25s ease;
+    }
     body{
-        margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+        background: var(--bg);
+        color: var(--ink);
         font-family:'Be Vietnam Pro', sans-serif;
-        display:flex; align-items:stretch; justify-content:center;
-        transition:background .25s ease, color .25s ease;
+        min-height:100vh;
+        line-height:1.6;
     }
     @media (prefers-reduced-motion: reduce){
         *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
     }
 
+    /* ---------------- header ---------------- */
+    header{
+        background:var(--card); height:64px; display:flex; align-items:center; justify-content:space-between;
+        padding:0 clamp(14px, 4vw, 24px); border-bottom:1px solid var(--line);
+        padding-left:max(14px, env(safe-area-inset-left)); padding-right:max(14px, env(safe-area-inset-right));
+        position:fixed; top:0; width:100%; z-index:1000; gap:10px;
+    }
+    .header-left{ display:flex; align-items:center; gap:10px; min-width:0; flex-shrink:0; text-decoration:none; color:inherit; cursor:pointer; }
+    .header-left .mark{
+        width:32px; height:32px; border-radius:9px;
+        background:linear-gradient(135deg, var(--brand), #7b8fff);
+        display:flex; align-items:center; justify-content:center;
+        color:#fff; font-weight:800; font-size:.88rem; flex-shrink:0;
+    }
+    .header-left .name{ font-weight:800; font-size:.92rem; color:var(--ink); white-space:nowrap; }
+    .header-title{
+        font-weight:700; color:var(--ink); font-size:.98rem; text-align:center;
+        min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;
+    }
+    .header-title span{
+        display:block; font-size:.72rem; font-weight:500; color:var(--ink-mute); margin-top:1px;
+        overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .header-right{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
     .theme-toggle{
-        position:fixed; top:20px; right:20px; z-index:20;
         width:40px; height:40px; border-radius:50%;
         border:1px solid var(--line); background:var(--card); cursor:pointer;
         display:flex; align-items:center; justify-content:center;
-        color:var(--ink-soft); font-size:.95rem;
-        transition:background .2s ease, color .2s ease, border-color .2s ease;
+        color:var(--ink-soft); font-size:.9rem; flex-shrink:0;
+        transition:background .2s ease, color .2s ease, border-color .2s ease, transform .12s ease;
     }
-    .theme-toggle:hover{ background:var(--brand-bg); color:var(--brand); }
+    @media (hover:hover){ .theme-toggle:hover{ background:var(--brand-bg); color:var(--brand); } }
+    .theme-toggle:active{ transform:scale(.9); }
     .theme-toggle .fa-sun{ display:none; }
     html[data-theme="dark"] .theme-toggle .fa-sun{ display:inline; }
     html[data-theme="dark"] .theme-toggle .fa-moon{ display:none; }
 
-    /* ---------- layout shell ---------- */
-    .shell{ display:flex; width:100%; max-width:1080px; margin:0 auto; min-height:100vh; }
-
-    /* ---------- left brand panel ---------- */
-    .brand-panel{
-        flex:1; position:relative; overflow:hidden; display:flex; flex-direction:column;
-        justify-content:space-between; padding:40px 44px;
-        background:linear-gradient(155deg, var(--brand) 0%, var(--brand2) 100%);
-        color:#fff;
+    /* ---------------- wrap ---------------- */
+    .chapter-screen{
+        max-width:1180px; width:100%; margin:0 auto;
+        padding:88px clamp(16px, 4vw, 28px) 60px;
+        padding-left:max(clamp(16px, 4vw, 28px), env(safe-area-inset-left));
+        padding-right:max(clamp(16px, 4vw, 28px), env(safe-area-inset-right));
+        padding-bottom:max(60px, env(safe-area-inset-bottom));
     }
-    .brand-top .logo{ display:flex; align-items:center; gap:10px; }
-    .logo-badge{
-        width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,.16);
-        display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff;
-        border:1px solid rgba(255,255,255,.3);
-    }
-    .logo-name{ font-weight:800; font-size:1.02rem; letter-spacing:.2px; }
 
-    .brand-mid{ position:relative; flex:1; display:flex; align-items:center; }
-    .brand-copy h2{ font-size:1.7rem; line-height:1.35; margin:0 0 12px; font-weight:800; max-width:360px; }
-    .brand-copy p{ font-size:.92rem; line-height:1.6; color:rgba(255,255,255,.82); max-width:340px; margin:0; }
-
-    /* signature: floating quiz answer-sheet cards */
-    .quiz-stack{ position:absolute; right:-30px; bottom:56px; width:260px; height:260px; pointer-events:none; }
-    .quiz-card{
-        position:absolute; width:220px; border-radius:16px; background:rgba(255,255,255,.1);
-        border:1px solid rgba(255,255,255,.22); padding:16px 18px; backdrop-filter:blur(2px);
-        box-shadow:0 20px 40px -20px rgba(0,0,0,.35);
+    /* ---------------- hero ---------------- */
+    .hero-card{
+        background: linear-gradient(135deg, var(--accent-bg) 0%, var(--card) 55%, var(--brand-bg) 100%);
+        border:1px solid var(--line);
+        border-radius:20px; padding:clamp(20px, 3.5vw, 30px); margin-bottom:clamp(20px, 3.5vw, 30px);
+        display:flex; align-items:center; gap:18px; justify-content:space-between; flex-wrap:wrap;
+        position:relative; overflow:hidden;
     }
-    .quiz-card.c1{ top:0; left:10px; transform:rotate(-9deg); opacity:.55; }
-    .quiz-card.c2{ top:36px; left:36px; transform:rotate(-2deg); opacity:.8; }
-    .quiz-card.c3{ top:74px; left:60px; transform:rotate(6deg); }
-    .quiz-card .qline{ height:7px; border-radius:4px; background:rgba(255,255,255,.35); margin-bottom:9px; }
-    .quiz-card .qline.short{ width:55%; }
-    .quiz-card .opts{ display:flex; gap:8px; margin-top:12px; }
-    .quiz-opt{
-        width:24px; height:24px; border-radius:50%; border:1.5px solid rgba(255,255,255,.55);
-        display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:700; color:rgba(255,255,255,.75);
+    .hero-text{ flex:1; min-width:220px; }
+    .hero-eyebrow{
+        font-size:.76rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+        color:var(--accent); margin-bottom:8px;
     }
-    .quiz-opt.correct{ background:#fff; color:var(--brand2); border-color:#fff; }
-
-    .brand-bottom{ position:relative; display:flex; flex-wrap:wrap; gap:10px; }
-    .brand-chip{
-        display:flex; align-items:center; gap:8px; padding:9px 14px; border-radius:999px;
-        background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.24);
-        font-size:.78rem; font-weight:700; color:#fff; backdrop-filter:blur(2px);
+    .hero-card h1{ font-size:clamp(1.15rem, 1rem + 1.6vw, 1.6rem); font-weight:800; line-height:1.32; margin-bottom:8px; max-width:480px; }
+    .hero-card p{ color:var(--ink-soft); font-size:.9rem; max-width:460px; }
+    .hero-icon{
+        width:clamp(56px, 8vw, 88px); height:clamp(56px, 8vw, 88px); border-radius:22px; flex-shrink:0;
+        background:var(--accent-bg); color:var(--accent);
+        display:flex; align-items:center; justify-content:center; font-size:clamp(1.4rem, 3vw, 2.1rem);
     }
-    .brand-chip i{ font-size:.78rem; opacity:.9; }
 
-    /* ---------- right form panel ---------- */
-    .form-panel{
-        width:440px; flex-shrink:0; background:var(--card); border-left:1px solid var(--line);
-        display:flex; align-items:center; justify-content:center; padding:40px 36px;
+    /* ---------------- section heading ---------------- */
+    .section-label{
+        display:flex; align-items:center; gap:8px;
+        font-size:.78rem; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:.06em;
+        margin:clamp(24px, 4vw, 30px) 0 14px;
+    }
+    .section-label::before{
+        content:''; width:4px; height:14px; border-radius:3px; background:var(--accent); display:inline-block;
+    }
+    .section-label:first-of-type{ margin-top:0; }
+
+    /* ---------------- chapter cards ---------------- */
+    .chapter-list{ display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:clamp(12px, 2vw, 16px); }
+    .chapter-card{
+        background:var(--card); border:1px solid var(--line); border-radius:18px;
+        padding:18px 20px; text-decoration:none; color:var(--ink);
+        display:flex; flex-direction:column; gap:14px;
         box-shadow:var(--shadow);
+        transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+        cursor:pointer; position:relative;
+        -webkit-tap-highlight-color:transparent;
     }
-    .form-inner{ width:100%; max-width:340px; }
-
-    .back-home{
-        display:inline-flex; align-items:center; gap:6px; color:var(--ink-mute); text-decoration:none;
-        font-size:.83rem; margin-bottom:20px; font-weight:600;
+    @media (hover:hover){
+        .chapter-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-hov); border-color:#dfe2ee; }
     }
-    .back-home:hover{ color:var(--brand); }
+    .chapter-card:active{ transform:scale(.98); box-shadow:var(--shadow); }
 
-    h1{ font-size:1.4rem; margin:0 0 6px; font-weight:800; }
-    p.sub{ color:var(--ink-mute); font-size:.87rem; margin:0 0 26px; line-height:1.5; }
-
-    label{ display:block; font-size:.8rem; font-weight:700; color:var(--ink-soft); margin:14px 0 6px; }
-    input{
-        width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line);
-        background:var(--bg); color:var(--ink); font-size:.9rem; outline:none; font-family:inherit;
-        transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    .c-top{ display:flex; align-items:flex-start; justify-content:space-between; }
+    .icon-chip{
+        width:42px; height:42px; border-radius:12px; flex-shrink:0;
+        background:var(--accent-bg); color:var(--accent);
+        display:flex; align-items:center; justify-content:center; font-size:1.05rem;
     }
-    input::placeholder{ color:var(--ink-mute); }
-    input:focus{ border-color:var(--brand); background:var(--card); box-shadow:0 0 0 3px var(--brand-bg); }
-
-    .pw-wrap{ position:relative; }
-    .pw-wrap input{ padding-right:42px; }
-    .pw-toggle{
-        position:absolute; right:4px; top:50%; transform:translateY(-50%);
-        width:32px; height:32px; background:none; border:none; color:var(--ink-mute); cursor:pointer; font-size:.92rem;
-        border-radius:8px; display:flex; align-items:center; justify-content:center;
+    .card-arrow{
+        width:26px; height:26px; border-radius:50%;
+        display:flex; align-items:center; justify-content:center;
+        background:#f2f3f8; color:var(--ink-mute); font-size:.7rem;
+        opacity:0; transform:translateX(-4px);
+        transition:opacity .2s ease, transform .2s ease, background .2s ease, color .2s ease;
     }
-    .pw-toggle:hover{ color:var(--brand); background:var(--brand-bg); }
-
-    .btn-primary{
-        width:100%; margin-top:22px; padding:12px; border:none; border-radius:10px;
-        background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff; font-weight:700;
-        font-size:.92rem; cursor:pointer; font-family:inherit;
-        transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    html[data-theme="dark"] .card-arrow{ background:#262a38; }
+    @media (hover:hover){
+        .chapter-card:hover .card-arrow{ opacity:1; transform:translateX(0); background:var(--accent); color:#fff; }
     }
-    .btn-primary:hover:not(:disabled){ transform:translateY(-1px); box-shadow:0 10px 20px -10px rgba(79,107,255,.55); }
-    .btn-primary:disabled{ opacity:.6; cursor:not-allowed; transform:none; box-shadow:none; }
-
-    .btn-ghost{
-        width:100%; margin-top:10px; padding:12px; border-radius:10px; font-family:inherit;
-        background:transparent; color:var(--ink); border:1px solid var(--line); font-weight:700; font-size:.92rem; cursor:pointer;
-        transition:background .15s ease;
-    }
-    .btn-ghost:hover{ background:var(--brand-bg); color:var(--brand); border-color:var(--brand-bg); }
-
-    .switch-row{ margin-top:20px; text-align:center; font-size:.85rem; color:var(--ink-mute); }
-    .switch-row a{ color:var(--brand); text-decoration:none; font-weight:700; cursor:pointer; }
-    .switch-row a:hover{ text-decoration:underline; }
-
-    .msg{ margin-top:14px; font-size:.83rem; padding:10px 12px; border-radius:10px; display:none; align-items:center; gap:8px; font-weight:600; }
-    .msg.err{ display:flex; background:var(--red-bg); color:var(--red); }
-    .msg.ok{ display:flex; background:var(--green-bg); color:var(--green); }
-
-    .logged-icon{
-        width:52px; height:52px; border-radius:50%; background:var(--green-bg); color:var(--green);
-        display:flex; align-items:center; justify-content:center; font-size:1.3rem; margin-bottom:16px;
+    @media (hover:none){
+        .card-arrow{ opacity:.55; transform:translateX(0); }
     }
 
-    .hidden{ display:none !important; }
+    .c-name{ font-weight:700; font-size:.98rem; line-height:1.4; display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+    .c-note{ color:var(--ink-soft); font-size:.84rem; }
+    .c-count{ color:var(--ink-mute); font-size:.82rem; display:flex; align-items:center; gap:6px; }
+    .c-count i{ font-size:.76rem; }
 
-    /* ---------- Premium status + pricing (loggedInView) ---------- */
-    .plan-chip{
-        display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px;
-        font-size:.76rem; font-weight:700; margin-bottom:4px;
+    .badge-new{
+        display:inline-flex; align-items:center; padding:2px 8px; font-size:9.5px; font-weight:800;
+        letter-spacing:.4px; text-transform:uppercase; color:#fff;
+        background:linear-gradient(135deg, #ff6b52, #e4372a); border-radius:999px;
     }
-    .plan-chip.is-free{ background:var(--brand-bg); color:var(--ink-soft); }
-    .plan-chip.is-premium{ background:var(--green-bg); color:var(--green); }
-    .plan-sub{ font-size:.8rem; color:var(--ink-mute); margin:4px 0 18px; }
 
-    .pricing-list{ display:flex; flex-direction:column; gap:10px; margin-top:4px; }
-    .price-row{
-        border:1px solid var(--line); border-radius:12px; padding:13px 15px;
-        display:flex; align-items:center; justify-content:space-between; gap:12px;
-        background:var(--card);
-    }
-    .price-row.is-popular{ border-color:var(--brand); box-shadow:0 0 0 1px var(--brand) inset; }
-    .price-row .pr-info .pr-name{ font-weight:700; font-size:.86rem; display:flex; align-items:center; gap:6px; }
-    .price-row .pr-info .pr-name .pr-tag{
-        font-size:.64rem; font-weight:700; color:#fff; background:var(--brand);
-        padding:2px 7px; border-radius:999px;
-    }
-    .price-row .pr-info .pr-sub{ font-size:.76rem; color:var(--ink-mute); margin-top:2px; }
-    .price-row .pr-buy{
-        flex-shrink:0; padding:8px 14px; border-radius:8px; border:none; cursor:pointer;
-        font-family:inherit; font-weight:700; font-size:.8rem; white-space:nowrap;
-        background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff;
-        transition:transform .15s ease, opacity .15s ease;
-    }
-    .price-row .pr-buy:hover:not(:disabled){ transform:translateY(-1px); }
-    .price-row .pr-buy:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
-    .pricing-note{ font-size:.72rem; color:var(--ink-mute); text-align:center; margin-top:2px; }
+    /* ---------------- section label riêng cho "Đề thi thử" ---------------- */
+    .section-label.is-exam{ color:#2ed392; }
+    .section-label.is-exam::before{ background:#2ed392; }
 
-    @media (max-width: 860px){
-        .brand-panel{ display:none; }
-        .form-panel{ width:100%; border-left:none; }
+    /* ---------------- thẻ "Đề thi thử" — style riêng, khác thẻ chương thường ---------------- */
+    .chapter-card.exam-card{
+        background:linear-gradient(160deg, #163a2c 0%, #10281f 100%);
+        border:1.5px dashed #2ed392; color:#e8fdf4;
+    }
+    @media (hover:hover){
+        .chapter-card.exam-card:hover{ border-color:#4ee6a8; transform:translateY(-4px); }
+    }
+    .chapter-card.exam-card .c-note,
+    .chapter-card.exam-card .c-count{ color:#a9e8cd; }
+    .exam-icon-chip{ background:rgba(46,211,146,.16); color:#4ee6a8; }
+    .chapter-card.exam-card .card-arrow{ background:rgba(255,255,255,.12); color:#c9fbe4; }
+    @media (hover:hover){
+        .chapter-card.exam-card:hover .card-arrow{ background:#2ed392; color:#0e1a15; }
+    }
+
+    /* ---------------- state cards (loading / error / empty) ---------------- */
+    .state-card{
+        background:var(--card); border:1px solid var(--line); border-radius:20px;
+        padding:50px 24px; text-align:center; color:var(--ink-soft); font-size:.92rem;
+    }
+    .state-card i{ font-size:1.6rem; color:var(--ink-mute); margin-bottom:12px; display:block; }
+    .state-card.is-error{ color:#c0392b; }
+    .state-card.is-error i{ color:var(--amber); }
+    .state-card a{ color:var(--accent); font-weight:700; text-decoration:none; }
+    .state-card a:hover{ text-decoration:underline; }
+
+    /* ---------------- report banner ---------------- */
+    .report-banner{
+        display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+        background:var(--amber-bg); border:1.5px solid var(--amber);
+        border-radius:20px; padding:13px 22px; margin:clamp(28px, 5vw, 36px) auto 0; width:fit-content; max-width:100%;
+        text-decoration:none; position:relative;
+        box-shadow:var(--shadow);
+        animation: bannerGlow 2s ease-in-out infinite;
+    }
+    @media (hover:hover){ .report-banner:hover{ transform:translateY(-1px) scale(1.015); box-shadow:var(--shadow-hov); } }
+    .report-banner:active{ transform:scale(.98); }
+    .report-banner .icon{ font-size:16px; flex-shrink:0; display:inline-block; animation: iconShake 1.8s ease-in-out infinite; }
+    .report-banner span:not(.icon):not(.arrow){
+        color:#8a5a06; font-size:12.5px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; text-align:center;
+    }
+    html[data-theme="dark"] .report-banner span:not(.icon):not(.arrow){ color:var(--amber); }
+    .report-banner span u{ text-decoration-thickness:2px; }
+    .report-banner .arrow{ font-size:15px; flex-shrink:0; animation: arrowNudge 1s ease-in-out infinite; }
+    @keyframes arrowNudge{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(4px); } }
+    @keyframes bannerGlow{
+        0%,100%{ box-shadow:var(--shadow), 0 0 0 0 rgba(245,165,36,.4); }
+        50%{ box-shadow:var(--shadow-hov), 0 0 0 9px rgba(245,165,36,0); }
+    }
+    @keyframes iconShake{
+        0%,60%,100%{ transform:rotate(0deg); }
+        65%{ transform:rotate(-14deg); } 75%{ transform:rotate(11deg); }
+        85%{ transform:rotate(-7deg); } 92%{ transform:rotate(4deg); }
+    }
+    @media (prefers-reduced-motion: reduce){
+        .report-banner, .report-banner .icon, .report-banner .arrow{ animation:none; }
+    }
+
+    footer{
+        text-align:center; color:var(--ink-mute); font-size:.8rem;
+        padding-top:26px; margin-top:34px; border-top:1px solid var(--line);
+    }
+
+    /* ---------------- responsive ---------------- */
+    @media (min-width: 1400px){
+        .chapter-screen{ max-width:1280px; }
+    }
+    @media (max-width: 900px){
+        .chapter-list{ grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); }
+    }
+    @media (max-width: 640px){
+        header{ height:58px; }
+        .chapter-screen{ padding-top:80px; }
+        .hero-card{ flex-direction:column; align-items:flex-start; text-align:left; gap:14px; }
+        .hero-icon{ align-self:flex-start; }
+        .hero-card h1, .hero-card p{ max-width:none; }
+        .header-title span{ display:none; }
+        .header-left .name{ display:none; }
+        .chapter-list{ grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; }
+        .chapter-card{ padding:16px; gap:12px; }
+        .c-name{ font-size:.92rem; }
+        .section-label{ font-size:.72rem; }
+        .report-banner{ padding:12px 18px; }
+        .report-banner span:not(.icon):not(.arrow){ font-size:11.5px; }
+    }
+    @media (max-width: 400px){
+        .chapter-screen{ padding-left:14px; padding-right:14px; }
+        .chapter-list{ grid-template-columns:1fr 1fr; gap:10px; }
+        .icon-chip{ width:38px; height:38px; font-size:.95rem; }
+        .hero-card h1{ font-size:1.1rem; }
+        .card-arrow{ display:none; }
     }
 </style>
 </head>
 <body>
 
-<button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
-    <i class="fa-solid fa-moon"></i>
-    <i class="fa-solid fa-sun"></i>
-</button>
+<header>
+    <a href="index.html" class="header-left">
+        <div class="mark">S</div>
+        <div class="name">SNG EDU</div>
+    </a>
+    <div class="header-title" id="headerTitle">Đang tải...</div>
+    <div class="header-right">
+        <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
+            <i class="fa-solid fa-moon"></i>
+            <i class="fa-solid fa-sun"></i>
+        </button>
+    </div>
+</header>
 
-<div class="shell">
+<div class="chapter-screen">
 
-    <!-- BRAND PANEL -->
-    <div class="brand-panel">
-        <div class="brand-top">
-            <div class="logo">
-                <div class="logo-name">SNG EDU</div>
-            </div>
+    <div class="hero-card" id="heroCard" style="display:none;">
+        <div class="hero-text">
+            <div class="hero-eyebrow">Học phần</div>
+            <h1 id="heroTitle"></h1>
+            <p id="heroSubtitle">Chọn một chương/đề bên dưới để bắt đầu ôn tập — mỗi chương có bộ câu hỏi riêng, giải thích đáp án chi tiết.</p>
         </div>
-
-        <div class="brand-mid">
-            <div class="brand-copy">
-                <h2>Không gian tri thức, mở ra cơ hội.</h2>
-                <p>SNG EDU — trải nghiệm ôn luyện hiện đại với ngân hàng câu hỏi, tài liệu và công cụ tính toán được cập nhật liên tục.</p>
-            </div>
-            <div class="quiz-stack">
-                <div class="quiz-card c1">
-                    <div class="qline"></div>
-                    <div class="qline short"></div>
-                </div>
-                <div class="quiz-card c2">
-                    <div class="qline"></div>
-                    <div class="qline short"></div>
-                </div>
-                <div class="quiz-card c3">
-                    <div class="qline"></div>
-                    <div class="qline short"></div>
-                    <div class="opts">
-                        <div class="quiz-opt">A</div>
-                        <div class="quiz-opt correct"><i class="fa-solid fa-check"></i></div>
-                        <div class="quiz-opt">C</div>
-                        <div class="quiz-opt">D</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="brand-bottom">
-            <div class="brand-chip"><i class="fa-solid fa-database"></i> Ngân hàng câu hỏi</div>
-            <div class="brand-chip"><i class="fa-solid fa-book-open"></i> Tài liệu học tập</div>
-            <div class="brand-chip"><i class="fa-solid fa-calculator"></i> Công cụ tính toán</div>
-        </div>
+        <div class="hero-icon" id="heroIcon"><i class="fa-solid fa-book-open"></i></div>
     </div>
 
-    <!-- FORM PANEL -->
-    <div class="form-panel">
-        <div class="form-inner">
-            <a class="back-home" href="../index.html"><i class="fa-solid fa-arrow-left"></i> Về trang chủ</a>
+    <div id="content"><div class="state-card"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải dữ liệu môn học...</div></div>
 
-            <!-- ĐĂNG NHẬP -->
-            <div id="loginView">
-                <h1>Đăng nhập</h1>
-                <p class="sub">Đăng nhập để dùng Trắc nghiệm, Tài liệu, Công cụ và các mục khác.</p>
+    <a href="https://forms.gle/CMZj35G3BMGfo1AZ8" target="_blank" rel="noopener" class="report-banner">
+        <span class="icon">🔔</span>
+        <span>Gặp câu hỏi sai? <u>Click vào đây</u> góp ý giúp tôi!</span>
+        <span class="arrow">👉</span>
+    </a>
 
-                <label>Email</label>
-                <input id="loginEmail" type="email" placeholder="ban@email.com" autocomplete="email">
-
-                <label>Mật khẩu</label>
-                <div class="pw-wrap">
-                    <input id="loginPassword" type="password" placeholder="Nhập mật khẩu" autocomplete="current-password">
-                    <button type="button" class="pw-toggle" onclick="togglePw('loginPassword', this)"><i class="fa-solid fa-eye"></i></button>
-                </div>
-
-                <button class="btn-primary" id="loginBtn" onclick="doLogin()">Đăng nhập</button>
-                <div class="msg" id="loginMsg"></div>
-
-                <div class="switch-row">Chưa có tài khoản? <a onclick="showView('register')">Đăng ký ngay</a></div>
-            </div>
-
-            <!-- ĐĂNG KÝ -->
-            <div id="registerView" class="hidden">
-                <h1>Tạo tài khoản</h1>
-                <p class="sub">Tạo tài khoản miễn phí để bắt đầu ôn tập.</p>
-
-                <label>Tên tài khoản</label>
-                <input id="regName" type="text" placeholder="Nhập tên tài khoản" autocomplete="name">
-
-                <label>Email</label>
-                <input id="regEmail" type="email" placeholder="ban@email.com" autocomplete="email">
-
-                <label>Mật khẩu</label>
-                <div class="pw-wrap">
-                    <input id="regPassword" type="password" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
-                    <button type="button" class="pw-toggle" onclick="togglePw('regPassword', this)"><i class="fa-solid fa-eye"></i></button>
-                </div>
-
-                <label>Nhập lại mật khẩu</label>
-                <div class="pw-wrap">
-                    <input id="regPassword2" type="password" placeholder="Nhập lại mật khẩu" autocomplete="new-password">
-                    <button type="button" class="pw-toggle" onclick="togglePw('regPassword2', this)"><i class="fa-solid fa-eye"></i></button>
-                </div>
-
-                <button class="btn-primary" id="registerBtn" onclick="doRegister()">Đăng ký</button>
-                <div class="msg" id="registerMsg"></div>
-
-                <div class="switch-row">Đã có tài khoản? <a onclick="showView('login')">Đăng nhập</a></div>
-            </div>
-
-            <!-- ĐÃ ĐĂNG NHẬP -->
-            <div id="loggedInView" class="hidden">
-                <div class="logged-icon"><i class="fa-solid fa-check"></i></div>
-                <h1>Bạn đã đăng nhập</h1>
-                <p class="sub">Đang đăng nhập với <b id="loggedInEmail" style="color:var(--ink);">—</b></p>
-
-                <div id="planChip" class="plan-chip is-free"><i class="fa-solid fa-user"></i> Tài khoản miễn phí</div>
-                <div class="plan-sub" id="planSub">Nâng cấp Premium để mở khoá toàn bộ chương/đề.</div>
-
-                <div class="pricing-list" id="pricingList">
-                    <div class="msg ok" style="display:flex;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải gói...</div>
-                </div>
-                <div class="pricing-note" id="pricingNote"></div>
-
-                <button class="btn-primary" onclick="location.href='../index.html'">Vào trang chủ</button>
-                <button class="btn-ghost" onclick="doLogout()">Đăng xuất</button>
-            </div>
-        </div>
-    </div>
-
+    <footer>SNG © H.N.TấnHải · sngedu.site</footer>
 </div>
 
 <script>
@@ -364,9 +341,171 @@ const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Nếu URL có ?next=... thì sau khi đăng nhập/đăng ký xong sẽ quay lại đúng trang đó
-const params = new URLSearchParams(location.search);
-const nextUrl = params.get('next') || '../index.html';
+// Chương thuộc nhóm này sẽ mở giao diện làm bài thi (quiz-exam.html) thay vì
+// giao diện ôn tập thường (quiz-dynamic.html)
+const EXAM_GROUP = 'Đề thi thử';
+const CALC_GROUP = 'Bài tập tính toán';
+
+// Bảng màu + icon xoay vòng cho từng môn học (chọn theo hash của mã môn, để mỗi môn luôn ra đúng 1 màu/1 icon cố định)
+const PALETTE = [
+    { icon:'fa-scale-balanced',   light:{c:'#e4572e', bg:'#ffece8'}, dark:{c:'#ff8161', bg:'#3a2018'} },
+    { icon:'fa-landmark',         light:{c:'#4f6bff', bg:'#eef1ff'}, dark:{c:'#7b93ff', bg:'#232a4d'} },
+    { icon:'fa-flask',            light:{c:'#17b26a', bg:'#e7f9f0'}, dark:{c:'#2ed392', bg:'#163a2c'} },
+    { icon:'fa-brain',            light:{c:'#9333ea', bg:'#f4ebfd'}, dark:{c:'#c084fc', bg:'#2e1f3d'} },
+    { icon:'fa-globe',            light:{c:'#0891b2', bg:'#e5f7fa'}, dark:{c:'#38bdf8', bg:'#0f2f38'} },
+    { icon:'fa-book-open',        light:{c:'#d97706', bg:'#fef3e0'}, dark:{c:'#ffbd4a', bg:'#3a2e12'} },
+    { icon:'fa-graduation-cap',   light:{c:'#db2777', bg:'#fdeaf3'}, dark:{c:'#f472b6', bg:'#3a1f2d'} },
+    { icon:'fa-chart-line',       light:{c:'#65a30d', bg:'#f1f8e5'}, dark:{c:'#a3e635', bg:'#25301a'} },
+];
+
+function hashStr(s){
+    let h = 0;
+    for (let i=0; i<s.length; i++){ h = (h*31 + s.charCodeAt(i)) | 0; }
+    return Math.abs(h);
+}
+
+let currentPalette = PALETTE[0];
+function applyPalette(theme){
+    const p = theme === 'dark' ? currentPalette.dark : currentPalette.light;
+    document.documentElement.style.setProperty('--accent', p.c);
+    document.documentElement.style.setProperty('--accent-bg', p.bg);
+}
+
+function getSubjectId(){
+    const params = new URLSearchParams(window.location.search);
+    return params.get('subject') || params.get('subject_id') || params.get('mon');
+}
+function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function parseNoteMinutes(note){
+    if (!note) return null;
+    const m = String(note).match(/(\d+)\s*ph/i);
+    return m ? parseInt(m[1], 10) : null;
+}
+function showState(html, isError){
+    document.getElementById('content').innerHTML = `<div class="state-card${isError ? ' is-error' : ''}">${html}</div>`;
+}
+
+async function loadPage(){
+    const subjectId = getSubjectId();
+
+    if (!subjectId){
+        document.getElementById('headerTitle').innerText = 'Thiếu thông tin môn học';
+        showState(`<i class="fa-solid fa-circle-exclamation"></i>Không tìm thấy môn học trong đường dẫn.<br>Vui lòng quay lại <a href="index.html">trang chủ</a> và chọn lại môn học.`, true);
+        return;
+    }
+
+    const { data: subject, error: subjectErr } = await sb.from('subjects').select('*').eq('id', subjectId).single();
+
+    // Không tồn tại hoặc đã bị ẩn khỏi hệ thống -> coi như không tìm thấy, không tiết lộ thêm
+    if (subjectErr || !subject || subject.status === 'hidden'){
+        document.getElementById('headerTitle').innerText = 'Không tìm thấy môn học';
+        showState(`<i class="fa-solid fa-circle-exclamation"></i>Môn học này không tồn tại hoặc đã bị gỡ bỏ.<br>Vui lòng quay lại <a href="index.html">trang chủ</a> để chọn môn khác.`, true);
+        return;
+    }
+
+    // Cập nhật header + hero theo đúng môn học đang xem
+    document.title = `${subject.name} · SNG EDU`;
+    document.getElementById('headerTitle').innerHTML = `${escapeHtml(subject.name)}<span>Ôn tập trắc nghiệm</span>`;
+    document.getElementById('heroTitle').innerText = `Ôn tập trắc nghiệm ${subject.name}`;
+
+    const pIdx = hashStr(String(subject.id)) % PALETTE.length;
+    currentPalette = PALETTE[pIdx];
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    applyPalette(theme);
+    document.getElementById('heroIcon').innerHTML = `<i class="fa-solid ${currentPalette.icon}"></i>`;
+    document.getElementById('heroCard').style.display = '';
+
+    // Môn đang bảo trì / chưa cập nhật -> chặn truy cập chương, giải thích rõ lý do
+    if (subject.status === 'maintenance'){
+        showState(`<i class="fa-solid fa-screwdriver-wrench"></i>Môn học <b>${escapeHtml(subject.name)}</b> đang được bảo trì.<br>Vui lòng quay lại sau ít phút.`, true);
+        return;
+    }
+    if (subject.status === 'pending'){
+        showState(`<i class="fa-solid fa-hourglass-half"></i>Môn học <b>${escapeHtml(subject.name)}</b> chưa được cập nhật nội dung.<br>Vui lòng quay lại sau.`, true);
+        return;
+    }
+
+    const { data: chapters, error: chapErr } = await sb.from('chapters')
+        .select('*').eq('subject_id', subjectId).order('order_no');
+
+    if (chapErr){
+        showState(`<i class="fa-solid fa-triangle-exclamation"></i>Lỗi tải chương/đề: ${escapeHtml(chapErr.message)}`, true);
+        return;
+    }
+
+    if (!chapters || !chapters.length){
+        showState(`<i class="fa-solid fa-inbox"></i>Môn học này chưa có chương/đề nào.<br>Vui lòng quay lại sau.`);
+        return;
+    }
+
+    // Đếm số câu hỏi theo từng chương (gộp đếm ở phía client).
+    // Supabase/PostgREST chỉ trả tối đa 1000 dòng mỗi lần select(), nên phải phân
+    // trang bằng .range() — nếu không, môn nào có tổng số câu hỏi > 1000 sẽ bị
+    // cắt ngang, khiến vài chương (thường là chương nạp sau cùng) đếm ra 0 câu.
+    const counts = {};
+    const COUNT_PAGE_SIZE = 1000;
+    for (let page = 0; ; page++){
+        const from = page * COUNT_PAGE_SIZE, to = from + COUNT_PAGE_SIZE - 1;
+        const { data: chunk } = await sb.from('questions').select('chapter')
+            .eq('subject_id', subjectId).range(from, to);
+        if (!chunk || !chunk.length) break;
+        chunk.forEach(r => { counts[r.chapter] = (counts[r.chapter] || 0) + 1; });
+        if (chunk.length < COUNT_PAGE_SIZE) break; // trang cuối cùng
+    }
+
+    // Gom nhóm chương theo group_name, giữ đúng thứ tự nhóm xuất hiện lần đầu trong dữ liệu.
+    // Nhóm "Đề thi thử" vẫn nằm trong cùng lưới chương, chỉ khác style thẻ + trỏ sang quiz-exam.html
+    const groupOrder = [];
+    const groups = {};
+    chapters.forEach(ch => {
+        const g = ch.group_name || 'Nội dung chính';
+        if (!groups[g]){ groups[g] = []; groupOrder.push(g); }
+        groups[g].push(ch);
+    });
+
+    let html = '';
+    groupOrder.forEach(groupName => {
+        const isExamGroup = groupName === EXAM_GROUP;
+        const isCalcGroup = groupName === CALC_GROUP;
+        html += `<div class="section-label${isExamGroup ? ' is-exam' : ''}">${escapeHtml(groupName)}</div>`;
+        html += `<div class="chapter-list">`;
+        groups[groupName].forEach(ch => {
+            const targetPage = isExamGroup ? 'quiz-exam.html' : (isCalcGroup ? 'quiz-tinhtoan.html' : 'quiz-dynamic.html');
+            const href = `${targetPage}?subject=${encodeURIComponent(subjectId)}&chapter=${encodeURIComponent(ch.chapter)}`;
+            const n = counts[ch.chapter] || 0;
+            if (isExamGroup){
+                html += `
+                    <a class="chapter-card exam-card" href="${href}">
+                        <div class="c-top">
+                            <div class="icon-chip exam-icon-chip"><i class="fa-solid fa-dice"></i></div>
+                            <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                        <div class="c-name">${escapeHtml(ch.label)}</div>
+                        ${ch.note ? `<div class="c-note"><i class="fa-solid fa-tag"></i> ${escapeHtml(ch.note)}</div>` : ''}
+                        <div class="c-count"><i class="fa-regular fa-circle-question"></i> ${n} câu</div>
+                    </a>
+                `;
+                return;
+            }
+            html += `
+                <a class="chapter-card" href="${href}">
+                    <div class="c-top">
+                        <div class="icon-chip"><i class="fa-solid ${isCalcGroup ? 'fa-calculator' : 'fa-list-check'}"></i></div>
+                        <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                    </div>
+                    <div class="c-name">${escapeHtml(ch.label)}</div>
+                    ${ch.note ? `<div class="c-note">${escapeHtml(ch.note)}</div>` : ''}
+                    ${n ? `<div class="c-count"><i class="fa-regular fa-circle-question"></i> ${n} câu</div>` : ''}
+                </a>
+            `;
+        });
+        html += `</div>`;
+    });
+
+    document.getElementById('content').innerHTML = html;
+}
 
 const themeBtn = document.getElementById('themeToggle');
 themeBtn.addEventListener('click', ()=>{
@@ -374,176 +513,12 @@ themeBtn.addEventListener('click', ()=>{
     const next = isDark ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     try{ localStorage.setItem('sng-theme', next); }catch(e){}
+    applyPalette(next);
 });
 
-function showView(name){
-    document.getElementById('loginView').classList.toggle('hidden', name !== 'login');
-    document.getElementById('registerView').classList.toggle('hidden', name !== 'register');
-    document.getElementById('loggedInView').classList.toggle('hidden', name !== 'loggedIn');
-}
-
-function togglePw(id, btn){
-    const input = document.getElementById(id);
-    const icon = btn.querySelector('i');
-    if (input.type === 'password'){ input.type = 'text'; icon.className = 'fa-solid fa-eye-slash'; }
-    else { input.type = 'password'; icon.className = 'fa-solid fa-eye'; }
-}
-
-function showMsg(id, html, type){
-    const el = document.getElementById(id);
-    el.innerHTML = html;
-    el.className = 'msg ' + type;
-}
-
-async function doLogin(){
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    if (!email || !password) return showMsg('loginMsg', 'Nhập đầy đủ email và mật khẩu.', 'err');
-
-    const btn = document.getElementById('loginBtn');
-    btn.disabled = true; btn.textContent = 'Đang đăng nhập...';
-
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-
-    if (error){
-        btn.disabled = false; btn.textContent = 'Đăng nhập';
-        showMsg('loginMsg', 'Sai email hoặc mật khẩu.', 'err');
-        return;
-    }
-    showMsg('loginMsg', '<i class="fa-solid fa-circle-check"></i> Đăng nhập thành công.', 'ok');
-    location.href = nextUrl;
-}
-
-async function doRegister(){
-    const name = document.getElementById('regName').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
-    const password = document.getElementById('regPassword').value;
-    const password2 = document.getElementById('regPassword2').value;
-
-    if (!name || !email || !password) return showMsg('registerMsg', 'Nhập đầy đủ thông tin.', 'err');
-    if (password.length < 6) return showMsg('registerMsg', 'Mật khẩu tối thiểu 6 ký tự.', 'err');
-    if (password !== password2) return showMsg('registerMsg', 'Mật khẩu nhập lại không khớp.', 'err');
-
-    const btn = document.getElementById('registerBtn');
-    btn.disabled = true; btn.textContent = 'Đang tạo tài khoản...';
-
-    const { data, error } = await sb.auth.signUp({
-        email, password,
-        options: { data: { full_name: name } }
-    });
-
-    if (error){
-        btn.disabled = false; btn.textContent = 'Đăng ký';
-        showMsg('registerMsg', error.message.includes('already registered') ? 'Email này đã được đăng ký.' : ('Lỗi: ' + error.message), 'err');
-        return;
-    }
-
-    if (data.user){
-        try{
-            await sb.from('profiles').upsert({ id: data.user.id, full_name: name });
-        }catch(e){ /* bảng chưa tồn tại thì thôi, không chặn đăng ký */ }
-    }
-
-    if (data.session){
-        showMsg('registerMsg', '<i class="fa-solid fa-circle-check"></i> Tạo tài khoản thành công.', 'ok');
-        location.href = nextUrl;
-    } else {
-        btn.disabled = false; btn.textContent = 'Đăng ký';
-        showMsg('registerMsg', '<i class="fa-solid fa-circle-check"></i> Tạo tài khoản thành công! Kiểm tra email để xác nhận trước khi đăng nhập.', 'ok');
-    }
-}
-
-async function doLogout(){
-    await sb.auth.signOut();
-    showView('login');
-}
-
-function formatVND(n){
-    return Number(n).toLocaleString('vi-VN') + 'đ';
-}
-function formatDuration(days){
-    days = Number(days);
-    if (days >= 360) return `${Math.round(days/365)} năm`;
-    if (days >= 80)  return `${Math.round(days/30)} tháng`;
-    return `${days} ngày`;
-}
-
-function renderPlanStatus(user){
-    const meta = user.user_metadata || {};
-    const chip = document.getElementById('planChip');
-    const sub = document.getElementById('planSub');
-    const until = meta.premium_until ? new Date(meta.premium_until) : null;
-    const isPremium = meta.plan === 'premium' && until && until.getTime() > Date.now();
-
-    if (isPremium){
-        chip.className = 'plan-chip is-premium';
-        chip.innerHTML = '<i class="fa-solid fa-crown"></i> Đang dùng Premium';
-        sub.textContent = `Hết hạn: ${until.toLocaleDateString('vi-VN')}. Có thể gia hạn thêm bên dưới.`;
-    } else {
-        chip.className = 'plan-chip is-free';
-        chip.innerHTML = '<i class="fa-solid fa-user"></i> Tài khoản miễn phí';
-        sub.textContent = 'Nâng cấp Premium để mở khoá toàn bộ chương/đề.';
-    }
-}
-
-async function renderPricingList(){
-    const list = document.getElementById('pricingList');
-    const note = document.getElementById('pricingNote');
-    try {
-        const { data: plans, error } = await sb
-            .from('pro_packages')
-            .select('id, name, price, duration_days')
-            .order('price', { ascending: true });
-
-        if (error) throw error;
-        if (!plans || plans.length === 0){ list.innerHTML = ''; return; }
-
-        const popularIndex = plans.length >= 3 ? 1 : -1;
-
-        list.innerHTML = plans.map((plan, i) => `
-            <div class="price-row${i === popularIndex ? ' is-popular' : ''}">
-                <div class="pr-info">
-                    <div class="pr-name">${escapeHtml(plan.name)}${i === popularIndex ? '<span class="pr-tag">Phổ biến</span>' : ''}</div>
-                    <div class="pr-sub">${formatVND(plan.price)} · ${formatDuration(plan.duration_days)}</div>
-                </div>
-                <button class="pr-buy" data-plan-id="${escapeHtml(plan.id)}">Mua ngay</button>
-            </div>
-        `).join('');
-
-        list.querySelectorAll('.pr-buy').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                btn.disabled = true;
-                btn.textContent = '...';
-                try {
-                    await thanhToanGoiThanhVien(btn.dataset.planId);
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = 'Mua ngay';
-                }
-            });
-        });
-    } catch (err){
-        console.error('Không tải được danh sách gói Premium:', err);
-        list.innerHTML = '';
-        note.textContent = 'Không tải được danh sách gói. Vui lòng thử lại sau.';
-    }
-}
-function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-
-(async function init(){
-    const { data: { session } } = await sb.auth.getSession();
-    if (session){
-        document.getElementById('loggedInEmail').textContent = session.user.email || '';
-        renderPlanStatus(session.user);
-        renderPricingList();
-        showView('loggedIn');
-    } else {
-        showView('login');
-    }
-})();
+loadPage();
 </script>
-<script src="../frontend/sepay-checkout.js"></script>
+
+<script src="frontend/sepay-checkout.js"></script>
 </body>
 </html>

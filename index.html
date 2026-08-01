@@ -1165,6 +1165,31 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     </div>
 </div>
 
+<!-- ============ MODAL: Xác nhận mua tài liệu trả phí ============ -->
+<div class="pro-confirm-overlay hidden" id="docConfirmOverlay">
+    <div class="pro-confirm-modal" role="dialog" aria-modal="true" aria-label="Xác nhận mua tài liệu">
+        <button class="pro-confirm-close" onclick="closeDocConfirm()" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        <div class="pro-confirm-head">
+            <div class="icon"><i class="fa-solid fa-file-lines"></i></div>
+            <h3>Xác nhận mua tài liệu</h3>
+            <p>Kiểm tra lại thông tin tài liệu trước khi chuyển sang cổng thanh toán SePay.</p>
+        </div>
+        <div class="pro-confirm-body">
+            <div class="pro-confirm-summary">
+                <div>
+                    <div class="name" id="docConfirmName">—</div>
+                    <div class="days" id="docConfirmMeta">—</div>
+                </div>
+                <div class="price" id="docConfirmPrice">—</div>
+            </div>
+        </div>
+        <div class="pro-confirm-actions">
+            <button type="button" class="pro-confirm-cancel" onclick="closeDocConfirm()">Hủy</button>
+            <button type="button" class="pro-confirm-ok" id="docConfirmOkBtn" onclick="confirmDocPurchase()"><i class="fa-solid fa-lock"></i> Xác nhận thanh toán</button>
+        </div>
+    </div>
+</div>
+
 <div class="acc-overlay" id="accOverlay">
     <div class="acc-modal" role="dialog" aria-modal="true" aria-label="Tài khoản">
         <div class="acc-modal-head">
@@ -1746,26 +1771,75 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     const DEFAULT_PRODUCT_CONTENT = { items: [] };
     const DEFAULT_PRO_CONTENT = { items: [] };
 
+    // ---- Trạng thái mua tài liệu trả phí của người dùng hiện tại ----
+    let purchasedDocIds = new Set();
+    let DOC_PAID_ITEMS_MAP = {}; // id -> item (title, price, size...) để mở modal xác nhận mua
+
+    async function loadPurchasedDocIds(){
+        const next = new Set();
+        try{
+            const { data: { user } } = await sb.auth.getUser();
+            if (user){
+                const { data, error } = await sb.from('document_purchases').select('document_id').eq('user_id', user.id);
+                if (!error && data) data.forEach(r => next.add(String(r.document_id)));
+            }
+        }catch(e){ /* chưa đăng nhập hoặc lỗi mạng -> coi như chưa mua gì */ }
+        purchasedDocIds = next;
+    }
+
     function docItemCardHtml(item, isPaid){
-        const href = item.link || '#';
         const sizeBadge = item.size ? `<div class="badge-row"><i class="fa-solid fa-file-lines"></i> ${escapeHtmlHome(item.size)}</div>` : '';
         const topHtml = item.image
             ? `<img src="${escapeHtmlHome(item.image)}" alt="" style="width:100%;height:110px;object-fit:cover;border-radius:12px;margin-bottom:10px;">`
             : `<div class="card-top"><div class="icon-chip" style="background:${isPaid ? 'var(--amber-bg)' : 'var(--green-bg)'}; color:${isPaid ? 'var(--amber)' : 'var(--green)'}"><i class="fa-solid ${isPaid ? 'fa-lock' : 'fa-file-lines'}"></i></div></div>`;
+
+        // Tài liệu miễn phí: mở/tải trực tiếp như cũ.
+        if (!isPaid){
+            const href = item.link || '#';
+            return `
+                <a class="card" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
+                    ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
+                    ${topHtml}
+                    <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
+                    ${sizeBadge}
+                    <div class="status-text" style="color:var(--green)">${escapeHtmlHome(item.desc || 'Tài liệu miễn phí')}</div>
+                </a>`;
+        }
+
+        // Tài liệu trả phí: chỉ lộ link tải sau khi đã thanh toán thành công.
+        const docId = String(item.id);
+        DOC_PAID_ITEMS_MAP[docId] = item;
+        const owned = purchasedDocIds.has(docId);
+        const priceLabel = Number(item.price) > 0 ? Number(item.price).toLocaleString('vi-VN') + 'đ' : '';
+
+        if (owned){
+            const href = item.link || '#';
+            return `
+                <a class="card" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
+                    ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
+                    ${topHtml}
+                    <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
+                    ${sizeBadge}
+                    <div class="status-text" style="color:var(--green)"><i class="fa-solid fa-circle-check"></i> Đã mua · Nhấn để tải</div>
+                </a>`;
+        }
+
+        const idAttr = escapeHtmlHome(docId);
         return `
-            <a class="card" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
-                ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
+            <div class="card" role="button" tabindex="0" style="cursor:pointer" onclick="openDocPurchase('${idAttr}')" onkeydown="if(event.key==='Enter')openDocPurchase('${idAttr}')">
+                <div class="card-arrow"><i class="fa-solid fa-lock"></i></div>
                 ${topHtml}
                 <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
                 ${sizeBadge}
-                <div class="status-text" style="color:${isPaid ? 'var(--amber)' : 'var(--green)'}">${escapeHtmlHome(item.desc || (isPaid ? 'Tài liệu trả phí' : 'Tài liệu miễn phí'))}</div>
-            </a>`;
+                <div class="status-text" style="color:var(--amber)">${priceLabel ? priceLabel + ' · Nhấn để mua' : 'Tài liệu trả phí'}</div>
+            </div>`;
     }
 
     async function renderDocContent(){
         const payload = await fetchSiteSettingPayload('doc_content', DEFAULT_DOC_CONTENT);
         const free = Array.isArray(payload.free) ? payload.free : [];
         const paid = Array.isArray(payload.paid) ? payload.paid : [];
+        DOC_PAID_ITEMS_MAP = {};
 
         const freeGrid = document.getElementById('docFreeGrid');
         const paidGrid = document.getElementById('docPaidGrid');
@@ -1781,6 +1855,33 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         paidGrid.innerHTML = paid.length
             ? `<div class="grid">${paid.map(it => docItemCardHtml(it, true)).join('')}</div>`
             : `<div class="empty-state small"><div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-crown"></i></div><div class="empty-title">Chưa có tài liệu trả phí</div></div>`;
+    }
+
+    // ---- Modal xác nhận mua tài liệu ----
+    let docConfirmSelectedId = null;
+
+    function openDocPurchase(id){
+        if (!currentSession){ location.href = loginUrl('doc'); return; }
+        const item = DOC_PAID_ITEMS_MAP[id];
+        if (!item) return;
+        docConfirmSelectedId = id;
+        document.getElementById('docConfirmName').textContent = item.title || '';
+        document.getElementById('docConfirmMeta').textContent = item.size || 'Tài liệu trả phí';
+        document.getElementById('docConfirmPrice').textContent = Number(item.price || 0).toLocaleString('vi-VN') + 'đ';
+        document.getElementById('docConfirmOverlay').classList.remove('hidden');
+    }
+
+    function closeDocConfirm(){
+        document.getElementById('docConfirmOverlay').classList.add('hidden');
+        const okBtn = document.getElementById('docConfirmOkBtn');
+        if (okBtn){ okBtn.disabled = false; okBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Xác nhận thanh toán'; }
+    }
+
+    function confirmDocPurchase(){
+        if (!docConfirmSelectedId) return;
+        const okBtn = document.getElementById('docConfirmOkBtn');
+        if (okBtn){ okBtn.disabled = true; okBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chuyển tới cổng thanh toán...'; }
+        thanhToanTaiLieu(docConfirmSelectedId); // hàm có sẵn trong frontend/sepay-checkout.js
     }
 
     function toolItemCardHtml(item){
@@ -2501,6 +2602,9 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const paymentStatus = params.get('payment');
         if (!paymentStatus) return;
 
+        const inv = params.get('inv') || '';
+        const isDocOrder = inv.startsWith('DOC-');
+
         // Xoá query param khỏi URL cho gọn, không ảnh hưởng logic bên dưới
         history.replaceState({}, '', location.pathname + location.hash);
 
@@ -2510,11 +2614,19 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             for (let i = 0; i < 5; i++) {
                 await sb.auth.refreshSession();
                 const { data: { user } } = await sb.auth.getUser();
-                if (user?.user_metadata?.plan === 'premium') break;
+                if (isDocOrder) {
+                    await loadPurchasedDocIds();
+                    if (purchasedDocIds.size) break; // tối thiểu đã có 1 tài liệu -> IPN chắc chắn đã xử lý xong
+                } else if (user?.user_metadata?.plan === 'premium') {
+                    break;
+                }
                 await new Promise(r => setTimeout(r, 2000));
             }
+            renderDocContent();
             if (typeof notyf !== 'undefined') {
-                notyf.success('Thanh toán thành công! Tài khoản của bạn đã được nâng cấp.');
+                notyf.success(isDocOrder
+                    ? 'Thanh toán thành công! Tài liệu đã được mở khoá, có thể tải ngay.'
+                    : 'Thanh toán thành công! Tài khoản của bạn đã được nâng cấp.');
             }
         } else if (paymentStatus === 'error' || paymentStatus === 'cancel') {
             if (typeof notyf !== 'undefined') {
@@ -2539,7 +2651,11 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             currentSession = session;
             updateAccountUI();
             renderAccountPanelInfo();
+            loadPurchasedDocIds().then(renderDocContent);
         });
+
+        await loadPurchasedDocIds();
+        renderDocContent();
 
         const tabsConfig = await loadNavTabsConfig();
         tabsConfig.forEach(t => { TAB_TITLES[t.key] = [t.label, '']; });

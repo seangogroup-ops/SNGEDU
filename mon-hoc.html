@@ -220,38 +220,6 @@
     }
 
     /* ---------------- state cards (loading / error / empty) ---------------- */
-    /* ---------------- pricing / gói Premium ---------------- */
-    .pricing-section{ margin-top:28px; }
-    .pricing-heading{ text-align:center; margin-bottom:18px; }
-    .pricing-heading h2{ font-size:1.3rem; font-weight:800; color:var(--ink); }
-    .pricing-heading p{ color:var(--ink-soft); font-size:.9rem; margin-top:4px; }
-    .pricing-grid{
-        display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
-        gap:16px; max-width:900px; margin:0 auto;
-    }
-    .price-card{
-        background:var(--card); border:1px solid var(--line); border-radius:16px;
-        padding:22px 20px; text-align:center; box-shadow:var(--shadow);
-        display:flex; flex-direction:column; gap:10px; position:relative;
-    }
-    .price-card.is-popular{ border-color:var(--brand); }
-    .price-card .pc-tag{
-        position:absolute; top:-11px; left:50%; transform:translateX(-50%);
-        background:var(--brand); color:#fff; font-size:.7rem; font-weight:700;
-        padding:3px 12px; border-radius:999px; letter-spacing:.02em;
-    }
-    .price-card .pc-name{ font-size:1.02rem; font-weight:700; color:var(--ink); margin-top:6px; }
-    .price-card .pc-price{ font-size:1.55rem; font-weight:800; color:var(--brand); }
-    .price-card .pc-price span{ font-size:.8rem; font-weight:600; color:var(--ink-mute); }
-    .price-card .pc-duration{ font-size:.82rem; color:var(--ink-soft); }
-    .price-card .pc-buy{
-        margin-top:8px; padding:11px 18px; background:var(--brand); color:#fff;
-        border:none; border-radius:10px; font-size:.95rem; font-weight:700;
-        cursor:pointer; font-family:inherit; transition:filter .15s ease, transform .1s ease;
-    }
-    .price-card .pc-buy:hover{ filter:brightness(1.08); }
-    .price-card .pc-buy:active{ transform:scale(.97); }
-    .price-card .pc-buy:disabled{ opacity:.6; cursor:not-allowed; }
     .state-card{
         background:var(--card); border:1px solid var(--line); border-radius:20px;
         padding:50px 24px; text-align:center; color:var(--ink-soft); font-size:.92rem;
@@ -365,15 +333,7 @@
         <span class="arrow">👉</span>
     </a>
 
-    <section class="pricing-section" id="pricingSection" style="display:none;">
-        <div class="pricing-heading">
-            <h2>Nâng cấp tài khoản Premium</h2>
-            <p>Mở khoá toàn bộ chương/đề, không giới hạn số lần làm bài.</p>
-        </div>
-        <div class="pricing-grid" id="pricingGrid">
-            <div class="state-card"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải gói...</div>
-        </div>
-    </section>
+
 
     <footer>SNG © H.N.TấnHải · sngedu.site</footer>
 </div>
@@ -549,63 +509,6 @@ async function loadPage(){
     document.getElementById('content').innerHTML = html;
 }
 
-function formatVND(n){
-    return Number(n).toLocaleString('vi-VN') + 'đ';
-}
-function formatDuration(days){
-    days = Number(days);
-    if (days >= 360) return `${Math.round(days/365)} năm`;
-    if (days >= 80)  return `${Math.round(days/30)} tháng`;
-    return `${days} ngày`;
-}
-
-async function renderPricingPlans(){
-    const grid = document.getElementById('pricingGrid');
-    const section = document.getElementById('pricingSection');
-    try {
-        const { data: plans, error } = await sb
-            .from('pro_packages')
-            .select('id, name, price, duration_days')
-            .order('price', { ascending: true });
-
-        if (error) throw error;
-        if (!plans || plans.length === 0){ section.style.display = 'none'; return; }
-
-        // Gói ở giữa (nếu có từ 3 gói trở lên) được gắn nhãn "Phổ biến nhất"
-        const popularIndex = plans.length >= 3 ? 1 : -1;
-
-        grid.innerHTML = plans.map((plan, i) => `
-            <div class="price-card${i === popularIndex ? ' is-popular' : ''}">
-                ${i === popularIndex ? '<div class="pc-tag">Phổ biến nhất</div>' : ''}
-                <div class="pc-name">${escapeHtml(plan.name)}</div>
-                <div class="pc-price">${formatVND(plan.price)}</div>
-                <div class="pc-duration">Thời hạn ${formatDuration(plan.duration_days)}</div>
-                <button class="pc-buy" data-plan-id="${escapeHtml(plan.id)}">Mua ngay</button>
-            </div>
-        `).join('');
-
-        grid.querySelectorAll('.pc-buy').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                btn.disabled = true;
-                btn.textContent = 'Đang xử lý...';
-                try {
-                    await thanhToanGoiThanhVien(btn.dataset.planId);
-                } finally {
-                    // Nếu chuyển trang thành công thì đoạn dưới không kịp chạy;
-                    // đoạn này chỉ để tránh nút bị kẹt khi có lỗi/không chuyển trang.
-                    btn.disabled = false;
-                    btn.textContent = 'Mua ngay';
-                }
-            });
-        });
-
-        section.style.display = '';
-    } catch (err){
-        console.error('Không tải được danh sách gói Premium:', err);
-        section.style.display = 'none';
-    }
-}
-
 const themeBtn = document.getElementById('themeToggle');
 themeBtn.addEventListener('click', ()=>{
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -616,7 +519,6 @@ themeBtn.addEventListener('click', ()=>{
 });
 
 loadPage();
-renderPricingPlans();
 </script>
 
 <script src="frontend/sepay-checkout.js"></script>

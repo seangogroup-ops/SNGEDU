@@ -28,6 +28,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="frontend/sepay-checkout.js" defer></script>
 <style>
     :root{
         --bg:        #f5f7fb;
@@ -1417,19 +1418,52 @@
     }
 
     // ---------------- GÓI PRO — quản lý ở trang admin (site_settings: pro_content), giống Sản phẩm ----------------
-    function proItemCardHtml(item){
+    // Giá/thời hạn KHÔNG lấy từ item.price (text admin gõ tay) khi thẻ có plan_id.
+    // Khi có plan_id, giá luôn được lấy trực tiếp từ bảng pro_packages (nguồn sự thật duy nhất),
+    // để admin chỉ cần sửa giá 1 chỗ (trang admin > Gói Pro) là tự động khớp ở mọi nơi.
+    let homeProPackagesCache = null;
+    async function loadHomeProPackagesCache(){
+        if (homeProPackagesCache) return homeProPackagesCache;
+        const { data, error } = await sb.from('pro_packages').select('id, name, price, duration_days, active').eq('active', true);
+        homeProPackagesCache = (!error && data) ? data : [];
+        return homeProPackagesCache;
+    }
+    function formatHomeDuration(days){
+        days = Number(days);
+        if (days >= 360) return Math.round(days/365) + ' năm';
+        if (days >= 80) return Math.round(days/30) + ' tháng';
+        return days + ' ngày';
+    }
+    function formatHomePrice(days, price){
+        return Number(price).toLocaleString('vi-VN') + 'đ / ' + formatHomeDuration(days);
+    }
+
+    function proItemCardHtml(item, plansById){
         const style = QL_COLOR_MAP[item.color] || QL_COLOR_MAP.indigo;
-        const href = item.link || '#';
         const isHighlight = item.color === 'amber';
+        const plan = item.plan_id ? plansById.get(String(item.plan_id)) : null;
+
+        // Thẻ có gói liên kết SePay: bấm "Mua ngay" gọi thẳng cổng thanh toán, không dùng href ngoài.
+        // Thẻ không liên kết (plan_id trống hoặc gói đã bị xoá/tắt): giữ hành vi cũ, trỏ ra link ngoài.
+        const priceText = plan ? formatHomePrice(plan.duration_days, plan.price) : (item.price || '');
+        const isBuyable = !!plan;
+        const href = item.link || '#';
+
+        const tag = isBuyable ? 'div' : 'a';
+        const clickAttr = isBuyable
+            ? `role="button" tabindex="0" onclick="thanhToanGoiThanhVien('${escapeHtmlHome(String(plan.id))}')" onkeydown="if(event.key==='Enter')thanhToanGoiThanhVien('${escapeHtmlHome(String(plan.id))}')" style="cursor:pointer;"`
+            : `href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}`;
+
         return `
-            <a class="card${isHighlight ? ' pro-highlight' : ''}" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
+            <${tag} class="card${isHighlight ? ' pro-highlight' : ''}" ${clickAttr}>
                 ${isHighlight ? '<div class="pro-ribbon">Phổ biến nhất</div>' : ''}
-                ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
+                ${(item.link || isBuyable) ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
                 <div class="card-top"><div class="icon-chip" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(item.icon || 'fa-solid fa-crown')}"></i></div></div>
                 <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
                 ${item.desc ? `<div class="badge-row"><i class="fa-solid fa-circle-info"></i> ${escapeHtmlHome(item.desc)}</div>` : ''}
-                ${item.price ? `<div class="status-text" style="color:${style.fg}">${escapeHtmlHome(item.price)}</div>` : ''}
-            </a>`;
+                ${priceText ? `<div class="status-text" style="color:${style.fg}">${escapeHtmlHome(priceText)}</div>` : ''}
+                ${isBuyable ? `<div class="badge-row" style="margin-top:6px;"><i class="fa-solid fa-lock"></i> Mua ngay qua SePay</div>` : ''}
+            </${tag}>`;
     }
 
     async function renderProContent(){
@@ -1439,9 +1473,12 @@
         if (!grid) return;
         if (!items.length){
             grid.innerHTML = `<div class="empty-state"><div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-crown"></i></div><div class="empty-title">Chưa có gói Pro nào</div><div class="empty-sub">Vào trang admin &gt; Gói Pro để thêm gói đầu tiên.</div></div>`;
-        } else {
-            grid.innerHTML = items.map(proItemCardHtml).join('');
+            return;
         }
+        const needsPlans = items.some(it => it.plan_id);
+        const plans = needsPlans ? await loadHomeProPackagesCache() : [];
+        const plansById = new Map(plans.map(p => [String(p.id), p]));
+        grid.innerHTML = items.map(it => proItemCardHtml(it, plansById)).join('');
     }
 
     // ---------------- Đổ dữ liệu tài khoản đang đăng nhập vào tab "Tài khoản & Gói Pro" ----------------

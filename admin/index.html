@@ -2995,14 +2995,15 @@ registerContentList('product_items', 'product_content', 'items', {
 registerContentList('pro_items', 'pro_content', 'items', {
     label:'Gói Pro', icon:'fa-solid fa-crown', color:'amber', defaultIcon:'fa-solid fa-crown',
     extraField:{ key:'price', label:'Giá / chu kỳ', placeholder:'VD: 49.000đ / tháng' },
-    linkLabel:'Đường dẫn mua (Zalo, Momo, link thanh toán...)', linkPlaceholder:'https://zalo.me/... hoặc link thanh toán'
+    linkLabel:'Đường dẫn mua (Zalo, Momo, link thanh toán...) — bỏ trống nếu đã chọn gói SePay bên dưới', linkPlaceholder:'https://zalo.me/... hoặc link thanh toán',
+    planField:true
 });
 
 const CONTENT_MANAGER_GROUPS = {
     doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu miễn phí và trả phí hiển thị ở tab "Tài liệu" trên trang chủ. Tải file PDF/Word lên trực tiếp, không cần link ngoài.', subKeys:['doc_free','doc_paid'] },
     tool:    { title:'Công cụ',   icon:'🧰',  hint:'Quản lý các thẻ công cụ hiển thị ở tab "Công cụ" trên trang chủ.', subKeys:['tool_items'] },
     product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ.', subKeys:['product_items'] },
-    pro:     { title:'Gói Pro',   icon:'👑',  hint:'Quản lý các gói Pro hiển thị ở tab "Tài khoản & Gói Pro" trên trang chủ. Chọn màu "amber" để đánh dấu gói "Phổ biến nhất". Đường dẫn mua nên trỏ tới Zalo/Momo/link thanh toán của bạn — SNG EDU chưa có cổng thanh toán tự động, nên sau khi khách chuyển khoản, bạn vào mục "Tài khoản" bên dưới để gán gói Premium thủ công cho họ.', subKeys:['pro_items'] }
+    pro:     { title:'Gói Pro',   icon:'👑',  hint:'Quản lý các gói Pro hiển thị ở tab "Tài khoản & Gói Pro" trên trang chủ. Chọn màu "amber" để đánh dấu gói "Phổ biến nhất". Mục "Gói thanh toán tự động (SePay)" cho phép chọn gói tương ứng trong bảng giá tự động — khi đã chọn, thẻ sẽ hiện nút "Mua ngay" mở thẳng cổng SePay thay vì link ngoài. Nếu để trống, thẻ vẫn hoạt động theo kiểu cũ: trỏ ra Zalo/Momo, sau khi khách chuyển khoản bạn vào mục "Tài khoản" bên dưới để gán Premium thủ công.', subKeys:['pro_items'] }
 };
 
 function contentColorSwatchesHtml(subKey){
@@ -3064,6 +3065,11 @@ function contentBlockHtml(subKey){
                     ` : `
                     <input id="cmLink_${subKey}" placeholder="${escapeHtml(meta.linkPlaceholder)}">
                     `}
+                    ${meta.planField ? `
+                    <label style="margin-top:10px;">Gói thanh toán tự động (SePay)</label>
+                    <select id="cmPlan_${subKey}" onchange="onContentPlanChanged('${subKey}')"><option value="">— Đang tải danh sách gói... —</option></select>
+                    <div class="hint" style="margin-top:4px;">Chọn gói trong bảng giá tự động (pro_packages) để nút "Mua ngay" mở thẳng cổng SePay. Để "Không liên kết" nếu chỉ muốn hiển thị thẻ giới thiệu + link ngoài như cũ.</div>
+                    ` : ''}
                     <div class="settings-preview">
                         <div class="prev-ico" id="cmPreviewIco_${subKey}"><i class="fa-solid fa-star"></i></div>
                         <div class="prev-text"><b id="cmPreviewTitle_${subKey}">Tiêu đề</b><span id="cmPreviewDesc_${subKey}">Mô tả</span></div>
@@ -3086,6 +3092,12 @@ async function showContentManager(type){
     document.getElementById('cmHeaderTitle').textContent = group.title;
     document.getElementById('cmHeaderHint').textContent = group.hint;
     document.getElementById('cmListsWrap').innerHTML = group.subKeys.map(contentBlockHtml).join('');
+
+    const planSubKeys = group.subKeys.filter(k => contentLists[k].meta.planField);
+    if (planSubKeys.length){
+        await loadProPackagesCache();
+        planSubKeys.forEach(k => refreshPlanSelect(k, ''));
+    }
 
     for (const subKey of group.subKeys){
         await loadContentList(subKey);
@@ -3348,6 +3360,56 @@ async function onContentFileSelected(subKey){
     }
 }
 
+let proPackagesCache = null;
+async function loadProPackagesCache(force){
+    if (proPackagesCache && !force) return proPackagesCache;
+    const { data, error } = await sb.from('pro_packages').select('id, name, price, duration_days').order('price', { ascending:true });
+    proPackagesCache = (!error && data) ? data : [];
+    return proPackagesCache;
+}
+function formatDurationAdmin(days){
+    days = Number(days);
+    if (days >= 360) return Math.round(days/365) + ' năm';
+    if (days >= 80) return Math.round(days/30) + ' tháng';
+    return days + ' ngày';
+}
+function planOptionsHtml(selectedId){
+    const opts = ['<option value="">— Không liên kết (chỉ hiển thị, dùng link ngoài) —</option>'];
+    (proPackagesCache || []).forEach(p => {
+        const sel = String(p.id) === String(selectedId || '') ? ' selected' : '';
+        opts.push(`<option value="${escapeHtml(p.id)}"${sel}>${escapeHtml(p.name)} — ${Number(p.price).toLocaleString('vi-VN')}đ / ${formatDurationAdmin(p.duration_days)}</option>`);
+    });
+    if (!proPackagesCache || !proPackagesCache.length){
+        opts.push('<option value="" disabled>(Chưa có gói nào trong pro_packages — tạo trong Supabase trước)</option>');
+    }
+    return opts.join('');
+}
+function refreshPlanSelect(subKey, selectedId){
+    const sel = document.getElementById('cmPlan_' + subKey);
+    if (!sel) return;
+    sel.innerHTML = planOptionsHtml(selectedId);
+    onContentPlanChanged(subKey);
+}
+function onContentPlanChanged(subKey){
+    const sel = document.getElementById('cmPlan_' + subKey);
+    const linkEl = document.getElementById('cmLink_' + subKey);
+    if (!sel || !linkEl) return;
+    const plan = (proPackagesCache || []).find(p => String(p.id) === sel.value);
+    if (plan){
+        linkEl.disabled = true;
+        linkEl.value = '';
+        linkEl.placeholder = 'Không cần nhập — thẻ này sẽ mở cổng SePay';
+        const extraEl = document.getElementById('cmExtra_' + subKey);
+        if (extraEl && !extraEl.value.trim()){
+            extraEl.value = Number(plan.price).toLocaleString('vi-VN') + 'đ / ' + formatDurationAdmin(plan.duration_days);
+            updateContentPreview(subKey);
+        }
+    } else {
+        linkEl.disabled = false;
+        linkEl.placeholder = 'https://zalo.me/... hoặc link thanh toán';
+    }
+}
+
 function openContentForm(subKey){
     const cfg = contentLists[subKey];
     cfg.editingId = null;
@@ -3358,6 +3420,8 @@ function openContentForm(subKey){
     const extraEl = document.getElementById('cmExtra_' + subKey); if (extraEl) extraEl.value = '';
     const statusEl = document.getElementById('cmStatus_' + subKey); if (statusEl) statusEl.value = 'soon';
     document.getElementById('cmLink_' + subKey).value = '';
+    document.getElementById('cmLink_' + subKey).disabled = false;
+    if (cfg.meta.planField) refreshPlanSelect(subKey, '');
     if (cfg.meta.upload) resetContentUploadUI(subKey, '', '');
     pickContentColor(subKey, cfg.meta.color || 'indigo');
     updateContentPreview(subKey);
@@ -3382,6 +3446,8 @@ function editContentItem(subKey, id){
     const statusEl = document.getElementById('cmStatus_' + subKey);
     if (statusEl && cfg.meta.statusField) statusEl.value = item.status || 'soon';
     document.getElementById('cmLink_' + subKey).value = item.link || '';
+    document.getElementById('cmLink_' + subKey).disabled = false;
+    if (cfg.meta.planField) refreshPlanSelect(subKey, item.plan_id || '');
     if (cfg.meta.upload) resetContentUploadUI(subKey, item.link || '', item.image || '');
     pickContentColor(subKey, item.color || cfg.meta.color || 'indigo');
     updateContentPreview(subKey);
@@ -3394,11 +3460,13 @@ async function saveContentItem(subKey){
     const title = document.getElementById('cmTitle_' + subKey).value.trim();
     const desc = document.getElementById('cmDesc_' + subKey).value.trim();
     const link = document.getElementById('cmLink_' + subKey).value.trim();
+    const planId = cfg.meta.planField ? (document.getElementById('cmPlan_' + subKey).value || '') : '';
     const selected = document.querySelector('#cmColorRow_' + subKey + ' .color-swatch.selected');
     const color = selected ? selected.dataset.color : (cfg.meta.color || 'indigo');
     if (!title) return showMsg('Nhập tiêu đề.', 'err');
 
     const item = { id: cfg.editingId || ('i' + Date.now().toString(36) + Math.random().toString(36).slice(2,6)), icon, color, title, desc, link };
+    if (cfg.meta.planField) item.plan_id = planId || null;
     if (cfg.meta.upload){
         const imgUrlEl = document.getElementById('cmImageUrl_' + subKey);
         item.image = imgUrlEl ? imgUrlEl.value.trim() : '';

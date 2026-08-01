@@ -300,10 +300,27 @@
     }
     .acc-changepw-btn:hover{ background:var(--brand); color:#fff; }
 
+    /* ----- sub-tab "Tổng quan" / "Lịch sử giao dịch" trong trang Tài khoản ----- */
+    .acct-subtabs{ display:inline-flex; gap:4px; padding:4px; background:var(--card); border:1px solid var(--line); border-radius:14px; margin-bottom:24px; }
+    .acct-subtab{
+        border:none; background:transparent; padding:9px 18px; border-radius:10px;
+        font-family:inherit; font-weight:700; font-size:.86rem; color:var(--ink-mute); cursor:pointer;
+        transition:background .15s ease, color .15s ease;
+    }
+    .acct-subtab:hover{ color:var(--ink-soft); }
+    .acct-subtab.active{ background:var(--brand); color:#fff; }
+    .acct-subpanel{ display:none; }
+    .acct-subpanel.active{ display:block; animation:accPop .18s ease; }
+
+    /* ----- khối "Đổi mật khẩu" thu gọn, bấm mới hiện ----- */
+    .acctpw-toggle{ cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between; }
+    .acctpw-chevron{ color:var(--ink-mute); font-size:.85rem; transition:transform .2s ease; }
+    .acctpw-toggle.open .acctpw-chevron{ transform:rotate(180deg); }
+
     /* ----- đổi mật khẩu (trang Tài khoản đầy đủ) ----- */
     .acctpw-card{
         background:var(--card); border:1px solid var(--line); border-radius:20px;
-        padding:22px 24px; margin-bottom:28px;
+        padding:22px 24px; margin-bottom:28px; animation:accPop .18s ease;
     }
     .acctpw-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:14px; }
     .acctpw-field{ display:flex; flex-direction:column; gap:6px; }
@@ -949,46 +966,58 @@
 
     <!-- ============ TAB: TÀI KHOẢN & GÓI PRO ============ -->
     <section class="tab-panel" id="panel-account" style="display:none">
-        <div class="sec-head"><h2>Thông tin tài khoản</h2></div>
-        <div style="background:var(--card); border:1px solid var(--line); border-radius:20px; padding:22px 24px; margin-bottom:28px;">
-            <div class="acc-info-row"><span class="label">Email</span><span class="value" id="acctPageEmail">—</span></div>
-            <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="acctPageName">—</span></div>
-            <div class="acc-info-row"><span class="label">Gói hiện tại</span><span class="value"><span class="acc-plan-badge" id="acctPagePlanBadge">Miễn phí</span></span></div>
-            <div class="acc-info-row" id="acctPageBalanceRow" style="display:none"><span class="label">Số dư</span><span class="value" id="acctPageBalanceValue">—</span></div>
+        <div class="acct-subtabs" id="acctSubtabs">
+            <button type="button" class="acct-subtab active" data-subtab="overview">Tổng quan</button>
+            <button type="button" class="acct-subtab" data-subtab="history">Lịch sử giao dịch</button>
         </div>
 
-        <div class="sec-head"><h2>Đổi mật khẩu</h2></div>
-        <div class="acctpw-card">
-            <div class="acctpw-grid">
-                <div class="acctpw-field">
-                    <label for="acctPwOld">Mật khẩu hiện tại</label>
-                    <input type="password" id="acctPwOld" placeholder="Nhập mật khẩu hiện tại" autocomplete="current-password">
-                </div>
-                <div class="acctpw-field">
-                    <label for="acctPwNew">Mật khẩu mới</label>
-                    <input type="password" id="acctPwNew" placeholder="Ít nhất 6 ký tự" autocomplete="new-password">
-                </div>
-                <div class="acctpw-field">
-                    <label for="acctPwConfirm">Nhập lại mật khẩu mới</label>
-                    <input type="password" id="acctPwConfirm" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password">
-                </div>
+        <div class="acct-subpanel active" id="acctSubOverview">
+            <div class="sec-head"><h2>Thông tin tài khoản</h2></div>
+            <div style="background:var(--card); border:1px solid var(--line); border-radius:20px; padding:22px 24px; margin-bottom:28px;">
+                <div class="acc-info-row"><span class="label">Email</span><span class="value" id="acctPageEmail">—</span></div>
+                <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="acctPageName">—</span></div>
+                <div class="acc-info-row"><span class="label">Gói hiện tại</span><span class="value"><span class="acc-plan-badge" id="acctPagePlanBadge">Miễn phí</span></span></div>
+                <div class="acc-info-row" id="acctPageBalanceRow" style="display:none"><span class="label">Số dư</span><span class="value" id="acctPageBalanceValue">—</span></div>
             </div>
-            <div class="acctpw-msg" id="acctPwMsg"></div>
-            <button class="acctpw-save-btn" id="acctPwSave" type="button"><i class="fa-solid fa-key"></i> Lưu mật khẩu mới</button>
+
+            <div class="sec-head acctpw-toggle" id="acctPwToggle" role="button" tabindex="0" aria-expanded="false">
+                <h2>Đổi mật khẩu</h2>
+                <i class="fa-solid fa-chevron-down acctpw-chevron" id="acctPwChevron"></i>
+            </div>
+            <div class="acctpw-card" id="acctPwCard" style="display:none;">
+                <div class="acctpw-grid">
+                    <div class="acctpw-field">
+                        <label for="acctPwOld">Mật khẩu hiện tại</label>
+                        <input type="password" id="acctPwOld" placeholder="Nhập mật khẩu hiện tại" autocomplete="current-password">
+                    </div>
+                    <div class="acctpw-field">
+                        <label for="acctPwNew">Mật khẩu mới</label>
+                        <input type="password" id="acctPwNew" placeholder="Ít nhất 6 ký tự" autocomplete="new-password">
+                    </div>
+                    <div class="acctpw-field">
+                        <label for="acctPwConfirm">Nhập lại mật khẩu mới</label>
+                        <input type="password" id="acctPwConfirm" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password">
+                    </div>
+                </div>
+                <div class="acctpw-msg" id="acctPwMsg"></div>
+                <button class="acctpw-save-btn" id="acctPwSave" type="button"><i class="fa-solid fa-key"></i> Lưu mật khẩu mới</button>
+            </div>
+
+            <div class="sec-head"><h2>Nâng cấp gói Pro</h2></div>
+            <div id="proGrid" class="pro-pkg-grid">
+                <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
+            </div>
         </div>
 
-        <div class="sec-head"><h2>Nâng cấp gói Pro</h2></div>
-        <div id="proGrid" class="pro-pkg-grid">
-            <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
-        </div>
-
-        <div class="sec-head"><h2>Lịch sử giao dịch</h2></div>
-        <div class="acct-order-card">
-            <div class="acc-loading" id="acctOrderLoading">Đang tải lịch sử...</div>
-            <div id="acctOrderList" style="display:none"></div>
-            <div class="acc-empty" id="acctOrderEmpty" style="display:none">
-                <i class="fa-solid fa-receipt"></i>
-                <p>Chưa có giao dịch nào.<br>Lịch sử nâng cấp gói Pro của bạn sẽ hiện tại đây sau khi thanh toán.</p>
+        <div class="acct-subpanel" id="acctSubHistory" style="display:none;">
+            <div class="sec-head"><h2>Lịch sử giao dịch</h2></div>
+            <div class="acct-order-card">
+                <div class="acc-loading" id="acctOrderLoading">Đang tải lịch sử...</div>
+                <div id="acctOrderList" style="display:none"></div>
+                <div class="acc-empty" id="acctOrderEmpty" style="display:none">
+                    <i class="fa-solid fa-receipt"></i>
+                    <p>Chưa có giao dịch nào.<br>Lịch sử nâng cấp gói Pro của bạn sẽ hiện tại đây sau khi thanh toán.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -1413,6 +1442,37 @@
             acctPwMsg.classList.add('ok');
             acctPwOld.value = ''; acctPwNew.value = ''; acctPwConfirm.value = '';
         }
+    });
+
+    // ---------------- Khối "Đổi mật khẩu" thu gọn — bấm vào tiêu đề mới hiện ra ----------------
+    (function initAcctPwToggle(){
+        const toggle = document.getElementById('acctPwToggle');
+        const card = document.getElementById('acctPwCard');
+        if (!toggle || !card) return;
+        const setOpen = (open) => {
+            toggle.classList.toggle('open', open);
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            card.style.display = open ? 'block' : 'none';
+        };
+        toggle.addEventListener('click', () => setOpen(card.style.display === 'none'));
+        toggle.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); setOpen(card.style.display === 'none'); }
+        });
+    })();
+
+    // ---------------- Sub-tab "Tổng quan" / "Lịch sử giao dịch" trong trang Tài khoản ----------------
+    function switchAcctSubtab(key){
+        document.querySelectorAll('.acct-subtab').forEach(btn => btn.classList.toggle('active', btn.dataset.subtab === key));
+        const overview = document.getElementById('acctSubOverview');
+        const history = document.getElementById('acctSubHistory');
+        if (overview) overview.classList.toggle('active', key === 'overview');
+        if (overview) overview.style.display = key === 'overview' ? 'block' : 'none';
+        if (history) history.classList.toggle('active', key === 'history');
+        if (history) history.style.display = key === 'history' ? 'block' : 'none';
+        if (key === 'history') loadAcctOrderHistory();
+    }
+    document.querySelectorAll('.acct-subtab').forEach(btn => {
+        btn.addEventListener('click', () => switchAcctSubtab(btn.dataset.subtab));
     });
 
     let currentTabKey = 'home';

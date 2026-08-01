@@ -1101,51 +1101,19 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         </div>
     </section>
 
-    <!-- ============ TAB: HỖ TRỢ ============ -->
+    <!-- ============ TAB: HỖ TRỢ (nội dung động — quản lý ở trang admin > Hỗ trợ) ============ -->
     <section class="tab-panel" id="panel-support" style="display:none">
         <div class="sec-head"><h2>Hỗ trợ</h2></div>
 
-        <div style="background:var(--brand-bg); border:1px solid var(--line); border-radius:20px; padding:26px 28px; margin-bottom:22px;">
-            <div style="font-weight:800; font-size:1.1rem; margin-bottom:6px;">Kẹt chỗ nào, nhắn liền chỗ đó 👋</div>
-            <div style="color:var(--ink-mute); font-size:.9rem; max-width:600px; line-height:1.6;">Báo lỗi câu hỏi, góp ý tính năng, hay chỉ đơn giản chưa hiểu một đáp án nào đó trong đề — đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.</div>
+        <div id="supportIntroBox" style="background:var(--brand-bg); border:1px solid var(--line); border-radius:20px; padding:26px 28px; margin-bottom:22px;">
+            <div id="supportIntroTitle" style="font-weight:800; font-size:1.1rem; margin-bottom:6px;">Kẹt chỗ nào, nhắn liền chỗ đó 👋</div>
+            <div id="supportIntroDesc" style="color:var(--ink-mute); font-size:.9rem; max-width:600px; line-height:1.6;">Báo lỗi câu hỏi, góp ý tính năng, hay chỉ đơn giản chưa hiểu một đáp án nào đó trong đề — đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.</div>
         </div>
 
-        <div class="grid" style="grid-template-columns:repeat(2, 1fr)">
-            <a class="card" href="https://zalo.me/0825160035" target="_blank" rel="noopener">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip" style="background:#e8f3ff; color:#0068ff"><i class="fa-solid fa-comment-dots"></i></div>
-                </div>
-                <div class="card-title">Nhắn Zalo</div>
-                <div class="badge-row"><i class="fa-solid fa-phone"></i> Nhấn để mở Zalo chat</div>
-                <div class="status-text" style="color:#0068ff">Phản hồi trong ngày</div>
-            </a>
-            <a class="card" href="https://forms.gle/dLLMdpZttmZWYmuRA" target="_blank" rel="noopener">
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top">
-                    <div class="icon-chip" style="background:var(--green-bg); color:var(--green)"><i class="fa-solid fa-pen-to-square"></i></div>
-                </div>
-                <div class="card-title">Gửi biểu mẫu góp ý</div>
-                <div class="badge-row"><i class="fa-solid fa-file-lines"></i> Google Form</div>
-                <div class="status-text" style="color:var(--green)">Báo lỗi &amp; đề xuất</div>
-            </a>
-        </div>
+        <div class="grid" style="grid-template-columns:repeat(2, 1fr)" id="supportContactsGrid"></div>
 
         <div class="sec-head" style="margin-top:30px"><h2>Câu hỏi thường gặp</h2></div>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-            <details class="faq-item">
-                <summary>Tài liệu và trắc nghiệm trên SNG EDU có mất phí không?</summary>
-                <p>Toàn bộ học phần đang mở đều miễn phí 100%. Các gói nâng cao (nếu có trong tương lai) sẽ được thông báo rõ trước khi ra mắt, không tự động trừ phí.</p>
-            </details>
-            <details class="faq-item">
-                <summary>Phát hiện câu hỏi hoặc đáp án bị sai thì báo ở đâu?</summary>
-                <p>Gửi qua Zalo kèm ảnh chụp câu hỏi, hoặc điền vào Form góp ý ở trên — đội ngũ sẽ kiểm tra và cập nhật trong thời gian sớm nhất.</p>
-            </details>
-            <details class="faq-item">
-                <summary>Khi nào các học phần "Sắp ra mắt" sẽ mở?</summary>
-                <p>Bạn có thể bấm nút "Quan tâm" ngay trên thẻ học phần đó — hệ thống sẽ ghi nhận và ưu tiên biên soạn theo mức độ quan tâm.</p>
-            </details>
-        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;" id="supportFaqList"></div>
     </section>
 
     <footer id="siteFooter">SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải</footer>
@@ -1869,6 +1837,76 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         }
     }
 
+    // ---------------- HỖ TRỢ — nội dung động, quản lý ở trang admin > Hỗ trợ (site_settings key 'support_content') ----------------
+    const DEFAULT_SUPPORT_CONTENT = {
+        intro_title: 'Kẹt chỗ nào, nhắn liền chỗ đó 👋',
+        intro_desc: 'Báo lỗi câu hỏi, góp ý tính năng, hay chỉ đơn giản chưa hiểu một đáp án nào đó trong đề — đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.',
+        contacts: [
+            { id:'c1', icon:'fa-solid fa-comment-dots', color:'blue',  title:'Nhắn Zalo',            desc:'Nhấn để mở Zalo chat', status_label:'Phản hồi trong ngày', link:'https://zalo.me/0825160035' },
+            { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi biểu mẫu góp ý',   desc:'Google Form',           status_label:'Báo lỗi & đề xuất',    link:'https://forms.gle/dLLMdpZttmZWYmuRA' }
+        ],
+        faq: [
+            { id:'f1', title:'Tài liệu và trắc nghiệm trên SNG EDU có mất phí không?', desc:'Toàn bộ học phần đang mở đều miễn phí 100%. Các gói nâng cao (nếu có trong tương lai) sẽ được thông báo rõ trước khi ra mắt, không tự động trừ phí.' },
+            { id:'f2', title:'Phát hiện câu hỏi hoặc đáp án bị sai thì báo ở đâu?', desc:'Gửi qua Zalo kèm ảnh chụp câu hỏi, hoặc điền vào Form góp ý ở trên — đội ngũ sẽ kiểm tra và cập nhật trong thời gian sớm nhất.' },
+            { id:'f3', title:'Khi nào các học phần "Sắp ra mắt" sẽ mở?', desc:'Bạn có thể bấm nút "Quan tâm" ngay trên thẻ học phần đó — hệ thống sẽ ghi nhận và ưu tiên biên soạn theo mức độ quan tâm.' }
+        ]
+    };
+
+    const SUPPORT_ICON_COLOR_MAP = {
+        indigo: { bg:'var(--brand-bg)', fg:'var(--brand)' },
+        purple: { bg:'#f1ecff',         fg:'#7c5cfc' },
+        green:  { bg:'var(--green-bg)', fg:'var(--green)' },
+        amber:  { bg:'var(--amber-bg)', fg:'var(--amber)' },
+        blue:   { bg:'#e8f3ff',         fg:'#0068ff' },
+        red:    { bg:'#fde8e8',         fg:'#dc2626' }
+    };
+
+    function supportContactCardHtml(item){
+        const style = SUPPORT_ICON_COLOR_MAP[item.color] || SUPPORT_ICON_COLOR_MAP.indigo;
+        const href = item.link || '#';
+        return `
+            <a class="card" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
+                ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
+                <div class="card-top"><div class="icon-chip" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(item.icon || 'fa-solid fa-comment-dots')}"></i></div></div>
+                <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
+                ${item.desc ? `<div class="badge-row"><i class="fa-solid fa-circle-info"></i> ${escapeHtmlHome(item.desc)}</div>` : ''}
+                ${item.status_label ? `<div class="status-text" style="color:${style.fg}">${escapeHtmlHome(item.status_label)}</div>` : ''}
+            </a>`;
+    }
+
+    function supportFaqItemHtml(item){
+        return `
+            <details class="faq-item">
+                <summary>${escapeHtmlHome(item.title || '')}</summary>
+                <p>${escapeHtmlHome(item.desc || '')}</p>
+            </details>`;
+    }
+
+    async function renderSupportContent(){
+        const payload = await fetchSiteSettingPayload('support_content', DEFAULT_SUPPORT_CONTENT);
+
+        const titleEl = document.getElementById('supportIntroTitle');
+        const descEl = document.getElementById('supportIntroDesc');
+        if (titleEl) titleEl.textContent = payload.intro_title || DEFAULT_SUPPORT_CONTENT.intro_title;
+        if (descEl) descEl.textContent = payload.intro_desc || DEFAULT_SUPPORT_CONTENT.intro_desc;
+
+        const contacts = Array.isArray(payload.contacts) ? payload.contacts : [];
+        const contactsGrid = document.getElementById('supportContactsGrid');
+        if (contactsGrid){
+            contactsGrid.innerHTML = contacts.length
+                ? contacts.map(supportContactCardHtml).join('')
+                : `<div class="empty-state small"><div class="empty-title">Chưa có kênh hỗ trợ nào</div></div>`;
+        }
+
+        const faq = Array.isArray(payload.faq) ? payload.faq : [];
+        const faqList = document.getElementById('supportFaqList');
+        if (faqList){
+            faqList.innerHTML = faq.length
+                ? faq.map(supportFaqItemHtml).join('')
+                : `<div class="empty-state small"><div class="empty-title">Chưa có câu hỏi thường gặp nào</div></div>`;
+        }
+    }
+
     // ---------------- GÓI PRO — đọc thẳng từ bảng pro_packages (1 nguồn duy nhất) ----------------
     // Bảng pro_packages vừa là giá gốc cho cổng SePay, vừa là nội dung hiển thị ở đây.
     // Quản lý toàn bộ tại trang admin > Gói Pro.
@@ -2405,6 +2443,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     renderDocContent();
     renderToolContent();
     renderProductContent();
+    renderSupportContent();
     renderProContent();
     proFeaturesConfigPromise = loadProUpgradeFeaturesConfig();
     loadPromoBanner();

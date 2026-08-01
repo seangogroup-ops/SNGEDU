@@ -3488,12 +3488,12 @@ function openSepayPackageForm(id){
     document.getElementById('sepayPkgDuration').value = pkg ? pkg.duration_days : '';
     document.getElementById('sepayPkgActive').checked = pkg ? (pkg.active !== false) : true;
     title.innerText = pkg ? ('Sửa gói: ' + pkg.name) : 'Thêm gói mới';
-    form.classList.remove('hidden');
+    form.classList.add('show');
     document.getElementById('sepayPkgName').focus();
 }
 function closeSepayPackageForm(){
     const form = document.getElementById('sepayPkgForm');
-    if (form) form.classList.add('hidden');
+    if (form) form.classList.remove('show');
 }
 async function saveSepayPackage(){
     const msgEl = document.getElementById('sepayPkgMsg');

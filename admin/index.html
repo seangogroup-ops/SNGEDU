@@ -1032,7 +1032,7 @@ textarea{resize:vertical;}
         <div id="featuredPanel" class="hidden">
             <div class="subj-mgr-head">
                 <h2>⭐ Ghim nổi bật</h2>
-                <p class="hint">Chọn Học phần / Tài liệu / Công cụ / Sản phẩm để ghim vào khối "Nổi bật" hiện ở đầu trang chủ. Kéo thả (⋮⋮) trong danh sách "Đang ghim" để đổi thứ tự hiển thị.</p>
+                <p class="hint">Chọn Học phần / Tài liệu / Công cụ / Sản phẩm để ghim. Mỗi loại sẽ tự hiện đúng khối tương ứng trên trang chủ: Học phần → nổi lên đầu khối "Học phần nổi bật" (có ribbon ★); Tài liệu / Công cụ / Sản phẩm → hiện ở khối "X nổi bật" riêng ngay bên dưới. Kéo thả (⋮⋮) trong danh sách "Đang ghim" để đổi thứ tự hiển thị, bấm biểu tượng mắt để ẩn/hiện tạm thời mà không cần bỏ ghim.</p>
             </div>
             <div class="subj-mgr-grid">
                 <div class="subj-mgr-col" style="max-width:460px;">
@@ -1220,12 +1220,16 @@ textarea{resize:vertical;}
                 </div>
 
                 <div id="setFieldsTexts" class="hidden">
-                    <label>Tiêu đề khối "Nổi bật" (chỉ hiện khi có mục được ghim)</label>
-                    <input id="setTextFeatured" placeholder="⭐ Nổi bật">
                     <label style="margin-top:10px;">Tiêu đề "Truy cập nhanh"</label>
                     <input id="setTextQuick" placeholder="Truy cập nhanh">
                     <label style="margin-top:10px;">Tiêu đề "Học phần nổi bật" (trang chủ)</label>
                     <input id="setTextHomeSubjects" placeholder="Học phần nổi bật">
+                    <label style="margin-top:10px;">Tiêu đề khối "Tài liệu nổi bật" (chỉ hiện khi có tài liệu được ghim)</label>
+                    <input id="setTextFeaturedDoc" placeholder="Tài liệu nổi bật">
+                    <label style="margin-top:10px;">Tiêu đề khối "Công cụ nổi bật" (chỉ hiện khi có công cụ được ghim)</label>
+                    <input id="setTextFeaturedTool" placeholder="Công cụ nổi bật">
+                    <label style="margin-top:10px;">Tiêu đề khối "Sản phẩm nổi bật" (chỉ hiện khi có sản phẩm được ghim)</label>
+                    <input id="setTextFeaturedProduct" placeholder="Sản phẩm nổi bật">
                     <label style="margin-top:10px;">Tiêu đề tab "Trắc nghiệm"</label>
                     <input id="setTextQuiz" placeholder="Học phần đại cương">
                     <label style="margin-top:10px;">Tiêu đề tab "Tài liệu"</label>
@@ -4129,7 +4133,7 @@ async function loadFeaturedPins(){
     const { data, error } = await sb.from('site_settings').select('*').eq('key', 'home_featured').single();
     if (error && error.code !== 'PGRST116') showMsg('Lỗi tải danh sách ghim: ' + error.message, 'err');
     const payload = (data && data.payload) ? data.payload : { items: [] };
-    featuredPins = Array.isArray(payload.items) ? payload.items.map(x => ({ type: x.type, ref_id: x.ref_id })) : [];
+    featuredPins = Array.isArray(payload.items) ? payload.items.map(x => ({ type: x.type, ref_id: x.ref_id, hidden: !!x.hidden })) : [];
 }
 
 async function loadFeaturedSources(){
@@ -4188,23 +4192,35 @@ function renderFeaturedPinnedList(){
         const found = src.find(x => String(x.id) === String(p.ref_id));
         const title = found ? found.title : ('(#' + p.ref_id + ' — không còn tồn tại)');
         const domId = p.type + ':' + p.ref_id;
+        const isHidden = !!p.hidden;
         return `
-        <div class="side-item" data-id="${escapeHtml(domId)}">
+        <div class="side-item" data-id="${escapeHtml(domId)}" style="${isHidden ? 'opacity:.55;' : ''}">
             <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
             <span class="prev-ico color-swatch indigo" style="width:26px;height:26px;min-width:26px;font-size:.78rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;">${meta.icon}</span>
-            <span class="name">${escapeHtml(title)}<span class="hint-inline"> · ${escapeHtml(meta.label)}</span></span>
+            <span class="name">${escapeHtml(title)}<span class="hint-inline"> · ${escapeHtml(meta.label)}${isHidden ? ' · đang ẩn' : ''}</span></span>
             <span class="right-cluster">
+                <button class="icon-x" title="${isHidden ? 'Hiện lại' : 'Ẩn tạm (vẫn giữ ghim)'}" onclick="toggleFeaturedPinHidden('${p.type}','${escapeHtml(String(p.ref_id))}')"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'}"></i></button>
                 <button class="icon-x" title="Bỏ ghim" onclick="toggleFeaturedPin('${p.type}','${escapeHtml(String(p.ref_id))}')">✕</button>
             </span>
         </div>`;
     }).join('');
 }
 
+async function toggleFeaturedPinHidden(type, refId){
+    const pin = featuredPins.find(p => p.type === type && String(p.ref_id) === String(refId));
+    if (!pin) return;
+    pin.hidden = !pin.hidden;
+    renderFeaturedPinnedList();
+    const err = await saveFeaturedPins();
+    if (err) showMsg('Lỗi lưu trạng thái ẩn/hiện: ' + err.message, 'err');
+    else showMsg(pin.hidden ? 'Đã ẩn mục ghim (vẫn giữ trong danh sách).' : 'Đã hiện lại mục ghim.', 'ok');
+}
+
 async function toggleFeaturedPin(type, refId){
     const idx = featuredPins.findIndex(p => p.type === type && String(p.ref_id) === String(refId));
     const wasPinned = idx >= 0;
     if (wasPinned) featuredPins.splice(idx, 1);
-    else featuredPins.push({ type, ref_id: refId });
+    else featuredPins.push({ type, ref_id: refId, hidden: false });
     renderFeaturedPinnedList();
     renderFeaturedSourceList();
     const err = await saveFeaturedPins();
@@ -4228,7 +4244,7 @@ async function reorderFeaturedPins(fromId, toId){
 }
 
 async function saveFeaturedPins(){
-    const payload = { items: featuredPins.map(p => ({ type: p.type, ref_id: p.ref_id })) };
+    const payload = { items: featuredPins.map(p => ({ type: p.type, ref_id: p.ref_id, hidden: !!p.hidden })) };
     const { error } = await sb.from('site_settings')
         .upsert({ key: 'home_featured', payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     return error;
@@ -4963,9 +4979,11 @@ async function openSettingsPanel(key){
         document.getElementById('setHeroEyebrow').value = currentSetPayload.eyebrow || '';
         document.getElementById('setHeroTitle').value = currentSetPayload.title || '';
     } else if (isTexts){
-        document.getElementById('setTextFeatured').value = currentSetPayload.featuredTitle || '';
         document.getElementById('setTextQuick').value = currentSetPayload.quickTitle || '';
         document.getElementById('setTextHomeSubjects').value = currentSetPayload.homeSubjectsTitle || '';
+        document.getElementById('setTextFeaturedDoc').value = currentSetPayload.featuredDocTitle || '';
+        document.getElementById('setTextFeaturedTool').value = currentSetPayload.featuredToolTitle || '';
+        document.getElementById('setTextFeaturedProduct').value = currentSetPayload.featuredProductTitle || '';
         document.getElementById('setTextQuiz').value = currentSetPayload.quizTitle || '';
         document.getElementById('setTextDoc').value = currentSetPayload.docTitle || '';
         document.getElementById('setTextTool').value = currentSetPayload.toolTitle || '';
@@ -5202,9 +5220,11 @@ async function saveSiteSetting(){
         };
     } else if (currentSetKey === 'home_texts'){
         payload = {
-            featuredTitle: document.getElementById('setTextFeatured').value.trim(),
             quickTitle: document.getElementById('setTextQuick').value.trim(),
             homeSubjectsTitle: document.getElementById('setTextHomeSubjects').value.trim(),
+            featuredDocTitle: document.getElementById('setTextFeaturedDoc').value.trim(),
+            featuredToolTitle: document.getElementById('setTextFeaturedTool').value.trim(),
+            featuredProductTitle: document.getElementById('setTextFeaturedProduct').value.trim(),
             quizTitle: document.getElementById('setTextQuiz').value.trim(),
             docTitle: document.getElementById('setTextDoc').value.trim(),
             toolTitle: document.getElementById('setTextTool').value.trim(),

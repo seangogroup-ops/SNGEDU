@@ -334,6 +334,15 @@ aside{
 }
 .settings-form-card h3{margin:0 0 4px;font-size:1.1rem;letter-spacing:-.01em;}
 .settings-form-card .hint{margin-bottom:18px;}
+.pf-row{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;background:var(--white);}
+.pf-row .drag-handle{cursor:grab;color:#c1c5da;padding-top:9px;flex:0 0 auto;}
+.pf-row .pf-fields{flex:1;min-width:0;}
+.pf-row .pf-fields label{margin:8px 0 4px;}
+.pf-row .pf-fields label:first-child{margin-top:0;}
+.pf-row .pf-del{background:none;border:none;color:var(--gray);cursor:pointer;font-size:.95rem;padding:6px 8px;border-radius:8px;flex:0 0 auto;}
+.pf-row .pf-del:hover{background:#fde8e8;color:#e5484d;}
+.pf-row.dragging{opacity:.4;}
+.pf-row.drag-over{box-shadow:inset 0 0 0 2px var(--accent);}
 .icon-color-row{display:flex;gap:10px;}
 .icon-color-row > div{flex:1;}
 .color-swatch-row{display:flex;gap:8px;margin-top:7px;flex-wrap:wrap;}
@@ -1067,6 +1076,17 @@ textarea{resize:vertical;}
                     </div>
 
                     <div class="settings-form-card" style="margin-top:16px;">
+                        <h3>👑 Tính năng gói Pro</h3>
+                        <p class="hint">Danh sách tính năng hiển thị trong popup "Nâng cấp Pro" và popup xác nhận thanh toán ở trang chủ. Kéo thả để đổi thứ tự.</p>
+                        <div id="proFeaturesList"></div>
+                        <button type="button" class="side-add" onclick="addProFeatureRow()">+ Thêm tính năng</button>
+                        <div class="mini-actions" style="margin-top:14px;">
+                            <button class="btn-mini-save" onclick="saveProFeatures()">💾 Lưu thay đổi</button>
+                        </div>
+                        <div class="hint" id="proFeaturesMsg" style="margin-top:10px;min-height:1.2em;"></div>
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
                         <h3>Thẻ "Hỗ trợ" (trang chủ)</h3>
                         <p class="hint">Hiển thị ở mục Truy cập nhanh trên trang chủ.</p>
                         <label>Icon (mã lớp Font Awesome)</label>
@@ -1555,6 +1575,7 @@ function showGeneralSettings(){
     document.getElementById('genPassMsg').innerText = '';
     loadSupportCard();
     loadNavTabsList();
+    loadProFeaturesList();
 }
 
 // ---------- Thẻ "Hỗ trợ" (trang chủ) — quản lý ngay trong tab Cài đặt, dùng chung bảng quick_links ----------
@@ -3895,6 +3916,87 @@ async function saveNavTabs(){
     }
 }
 enableDragReorder('navTabsList', '.side-item', el => el.dataset.id, null, reorderNavTabs);
+
+// ============================================================================
+// TÍNH NĂNG GÓI PRO (site_settings key 'pro_features') — hiện trong popup "Nâng cấp Pro" ở trang chủ
+// ============================================================================
+const PRO_FEATURES_DEFAULT = [
+    { title:'Mở khoá toàn bộ đề trắc nghiệm', desc:'Làm không giới hạn mọi đề thi, mọi môn học trong suốt thời gian Premium.' },
+    { title:'Xem đáp án & giải thích chi tiết', desc:'Không giới hạn số lần xem lời giải sau khi làm bài.' },
+    { title:'Tải tài liệu không giới hạn', desc:'Truy cập và tải toàn bộ tài liệu trong thư viện.' },
+    { title:'Hỗ trợ trực tiếp từ quản trị viên', desc:'Ưu tiên phản hồi khi báo lỗi câu hỏi hoặc cần hỗ trợ.' },
+];
+let proFeaturesState = [];
+
+async function loadProFeaturesList(){
+    document.getElementById('proFeaturesMsg').innerText = '';
+    const { data, error } = await sb.from('site_settings').select('*').eq('key', 'pro_features').single();
+    if (error && error.code !== 'PGRST116') showMsg('Lỗi tải tính năng gói Pro: ' + error.message, 'err');
+    const saved = (data && data.payload && Array.isArray(data.payload.items)) ? data.payload.items : null;
+    proFeaturesState = (saved && saved.length)
+        ? saved.map(f => ({ title: f.title || '', desc: f.desc || '' }))
+        : PRO_FEATURES_DEFAULT.map(f => Object.assign({}, f));
+    renderProFeaturesList();
+}
+function proFeatureRowHtml(f, idx){
+    return `
+        <div class="pf-row" data-idx="${idx}">
+            <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
+            <div class="pf-fields">
+                <label>Tiêu đề</label>
+                <input type="text" value="${escapeHtml(f.title || '')}" placeholder="Tên tính năng" oninput="updateProFeatureField(${idx}, 'title', this.value)">
+                <label>Mô tả</label>
+                <textarea rows="2" placeholder="Mô tả ngắn" oninput="updateProFeatureField(${idx}, 'desc', this.value)">${escapeHtml(f.desc || '')}</textarea>
+            </div>
+            <button type="button" class="pf-del" title="Xoá tính năng này" onclick="removeProFeatureRow(${idx})"><i class="fa-solid fa-trash"></i></button>
+        </div>`;
+}
+function renderProFeaturesList(){
+    const wrap = document.getElementById('proFeaturesList');
+    wrap.innerHTML = proFeaturesState.length
+        ? proFeaturesState.map(proFeatureRowHtml).join('')
+        : '<p class="hint">Chưa có tính năng nào, bấm "+ Thêm tính năng" bên dưới.</p>';
+}
+function updateProFeatureField(idx, field, value){
+    if (!proFeaturesState[idx]) return;
+    proFeaturesState[idx][field] = value;
+}
+function addProFeatureRow(){
+    proFeaturesState.push({ title:'', desc:'' });
+    renderProFeaturesList();
+}
+function removeProFeatureRow(idx){
+    proFeaturesState.splice(idx, 1);
+    renderProFeaturesList();
+}
+function reorderProFeatures(fromIdx, toIdx){
+    fromIdx = Number(fromIdx); toIdx = Number(toIdx);
+    if (Number.isNaN(fromIdx) || Number.isNaN(toIdx) || fromIdx === toIdx) return;
+    const reordered = proFeaturesState.slice();
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    proFeaturesState = reordered;
+    renderProFeaturesList();
+}
+async function saveProFeatures(){
+    const cleaned = proFeaturesState
+        .map(f => ({ title: (f.title || '').trim(), desc: (f.desc || '').trim() }))
+        .filter(f => f.title); // bỏ dòng chưa nhập tiêu đề
+    const { error } = await sb.from('site_settings')
+        .upsert({ key:'pro_features', payload:{ items: cleaned }, updated_at: new Date().toISOString() }, { onConflict:'key' });
+    const msgEl = document.getElementById('proFeaturesMsg');
+    if (error){
+        msgEl.style.color = 'var(--red)';
+        msgEl.innerText = 'Lỗi: ' + error.message;
+    } else {
+        proFeaturesState = cleaned;
+        renderProFeaturesList();
+        msgEl.style.color = 'var(--green)';
+        msgEl.innerText = '✔ Đã lưu. Trang chủ sẽ cập nhật ngay khi tải lại.';
+        setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4000);
+    }
+}
+enableDragReorder('proFeaturesList', '.pf-row', el => el.dataset.idx, null, reorderProFeatures);
 
 // ============================================================================
 // QUẢN LÝ TÀI KHOẢN — gọi Edge Function "admin-users" (giữ service_role key an toàn phía server)

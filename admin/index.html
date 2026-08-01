@@ -818,6 +818,9 @@ textarea{resize:vertical;}
                 <div class="side-item settings-item" data-setkey="report_banner" onclick="openSettingsPanel('report_banner')">
                     <span class="set-ico">🔔</span><span class="name">Banner góp ý</span>
                 </div>
+                <div class="side-item settings-item" data-setkey="promo_banner" onclick="openSettingsPanel('promo_banner')">
+                    <span class="set-ico">⏱️</span><span class="name">Banner Premium</span>
+                </div>
                 <div class="side-item settings-item" id="nav_doc" onclick="showContentManager('doc')">
                     <span class="set-ico">📁</span><span class="name">Tài liệu</span>
                 </div>
@@ -1222,6 +1225,45 @@ textarea{resize:vertical;}
                                 <span id="setBannerPreview" style="color:#f5c065;font-weight:800;font-size:.78rem;letter-spacing:.3px;text-transform:uppercase;">Gặp câu hỏi sai? <u>Click vào đây</u> góp ý giúp tôi!</span>
                                 <span id="setBannerPreviewIconRight" style="font-size:15px;">👉</span>
                             </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="setFieldsPromo" class="hidden">
+                    <label style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="setPromoEnabled" style="width:auto;" onchange="updatePromoPreview()"> Bật hiển thị banner
+                    </label>
+                    <label>Nội dung banner</label>
+                    <textarea id="setPromoMessage" rows="3" placeholder="Người dùng Premium ghi nhớ hiệu quả hơn gấp 3 lần. Ưu đãi gói năm chỉ còn 790.000đ sẽ sớm kết thúc." oninput="updatePromoPreview()"></textarea>
+                    <div class="hint" style="margin:2px 0 10px;">Bấm vào banner sẽ mở luôn popup "Nâng cấp Pro" hiện có trên trang chủ.</div>
+
+                    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                        <div style="flex:1;min-width:140px;">
+                            <label>Số suất còn lại</label>
+                            <input type="number" id="setPromoSlotsLeft" min="0" placeholder="12" oninput="updatePromoPreview()">
+                        </div>
+                        <div style="flex:1;min-width:140px;">
+                            <label>Tổng số suất</label>
+                            <input type="number" id="setPromoSlotsTotal" min="0" placeholder="100" oninput="updatePromoPreview()">
+                        </div>
+                    </div>
+                    <div class="hint" style="margin:2px 0 10px;">Để trống 1 trong 2 ô (hoặc để 0) nếu không muốn hiện cụm "còn X/Y suất".</div>
+
+                    <label>Thời điểm kết thúc ưu đãi</label>
+                    <input type="datetime-local" id="setPromoEndAt" oninput="updatePromoPreview()">
+                    <div class="hint" style="margin:2px 0 10px;">Banner tự đếm ngược tới thời điểm này rồi tự ẩn. Đổi giờ này sẽ khiến banner hiện lại kể cả với người đã từng bấm đóng.</div>
+
+                    <div style="margin-top:14px;padding:15px 17px;border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);">
+                        <div class="hint" style="text-transform:uppercase;font-size:.7rem;font-weight:700;letter-spacing:.05em;margin-bottom:8px;">Xem trước</div>
+                        <div style="background:var(--navy);border-radius:var(--radius-sm);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+                            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                                <span style="font-size:1.2rem;">👑</span>
+                                <span id="setPromoPreviewMsg" style="color:#f0f1f6;font-size:.85rem;font-weight:600;">Người dùng Premium ghi nhớ hiệu quả hơn gấp 3 lần...</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                                <span id="setPromoPreviewSlots" style="background:#232a4d;color:#a5a4ff;border:1px solid #7b93ff;border-radius:99px;padding:5px 12px;font-size:.75rem;font-weight:800;white-space:nowrap;">còn 12/100 suất</span>
+                                <span id="setPromoPreviewTimer" style="background:#3a1414;color:#ff8787;border:1px solid #ff8787;border-radius:99px;padding:5px 12px;font-size:.75rem;font-weight:800;white-space:nowrap;">1n 03:23:58</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -4478,6 +4520,7 @@ const SETTINGS_META = {
     home_hero: { title: 'Trang chủ', hint: 'Khối giới thiệu (hero) ở đầu trang chủ, và các thẻ Truy cập nhanh bên dưới nó.' },
     site_footer: { title: 'Chân trang', hint: 'Dòng chữ bản quyền / chân trang, dùng chung và đồng bộ trên mọi trang.' },
     report_banner: { title: 'Banner góp ý', hint: 'Banner "Gặp câu hỏi sai?" ở trang danh sách môn học — chỉnh chữ và link đích.' },
+    promo_banner: { title: 'Banner Premium', hint: 'Banner đếm ngược + giới hạn suất ở đầu trang chủ, bấm vào sẽ mở popup "Nâng cấp Pro".' },
 };
 
 async function openSettingsPanel(key){
@@ -4502,11 +4545,13 @@ async function openSettingsPanel(key){
     const isHero = key === 'home_hero';
     const isFooter = key === 'site_footer';
     const isBanner = key === 'report_banner';
+    const isPromo = key === 'promo_banner';
     document.getElementById('setFieldsHero').classList.toggle('hidden', !isHero);
     document.getElementById('setFieldsFooter').classList.toggle('hidden', !isFooter);
     document.getElementById('setFieldsBanner').classList.toggle('hidden', !isBanner);
-    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero || isFooter || isBanner);
-    document.getElementById('quickLinksSection').classList.toggle('hidden', isFooter || isBanner);
+    document.getElementById('setFieldsPromo').classList.toggle('hidden', !isPromo);
+    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero || isFooter || isBanner || isPromo);
+    document.getElementById('quickLinksSection').classList.toggle('hidden', isFooter || isBanner || isPromo);
 
     const { data, error } = await sb.from('site_settings').select('*').eq('key', key).single();
     if (error && error.code !== 'PGRST116'){
@@ -4535,6 +4580,13 @@ async function openSettingsPanel(key){
         pickBannerSize(currentSetPayload.size || 'md');
         pickBannerEffect(currentSetPayload.effect || 'subtle');
         updateBannerPreview();
+    } else if (isPromo){
+        document.getElementById('setPromoEnabled').checked = !!currentSetPayload.enabled;
+        document.getElementById('setPromoMessage').value = currentSetPayload.message || '';
+        document.getElementById('setPromoSlotsLeft').value = currentSetPayload.slots_left ?? '';
+        document.getElementById('setPromoSlotsTotal').value = currentSetPayload.slots_total ?? '';
+        document.getElementById('setPromoEndAt').value = currentSetPayload.end_at || '';
+        updatePromoPreview();
     } else {
         document.getElementById('setCardIcon').value = currentSetPayload.icon || '';
         document.getElementById('setCardTitle').value = currentSetPayload.title || '';
@@ -4697,6 +4749,41 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ir) ir.addEventListener('input', handler);
 });
 
+function formatPromoCountdown(ms){
+    if (ms <= 0) return 'Đã kết thúc';
+    const totalSec = Math.floor(ms / 1000);
+    const days = Math.floor(totalSec / 86400);
+    const hours = Math.floor((totalSec % 86400) / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
+    const pad = n => String(n).padStart(2, '0');
+    return (days > 0 ? days + 'n ' : '') + pad(hours) + ':' + pad(mins) + ':' + pad(secs);
+}
+function updatePromoPreview(){
+    const msg = document.getElementById('setPromoMessage').value.trim() || 'Người dùng Premium ghi nhớ hiệu quả hơn gấp 3 lần...';
+    document.getElementById('setPromoPreviewMsg').innerText = msg;
+
+    const left = Number(document.getElementById('setPromoSlotsLeft').value) || 0;
+    const total = Number(document.getElementById('setPromoSlotsTotal').value) || 0;
+    const slotsEl = document.getElementById('setPromoPreviewSlots');
+    if (left > 0 && total > 0){
+        slotsEl.innerText = `còn ${left}/${total} suất`;
+        slotsEl.style.display = '';
+    } else {
+        slotsEl.style.display = 'none';
+    }
+
+    const endAtVal = document.getElementById('setPromoEndAt').value;
+    const timerEl = document.getElementById('setPromoPreviewTimer');
+    if (endAtVal){
+        const diff = new Date(endAtVal).getTime() - Date.now();
+        timerEl.innerText = formatPromoCountdown(diff);
+        timerEl.style.display = '';
+    } else {
+        timerEl.style.display = 'none';
+    }
+}
+
 async function saveSiteSetting(){
     if (!currentSetKey) return;
     let payload;
@@ -4721,6 +4808,14 @@ async function saveSiteSetting(){
             shape: bannerShape,
             size: bannerSize,
             effect: bannerEffect,
+        };
+    } else if (currentSetKey === 'promo_banner'){
+        payload = {
+            enabled: document.getElementById('setPromoEnabled').checked,
+            message: document.getElementById('setPromoMessage').value.trim(),
+            slots_left: Number(document.getElementById('setPromoSlotsLeft').value) || 0,
+            slots_total: Number(document.getElementById('setPromoSlotsTotal').value) || 0,
+            end_at: document.getElementById('setPromoEndAt').value || '',
         };
     } else {
         const selected = document.querySelector('#setColorRow .color-swatch.selected');

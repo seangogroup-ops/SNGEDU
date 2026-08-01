@@ -712,7 +712,6 @@
         <div style="background:var(--card); border:1px solid var(--line); border-radius:20px; padding:22px 24px; margin-bottom:28px;">
             <div class="acc-info-row"><span class="label">Email</span><span class="value" id="acctPageEmail">—</span></div>
             <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="acctPageName">—</span></div>
-            <div class="acc-info-row"><span class="label">Tham gia từ</span><span class="value" id="acctPageJoined">—</span></div>
             <div class="acc-info-row"><span class="label">Gói hiện tại</span><span class="value"><span class="acc-plan-badge" id="acctPagePlanBadge">Miễn phí</span></span></div>
         </div>
 
@@ -799,7 +798,6 @@
             <div class="acc-panel active" id="accPanel-info">
                 <div class="acc-info-row"><span class="label">Email</span><span class="value" id="accInfoEmail">—</span></div>
                 <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="accInfoName">—</span></div>
-                <div class="acc-info-row"><span class="label">Tham gia từ</span><span class="value" id="accInfoJoined">—</span></div>
                 <div class="acc-info-row"><span class="label">Gói sử dụng</span><span class="value"><span class="acc-plan-badge" id="accPlanBadge">Miễn phí</span></span></div>
                 <div class="acc-info-row"><span class="label">Trạng thái</span><span class="value" style="color:var(--green)">Đã xác thực</span></div>
 
@@ -946,14 +944,12 @@
         const email = user.email || '';
         const initial = (email.trim()[0] || 'U').toUpperCase();
         const displayName = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || email.split('@')[0];
-        const joined = user.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : '—';
 
         document.getElementById('accAvatar').textContent = initial;
         document.getElementById('accName').textContent = displayName;
         document.getElementById('accSub').textContent = email;
         document.getElementById('accInfoEmail').textContent = email || '—';
         document.getElementById('accInfoName').textContent = displayName || '—';
-        document.getElementById('accInfoJoined').textContent = joined;
 
         // ----- Gói sử dụng: đọc từ user_metadata.plan (giá trị 'premium' | để trống/khác = miễn phí) -----
         // premium_until (nếu có) là hạn dùng Premium, dạng ISO date -> hết hạn thì tự về Miễn phí.
@@ -1471,22 +1467,19 @@
         if (!document.getElementById('panel-account')) return;
         const emailEl = document.getElementById('acctPageEmail');
         const nameEl = document.getElementById('acctPageName');
-        const joinedEl = document.getElementById('acctPageJoined');
         const badgeEl = document.getElementById('acctPagePlanBadge');
         if (!emailEl) return;
 
         if (!currentSession){
-            emailEl.textContent = '—'; nameEl.textContent = '—'; joinedEl.textContent = '—';
+            emailEl.textContent = '—'; nameEl.textContent = '—';
             badgeEl.textContent = 'Miễn phí'; badgeEl.className = 'acc-plan-badge';
             return;
         }
         const user = currentSession.user;
         const email = user.email || '';
         const displayName = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || email.split('@')[0];
-        const joined = user.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : '—';
         emailEl.textContent = email || '—';
         nameEl.textContent = displayName || '—';
-        joinedEl.textContent = joined;
 
         const meta = user.user_metadata || {};
         const premiumUntil = meta.premium_until ? new Date(meta.premium_until) : null;

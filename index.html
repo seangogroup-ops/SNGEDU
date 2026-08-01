@@ -524,6 +524,12 @@
         background:linear-gradient(135deg,#f5a524,#ffbd4a); color:#5a3c05;
         font-size:.68rem; font-weight:800; padding:3px 34px;
     }
+    .card.pinned{ border-color:var(--brand); box-shadow:0 0 0 2px var(--brand-bg); }
+    .pin-ribbon{
+        position:absolute; top:14px; right:-30px; transform:rotate(35deg);
+        background:linear-gradient(135deg,#6a5cff,#8b7dff); color:#fff;
+        font-size:.68rem; font-weight:800; padding:3px 30px;
+    }
 
     .card-top{ display:flex; align-items:flex-start; justify-content:space-between; }
     .icon-chip{
@@ -970,11 +976,6 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             </div>
         </div>
 
-        <div id="featuredSection" style="display:none;">
-            <div class="sec-head"><h2 id="featuredSectionTitle">⭐ Nổi bật</h2></div>
-            <div class="grid" id="featuredGrid"></div>
-        </div>
-
         <div class="sec-head"><h2 id="quickAccessTitle">Truy cập nhanh</h2></div>
         <div class="quick-grid" id="quickGrid">
             <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
@@ -984,6 +985,20 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         <div class="sec-head" style="margin-top:8px"><h2 id="homeSubjectsTitle">Học phần nổi bật</h2><span id="homeSubjectCount">Đang tải...</span></div>
         <div class="grid" id="homeSubjectGrid">
             <div class="empty-state small"><div class="empty-title">Đang tải danh sách môn học...</div></div>
+        </div>
+
+        <!-- Các khối "nổi bật" theo từng loại — ghim ở trang admin > Ghim nổi bật, tự ẩn nếu chưa ghim mục nào -->
+        <div id="featuredDocSection" style="display:none; margin-top:8px">
+            <div class="sec-head"><h2 id="featuredDocTitle">Tài liệu nổi bật</h2></div>
+            <div class="grid" id="featuredDocGrid"></div>
+        </div>
+        <div id="featuredToolSection" style="display:none; margin-top:8px">
+            <div class="sec-head"><h2 id="featuredToolTitle">Công cụ nổi bật</h2></div>
+            <div class="grid" id="featuredToolGrid"></div>
+        </div>
+        <div id="featuredProductSection" style="display:none; margin-top:8px">
+            <div class="sec-head"><h2 id="featuredProductTitle">Sản phẩm nổi bật</h2></div>
+            <div class="grid" id="featuredProductGrid"></div>
         </div>
 
     </section>
@@ -1235,7 +1250,6 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="accInfoName">—</span></div>
                 <div class="acc-info-row"><span class="label">Gói sử dụng</span><span class="value"><span class="acc-plan-badge" id="accPlanBadge">Miễn phí</span></span></div>
                 <div class="acc-info-row" id="accBalanceRow" style="display:none"><span class="label">Số dư</span><span class="value" id="accBalanceValue">—</span></div>
-                <div class="acc-info-row"><span class="label">Trạng thái</span><span class="value" style="color:var(--green)">Đã xác thực</span></div>
                 <button class="acc-changepw-btn" type="button" onclick="closeAccountModal(); goTab('account');">
                     <i class="fa-solid fa-gear"></i> Đổi mật khẩu &amp; quản lý gói Pro
                 </button>
@@ -1605,9 +1619,10 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     function escapeHtmlHome(s){
         return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     }
-    function readyCardHtml(subject, style, num){
+    function readyCardHtml(subject, style, num, pinned){
         return `
-            <a class="card" href="mon-hoc.html?subject=${encodeURIComponent(subject.id)}">
+            <a class="card${pinned ? ' pinned' : ''}" href="mon-hoc.html?subject=${encodeURIComponent(subject.id)}">
+                ${pinned ? '<div class="pin-ribbon">★ GHIM</div>' : ''}
                 <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                 <div class="card-top">
                     <div class="icon-chip" style="background:${style.bg}; color:${style.color}"><i class="fa-solid ${style.icon}"></i></div>
@@ -1620,9 +1635,10 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             </a>
         `;
     }
-    function maintenanceCardHtml(subject, style, num){
+    function maintenanceCardHtml(subject, style, num, pinned){
         return `
-            <a class="card locked" href="#" data-locked="true" data-subject="${subject.id.toLowerCase()}" data-subject-name="${escapeHtmlHome(subject.name)}" data-locked-msg="“${escapeHtmlHome(subject.name)}” đang bảo trì, quay lại sau nhé.">
+            <a class="card locked${pinned ? ' pinned' : ''}" href="#" data-locked="true" data-subject="${subject.id.toLowerCase()}" data-subject-name="${escapeHtmlHome(subject.name)}" data-locked-msg="“${escapeHtmlHome(subject.name)}” đang bảo trì, quay lại sau nhé.">
+                ${pinned ? '<div class="pin-ribbon">★ GHIM</div>' : ''}
                 <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                 <div class="card-top">
                     <div class="icon-chip" style="background:${style.bg}; color:${style.color}"><i class="fa-solid ${style.icon}"></i></div>
@@ -1635,9 +1651,10 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             </a>
         `;
     }
-    function pendingCardHtml(subject, style, num){
+    function pendingCardHtml(subject, style, num, pinned){
         return `
-            <a class="card locked" href="#" data-locked="true" data-subject="${subject.id.toLowerCase()}" data-subject-name="${escapeHtmlHome(subject.name)}">
+            <a class="card locked${pinned ? ' pinned' : ''}" href="#" data-locked="true" data-subject="${subject.id.toLowerCase()}" data-subject-name="${escapeHtmlHome(subject.name)}">
+                ${pinned ? '<div class="pin-ribbon">★ GHIM</div>' : ''}
                 <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                 <div class="card-top">
                     <div class="icon-chip" style="background:${style.bg}; color:${style.color}"><i class="fa-solid ${style.icon}"></i></div>
@@ -1676,7 +1693,19 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         }
 
         // Môn trạng thái "hidden" không hiện trên trang chủ/tab Trắc nghiệm
-        const visibleSubjects = dbSubjects.filter(s => (s.status || 'ready') !== 'hidden');
+        let visibleSubjects = dbSubjects.filter(s => (s.status || 'ready') !== 'hidden');
+
+        // Học phần được ghim (Admin > Ghim nổi bật, loại "Học phần") sẽ nổi lên đầu danh sách + có ribbon ★ GHIM
+        const pins = await getHomeFeaturedPins();
+        const pinnedSubjectIds = pins.filter(p => p.type === 'subject').map(p => String(p.ref_id));
+        if (pinnedSubjectIds.length){
+            const pinnedSet = new Set(pinnedSubjectIds);
+            const pinnedOnes = pinnedSubjectIds
+                .map(id => visibleSubjects.find(s => String(s.id) === id))
+                .filter(Boolean);
+            const restOnes = visibleSubjects.filter(s => !pinnedSet.has(String(s.id)));
+            visibleSubjects = pinnedOnes.concat(restOnes);
+        }
 
         if (!visibleSubjects.length){
             const emptyHtml = `<div class="empty-state"><div class="empty-icon" style="background:var(--brand-bg); color:var(--brand)"><i class="fa-solid fa-book"></i></div><div class="empty-title">Chưa có học phần nào</div><div class="empty-sub">Vào trang admin để thêm môn học đầu tiên.</div></div>`;
@@ -1692,12 +1721,13 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         visibleSubjects.forEach((s, idx) => {
             const style = styleForSubject(s, idx);
             const status = s.status || 'ready';
+            const isPinned = pinnedSubjectIds.includes(String(s.id));
             if (status === 'maintenance'){
-                html += maintenanceCardHtml(s, style, idx + 1);
+                html += maintenanceCardHtml(s, style, idx + 1, isPinned);
             } else if (status === 'pending'){
-                html += pendingCardHtml(s, style, idx + 1);
+                html += pendingCardHtml(s, style, idx + 1, isPinned);
             } else {
-                html += readyCardHtml(s, style, idx + 1);
+                html += readyCardHtml(s, style, idx + 1, isPinned);
                 readySubjects.push(s);
             }
         });
@@ -1775,9 +1805,11 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     async function loadHomeTexts(){
         const payload = await fetchSiteSettingPayload('home_texts', {});
         const map = {
-            featuredSectionTitle: payload.featuredTitle,
             quickAccessTitle: payload.quickTitle,
             homeSubjectsTitle: payload.homeSubjectsTitle,
+            featuredDocTitle: payload.featuredDocTitle,
+            featuredToolTitle: payload.featuredToolTitle,
+            featuredProductTitle: payload.featuredProductTitle,
             quizSectionTitle: payload.quizTitle,
             docSectionTitle: payload.docTitle,
             toolSectionTitle: payload.toolTitle,
@@ -1901,7 +1933,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
         applyDocFilter();
         loadDocOrderHistory();
-        renderFeaturedSection();
+        renderFeaturedExtras();
     }
 
     function applyDocFilter(){
@@ -1993,72 +2025,60 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         }
     }
 
-    // ---------------- KHỐI "NỔI BẬT" TRÊN TRANG CHỦ — ghim từ Học phần / Tài liệu / Công cụ / Sản phẩm ----------------
+    // ---------------- HỆ THỐNG GHIM NỔI BẬT — mỗi loại ghim rơi đúng vào khối "nổi bật" tương ứng ----------------
     // Quản lý ở trang admin > Ghim nổi bật (site_settings key 'home_featured').
-    async function renderFeaturedSection(){
-        const section = document.getElementById('featuredSection');
-        const grid = document.getElementById('featuredGrid');
-        if (!section || !grid) return;
+    // - Ghim loại "Học phần" -> nổi lên đầu khối "Học phần nổi bật" (ribbon ★ GHIM).
+    // - Ghim loại "Tài liệu"/"Công cụ"/"Sản phẩm" -> hiện ở khối "X nổi bật" riêng ngay dưới khối học phần.
+    // - Mỗi mục ghim có thể ẩn/hiện (cờ hidden) và đổi vị trí (kéo thả ở admin) mà không cần bỏ ghim.
+    let _homeFeaturedPinsPromise = null;
+    async function getHomeFeaturedPins(){
+        if (!_homeFeaturedPinsPromise){
+            _homeFeaturedPinsPromise = fetchSiteSettingPayload('home_featured', { items: [] }).then(payload => {
+                const items = Array.isArray(payload.items) ? payload.items : [];
+                return items.filter(p => !p.hidden); // chỉ lấy các mục đang bật hiển thị
+            });
+        }
+        return _homeFeaturedPinsPromise;
+    }
 
-        const payload = await fetchSiteSettingPayload('home_featured', { items: [] });
-        const pins = Array.isArray(payload.items) ? payload.items : [];
-        if (!pins.length){ section.style.display = 'none'; return; }
+    async function renderFeaturedExtras(){
+        const docSection = document.getElementById('featuredDocSection');
+        const docGrid = document.getElementById('featuredDocGrid');
+        const toolSection = document.getElementById('featuredToolSection');
+        const toolGrid = document.getElementById('featuredToolGrid');
+        const productSection = document.getElementById('featuredProductSection');
+        const productGrid = document.getElementById('featuredProductGrid');
+        if (!docSection || !toolSection || !productSection) return;
 
-        const subjectIds = pins.filter(p => p.type === 'subject').map(p => p.ref_id);
+        const pins = await getHomeFeaturedPins();
         const docIds     = pins.filter(p => p.type === 'doc').map(p => String(p.ref_id));
         const toolIds    = pins.filter(p => p.type === 'tool').map(p => String(p.ref_id));
         const productIds = pins.filter(p => p.type === 'product').map(p => String(p.ref_id));
 
-        const subjectsMap = {};
-        if (subjectIds.length){
-            const { data } = await sb.from('subjects').select('*').in('id', subjectIds);
-            (data || []).forEach(s => { subjectsMap[s.id] = s; });
-        }
-        const docsMap = {};
         if (docIds.length){
             const docPayload = await fetchSiteSettingPayload('doc_content', DEFAULT_DOC_CONTENT);
+            const docsMap = {};
             (docPayload.free || []).forEach(it => { docsMap[String(it.id)] = { item: it, isPaid: false }; });
             (docPayload.paid || []).forEach(it => { docsMap[String(it.id)] = { item: it, isPaid: true }; });
-        }
-        const toolsMap = {};
+            const html = docIds.map(id => { const e = docsMap[id]; return e ? docItemCardHtml(e.item, e.isPaid) : ''; }).join('');
+            if (html){ docGrid.innerHTML = html; docSection.style.display = ''; } else { docSection.style.display = 'none'; }
+        } else { docSection.style.display = 'none'; }
+
         if (toolIds.length){
             const toolPayload = await fetchSiteSettingPayload('tool_content', DEFAULT_TOOL_CONTENT);
+            const toolsMap = {};
             (toolPayload.items || []).forEach(it => { toolsMap[String(it.id)] = it; });
-        }
-        const productsMap = {};
+            const html = toolIds.map(id => { const it = toolsMap[id]; return it ? toolItemCardHtml(it) : ''; }).join('');
+            if (html){ toolGrid.innerHTML = html; toolSection.style.display = ''; bindLockedCards(); } else { toolSection.style.display = 'none'; }
+        } else { toolSection.style.display = 'none'; }
+
         if (productIds.length){
             const productPayload = await fetchSiteSettingPayload('product_content', DEFAULT_PRODUCT_CONTENT);
+            const productsMap = {};
             (productPayload.items || []).forEach(it => { productsMap[String(it.id)] = it; });
-        }
-
-        let html = '';
-        const readySubjectsForCount = [];
-        pins.forEach((p, idx) => {
-            if (p.type === 'subject'){
-                const s = subjectsMap[p.ref_id];
-                if (!s || (s.status || 'ready') === 'hidden') return;
-                const style = styleForSubject(s, idx);
-                const status = s.status || 'ready';
-                if (status === 'maintenance') html += maintenanceCardHtml(s, style, idx + 1);
-                else if (status === 'pending') html += pendingCardHtml(s, style, idx + 1);
-                else { html += readyCardHtml(s, style, idx + 1); readySubjectsForCount.push(s); }
-            } else if (p.type === 'doc'){
-                const entry = docsMap[String(p.ref_id)];
-                if (entry) html += docItemCardHtml(entry.item, entry.isPaid);
-            } else if (p.type === 'tool'){
-                const it = toolsMap[String(p.ref_id)];
-                if (it) html += toolItemCardHtml(it);
-            } else if (p.type === 'product'){
-                const it = productsMap[String(p.ref_id)];
-                if (it) html += productItemCardHtml(it);
-            }
-        });
-
-        if (!html){ section.style.display = 'none'; return; }
-        section.style.display = '';
-        grid.innerHTML = html;
-        bindLockedCards();
-        if (readySubjectsForCount.length) loadQuestionCounts(readySubjectsForCount);
+            const html = productIds.map(id => { const it = productsMap[id]; return it ? productItemCardHtml(it) : ''; }).join('');
+            if (html){ productGrid.innerHTML = html; productSection.style.display = ''; } else { productSection.style.display = 'none'; }
+        } else { productSection.style.display = 'none'; }
     }
 
     // ---------------- HỖ TRỢ — nội dung động, quản lý ở trang admin > Hỗ trợ (site_settings key 'support_content') ----------------
@@ -2775,7 +2795,6 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         });
     }
     renderQuickGrid();
-    renderDocContent();
     renderToolContent();
     renderProductContent();
     renderSupportContent();
@@ -2883,7 +2902,13 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         if (sideUserEl) sideUserEl.addEventListener('click', ()=>{ handleAccountClick(); closeMobileMenu(); });
         if (topAvatarEl) topAvatarEl.addEventListener('click', handleAccountClick);
 
+        // sb.auth.onAuthStateChange tự bắn 1 lần ngay khi đăng ký (event 'INITIAL_SESSION'),
+        // trùng với lệnh loadPurchasedDocIds() + renderDocContent() gọi thủ công ngay bên dưới.
+        // Nếu không chặn, cứ mỗi lần tải/tải lại trang chủ sẽ có 2 lệnh render tài liệu chạy song song,
+        // đôi khi lệnh chạy sau "đè" lên kết quả của lệnh chạy trước ngay giữa chừng -> flash sai layout/giao diện.
+        let authListenerFiredOnce = false;
         sb.auth.onAuthStateChange((_event, session) => {
+            if (!authListenerFiredOnce){ authListenerFiredOnce = true; return; }
             currentSession = session;
             updateAccountUI();
             renderAccountPanelInfo();

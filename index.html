@@ -376,6 +376,74 @@
     .acct-order-status.failed, .acct-order-status.cancelled{ background:#fdeeee; color:#e5484d; }
     html[data-theme="dark"] .acct-order-status.failed, html[data-theme="dark"] .acct-order-status.cancelled{ background:#3a2020; color:#ff7875; }
 
+    /* ----- Lịch sử mua hàng (trang riêng, danh sách đầy đủ) ----- */
+    .hist-stats{ display:flex; gap:14px; margin-bottom:16px; flex-wrap:wrap; }
+    .hist-stat{
+        flex:1; min-width:180px; display:flex; align-items:center; gap:14px;
+        background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px 18px;
+    }
+    .hist-stat-ico{
+        width:42px; height:42px; border-radius:12px; flex-shrink:0; font-size:1rem;
+        display:flex; align-items:center; justify-content:center; background:var(--brand-bg); color:var(--brand);
+    }
+    .hist-stat-ico.amount{ background:var(--green-bg); color:var(--green); }
+    .hist-stat-label{ font-size:.76rem; color:var(--ink-mute); font-weight:600; }
+    .hist-stat-value{ font-size:1.25rem; font-weight:800; color:var(--ink); margin-top:1px; }
+
+    .hist-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+    .hist-filters{ display:flex; gap:8px; flex-wrap:wrap; }
+    .hist-filter-chip{
+        display:inline-flex; align-items:center; gap:6px;
+        border:1px solid var(--line); background:var(--card); color:var(--ink-soft);
+        padding:8px 14px; border-radius:999px; font-family:inherit; font-weight:700; font-size:.8rem;
+        cursor:pointer; transition:background .15s ease, color .15s ease, border-color .15s ease; white-space:nowrap;
+    }
+    .hist-filter-chip:hover{ border-color:var(--brand); color:var(--brand); }
+    .hist-filter-chip.active{ background:var(--brand); border-color:var(--brand); color:#fff; }
+    .hist-search{
+        display:flex; align-items:center; gap:9px; background:var(--card); border:1px solid var(--line);
+        border-radius:12px; padding:9px 14px; min-width:220px; flex:0 0 auto;
+    }
+    .hist-search i{ color:var(--ink-mute); font-size:.82rem; }
+    .hist-search input{
+        border:none; outline:none; background:transparent; color:var(--ink); font-family:inherit;
+        font-size:.84rem; width:100%;
+    }
+    .hist-search input::placeholder{ color:var(--ink-mute); }
+
+    .hist-row{
+        display:flex; align-items:center; gap:14px; padding:15px 6px; border-bottom:1px solid var(--line);
+        transition:background .15s ease; border-radius:12px;
+    }
+    .hist-row:last-child{ border-bottom:none; }
+    a.hist-row{ text-decoration:none; color:inherit; cursor:pointer; }
+    a.hist-row:hover{ background:var(--brand-bg); padding-left:12px; padding-right:12px; margin:0 -6px; }
+    .hist-icon{
+        width:44px; height:44px; border-radius:13px; flex-shrink:0; font-size:1rem;
+        display:flex; align-items:center; justify-content:center;
+    }
+    .hist-icon.type-subscription{ background:var(--amber-bg); color:var(--amber); }
+    .hist-icon.type-document{ background:var(--brand-bg); color:var(--brand); }
+    .hist-icon.type-course{ background:#f0e7ff; color:#8b5cf6; }
+    html[data-theme="dark"] .hist-icon.type-course{ background:#2e2140; color:#b794ff; }
+    .hist-icon.type-other{ background:var(--line); color:var(--ink-mute); }
+
+    .hist-body{ flex:1; min-width:0; }
+    .hist-title{ font-size:.92rem; font-weight:700; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .hist-meta{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:3px; font-size:.76rem; color:var(--ink-mute); }
+    .hist-meta .hist-dot{ opacity:.5; }
+    .hist-side{ display:flex; flex-direction:column; align-items:flex-end; gap:7px; flex-shrink:0; margin-left:10px; }
+    .hist-amount{ font-size:.92rem; font-weight:800; color:var(--ink); white-space:nowrap; }
+    .hist-arrow{ color:var(--ink-mute); font-size:.75rem; margin-left:4px; flex-shrink:0; }
+
+    @media (max-width:640px){
+        .hist-row{ flex-wrap:wrap; }
+        .hist-icon{ width:38px; height:38px; font-size:.9rem; }
+        .hist-side{ margin-left:0; width:100%; flex-direction:row-reverse; justify-content:space-between; align-items:center; order:3; padding-top:8px; }
+        .hist-toolbar{ flex-direction:column; align-items:stretch; }
+        .hist-search{ min-width:0; }
+    }
+
     .wrap{ max-width:1180px; width:100%; margin:0 auto; padding:36px 28px 60px; flex:1; display:flex; flex-direction:column; }
 
     /* ---------------- hero row ---------------- */
@@ -1131,12 +1199,47 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     <!-- ============ TAB: LỊCH SỬ MUA HÀNG (toàn bộ đơn thành công) ============ -->
     <section class="tab-panel" id="panel-history" style="display:none">
         <div class="sec-head"><h2>Lịch sử mua hàng</h2></div>
+
+        <div class="hist-stats" id="histStats" style="display:none">
+            <div class="hist-stat">
+                <div class="hist-stat-ico"><i class="fa-solid fa-receipt"></i></div>
+                <div>
+                    <div class="hist-stat-label">Tổng số đơn</div>
+                    <div class="hist-stat-value" id="histStatCount">0</div>
+                </div>
+            </div>
+            <div class="hist-stat">
+                <div class="hist-stat-ico amount"><i class="fa-solid fa-sack-dollar"></i></div>
+                <div>
+                    <div class="hist-stat-label">Tổng đã chi tiêu</div>
+                    <div class="hist-stat-value" id="histStatAmount">0đ</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hist-toolbar" id="histToolbar" style="display:none">
+            <div class="hist-filters" id="histFilters">
+                <button type="button" class="hist-filter-chip active" data-histtype="">Tất cả</button>
+                <button type="button" class="hist-filter-chip" data-histtype="subscription"><i class="fa-solid fa-crown"></i> Gói Pro</button>
+                <button type="button" class="hist-filter-chip" data-histtype="document"><i class="fa-solid fa-file-lines"></i> Tài liệu</button>
+                <button type="button" class="hist-filter-chip" data-histtype="course"><i class="fa-solid fa-graduation-cap"></i> Khoá học</button>
+            </div>
+            <div class="hist-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="histSearchInput" placeholder="Tìm theo tên, mã đơn...">
+            </div>
+        </div>
+
         <div class="acct-order-card">
             <div class="acc-loading" id="histOrderLoading">Đang tải lịch sử...</div>
             <div id="histOrderList" style="display:none"></div>
             <div class="acc-empty" id="histOrderEmpty" style="display:none">
                 <i class="fa-solid fa-receipt"></i>
                 <p>Chưa có giao dịch nào thành công.<br>Mọi đơn thanh toán thành công (tài liệu, khoá học, gói Pro) sẽ hiện tại đây.</p>
+            </div>
+            <div class="acc-empty" id="histFilterEmpty" style="display:none">
+                <i class="fa-solid fa-filter-circle-xmark"></i>
+                <p>Không tìm thấy đơn nào khớp với bộ lọc hiện tại.</p>
             </div>
         </div>
     </section>
@@ -2634,15 +2737,96 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     }
 
     // Tab "Lịch sử mua hàng" — toàn bộ đơn (tài liệu + khoá học + gói Pro), chỉ đơn thành công
+    let fullHistoryCache = [];
+    let fullHistoryActiveType = '';
+    let fullHistoryListenersBound = false;
+
+    function fullHistoryRowHtml(row){
+        const meta = orderDisplayMeta(row);
+        const dateSrc = row.paid_at || row.created_at;
+        const dateText = dateSrc ? new Date(dateSrc).toLocaleString('vi-VN') : '';
+        const amountText = Number(row.amount || 0).toLocaleString('vi-VN') + 'đ';
+        const typeCls = ['subscription','document','course'].includes(row.order_type) ? row.order_type : 'other';
+        const inner = `
+            <div class="hist-icon type-${typeCls}"><i class="fa-solid ${meta.icon}"></i></div>
+            <div class="hist-body">
+                <div class="hist-title">${escapeHtmlHome(meta.title)}</div>
+                <div class="hist-meta">
+                    <span>${escapeHtmlHome(dateText)}</span>
+                    ${row.invoice_number ? `<span class="hist-dot">·</span><span>#${escapeHtmlHome(row.invoice_number)}</span>` : ''}
+                </div>
+            </div>
+            <div class="hist-side">
+                <span class="hist-amount">${amountText}</span>
+                <span class="acct-order-status paid">Đã thanh toán</span>
+            </div>`;
+
+        // Nếu tra ra được link tài sản (vd. link tải tài liệu) -> cho bấm vào mở luôn.
+        if (meta.link){
+            return `<a class="hist-row" href="${escapeHtmlHome(meta.link)}" target="_blank" rel="noopener">
+                ${inner}
+                <i class="fa-solid fa-arrow-up-right-from-square hist-arrow"></i>
+            </a>`;
+        }
+        return `<div class="hist-row">${inner}</div>`;
+    }
+
+    function renderFullHistoryList(){
+        const listEl = document.getElementById('histOrderList');
+        const filterEmptyEl = document.getElementById('histFilterEmpty');
+        if (!listEl) return;
+        const q = (document.getElementById('histSearchInput')?.value || '').trim().toLowerCase();
+        let rows = fullHistoryCache;
+        if (fullHistoryActiveType) rows = rows.filter(r => r.order_type === fullHistoryActiveType);
+        if (q){
+            rows = rows.filter(r => {
+                const meta = orderDisplayMeta(r);
+                return (meta.title || '').toLowerCase().includes(q) || (r.invoice_number || '').toLowerCase().includes(q);
+            });
+        }
+        if (!rows.length){
+            listEl.style.display = 'none';
+            if (filterEmptyEl) filterEmptyEl.style.display = 'flex';
+            return;
+        }
+        if (filterEmptyEl) filterEmptyEl.style.display = 'none';
+        listEl.style.display = 'block';
+        listEl.innerHTML = rows.map(fullHistoryRowHtml).join('');
+    }
+
+    function bindFullHistoryToolbar(){
+        if (fullHistoryListenersBound) return;
+        fullHistoryListenersBound = true;
+        const filtersEl = document.getElementById('histFilters');
+        if (filtersEl){
+            filtersEl.addEventListener('click', (e) => {
+                const btn = e.target.closest('.hist-filter-chip');
+                if (!btn || !filtersEl.contains(btn)) return;
+                filtersEl.querySelectorAll('.hist-filter-chip').forEach(b => b.classList.toggle('active', b === btn));
+                fullHistoryActiveType = btn.dataset.histtype || '';
+                renderFullHistoryList();
+            });
+        }
+        const searchEl = document.getElementById('histSearchInput');
+        if (searchEl) searchEl.addEventListener('input', () => renderFullHistoryList());
+    }
+
     async function loadFullPurchaseHistory(){
         const loadingEl = document.getElementById('histOrderLoading');
         const listEl = document.getElementById('histOrderList');
         const emptyEl = document.getElementById('histOrderEmpty');
+        const filterEmptyEl = document.getElementById('histFilterEmpty');
+        const statsEl = document.getElementById('histStats');
+        const toolbarEl = document.getElementById('histToolbar');
         if (!loadingEl || !listEl || !emptyEl) return;
+
+        bindFullHistoryToolbar();
 
         if (!currentSession){
             loadingEl.style.display = 'none';
             listEl.style.display = 'none';
+            if (statsEl) statsEl.style.display = 'none';
+            if (toolbarEl) toolbarEl.style.display = 'none';
             emptyEl.style.display = 'flex';
             return;
         }
@@ -2650,16 +2834,36 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         loadingEl.style.display = 'block';
         listEl.style.display = 'none';
         emptyEl.style.display = 'none';
+        if (filterEmptyEl) filterEmptyEl.style.display = 'none';
+        if (statsEl) statsEl.style.display = 'none';
+        if (toolbarEl) toolbarEl.style.display = 'none';
 
         const rows = await fetchPaidOrders(null, 50);
+        fullHistoryCache = rows;
 
         loadingEl.style.display = 'none';
         if (!rows.length){
             emptyEl.style.display = 'flex';
             return;
         }
-        listEl.style.display = 'block';
-        listEl.innerHTML = rows.map(orderHistoryItemHtml).join('');
+
+        // Thống kê nhanh: tổng số đơn + tổng đã chi tiêu
+        const totalAmount = rows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+        const statCountEl = document.getElementById('histStatCount');
+        const statAmountEl = document.getElementById('histStatAmount');
+        if (statCountEl) statCountEl.textContent = rows.length;
+        if (statAmountEl) statAmountEl.textContent = totalAmount.toLocaleString('vi-VN') + 'đ';
+        if (statsEl) statsEl.style.display = 'flex';
+        if (toolbarEl) toolbarEl.style.display = 'flex';
+
+        // Reset bộ lọc/ô tìm kiếm mỗi lần tải lại danh sách
+        fullHistoryActiveType = '';
+        const filtersEl = document.getElementById('histFilters');
+        if (filtersEl) filtersEl.querySelectorAll('.hist-filter-chip').forEach(b => b.classList.toggle('active', !b.dataset.histtype));
+        const searchEl = document.getElementById('histSearchInput');
+        if (searchEl) searchEl.value = '';
+
+        renderFullHistoryList();
     }
 
     // ---------------- MENU ĐIỀU HƯỚNG — ẩn/hiện + sắp xếp thứ tự tab, quản lý ở trang admin (site_settings) ----------------

@@ -1671,13 +1671,24 @@
     }
 
     // ---------------- MODAL: Nâng cấp Pro (chọn gói kiểu thẻ + danh sách tính năng) ----------------
-    // Danh sách tính năng hiển thị trong popup — sửa trực tiếp mảng này nếu muốn đổi nội dung quảng cáo Premium.
-    const PRO_UPGRADE_FEATURES = [
-        { icon:'fa-solid fa-unlock', title:'Mở khoá toàn bộ đề trắc nghiệm', desc:'Làm không giới hạn mọi đề thi, mọi môn học trong suốt thời gian Premium.' },
-        { icon:'fa-solid fa-list-check', title:'Xem đáp án & giải thích chi tiết', desc:'Không giới hạn số lần xem lời giải sau khi làm bài.' },
-        { icon:'fa-solid fa-file-lines', title:'Tải tài liệu không giới hạn', desc:'Truy cập và tải toàn bộ tài liệu trong thư viện.' },
-        { icon:'fa-solid fa-headset', title:'Hỗ trợ trực tiếp từ quản trị viên', desc:'Ưu tiên phản hồi khi báo lỗi câu hỏi hoặc cần hỗ trợ.' },
+    // Danh sách mặc định — dùng khi admin chưa cấu hình gì trong site_settings (key 'pro_features').
+    const PRO_UPGRADE_FEATURES_DEFAULT = [
+        { title:'Mở khoá toàn bộ đề trắc nghiệm', desc:'Làm không giới hạn mọi đề thi, mọi môn học trong suốt thời gian Premium.' },
+        { title:'Xem đáp án & giải thích chi tiết', desc:'Không giới hạn số lần xem lời giải sau khi làm bài.' },
+        { title:'Tải tài liệu không giới hạn', desc:'Truy cập và tải toàn bộ tài liệu trong thư viện.' },
+        { title:'Hỗ trợ trực tiếp từ quản trị viên', desc:'Ưu tiên phản hồi khi báo lỗi câu hỏi hoặc cần hỗ trợ.' },
     ];
+    let PRO_UPGRADE_FEATURES = PRO_UPGRADE_FEATURES_DEFAULT;
+
+    let proFeaturesConfigPromise = null;
+    // Tải danh sách tính năng do admin cấu hình (trang admin > Cài đặt > "Tính năng gói Pro") — nếu chưa cấu hình thì dùng mặc định ở trên.
+    async function loadProUpgradeFeaturesConfig(){
+        try{
+            const { data, error } = await sb.from('site_settings').select('*').eq('key', 'pro_features').single();
+            const items = (!error && data && data.payload && Array.isArray(data.payload.items)) ? data.payload.items : null;
+            if (items && items.length) PRO_UPGRADE_FEATURES = items;
+        }catch(e){ /* giữ nguyên danh sách mặc định nếu lỗi mạng/chưa có bảng */ }
+    }
 
     let proUpgradeItems = [];
     let proUpgradeSelectedId = null;
@@ -1687,6 +1698,7 @@
         const overlay = document.getElementById('proUpgradeOverlay');
         if (!overlay) return;
         overlay.classList.remove('hidden');
+        if (proFeaturesConfigPromise) await proFeaturesConfigPromise;
 
         const plansEl = document.getElementById('proUpgradePlans');
         plansEl.innerHTML = `<div class="empty-state small"><div class="empty-title">Đang tải gói...</div></div>`;
@@ -2022,6 +2034,7 @@
     renderToolContent();
     renderProductContent();
     renderProContent();
+    proFeaturesConfigPromise = loadProUpgradeFeaturesConfig();
 
     const panels = { home:'panel-home', quiz:'panel-quiz', doc:'panel-doc', tool:'panel-tool', product:'panel-product', account:'panel-account', support:'panel-support' };
     const TAB_TITLES = {

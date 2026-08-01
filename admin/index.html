@@ -815,11 +815,8 @@ textarea{resize:vertical;}
                 <div class="side-item settings-item" id="nav_product" onclick="showContentManager('product')">
                     <span class="set-ico">🛍️</span><span class="name">Sản phẩm</span>
                 </div>
-                <div class="side-item settings-item" id="nav_pro" onclick="showContentManager('pro')">
-                    <span class="set-ico">👑</span><span class="name">Gói Pro</span>
-                </div>
                 <div class="side-item settings-item" id="navSepayPkg" onclick="showSepayPackages()">
-                    <span class="set-ico">💳</span><span class="name">Gói thanh toán (SePay)</span>
+                    <span class="set-ico">👑</span><span class="name">Gói Pro</span>
                 </div>
                 <div class="side-item settings-item" id="navAccounts" onclick="showAccountsManager()">
                     <span class="set-ico">👤</span><span class="name">Tài khoản</span>
@@ -975,13 +972,13 @@ textarea{resize:vertical;}
         <!-- ================= QUẢN LÝ GÓI THANH TOÁN TỰ ĐỘNG (bảng pro_packages, dùng cho SePay) ================= -->
         <div id="sepayPackagesPanel" class="hidden">
             <div class="subj-mgr-head">
-                <h2>💳 Gói thanh toán (SePay)</h2>
-                <p class="hint">Đây là bảng giá gốc (bảng <code>pro_packages</code>) mà cổng thanh toán SePay dùng để tính tiền — sửa giá ở đây thay vì trong Supabase. Ở mục "Gói Pro", khi bạn chọn một gói trong danh sách này cho thẻ giới thiệu, nút "Mua ngay" sẽ mở thẳng cổng SePay với đúng số tiền bên dưới.</p>
+                <h2>👑 Gói Pro</h2>
+                <p class="hint">Quản lý toàn bộ gói Pro ở một nơi duy nhất: giá & thời hạn (dùng để tính tiền qua SePay) và cả nội dung hiển thị trên trang chủ (mô tả, icon, màu, có nổi bật hay không). Sửa/thêm/xoá ở đây sẽ tự động cập nhật cả trang chủ lẫn cổng thanh toán, không cần làm gì thêm ở nơi khác.</p>
             </div>
             <div class="subj-mgr-grid">
                 <div class="subj-mgr-col" style="max-width:460px;">
                     <div class="subj-mgr-col-head">
-                        <h4><i class="fa-solid fa-credit-card"></i> Danh sách gói</h4>
+                        <h4><i class="fa-solid fa-crown"></i> Danh sách gói</h4>
                         <button class="side-add" onclick="openSepayPackageForm()">+ Thêm gói</button>
                     </div>
                     <div id="sepayPkgList" class="side-list subj-mgr-list"></div>
@@ -991,18 +988,46 @@ textarea{resize:vertical;}
                     <div id="sepayPkgForm" class="mini-form show" style="display:flex;">
                         <div class="mini-form-title" id="sepayPkgFormTitle">Thêm gói</div>
                         <input type="hidden" id="sepayPkgId" value="">
-                        <label>Tên gói</label>
-                        <input id="sepayPkgName" placeholder="VD: Gói Premium 1 tháng">
+
+                        <label>Icon (mã lớp Font Awesome)</label>
+                        <input id="sepayPkgIcon" placeholder="fa-solid fa-crown" oninput="updateSepayPkgPreview()">
+                        <div class="hint" style="margin:2px 0 0;">Xem mã icon tại <a href="https://fontawesome.com/search" target="_blank" rel="noopener">fontawesome.com/search</a>.</div>
+
+                        <label style="margin-top:10px;">Màu</label>
+                        <div class="color-swatch-row" id="sepayPkgColorRow"></div>
+
+                        <label style="margin-top:10px;">Tên gói (hiển thị trên thẻ)</label>
+                        <input id="sepayPkgName" placeholder="VD: Gói Premium 1 tháng" oninput="updateSepayPkgPreview()">
+
+                        <label style="margin-top:10px;">Mô tả ngắn</label>
+                        <input id="sepayPkgDesc" placeholder="VD: Mở khoá toàn bộ tài liệu & trắc nghiệm" oninput="updateSepayPkgPreview()">
+
                         <label style="margin-top:10px;">Giá (VNĐ)</label>
-                        <input id="sepayPkgPrice" type="number" min="0" step="1000" placeholder="VD: 99000">
+                        <input id="sepayPkgPrice" type="number" min="0" step="1000" placeholder="VD: 99000" oninput="updateSepayPkgPreview()">
                         <div class="hint" style="margin-top:4px;">Nhập số nguyên, không có dấu chấm. VD: 99000 = 99.000đ.</div>
+
                         <label style="margin-top:10px;">Thời hạn (số ngày)</label>
-                        <input id="sepayPkgDuration" type="number" min="1" step="1" placeholder="VD: 30">
+                        <input id="sepayPkgDuration" type="number" min="1" step="1" placeholder="VD: 30" oninput="updateSepayPkgPreview()">
                         <div class="hint" style="margin-top:4px;">VD: 30 = 1 tháng, 365 = 1 năm, 7 = 1 tuần.</div>
+
+                        <label style="margin-top:10px;">Thứ tự hiển thị</label>
+                        <input id="sepayPkgOrder" type="number" step="1" placeholder="0">
+                        <div class="hint" style="margin-top:4px;">Số nhỏ hơn hiện trước. Để trống hoặc 0 nếu không cần sắp xếp riêng (sẽ xếp theo giá tăng dần).</div>
+
                         <label style="margin-top:10px;display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="sepayPkgActive" style="width:auto;" checked>
-                            <span>Đang hoạt động (hiển thị cho khách chọn mua)</span>
+                            <input type="checkbox" id="sepayPkgPopular" style="width:auto;" onchange="updateSepayPkgPreview()">
+                            <span>Đánh dấu "Phổ biến nhất" (nổi bật màu amber trên trang chủ)</span>
                         </label>
+                        <label style="margin-top:6px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="sepayPkgActive" style="width:auto;" checked>
+                            <span>Đang hoạt động (hiển thị trên trang chủ & cho khách chọn mua)</span>
+                        </label>
+
+                        <div class="settings-preview">
+                            <div class="prev-ico" id="sepayPkgPreviewIco"><i class="fa-solid fa-crown"></i></div>
+                            <div class="prev-text"><b id="sepayPkgPreviewTitle">Tên gói</b><span id="sepayPkgPreviewDesc">Mô tả · Giá / thời hạn</span></div>
+                        </div>
+
                         <div class="mini-actions">
                             <button class="btn-mini-save" onclick="saveSepayPackage()">Lưu</button>
                             <button class="btn-mini-cancel" onclick="closeSepayPackageForm()">Hủy</button>
@@ -3411,9 +3436,15 @@ async function loadProPackagesCache(force){
     return proPackagesCache;
 }
 
-// ---------- QUẢN LÝ GÓI THANH TOÁN TỰ ĐỘNG (bảng pro_packages) ----------
+// ---------- QUẢN LÝ GÓI PRO (bảng pro_packages — gộp giá SePay + hiển thị trang chủ) ----------
+const SEPAY_PKG_COLOR_OPTIONS = ['indigo','purple','green','amber','blue','red'];
+const SEPAY_PKG_SELECT_FULL = 'id, name, description, price, duration_days, icon, color, popular, order_no, active';
+let sepayPkgSchemaOk = true; // false nếu bảng pro_packages chưa chạy migration 0002 (thiếu cột hiển thị)
+
 function showSepayPackages(){
     showAdminPanel('sepayPackagesPanel', 'navSepayPkg');
+    const colorRow = document.getElementById('sepayPkgColorRow');
+    if (colorRow && !colorRow.innerHTML.trim()) colorRow.innerHTML = sepayPkgColorSwatchesHtml();
     closeSepayPackageForm();
     loadSepayPackagesList();
 }
@@ -3422,27 +3453,41 @@ async function loadSepayPackagesList(){
     const msgEl = document.getElementById('sepayPkgMsg');
     msgEl.innerText = '';
     box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Đang tải...</div>`;
-    const { data, error } = await sb.from('pro_packages').select('id, name, price, duration_days, active').order('price', { ascending:true });
+
+    let { data, error } = await sb.from('pro_packages').select(SEPAY_PKG_SELECT_FULL).order('order_no', { ascending:true }).order('price', { ascending:true });
+    if (error && (error.code === '42703' || /column .* does not exist/i.test(error.message || ''))){
+        // Bảng chưa chạy migration 0002_pro_packages_display_fields.sql — dùng tạm các cột cũ.
+        sepayPkgSchemaOk = false;
+        const fallback = await sb.from('pro_packages').select('id, name, price, duration_days, active').order('price', { ascending:true });
+        data = fallback.data; error = fallback.error;
+    } else {
+        sepayPkgSchemaOk = true;
+    }
     if (error){
         box.innerHTML = '';
         msgEl.style.color = '#e5484d';
         msgEl.innerText = 'Lỗi tải danh sách gói: ' + error.message;
         return;
     }
+    if (!sepayPkgSchemaOk){
+        msgEl.style.color = '#b45309';
+        msgEl.innerText = '⚠️ Bảng pro_packages chưa có các cột hiển thị (mô tả, icon, màu...). Chạy file supabase/migrations/0002_pro_packages_display_fields.sql trong Supabase SQL Editor để dùng đầy đủ tính năng.';
+    }
     renderSepayPackagesList(data || []);
-    // Đồng bộ lại cache dùng cho dropdown ở mục "Gói Pro"
     await loadProPackagesCache(true);
 }
 function sepayPkgRowHtml(pkg){
     const priceText = Number(pkg.price || 0).toLocaleString('vi-VN') + 'đ';
     const durationText = formatDurationAdmin(pkg.duration_days);
-    const activeBadge = pkg.active === false
-        ? '<span class="hint-inline" style="color:#e5484d;"> · Đang ẩn</span>'
-        : '';
+    const color = pkg.color || 'amber';
+    const icon = pkg.icon || 'fa-solid fa-crown';
+    const badges = [];
+    if (pkg.active === false) badges.push('<span class="hint-inline" style="color:#e5484d;"> · Đang ẩn</span>');
+    if (pkg.popular) badges.push('<span class="hint-inline" style="color:#b45309;"> · Phổ biến nhất</span>');
     return `
         <div class="side-item" data-id="${pkg.id}">
-            <span class="prev-ico color-swatch amber" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="fa-solid fa-credit-card"></i></span>
-            <span class="name">${escapeHtml(pkg.name || '(chưa đặt tên)')}<span class="hint-inline"> · ${priceText} / ${durationText}${activeBadge}</span></span>
+            <span class="prev-ico color-swatch ${color}" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="${escapeHtml(icon)}"></i></span>
+            <span class="name">${escapeHtml(pkg.name || '(chưa đặt tên)')}<span class="hint-inline"> · ${priceText} / ${durationText}${badges.join('')}</span></span>
             <span class="right-cluster">
                 <span class="menu-wrap">
                     <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleSepayPkgMenu('${pkg.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
@@ -3478,41 +3523,86 @@ function closeAllSepayPkgMenus(){
 }
 document.addEventListener('click', () => closeAllSepayPkgMenus());
 
+function sepayPkgColorSwatchesHtml(){
+    return SEPAY_PKG_COLOR_OPTIONS.map(c => `<div class="color-swatch ${c}" data-color="${c}" onclick="pickSepayPkgColor('${c}')">🎨</div>`).join('');
+}
+function pickSepayPkgColor(color){
+    document.querySelectorAll('#sepayPkgColorRow .color-swatch').forEach(el=>{
+        el.classList.toggle('selected', el.dataset.color === color);
+    });
+    updateSepayPkgPreview();
+}
+function updateSepayPkgPreview(){
+    const icon = document.getElementById('sepayPkgIcon').value.trim() || 'fa-solid fa-crown';
+    const title = document.getElementById('sepayPkgName').value.trim() || '—';
+    const desc = document.getElementById('sepayPkgDesc').value.trim();
+    const price = Number(document.getElementById('sepayPkgPrice').value || 0);
+    const duration = Number(document.getElementById('sepayPkgDuration').value || 0);
+    const selected = document.querySelector('#sepayPkgColorRow .color-swatch.selected');
+    const color = selected ? selected.dataset.color : 'amber';
+    const priceText = (price > 0 && duration > 0) ? (price.toLocaleString('vi-VN') + 'đ / ' + formatDurationAdmin(duration)) : '';
+    document.getElementById('sepayPkgPreviewIco').innerHTML = `<i class="${escapeHtml(icon)}"></i>`;
+    document.getElementById('sepayPkgPreviewIco').className = 'prev-ico color-swatch ' + color;
+    document.getElementById('sepayPkgPreviewTitle').innerText = title;
+    document.getElementById('sepayPkgPreviewDesc').innerText = [desc, priceText].filter(Boolean).join(' · ');
+}
+
 function openSepayPackageForm(id){
     const form = document.getElementById('sepayPkgForm');
     const title = document.getElementById('sepayPkgFormTitle');
     const pkg = id ? sepayPkgListCache.find(p => String(p.id) === String(id)) : null;
     document.getElementById('sepayPkgId').value = pkg ? pkg.id : '';
-    document.getElementById('sepayPkgName').value = pkg ? pkg.name : '';
+    document.getElementById('sepayPkgName').value = pkg ? (pkg.name || '') : '';
+    document.getElementById('sepayPkgDesc').value = pkg ? (pkg.description || '') : '';
+    document.getElementById('sepayPkgIcon').value = pkg ? (pkg.icon || '') : '';
     document.getElementById('sepayPkgPrice').value = pkg ? pkg.price : '';
     document.getElementById('sepayPkgDuration').value = pkg ? pkg.duration_days : '';
+    document.getElementById('sepayPkgOrder').value = pkg && pkg.order_no ? pkg.order_no : '';
+    document.getElementById('sepayPkgPopular').checked = pkg ? !!pkg.popular : false;
     document.getElementById('sepayPkgActive').checked = pkg ? (pkg.active !== false) : true;
+    pickSepayPkgColor(pkg ? (pkg.color || 'amber') : 'amber');
     title.innerText = pkg ? ('Sửa gói: ' + pkg.name) : 'Thêm gói mới';
     form.style.display = 'flex';
     form.scrollIntoView({ behavior:'smooth', block:'center' });
+    updateSepayPkgPreview();
     document.getElementById('sepayPkgName').focus();
 }
 function closeSepayPackageForm(){
     document.getElementById('sepayPkgId').value = '';
     document.getElementById('sepayPkgName').value = '';
+    document.getElementById('sepayPkgDesc').value = '';
+    document.getElementById('sepayPkgIcon').value = '';
     document.getElementById('sepayPkgPrice').value = '';
     document.getElementById('sepayPkgDuration').value = '';
+    document.getElementById('sepayPkgOrder').value = '';
+    document.getElementById('sepayPkgPopular').checked = false;
     document.getElementById('sepayPkgActive').checked = true;
     document.getElementById('sepayPkgFormTitle').innerText = 'Thêm gói mới';
+    pickSepayPkgColor('amber');
+    updateSepayPkgPreview();
 }
 async function saveSepayPackage(){
     const msgEl = document.getElementById('sepayPkgMsg');
     const id = document.getElementById('sepayPkgId').value;
     const name = document.getElementById('sepayPkgName').value.trim();
+    const description = document.getElementById('sepayPkgDesc').value.trim();
+    const icon = document.getElementById('sepayPkgIcon').value.trim();
     const price = Number(document.getElementById('sepayPkgPrice').value);
     const duration_days = Number(document.getElementById('sepayPkgDuration').value);
+    const order_no = Number(document.getElementById('sepayPkgOrder').value) || 0;
+    const popular = document.getElementById('sepayPkgPopular').checked;
     const active = document.getElementById('sepayPkgActive').checked;
+    const selected = document.querySelector('#sepayPkgColorRow .color-swatch.selected');
+    const color = selected ? selected.dataset.color : 'amber';
 
     if (!name){ showMsg('Vui lòng nhập tên gói.', 'err'); return; }
     if (!price || price <= 0){ showMsg('Vui lòng nhập giá hợp lệ (lớn hơn 0).', 'err'); return; }
     if (!duration_days || duration_days <= 0){ showMsg('Vui lòng nhập thời hạn hợp lệ (số ngày, lớn hơn 0).', 'err'); return; }
 
-    const payload = { name, price, duration_days, active };
+    let payload = { name, price, duration_days, active };
+    if (sepayPkgSchemaOk){
+        payload = Object.assign(payload, { description, icon: icon || 'fa-solid fa-crown', color, popular, order_no });
+    }
     let error;
     if (id){
         ({ error } = await sb.from('pro_packages').update(payload).eq('id', id));
@@ -3533,8 +3623,8 @@ function deleteSepayPackage(id){
     const pkg = sepayPkgListCache.find(p => String(p.id) === String(id));
     const name = pkg ? pkg.name : '';
     showConfirm(
-        'Xóa gói thanh toán?',
-        `Xóa "${name}"? Nếu gói này đang được gán cho một thẻ "Gói Pro", nút "Mua ngay" của thẻ đó sẽ ngừng hoạt động cho tới khi bạn gán lại gói khác. Không thể hoàn tác.`,
+        'Xóa gói Pro?',
+        `Xóa "${name}"? Thẻ này sẽ biến mất khỏi trang chủ ngay và không thể hoàn tác. Nếu đã từng có khách mua gói này, hệ thống có thể chặn xóa để giữ lịch sử đơn hàng — khi đó hãy dùng "Sửa" và tắt "Đang hoạt động" thay vì xóa.`,
         async () => {
             const { error } = await sb.from('pro_packages').delete().eq('id', id);
             if (error){ showMsg('Lỗi xóa: ' + error.message, 'err'); return; }

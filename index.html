@@ -291,7 +291,7 @@
     .acc-plan-badge.premium{ background:linear-gradient(135deg,#f5a524,#ffbd4a); color:#5a3c05; }
     .acc-plan-badge.premium::before{ content:'👑'; }
 
-    /* ----- đổi mật khẩu ----- */
+    /* ----- nút "đi tới trang Tài khoản" trong popup nhanh ----- */
     .acc-changepw-btn{
         width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
         background:var(--brand-bg); color:var(--brand); border:none; border-radius:12px;
@@ -299,22 +299,47 @@
         margin-top:14px; transition:background .15s ease, color .15s ease;
     }
     .acc-changepw-btn:hover{ background:var(--brand); color:#fff; }
-    .acc-pw-form{ margin-top:12px; display:flex; flex-direction:column; gap:8px; animation:accPop .15s ease; }
-    .acc-pw-form input{
-        width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
-        background:var(--bg); color:var(--ink); font-family:inherit; font-size:.85rem;
+
+    /* ----- đổi mật khẩu (trang Tài khoản đầy đủ) ----- */
+    .acctpw-card{
+        background:var(--card); border:1px solid var(--line); border-radius:20px;
+        padding:22px 24px; margin-bottom:28px;
     }
-    .acc-pw-form input:focus{ outline:none; border-color:var(--brand); }
-    .acc-pw-msg{ font-size:.78rem; min-height:1.1em; font-weight:600; }
-    .acc-pw-msg.err{ color:#e5484d; }
-    .acc-pw-msg.ok{ color:var(--green); }
-    .acc-pw-actions{ display:flex; gap:8px; }
-    .acc-pw-actions button{ flex:1; padding:10px; border-radius:10px; border:none; font-family:inherit; font-weight:700; font-size:.82rem; cursor:pointer; transition:background .15s ease; }
-    .acc-pw-cancel{ background:var(--bg); color:var(--ink-soft); border:1px solid var(--line); }
-    .acc-pw-cancel:hover{ background:var(--line); }
-    .acc-pw-save{ background:var(--brand); color:#fff; }
-    .acc-pw-save:hover{ background:#3d59e6; }
-    .acc-pw-save:disabled{ opacity:.6; cursor:not-allowed; }
+    .acctpw-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:14px; }
+    .acctpw-field{ display:flex; flex-direction:column; gap:6px; }
+    .acctpw-field label{ font-size:.78rem; font-weight:700; color:var(--ink-mute); }
+    .acctpw-field input{
+        width:100%; padding:12px 14px; border-radius:12px; border:1.5px solid var(--line);
+        background:var(--bg); color:var(--ink); font-family:inherit; font-size:.88rem;
+    }
+    .acctpw-field input:focus{ outline:none; border-color:var(--brand); }
+    .acctpw-msg{ font-size:.82rem; font-weight:600; min-height:1.3em; margin-bottom:10px; }
+    .acctpw-msg.err{ color:#e5484d; }
+    .acctpw-msg.ok{ color:var(--green); }
+    .acctpw-save-btn{
+        display:inline-flex; align-items:center; gap:8px;
+        padding:12px 22px; border-radius:12px; border:none;
+        background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff;
+        font-family:inherit; font-weight:700; font-size:.86rem; cursor:pointer;
+        transition:filter .15s ease;
+    }
+    .acctpw-save-btn:hover{ filter:brightness(1.06); }
+    .acctpw-save-btn:disabled{ opacity:.65; cursor:not-allowed; }
+    @media (max-width: 780px){ .acctpw-grid{ grid-template-columns:1fr; } }
+
+    /* ----- lịch sử giao dịch (trang Tài khoản đầy đủ) ----- */
+    .acct-order-card{
+        background:var(--card); border:1px solid var(--line); border-radius:20px;
+        padding:6px 24px; margin-bottom:28px;
+    }
+    .acct-order-status{
+        margin-left:auto; flex-shrink:0; font-size:.74rem; font-weight:800;
+        padding:4px 11px; border-radius:999px; white-space:nowrap;
+    }
+    .acct-order-status.paid{ background:var(--green-bg); color:var(--green); }
+    .acct-order-status.pending{ background:var(--amber-bg); color:var(--amber); }
+    .acct-order-status.failed, .acct-order-status.cancelled{ background:#fdeeee; color:#e5484d; }
+    html[data-theme="dark"] .acct-order-status.failed, html[data-theme="dark"] .acct-order-status.cancelled{ background:#3a2020; color:#ff7875; }
 
     .wrap{ max-width:1180px; width:100%; margin:0 auto; padding:36px 28px 60px; flex:1; display:flex; flex-direction:column; }
 
@@ -502,6 +527,42 @@
     .card:hover .card-arrow{ background:var(--brand); color:#fff; }
     .c-th:hover .card-arrow{ background:#7c5cfc; }
     .c-ktct:hover .card-arrow{ background:var(--green); }
+
+    /* ---------------- gói pro (bảng giá trong tab Tài khoản) ---------------- */
+    .pro-pkg-grid{
+        display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;
+        margin-bottom:36px;
+    }
+    .pro-pkg-card{
+        position:relative; background:var(--card); border:1.5px solid var(--line); border-radius:20px;
+        padding:24px 22px; display:flex; flex-direction:column; gap:10px;
+        cursor:pointer; box-shadow:var(--shadow); overflow:hidden;
+        transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+    }
+    .pro-pkg-card:hover, .pro-pkg-card:focus-visible{ transform:translateY(-4px); box-shadow:var(--shadow-hov); border-color:var(--brand); outline:none; }
+    .pro-pkg-card.popular{ border-color:var(--amber); box-shadow:0 0 0 2px var(--amber-bg); }
+    .pro-pkg-ribbon{
+        position:absolute; top:14px; right:-30px; transform:rotate(35deg);
+        background:linear-gradient(135deg,#f5a524,#ffbd4a); color:#5a3c05;
+        font-size:.68rem; font-weight:800; padding:3px 34px;
+    }
+    .pro-pkg-icon{
+        width:46px; height:46px; border-radius:13px;
+        display:flex; align-items:center; justify-content:center; font-size:1.2rem;
+    }
+    .pro-pkg-name{ font-size:1.02rem; font-weight:800; color:var(--ink); }
+    .pro-pkg-desc{ font-size:.82rem; color:var(--ink-mute); line-height:1.5; min-height:2.3em; }
+    .pro-pkg-price-row{ display:flex; align-items:baseline; gap:6px; margin-top:auto; }
+    .pro-pkg-price{ font-size:1.5rem; font-weight:900; color:var(--ink); letter-spacing:-.02em; }
+    .pro-pkg-duration{ font-size:.8rem; color:var(--ink-mute); font-weight:600; }
+    .pro-pkg-cta{
+        display:flex; align-items:center; gap:6px; font-size:.85rem; font-weight:700;
+        margin-top:6px; padding-top:12px; border-top:1px solid var(--line);
+    }
+    .pro-pkg-cta i{ font-size:.72rem; transition:transform .2s ease; }
+    .pro-pkg-card:hover .pro-pkg-cta i{ transform:translateX(3px); }
+    @media (max-width: 1020px){ .pro-pkg-grid{ grid-template-columns:repeat(2, 1fr); } }
+    @media (max-width: 640px){ .pro-pkg-grid{ grid-template-columns:1fr; } }
 
     /* ---------------- footer ---------------- */
     footer{
@@ -896,9 +957,39 @@
             <div class="acc-info-row" id="acctPageBalanceRow" style="display:none"><span class="label">Số dư</span><span class="value" id="acctPageBalanceValue">—</span></div>
         </div>
 
+        <div class="sec-head"><h2>Đổi mật khẩu</h2></div>
+        <div class="acctpw-card">
+            <div class="acctpw-grid">
+                <div class="acctpw-field">
+                    <label for="acctPwOld">Mật khẩu hiện tại</label>
+                    <input type="password" id="acctPwOld" placeholder="Nhập mật khẩu hiện tại" autocomplete="current-password">
+                </div>
+                <div class="acctpw-field">
+                    <label for="acctPwNew">Mật khẩu mới</label>
+                    <input type="password" id="acctPwNew" placeholder="Ít nhất 6 ký tự" autocomplete="new-password">
+                </div>
+                <div class="acctpw-field">
+                    <label for="acctPwConfirm">Nhập lại mật khẩu mới</label>
+                    <input type="password" id="acctPwConfirm" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password">
+                </div>
+            </div>
+            <div class="acctpw-msg" id="acctPwMsg"></div>
+            <button class="acctpw-save-btn" id="acctPwSave" type="button"><i class="fa-solid fa-key"></i> Lưu mật khẩu mới</button>
+        </div>
+
         <div class="sec-head"><h2>Nâng cấp gói Pro</h2></div>
-        <div id="proGrid" class="grid">
+        <div id="proGrid" class="pro-pkg-grid">
             <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
+        </div>
+
+        <div class="sec-head"><h2>Lịch sử giao dịch</h2></div>
+        <div class="acct-order-card">
+            <div class="acc-loading" id="acctOrderLoading">Đang tải lịch sử...</div>
+            <div id="acctOrderList" style="display:none"></div>
+            <div class="acc-empty" id="acctOrderEmpty" style="display:none">
+                <i class="fa-solid fa-receipt"></i>
+                <p>Chưa có giao dịch nào.<br>Lịch sử nâng cấp gói Pro của bạn sẽ hiện tại đây sau khi thanh toán.</p>
+            </div>
         </div>
     </section>
 
@@ -1017,19 +1108,9 @@
                 <div class="acc-info-row"><span class="label">Gói sử dụng</span><span class="value"><span class="acc-plan-badge" id="accPlanBadge">Miễn phí</span></span></div>
                 <div class="acc-info-row" id="accBalanceRow" style="display:none"><span class="label">Số dư</span><span class="value" id="accBalanceValue">—</span></div>
                 <div class="acc-info-row"><span class="label">Trạng thái</span><span class="value" style="color:var(--green)">Đã xác thực</span></div>
-
-                <button class="acc-changepw-btn" id="accChangePwBtn" type="button">
-                    <i class="fa-solid fa-key"></i> Đổi mật khẩu
+                <button class="acc-changepw-btn" type="button" onclick="closeAccountModal(); goTab('account');">
+                    <i class="fa-solid fa-gear"></i> Đổi mật khẩu &amp; quản lý gói Pro
                 </button>
-                <div class="acc-pw-form" id="accPwForm" style="display:none;">
-                    <input type="password" id="accPwNew" placeholder="Mật khẩu mới (ít nhất 6 ký tự)" autocomplete="new-password">
-                    <input type="password" id="accPwConfirm" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password">
-                    <div class="acc-pw-msg" id="accPwMsg"></div>
-                    <div class="acc-pw-actions">
-                        <button type="button" class="acc-pw-cancel" id="accPwCancel">Huỷ</button>
-                        <button type="button" class="acc-pw-save" id="accPwSave">Lưu mật khẩu mới</button>
-                    </div>
-                </div>
             </div>
             <div class="acc-panel" id="accPanel-history">
                 <div class="acc-loading" id="accHistoryLoading">Đang tải lịch sử...</div>
@@ -1196,7 +1277,6 @@
         }
         // ----- Số dư: số dư tiền (VNĐ) của tài khoản, lấy từ bảng profiles -----
         loadAndRenderBalance(user.id, 'accBalanceRow', 'accBalanceValue');
-        closePwForm();
 
         switchAccTab('info');
         accOverlay.classList.add('show');
@@ -1272,66 +1352,71 @@
         accLogoutBtn.disabled = false;
     });
 
-    // ---------------- Đổi mật khẩu (ngay trong tab Thông tin) ----------------
-    const accChangePwBtn = document.getElementById('accChangePwBtn');
-    const accPwForm = document.getElementById('accPwForm');
-    const accPwNew = document.getElementById('accPwNew');
-    const accPwConfirm = document.getElementById('accPwConfirm');
-    const accPwMsg = document.getElementById('accPwMsg');
-    const accPwSave = document.getElementById('accPwSave');
-    const accPwCancel = document.getElementById('accPwCancel');
+    // ---------------- Đổi mật khẩu (trong tab Tài khoản, trang đầy đủ) ----------------
+    const acctPwOld = document.getElementById('acctPwOld');
+    const acctPwNew = document.getElementById('acctPwNew');
+    const acctPwConfirm = document.getElementById('acctPwConfirm');
+    const acctPwMsg = document.getElementById('acctPwMsg');
+    const acctPwSave = document.getElementById('acctPwSave');
 
-    function closePwForm(){
-        if (!accPwForm) return;
-        accPwForm.style.display = 'none';
-        if (accPwNew) accPwNew.value = '';
-        if (accPwConfirm) accPwConfirm.value = '';
-        if (accPwMsg){ accPwMsg.textContent = ''; accPwMsg.className = 'acc-pw-msg'; }
-    }
+    if (acctPwSave) acctPwSave.addEventListener('click', async ()=>{
+        const oldPw = acctPwOld.value;
+        const pw1 = acctPwNew.value;
+        const pw2 = acctPwConfirm.value;
+        acctPwMsg.className = 'acctpw-msg';
 
-    if (accChangePwBtn) accChangePwBtn.addEventListener('click', ()=>{
-        const willOpen = accPwForm.style.display === 'none';
-        closePwForm();
-        if (willOpen){
-            accPwForm.style.display = 'flex';
-            accPwNew.focus();
+        if (!oldPw){
+            acctPwMsg.textContent = 'Vui lòng nhập mật khẩu hiện tại.';
+            acctPwMsg.classList.add('err');
+            return;
         }
-    });
-    if (accPwCancel) accPwCancel.addEventListener('click', closePwForm);
-
-    if (accPwSave) accPwSave.addEventListener('click', async ()=>{
-        const pw1 = accPwNew.value;
-        const pw2 = accPwConfirm.value;
-        accPwMsg.className = 'acc-pw-msg';
-
         if (pw1.length < 6){
-            accPwMsg.textContent = 'Mật khẩu phải có ít nhất 6 ký tự.';
-            accPwMsg.classList.add('err');
+            acctPwMsg.textContent = 'Mật khẩu mới phải có ít nhất 6 ký tự.';
+            acctPwMsg.classList.add('err');
             return;
         }
         if (pw1 !== pw2){
-            accPwMsg.textContent = 'Mật khẩu nhập lại không khớp.';
-            accPwMsg.classList.add('err');
+            acctPwMsg.textContent = 'Mật khẩu mới nhập lại không khớp.';
+            acctPwMsg.classList.add('err');
+            return;
+        }
+        if (!currentSession || !currentSession.user || !currentSession.user.email){
+            acctPwMsg.textContent = 'Không xác định được tài khoản, vui lòng đăng nhập lại.';
+            acctPwMsg.classList.add('err');
             return;
         }
 
-        accPwSave.disabled = true;
-        accPwSave.textContent = 'Đang lưu...';
+        acctPwSave.disabled = true;
+        acctPwSave.textContent = 'Đang kiểm tra mật khẩu hiện tại...';
+
+        // Xác thực lại bằng mật khẩu hiện tại trước khi cho phép đổi, tránh trường hợp
+        // ai đó chiếm được phiên đăng nhập (session) rồi tự đổi mật khẩu người dùng.
+        const { error: verifyErr } = await sb.auth.signInWithPassword({ email: currentSession.user.email, password: oldPw });
+        if (verifyErr){
+            acctPwSave.disabled = false;
+            acctPwSave.textContent = 'Lưu mật khẩu mới';
+            acctPwMsg.textContent = 'Mật khẩu hiện tại không đúng.';
+            acctPwMsg.classList.add('err');
+            return;
+        }
+
+        acctPwSave.textContent = 'Đang lưu...';
         const { error } = await sb.auth.updateUser({ password: pw1 });
-        accPwSave.disabled = false;
-        accPwSave.textContent = 'Lưu mật khẩu mới';
+        acctPwSave.disabled = false;
+        acctPwSave.textContent = 'Lưu mật khẩu mới';
 
         if (error){
-            accPwMsg.textContent = 'Lỗi: ' + error.message;
-            accPwMsg.classList.add('err');
+            acctPwMsg.textContent = 'Lỗi: ' + error.message;
+            acctPwMsg.classList.add('err');
         } else {
-            accPwMsg.textContent = '✔ Đổi mật khẩu thành công!';
-            accPwMsg.classList.add('ok');
-            setTimeout(closePwForm, 2000);
+            acctPwMsg.textContent = '✔ Đổi mật khẩu thành công!';
+            acctPwMsg.classList.add('ok');
+            acctPwOld.value = ''; acctPwNew.value = ''; acctPwConfirm.value = '';
         }
     });
 
     let currentTabKey = 'home';
+
 
     // Icon/màu riêng cho các mã môn quen thuộc (chỉ để đẹp hơn, KHÔNG bắt buộc phải tồn tại).
     // Môn có mã không nằm trong danh sách này vẫn hiện bình thường, chỉ lấy icon/màu xoay vòng ở PALETTE bên dưới.
@@ -1657,16 +1742,18 @@
     function proPackageCardHtml(pkg){
         const style = QL_COLOR_MAP[pkg.color] || QL_COLOR_MAP.amber;
         const isHighlight = !!pkg.popular;
-        const priceText = formatHomePrice(pkg.duration_days, pkg.price);
+        const idAttr = escapeHtmlHome(String(pkg.id));
         return `
-            <div class="card${isHighlight ? ' pro-highlight' : ''}" role="button" tabindex="0" onclick="thanhToanGoiThanhVien('${escapeHtmlHome(String(pkg.id))}')" onkeydown="if(event.key==='Enter')thanhToanGoiThanhVien('${escapeHtmlHome(String(pkg.id))}')" style="cursor:pointer;">
-                ${isHighlight ? '<div class="pro-ribbon">Phổ biến nhất</div>' : ''}
-                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                <div class="card-top"><div class="icon-chip" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(pkg.icon || 'fa-solid fa-crown')}"></i></div></div>
-                <div class="card-title">${escapeHtmlHome(pkg.name || '')}</div>
-                ${pkg.description ? `<div class="badge-row"><i class="fa-solid fa-circle-info"></i> ${escapeHtmlHome(pkg.description)}</div>` : ''}
-                <div class="status-text" style="color:${style.fg}">${escapeHtmlHome(priceText)}</div>
-                <div class="badge-row" style="margin-top:6px;"><i class="fa-solid fa-lock"></i> Mua ngay qua SePay</div>
+            <div class="pro-pkg-card${isHighlight ? ' popular' : ''}" role="button" tabindex="0" onclick="openProConfirmFromAccount('${idAttr}')" onkeydown="if(event.key==='Enter')openProConfirmFromAccount('${idAttr}')">
+                ${isHighlight ? '<div class="pro-pkg-ribbon">Phổ biến nhất</div>' : ''}
+                <div class="pro-pkg-icon" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(pkg.icon || 'fa-solid fa-crown')}"></i></div>
+                <div class="pro-pkg-name">${escapeHtmlHome(pkg.name || '')}</div>
+                <div class="pro-pkg-desc">${pkg.description ? escapeHtmlHome(pkg.description) : ''}</div>
+                <div class="pro-pkg-price-row">
+                    <span class="pro-pkg-price">${Number(pkg.price).toLocaleString('vi-VN')}đ</span>
+                    <span class="pro-pkg-duration">/ ${formatHomeDuration(pkg.duration_days)}</span>
+                </div>
+                <div class="pro-pkg-cta" style="color:${style.fg}">Chọn gói này <i class="fa-solid fa-arrow-right"></i></div>
             </div>`;
     }
 
@@ -1807,6 +1894,15 @@
         document.getElementById('proConfirmOverlay').classList.remove('hidden');
     }
 
+    // Mở popup xác nhận trực tiếp từ thẻ gói trong tab "Tài khoản" (proGrid) —
+    // dùng chung modal xác nhận với luồng mở từ nút "Nâng cấp Pro" ở sidebar.
+    async function openProConfirmFromAccount(id){
+        if (!currentSession){ location.href = loginUrl('account'); return; }
+        if (proFeaturesConfigPromise) await proFeaturesConfigPromise;
+        proUpgradeSelectedId = id;
+        openProConfirm();
+    }
+
     function closeProConfirm(){
         document.getElementById('proConfirmOverlay').classList.add('hidden');
         const okBtn = document.getElementById('proConfirmOkBtn');
@@ -1838,6 +1934,9 @@
             return;
         }
         grid.innerHTML = items.map(proPackageCardHtml).join('');
+        // Đồng bộ danh sách này vào biến dùng chung với popup xác nhận, để bấm thẻ gói ở đây
+        // cũng mở được popup "Xác nhận nâng cấp Pro" (giống hệt luồng mở từ nút Nâng cấp Pro).
+        proUpgradeItems = items;
     }
 
     // ---------------- Đổ dữ liệu tài khoản đang đăng nhập vào tab "Tài khoản & Gói Pro" ----------------
@@ -1850,6 +1949,7 @@
             if (!error && data && data.session) currentSession = data.session;
         }catch(e){ /* mạng lỗi thì cứ dùng dữ liệu cũ đang có */ }
         renderAccountPanelInfo();
+        loadAcctOrderHistory();
     }
 
     function renderAccountPanelInfo(){
@@ -1899,6 +1999,69 @@
         }catch(e){
             row.style.display = 'none';
         }
+    }
+
+    // ---------------- Lịch sử giao dịch (đơn nâng cấp gói Pro) — đọc từ bảng sepay_orders ----------------
+    const ORDER_STATUS_LABEL = {
+        paid:      { text:'Đã thanh toán',        cls:'paid' },
+        pending:   { text:'Đang chờ thanh toán',  cls:'pending' },
+        failed:    { text:'Thất bại',              cls:'failed' },
+        cancelled: { text:'Đã huỷ',                cls:'cancelled' },
+    };
+    async function loadAcctOrderHistory(){
+        const loadingEl = document.getElementById('acctOrderLoading');
+        const listEl = document.getElementById('acctOrderList');
+        const emptyEl = document.getElementById('acctOrderEmpty');
+        if (!loadingEl || !listEl || !emptyEl) return;
+
+        if (!currentSession){
+            loadingEl.style.display = 'none';
+            listEl.style.display = 'none';
+            emptyEl.style.display = 'flex';
+            return;
+        }
+
+        loadingEl.style.display = 'block';
+        listEl.style.display = 'none';
+        emptyEl.style.display = 'none';
+
+        let rows = [];
+        try{
+            const { data, error } = await sb
+                .from('sepay_orders')
+                .select('id, order_type, plan_id, amount, status, invoice_number, created_at, paid_at')
+                .eq('user_id', currentSession.user.id)
+                .eq('order_type', 'subscription')
+                .order('created_at', { ascending:false })
+                .limit(20);
+            if (!error && Array.isArray(data)) rows = data;
+        }catch(e){ rows = []; }
+
+        loadingEl.style.display = 'none';
+        if (!rows.length){
+            emptyEl.style.display = 'flex';
+            return;
+        }
+        listEl.style.display = 'block';
+
+        // Tên gói lấy từ proUpgradeItems (đã tải sẵn khi render lưới gói Pro) — không cần query thêm.
+        const pkgNameById = {};
+        (proUpgradeItems || []).forEach(p => { pkgNameById[p.id] = p.name; });
+
+        listEl.innerHTML = rows.map(r => {
+            const name = pkgNameById[r.plan_id] || 'Gói Premium';
+            const date = r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '';
+            const amountText = Number(r.amount || 0).toLocaleString('vi-VN') + 'đ';
+            const st = ORDER_STATUS_LABEL[r.status] || { text:r.status || '—', cls:'pending' };
+            return `<div class="acc-history-item">
+                <div class="acc-history-icon"><i class="fa-solid fa-crown"></i></div>
+                <div>
+                    <div class="acc-history-title">${escapeHtmlHome(name)} — ${amountText}</div>
+                    <div class="acc-history-meta">${escapeHtmlHome(date)}</div>
+                </div>
+                <span class="acct-order-status ${st.cls}">${st.text}</span>
+            </div>`;
+        }).join('');
     }
 
     // ---------------- MENU ĐIỀU HƯỚNG — ẩn/hiện + sắp xếp thứ tự tab, quản lý ở trang admin (site_settings) ----------------

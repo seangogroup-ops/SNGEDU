@@ -86,34 +86,64 @@
         background:var(--card); border-right:1px solid var(--line);
         display:flex; flex-direction:column;
         position:sticky; top:0; height:100vh;
+        transition:width .2s ease;
     }
     .side-logo{ display:flex; align-items:center; gap:10px; padding:22px 20px 18px; }
     .side-logo .mark{
-        width:34px; height:34px; border-radius:10px;
+        width:34px; height:34px; border-radius:10px; flex-shrink:0;
         background:linear-gradient(135deg, var(--brand), #7b8fff);
         display:flex; align-items:center; justify-content:center;
         color:#fff; font-weight:800; font-size:.95rem;
     }
-    .side-logo .name{ font-weight:800; font-size:1rem; }
+    .side-logo .name{ font-weight:800; font-size:1rem; white-space:nowrap; }
 
-    .side-nav{ flex:1; padding:6px 12px; display:flex; flex-direction:column; gap:2px; }
+    .side-nav{ flex:1; padding:6px 12px; display:flex; flex-direction:column; gap:2px; overflow:hidden; }
     .side-link{
         display:flex; align-items:center; gap:12px;
         padding:11px 12px; border-radius:12px;
         color:var(--ink-soft); text-decoration:none; font-weight:600; font-size:.9rem;
         cursor:pointer; transition:background .18s ease, color .18s ease;
+        white-space:nowrap;
     }
-    .side-link i{ width:18px; text-align:center; font-size:.95rem; }
+    .side-link i{ width:18px; text-align:center; font-size:.95rem; flex-shrink:0; }
     .side-link:hover{ background:#f2f3f8; color:var(--ink); }
     .side-link.active{ background:var(--brand-bg); color:var(--brand); }
+
+    /* ---- nút thu gọn / mở rộng sidebar ---- */
+    .side-collapse-wrap{ padding:10px 12px 4px; margin-top:auto; }
+    .side-collapse-btn{
+        width:100%; display:flex; align-items:center; justify-content:center;
+        padding:9px; border-radius:10px; border:none; background:transparent;
+        color:var(--ink-mute); cursor:pointer; font-size:.95rem;
+        transition:background .18s ease, color .18s ease;
+    }
+    .side-collapse-btn:hover{ background:#f2f3f8; color:var(--brand); }
+    .side-collapse-btn i{ transition:transform .2s ease; }
 
     .side-foot{ padding:14px 12px 18px; border-top:1px solid var(--line); }
     .side-user{
         display:flex; align-items:center; gap:10px;
         padding:10px 10px; border-radius:12px; cursor:pointer;
         transition:background .18s ease;
+        overflow:hidden;
     }
     .side-user:hover{ background:#f2f3f8; }
+    .side-user .u-name, .side-user .u-sub{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    /* ---- trạng thái sidebar đã thu gọn (chỉ còn icon) ---- */
+    .sidebar.collapsed{ width:76px; }
+    .sidebar.collapsed .side-logo{ justify-content:center; padding:22px 0 18px; }
+    .sidebar.collapsed .side-logo .name{ display:none; }
+    .sidebar.collapsed .side-link{ justify-content:center; padding:11px 0; gap:0; }
+    .sidebar.collapsed .side-link .lbl{ display:none; }
+    .sidebar.collapsed #sideProBtn{
+        width:44px; height:44px; padding:0; margin:0 auto 12px;
+        border-radius:50%; justify-content:center;
+    }
+    .sidebar.collapsed #sideProBtn .lbl{ display:none; }
+    .sidebar.collapsed .side-user{ justify-content:center; padding:10px 0; }
+    .sidebar.collapsed .side-user .u-info{ display:none; }
+    .sidebar.collapsed .side-collapse-btn i{ transform:rotate(180deg); }
     .side-avatar{
         width:36px; height:36px; border-radius:50%;
         background:linear-gradient(135deg, var(--brand), #7c5cfc);
@@ -502,8 +532,41 @@
     .toast-btn.done{ background:var(--green); border-color:var(--green); cursor:default; }
 
     /* ---------------- responsive ---------------- */
+    .mobile-menu-btn{
+        display:none; width:38px; height:38px; border-radius:12px;
+        border:1px solid var(--line); background:var(--card); color:var(--ink);
+        align-items:center; justify-content:center; font-size:1rem; cursor:pointer;
+        flex-shrink:0;
+    }
+    .topbar-left{ display:flex; align-items:center; gap:12px; min-width:0; }
+    .sidebar-backdrop{
+        display:none; position:fixed; inset:0; background:rgba(10,11,18,.55);
+        z-index:1400; opacity:0; pointer-events:none; transition:opacity .25s ease;
+    }
+    .sidebar-backdrop.show{ opacity:1; pointer-events:auto; }
     @media (max-width: 860px){
-        .sidebar{ display:none; }
+        .mobile-menu-btn{ display:flex; }
+        .sidebar-backdrop{ display:block; }
+        .sidebar{
+            position:fixed; left:0; top:0; height:100vh; z-index:1500;
+            width:264px !important;
+            transform:translateX(-100%);
+            transition:transform .25s ease;
+            box-shadow:0 0 40px rgba(0,0,0,.35);
+        }
+        .sidebar.mobile-open{ transform:translateX(0); }
+        /* Trên di động, menu luôn hiện đầy đủ chữ (không áp dụng chế độ thu gọn) */
+        .sidebar.collapsed{ width:264px !important; }
+        .sidebar.collapsed .side-logo{ justify-content:flex-start; padding:22px 20px 18px; }
+        .sidebar.collapsed .side-logo .name{ display:block; }
+        .sidebar.collapsed .side-link{ justify-content:flex-start; padding:11px 12px; gap:12px; }
+        .sidebar.collapsed .side-link .lbl{ display:inline; }
+        .sidebar.collapsed #sideProBtn{ width:100%; height:auto; padding:11px; margin:0 0 12px; border-radius:99px; justify-content:center; }
+        .sidebar.collapsed #sideProBtn .lbl{ display:inline; }
+        .sidebar.collapsed .side-user{ justify-content:flex-start; padding:10px 10px; }
+        .sidebar.collapsed .side-user .u-info{ display:block; }
+        .side-collapse-wrap{ display:none; }
+        .main{ width:100%; }
     }
     @media (max-width: 1020px){
         .grid{ grid-template-columns:repeat(3, 1fr); }
@@ -605,6 +668,49 @@
 .pro-upg-cta:hover{ filter:brightness(1.05); }
 .pro-upg-cta:disabled{ opacity:.6; cursor:not-allowed; }
 .pro-upg-note{ text-align:center; color:var(--ink-mute); font-size:.82rem; margin-top:12px; }
+
+/* ============ MODAL: Xác nhận thanh toán (bước 2, sau khi chọn gói) ============ */
+.pro-confirm-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:2100;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.pro-confirm-overlay.hidden{ display:none; }
+.pro-confirm-modal{
+    background:var(--card); border-radius:22px; max-width:460px; width:100%;
+    max-height:88vh; overflow-y:auto; padding:26px; position:relative;
+    box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+.pro-confirm-close{
+    position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:50%;
+    border:1px solid var(--line); background:var(--card); color:var(--ink-mute);
+    cursor:pointer; font-size:.95rem; display:flex; align-items:center; justify-content:center;
+}
+.pro-confirm-close:hover{ color:var(--ink); }
+.pro-confirm-head{ text-align:center; margin-bottom:18px; }
+.pro-confirm-head .icon{
+    width:52px; height:52px; border-radius:50%; margin:0 auto 12px;
+    background:var(--brand-bg); color:var(--brand); font-size:1.3rem;
+    display:flex; align-items:center; justify-content:center;
+}
+.pro-confirm-head h3{ font-size:1.08rem; font-weight:800; color:var(--ink); }
+.pro-confirm-head p{ font-size:.85rem; color:var(--ink-mute); margin-top:4px; }
+.pro-confirm-summary{
+    background:var(--brand-bg); border-radius:16px; padding:16px 18px; margin-bottom:18px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.pro-confirm-summary .name{ font-weight:800; color:var(--ink); font-size:1rem; }
+.pro-confirm-summary .days{ color:var(--ink-mute); font-size:.8rem; margin-top:2px; }
+.pro-confirm-summary .price{ font-weight:900; color:var(--brand); font-size:1.25rem; white-space:nowrap; }
+.pro-confirm-features{ border-top:1px solid var(--line); margin-bottom:20px; }
+.pro-confirm-actions{ display:flex; gap:10px; }
+.pro-confirm-actions button{
+    flex:1; border:none; border-radius:14px; padding:14px; font-weight:800; font-size:.95rem; cursor:pointer;
+}
+.pro-confirm-cancel{ background:var(--bg); color:var(--ink); border:1px solid var(--line) !important; }
+.pro-confirm-cancel:hover{ background:var(--line); }
+.pro-confirm-ok{ background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff; }
+.pro-confirm-ok:hover{ filter:brightness(1.05); }
+.pro-confirm-ok:disabled{ opacity:.65; cursor:not-allowed; }
 </style>
 </head>
 <body>
@@ -617,21 +723,26 @@
             <div class="name">SNG EDU</div>
         </a>
         <nav class="side-nav" id="sideNav">
-            <a class="side-link active" href="#" data-tab="home"><i class="fa-solid fa-house"></i>Trang chủ</a>
-            <a class="side-link" href="#" data-tab="doc"><i class="fa-solid fa-folder-open"></i>Tài liệu</a>
-            <a class="side-link" href="#" data-tab="quiz"><i class="fa-solid fa-list-check"></i>Trắc nghiệm</a>
-            <a class="side-link" href="#" data-tab="tool"><i class="fa-solid fa-toolbox"></i>Công cụ</a>
-            <a class="side-link" href="#" data-tab="product"><i class="fa-solid fa-bag-shopping"></i>Sản phẩm</a>
-            <a class="side-link" href="#" data-tab="account"><i class="fa-solid fa-crown"></i>Tài khoản</a>
-            <a class="side-link" href="#" data-tab="support"><i class="fa-solid fa-headset"></i>Hỗ trợ</a>
+            <a class="side-link active" href="#" data-tab="home" title="Trang chủ"><i class="fa-solid fa-house"></i><span class="lbl">Trang chủ</span></a>
+            <a class="side-link" href="#" data-tab="doc" title="Tài liệu"><i class="fa-solid fa-folder-open"></i><span class="lbl">Tài liệu</span></a>
+            <a class="side-link" href="#" data-tab="quiz" title="Trắc nghiệm"><i class="fa-solid fa-list-check"></i><span class="lbl">Trắc nghiệm</span></a>
+            <a class="side-link" href="#" data-tab="tool" title="Công cụ"><i class="fa-solid fa-toolbox"></i><span class="lbl">Công cụ</span></a>
+            <a class="side-link" href="#" data-tab="product" title="Sản phẩm"><i class="fa-solid fa-bag-shopping"></i><span class="lbl">Sản phẩm</span></a>
+            <a class="side-link" href="#" data-tab="account" title="Tài khoản"><i class="fa-solid fa-crown"></i><span class="lbl">Tài khoản</span></a>
+            <a class="side-link" href="#" data-tab="support" title="Hỗ trợ"><i class="fa-solid fa-headset"></i><span class="lbl">Hỗ trợ</span></a>
+            <div class="side-collapse-wrap">
+                <button type="button" class="side-collapse-btn" id="sideCollapseBtn" title="Thu gọn / mở rộng menu" aria-label="Thu gọn / mở rộng menu">
+                    <i class="fa-solid fa-angles-left"></i>
+                </button>
+            </div>
         </nav>
         <div class="side-foot">
-            <button type="button" id="sideProBtn" onclick="openProUpgradeModal()" style="display:none; width:100%; margin-bottom:12px; border:none; border-radius:99px; padding:11px; background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff; font-weight:800; font-size:.86rem; cursor:pointer; align-items:center; justify-content:center; gap:8px;">
-                <i class="fa-solid fa-crown"></i> Nâng cấp Pro
+            <button type="button" id="sideProBtn" onclick="openProUpgradeModal(); closeMobileMenu();" title="Nâng cấp Pro" style="display:none; width:100%; margin-bottom:12px; border:none; border-radius:99px; padding:11px; background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff; font-weight:800; font-size:.86rem; cursor:pointer; align-items:center; justify-content:center; gap:8px;">
+                <i class="fa-solid fa-crown"></i> <span class="lbl">Nâng cấp Pro</span>
             </button>
             <div class="side-user">
                 <div class="side-avatar is-guest"><span class="avt-content"><i class="fa-solid fa-user"></i></span><span class="online-dot"></span></div>
-                <div>
+                <div class="u-info">
                     <div class="u-name">Khách</div>
                     <div class="u-sub">Nhấn để xem hồ sơ</div>
                 </div>
@@ -642,7 +753,12 @@
     <div class="main">
 
         <div class="topbar">
-            <div class="topbar-title">Trang chủ</div>
+            <div class="topbar-left">
+                <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Mở menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="topbar-title">Trang chủ</div>
+            </div>
             <div class="topbar-right">
                 <div class="pill"><i class="fa-solid fa-fire"></i> Chuỗi ôn tập</div>
                 <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
@@ -652,6 +768,7 @@
                 <div class="avatar-btn is-guest"><span class="avt-content"><i class="fa-solid fa-user"></i></span><span class="online-dot"></span></div>
             </div>
         </div>
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
         <div class="wrap">
 
@@ -855,6 +972,30 @@
     </div>
 </div>
 
+<!-- ============ MODAL: Xác nhận thanh toán (bước 2 — hiện sau khi bấm "Thanh toán") ============ -->
+<div class="pro-confirm-overlay hidden" id="proConfirmOverlay">
+    <div class="pro-confirm-modal" role="dialog" aria-modal="true" aria-label="Xác nhận thanh toán">
+        <button class="pro-confirm-close" onclick="closeProConfirm()" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        <div class="pro-confirm-head">
+            <div class="icon"><i class="fa-solid fa-crown"></i></div>
+            <h3>Xác nhận nâng cấp Pro</h3>
+            <p>Kiểm tra lại thông tin gói trước khi chuyển sang cổng thanh toán.</p>
+        </div>
+        <div class="pro-confirm-summary">
+            <div>
+                <div class="name" id="proConfirmName">—</div>
+                <div class="days" id="proConfirmDays">—</div>
+            </div>
+            <div class="price" id="proConfirmPrice">—</div>
+        </div>
+        <div class="pro-confirm-features" id="proConfirmFeatures"></div>
+        <div class="pro-confirm-actions">
+            <button type="button" class="pro-confirm-cancel" onclick="closeProConfirm()">Hủy</button>
+            <button type="button" class="pro-confirm-ok" id="proConfirmOkBtn" onclick="confirmProUpgrade()">Xác nhận thanh toán</button>
+        </div>
+    </div>
+</div>
+
 <div class="acc-overlay" id="accOverlay">
     <div class="acc-modal" role="dialog" aria-modal="true" aria-label="Tài khoản">
         <div class="acc-modal-head">
@@ -1004,7 +1145,7 @@
                 const c = el.querySelector('.avt-content');
                 if (c) c.innerHTML = '<i class="fa-solid fa-user"></i>';
             });
-            if (sideProBtn) sideProBtn.style.display = 'none';
+            if (sideProBtn) sideProBtn.style.display = 'flex';
         }
     }
 
@@ -1633,6 +1774,40 @@
 
     function submitProUpgrade(){
         if (!proUpgradeSelectedId) return;
+        openProConfirm();
+    }
+
+    // ---- Popup xác nhận thanh toán (bước 2) — hiện đầy đủ gói + tính năng, chỉ gọi thanh toán khi bấm "Xác nhận" ----
+    function openProConfirm(){
+        const pkg = proUpgradeItems.find(p => p.id === proUpgradeSelectedId);
+        if (!pkg) return;
+
+        document.getElementById('proConfirmName').textContent = pkg.name || '';
+        document.getElementById('proConfirmDays').textContent = formatHomeDuration(pkg.duration_days);
+        document.getElementById('proConfirmPrice').textContent = Number(pkg.price).toLocaleString('vi-VN') + 'đ';
+
+        document.getElementById('proConfirmFeatures').innerHTML = PRO_UPGRADE_FEATURES.map(f => `
+            <div class="pro-upg-feat-row">
+                <span class="feat-check"><i class="fa-solid fa-check"></i></span>
+                <div>
+                    <div class="feat-title">${escapeHtmlHome(f.title)}</div>
+                    <div class="feat-desc">${escapeHtmlHome(f.desc)}</div>
+                </div>
+            </div>`).join('');
+
+        document.getElementById('proConfirmOverlay').classList.remove('hidden');
+    }
+
+    function closeProConfirm(){
+        document.getElementById('proConfirmOverlay').classList.add('hidden');
+        const okBtn = document.getElementById('proConfirmOkBtn');
+        if (okBtn){ okBtn.disabled = false; okBtn.textContent = 'Xác nhận thanh toán'; }
+    }
+
+    function confirmProUpgrade(){
+        if (!proUpgradeSelectedId) return;
+        const okBtn = document.getElementById('proConfirmOkBtn');
+        if (okBtn){ okBtn.disabled = true; okBtn.textContent = 'Đang chuyển tới cổng thanh toán...'; }
         thanhToanGoiThanhVien(proUpgradeSelectedId); // hàm có sẵn trong frontend/sepay-checkout.js
     }
 
@@ -1742,11 +1917,57 @@
         return merged;
     }
 
+    // Menu di động (drawer): mở bằng nút hamburger trên topbar, đóng bằng nút X ảo (backdrop) hoặc khi chọn 1 tab
+    function openMobileMenu(){
+        document.querySelector('.sidebar')?.classList.add('mobile-open');
+        document.getElementById('sidebarBackdrop')?.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeMobileMenu(){
+        document.querySelector('.sidebar')?.classList.remove('mobile-open');
+        document.getElementById('sidebarBackdrop')?.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    (function initMobileMenu(){
+        const menuBtn = document.getElementById('mobileMenuBtn');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (menuBtn) menuBtn.addEventListener('click', openMobileMenu);
+        if (backdrop) backdrop.addEventListener('click', closeMobileMenu);
+        const logoLink = document.querySelector('.side-logo');
+        if (logoLink) logoLink.addEventListener('click', closeMobileMenu);
+        window.addEventListener('resize', ()=>{ if (window.innerWidth > 860) closeMobileMenu(); });
+    })();
+
+    // Thu gọn / mở rộng sidebar (chỉ còn icon) — trạng thái được nhớ qua localStorage
+    function initSideCollapseBtn(){
+        const btn = document.getElementById('sideCollapseBtn');
+        const sidebar = document.querySelector('.sidebar');
+        if (!btn || !sidebar) return;
+
+        const applyState = (collapsed) => {
+            sidebar.classList.toggle('collapsed', collapsed);
+            btn.setAttribute('aria-label', collapsed ? 'Mở rộng menu' : 'Thu gọn menu');
+        };
+
+        let collapsed = false;
+        try{ collapsed = localStorage.getItem('sng-sidebar-collapsed') === '1'; }catch(e){}
+        applyState(collapsed);
+
+        btn.addEventListener('click', () => {
+            collapsed = !collapsed;
+            applyState(collapsed);
+            try{ localStorage.setItem('sng-sidebar-collapsed', collapsed ? '1' : '0'); }catch(e){}
+        });
+    }
+
     function renderSideNav(tabsConfig){
         let visible = tabsConfig.filter(t => t.visible);
         if (!visible.length) visible = [Object.assign({ visible:true }, NAV_TABS_DEFAULT[0])]; // an toàn: không để menu trống hoàn toàn
         const nav = document.getElementById('sideNav');
-        nav.innerHTML = visible.map((t,i) => `<a class="side-link${i===0 ? ' active' : ''}" href="#" data-tab="${t.key}"><i class="${t.icon}"></i>${escapeHtmlHome(t.label)}</a>`).join('');
+        const linksHtml = visible.map((t,i) => `<a class="side-link${i===0 ? ' active' : ''}" href="#" data-tab="${t.key}" title="${escapeHtmlHome(t.label)}"><i class="${t.icon}"></i><span class="lbl">${escapeHtmlHome(t.label)}</span></a>`).join('');
+        const collapseHtml = `<div class="side-collapse-wrap"><button type="button" class="side-collapse-btn" id="sideCollapseBtn" title="Thu gọn / mở rộng menu" aria-label="Thu gọn / mở rộng menu"><i class="fa-solid fa-angles-left"></i></button></div>`;
+        nav.innerHTML = linksHtml + collapseHtml;
+        initSideCollapseBtn();
         return visible;
     }
 
@@ -1889,7 +2110,7 @@
         const topAvatarEl = document.querySelector('.avatar-btn');
         if (sideUserEl) sideUserEl.style.cursor = 'pointer';
         if (topAvatarEl) topAvatarEl.style.cursor = 'pointer';
-        if (sideUserEl) sideUserEl.addEventListener('click', handleAccountClick);
+        if (sideUserEl) sideUserEl.addEventListener('click', ()=>{ handleAccountClick(); closeMobileMenu(); });
         if (topAvatarEl) topAvatarEl.addEventListener('click', handleAccountClick);
 
         sb.auth.onAuthStateChange((_event, session) => {
@@ -1903,7 +2124,7 @@
         const visibleTabs = renderSideNav(tabsConfig);
 
         document.querySelectorAll('.side-link[data-tab]').forEach(el=>{
-            el.addEventListener('click', e=>{ e.preventDefault(); goTab(el.dataset.tab); });
+            el.addEventListener('click', e=>{ e.preventDefault(); goTab(el.dataset.tab); closeMobileMenu(); });
         });
 
         // Thiết lập trạng thái ban đầu trong lịch sử trình duyệt, chỉ dùng tab đang hiển thị trong menu

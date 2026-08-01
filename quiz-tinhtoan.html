@@ -492,6 +492,10 @@ body{
 </head>
 <body>
 
+<div id="authGateOverlay" style="position:fixed;inset:0;z-index:99999;background:#14151c;display:flex;align-items:center;justify-content:center;color:#fff;font-family:inherit;font-size:.95rem;gap:10px;">
+  <i class="fa-solid fa-spinner fa-spin"></i> Đang kiểm tra đăng nhập...
+</div>
+
 <!-- HEADER -->
 <header class="hdr">
   <div class="hdr-left">
@@ -568,12 +572,16 @@ const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ---------------- Bắt buộc đăng nhập mới xem được trang này ----------------
+// Lớp phủ #authGateOverlay che toàn trang ngay từ đầu, chỉ gỡ ra sau khi xác nhận có phiên đăng nhập.
 (async function requireLogin(){
     const { data: { session } } = await sb.auth.getSession();
     if (!session){
         const next = location.pathname + location.search;
         location.href = 'account/login.html?next=' + encodeURIComponent(next);
+        return;
     }
+    const overlay = document.getElementById('authGateOverlay');
+    if (overlay) overlay.remove();
 })();
 
 function getParam(name){

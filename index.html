@@ -713,6 +713,7 @@
             <div class="acc-info-row"><span class="label">Email</span><span class="value" id="acctPageEmail">—</span></div>
             <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="acctPageName">—</span></div>
             <div class="acc-info-row"><span class="label">Gói hiện tại</span><span class="value"><span class="acc-plan-badge" id="acctPagePlanBadge">Miễn phí</span></span></div>
+            <div class="acc-info-row" id="acctPageBalanceRow" style="display:none"><span class="label">Số dư</span><span class="value" id="acctPageBalanceValue">—</span></div>
         </div>
 
         <div class="sec-head"><h2>Nâng cấp gói Pro</h2></div>
@@ -799,6 +800,7 @@
                 <div class="acc-info-row"><span class="label">Email</span><span class="value" id="accInfoEmail">—</span></div>
                 <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="accInfoName">—</span></div>
                 <div class="acc-info-row"><span class="label">Gói sử dụng</span><span class="value"><span class="acc-plan-badge" id="accPlanBadge">Miễn phí</span></span></div>
+                <div class="acc-info-row" id="accBalanceRow" style="display:none"><span class="label">Số dư</span><span class="value" id="accBalanceValue">—</span></div>
                 <div class="acc-info-row"><span class="label">Trạng thái</span><span class="value" style="color:var(--green)">Đã xác thực</span></div>
 
                 <button class="acc-changepw-btn" id="accChangePwBtn" type="button">
@@ -966,6 +968,19 @@
             } else {
                 planBadge.textContent = 'Miễn phí';
                 planBadge.className = 'acc-plan-badge';
+            }
+        }
+        // ----- Số dư: số ngày Premium còn lại (cộng dồn mỗi lần mua thêm) -----
+        const balanceRow = document.getElementById('accBalanceRow');
+        const balanceValue = document.getElementById('accBalanceValue');
+        if (balanceRow && balanceValue){
+            if (isPremiumActive && premiumUntil){
+                const msLeft = premiumUntil - new Date();
+                const daysLeft = Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
+                balanceValue.textContent = `${daysLeft} ngày còn lại`;
+                balanceRow.style.display = '';
+            } else {
+                balanceRow.style.display = 'none';
             }
         }
         closePwForm();
@@ -1490,6 +1505,20 @@
         } else {
             badgeEl.textContent = 'Miễn phí';
             badgeEl.className = 'acc-plan-badge';
+        }
+
+        // ----- Số dư: số ngày Premium còn lại (cộng dồn mỗi lần mua thêm) -----
+        const balanceRow = document.getElementById('acctPageBalanceRow');
+        const balanceValue = document.getElementById('acctPageBalanceValue');
+        if (balanceRow && balanceValue){
+            if (isPremiumActive && premiumUntil){
+                const msLeft = premiumUntil - new Date();
+                const daysLeft = Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
+                balanceValue.textContent = `${daysLeft} ngày còn lại`;
+                balanceRow.style.display = '';
+            } else {
+                balanceRow.style.display = 'none';
+            }
         }
     }
 

@@ -3173,6 +3173,7 @@ registerContentList('doc_free', 'doc_content', 'free', {
 registerContentList('doc_paid', 'doc_content', 'paid', {
     label:'Tài liệu trả phí', icon:'fa-solid fa-lock', color:'amber', defaultIcon:'fa-solid fa-crown',
     extraField:{ key:'size', label:'Dung lượng / định dạng', placeholder:'VD: PDF · 5.1MB' },
+    priceField:true,
     upload:true, linkLabel:'File tài liệu (PDF hoặc Word)'
 });
 registerContentList('tool_items', 'tool_content', 'items', {
@@ -3203,7 +3204,7 @@ registerContentList('pro_items', 'pro_content', 'items', {
 });
 
 const CONTENT_MANAGER_GROUPS = {
-    doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu miễn phí và trả phí hiển thị ở tab "Tài liệu" trên trang chủ. Tải file PDF/Word lên trực tiếp, không cần link ngoài.', subKeys:['doc_free','doc_paid'] },
+    doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu miễn phí và trả phí hiển thị ở tab "Tài liệu" trên trang chủ. Tải file PDF/Word lên trực tiếp, không cần link ngoài. Với tài liệu trả phí, bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Tải xuống", trước đó file không lộ link công khai.', subKeys:['doc_free','doc_paid'] },
     tool:    { title:'Công cụ',   icon:'🧰',  hint:'Quản lý các thẻ công cụ hiển thị ở tab "Công cụ" trên trang chủ.', subKeys:['tool_items'] },
     product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ.', subKeys:['product_items'] },
     pro:     { title:'Gói Pro',   icon:'👑',  hint:'Quản lý các gói Pro hiển thị ở tab "Tài khoản & Gói Pro" trên trang chủ. Chọn màu "amber" để đánh dấu gói "Phổ biến nhất". Mục "Gói thanh toán tự động (SePay)" cho phép chọn gói tương ứng trong bảng giá tự động — khi đã chọn, thẻ sẽ hiện nút "Mua ngay" mở thẳng cổng SePay thay vì link ngoài. Nếu để trống, thẻ vẫn hoạt động theo kiểu cũ: trỏ ra Zalo/Momo, sau khi khách chuyển khoản bạn vào mục "Tài khoản" bên dưới để gán Premium thủ công.', subKeys:['pro_items'] },
@@ -3244,6 +3245,10 @@ function contentBlockHtml(subKey){
                     ${meta.extraField ? `
                     <label>${escapeHtml(meta.extraField.label)}</label>
                     <input id="cmExtra_${subKey}" placeholder="${escapeHtml(meta.extraField.placeholder)}">` : ''}
+                    ${meta.priceField ? `
+                    <label>Giá bán (VNĐ)</label>
+                    <input id="cmPrice_${subKey}" type="number" min="0" step="1000" placeholder="VD: 20000" oninput="updateContentPreview('${subKey}')">
+                    <div class="hint" style="margin:2px 0 0;">Bắt buộc &gt; 0. Khách phải thanh toán qua SePay mới tải được file này.</div>` : ''}
                     ${meta.statusField ? `
                     <label>Trạng thái</label>
                     <select id="cmStatus_${subKey}">
@@ -3338,6 +3343,9 @@ function contentItemRowHtml(subKey, item){
         extraLabel = item.status === 'ready' ? ' · Sẵn sàng' : ' · Sắp ra mắt';
     } else if (cfg.extraField && item[cfg.extraField.key]){
         extraLabel = ' · ' + escapeHtml(item[cfg.extraField.key]);
+    }
+    if (cfg.priceField && item.price){
+        extraLabel += ' · ' + Number(item.price).toLocaleString('vi-VN') + 'đ';
     }
     const thumbHtml = item.image
         ? `<img src="${escapeHtml(item.image)}" style="width:26px;height:26px;min-width:26px;border-radius:8px;object-fit:cover;">`
@@ -3832,6 +3840,7 @@ function openContentForm(subKey){
     document.getElementById('cmTitle_' + subKey).value = '';
     document.getElementById('cmDesc_' + subKey).value = '';
     const extraEl = document.getElementById('cmExtra_' + subKey); if (extraEl) extraEl.value = '';
+    const priceEl = document.getElementById('cmPrice_' + subKey); if (priceEl) priceEl.value = '';
     const statusEl = document.getElementById('cmStatus_' + subKey); if (statusEl) statusEl.value = 'soon';
     const linkEl = document.getElementById('cmLink_' + subKey);
     if (linkEl){ linkEl.value = ''; linkEl.disabled = false; }
@@ -3857,6 +3866,8 @@ function editContentItem(subKey, id){
     document.getElementById('cmDesc_' + subKey).value = item.desc || '';
     const extraEl = document.getElementById('cmExtra_' + subKey);
     if (extraEl && cfg.meta.extraField) extraEl.value = item[cfg.meta.extraField.key] || '';
+    const priceEl = document.getElementById('cmPrice_' + subKey);
+    if (priceEl && cfg.meta.priceField) priceEl.value = item.price || '';
     const statusEl = document.getElementById('cmStatus_' + subKey);
     if (statusEl && cfg.meta.statusField) statusEl.value = item.status || 'soon';
     const linkEl = document.getElementById('cmLink_' + subKey);
@@ -3890,6 +3901,12 @@ async function saveContentItem(subKey){
     if (cfg.meta.extraField){
         const extraEl = document.getElementById('cmExtra_' + subKey);
         item[cfg.meta.extraField.key] = extraEl ? extraEl.value.trim() : '';
+    }
+    if (cfg.meta.priceField){
+        const priceEl = document.getElementById('cmPrice_' + subKey);
+        const price = priceEl ? Number(priceEl.value) : 0;
+        if (!price || price <= 0) return showMsg('Nhập giá bán hợp lệ (lớn hơn 0) cho tài liệu trả phí.', 'err');
+        item.price = price;
     }
     if (cfg.meta.statusField){
         item.status = document.getElementById('cmStatus_' + subKey).value;

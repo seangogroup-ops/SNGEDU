@@ -1635,6 +1635,34 @@
     });
 
     // ---------------- Dựng menu điều hướng theo cấu hình admin (ẩn/hiện + thứ tự), rồi khởi tạo tab ban đầu ----------------
+    // Nếu vừa quay về từ trang thanh toán SePay -> làm mới session để lấy user_metadata mới nhất
+    (async function handlePaymentReturn(){
+        const params = new URLSearchParams(location.search);
+        const paymentStatus = params.get('payment');
+        if (!paymentStatus) return;
+
+        // Xoá query param khỏi URL cho gọn, không ảnh hưởng logic bên dưới
+        history.replaceState({}, '', location.pathname + location.hash);
+
+        if (paymentStatus === 'success') {
+            // IPN của SePay có thể xử lý chậm hơn vài giây so với lúc redirect về,
+            // nên thử làm mới vài lần trong lúc chờ.
+            for (let i = 0; i < 5; i++) {
+                await sb.auth.refreshSession();
+                const { data: { user } } = await sb.auth.getUser();
+                if (user?.user_metadata?.plan === 'premium') break;
+                await new Promise(r => setTimeout(r, 2000));
+            }
+            if (typeof notyf !== 'undefined') {
+                notyf.success('Thanh toán thành công! Tài khoản của bạn đã được nâng cấp.');
+            }
+        } else if (paymentStatus === 'error' || paymentStatus === 'cancel') {
+            if (typeof notyf !== 'undefined') {
+                notyf.error('Giao dịch chưa hoàn tất. Vui lòng thử lại.');
+            }
+        }
+    })();
+
     (async function initSideNav(){
         const { data: { session } } = await sb.auth.getSession();
         currentSession = session;

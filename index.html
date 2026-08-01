@@ -1417,17 +1417,9 @@
         }
     }
 
-    // ---------------- GÓI PRO — quản lý ở trang admin (site_settings: pro_content), giống Sản phẩm ----------------
-    // Giá/thời hạn KHÔNG lấy từ item.price (text admin gõ tay) khi thẻ có plan_id.
-    // Khi có plan_id, giá luôn được lấy trực tiếp từ bảng pro_packages (nguồn sự thật duy nhất),
-    // để admin chỉ cần sửa giá 1 chỗ (trang admin > Gói Pro) là tự động khớp ở mọi nơi.
-    let homeProPackagesCache = null;
-    async function loadHomeProPackagesCache(){
-        if (homeProPackagesCache) return homeProPackagesCache;
-        const { data, error } = await sb.from('pro_packages').select('id, name, price, duration_days, active').eq('active', true);
-        homeProPackagesCache = (!error && data) ? data : [];
-        return homeProPackagesCache;
-    }
+    // ---------------- GÓI PRO — đọc thẳng từ bảng pro_packages (1 nguồn duy nhất) ----------------
+    // Bảng pro_packages vừa là giá gốc cho cổng SePay, vừa là nội dung hiển thị ở đây.
+    // Quản lý toàn bộ tại trang admin > Gói Pro.
     function formatHomeDuration(days){
         days = Number(days);
         if (days >= 360) return Math.round(days/365) + ' năm';
@@ -1438,47 +1430,40 @@
         return Number(price).toLocaleString('vi-VN') + 'đ / ' + formatHomeDuration(days);
     }
 
-    function proItemCardHtml(item, plansById){
-        const style = QL_COLOR_MAP[item.color] || QL_COLOR_MAP.indigo;
-        const isHighlight = item.color === 'amber';
-        const plan = item.plan_id ? plansById.get(String(item.plan_id)) : null;
-
-        // Thẻ có gói liên kết SePay: bấm "Mua ngay" gọi thẳng cổng thanh toán, không dùng href ngoài.
-        // Thẻ không liên kết (plan_id trống hoặc gói đã bị xoá/tắt): giữ hành vi cũ, trỏ ra link ngoài.
-        const priceText = plan ? formatHomePrice(plan.duration_days, plan.price) : (item.price || '');
-        const isBuyable = !!plan;
-        const href = item.link || '#';
-
-        const tag = isBuyable ? 'div' : 'a';
-        const clickAttr = isBuyable
-            ? `role="button" tabindex="0" onclick="thanhToanGoiThanhVien('${escapeHtmlHome(String(plan.id))}')" onkeydown="if(event.key==='Enter')thanhToanGoiThanhVien('${escapeHtmlHome(String(plan.id))}')" style="cursor:pointer;"`
-            : `href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}`;
-
+    function proPackageCardHtml(pkg){
+        const style = QL_COLOR_MAP[pkg.color] || QL_COLOR_MAP.amber;
+        const isHighlight = !!pkg.popular;
+        const priceText = formatHomePrice(pkg.duration_days, pkg.price);
         return `
-            <${tag} class="card${isHighlight ? ' pro-highlight' : ''}" ${clickAttr}>
+            <div class="card${isHighlight ? ' pro-highlight' : ''}" role="button" tabindex="0" onclick="thanhToanGoiThanhVien('${escapeHtmlHome(String(pkg.id))}')" onkeydown="if(event.key==='Enter')thanhToanGoiThanhVien('${escapeHtmlHome(String(pkg.id))}')" style="cursor:pointer;">
                 ${isHighlight ? '<div class="pro-ribbon">Phổ biến nhất</div>' : ''}
-                ${(item.link || isBuyable) ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
-                <div class="card-top"><div class="icon-chip" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(item.icon || 'fa-solid fa-crown')}"></i></div></div>
-                <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
-                ${item.desc ? `<div class="badge-row"><i class="fa-solid fa-circle-info"></i> ${escapeHtmlHome(item.desc)}</div>` : ''}
-                ${priceText ? `<div class="status-text" style="color:${style.fg}">${escapeHtmlHome(priceText)}</div>` : ''}
-                ${isBuyable ? `<div class="badge-row" style="margin-top:6px;"><i class="fa-solid fa-lock"></i> Mua ngay qua SePay</div>` : ''}
-            </${tag}>`;
+                <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="card-top"><div class="icon-chip" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(pkg.icon || 'fa-solid fa-crown')}"></i></div></div>
+                <div class="card-title">${escapeHtmlHome(pkg.name || '')}</div>
+                ${pkg.description ? `<div class="badge-row"><i class="fa-solid fa-circle-info"></i> ${escapeHtmlHome(pkg.description)}</div>` : ''}
+                <div class="status-text" style="color:${style.fg}">${escapeHtmlHome(priceText)}</div>
+                <div class="badge-row" style="margin-top:6px;"><i class="fa-solid fa-lock"></i> Mua ngay qua SePay</div>
+            </div>`;
     }
 
     async function renderProContent(){
-        const payload = await fetchSiteSettingPayload('pro_content', DEFAULT_PRO_CONTENT);
-        const items = Array.isArray(payload.items) ? payload.items : [];
         const grid = document.getElementById('proGrid');
         if (!grid) return;
+
+        const FULL_SELECT = 'id, name, description, price, duration_days, icon, color, popular, order_no, active';
+        let { data, error } = await sb.from('pro_packages').select(FULL_SELECT).eq('active', true).order('order_no', { ascending:true }).order('price', { ascending:true });
+        if (error && (error.code === '42703' || /column .* does not exist/i.test(error.message || ''))){
+            // Bảng chưa chạy migration 0002 (chưa có cột hiển thị) — dùng tạm cột cũ, không có mô tả/icon/màu riêng.
+            const fallback = await sb.from('pro_packages').select('id, name, price, duration_days, active').eq('active', true).order('price', { ascending:true });
+            data = fallback.data; error = fallback.error;
+        }
+        const items = (!error && data) ? data : [];
+
         if (!items.length){
             grid.innerHTML = `<div class="empty-state"><div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-crown"></i></div><div class="empty-title">Chưa có gói Pro nào</div><div class="empty-sub">Vào trang admin &gt; Gói Pro để thêm gói đầu tiên.</div></div>`;
             return;
         }
-        const needsPlans = items.some(it => it.plan_id);
-        const plans = needsPlans ? await loadHomeProPackagesCache() : [];
-        const plansById = new Map(plans.map(p => [String(p.id), p]));
-        grid.innerHTML = items.map(it => proItemCardHtml(it, plansById)).join('');
+        grid.innerHTML = items.map(proPackageCardHtml).join('');
     }
 
     // ---------------- Đổ dữ liệu tài khoản đang đăng nhập vào tab "Tài khoản & Gói Pro" ----------------

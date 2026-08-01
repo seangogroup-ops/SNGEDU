@@ -435,7 +435,9 @@ main{flex:1;padding:30px 36px 60px;max-width:1020px;}
 .q-item .expl{margin-top:9px;font-size:.83rem;color:var(--gray);background:var(--bg);padding:9px 11px;border-radius:var(--radius-sm);line-height:1.5;}
 .q-item .actions{margin-top:11px;display:flex;gap:8px;flex-wrap:wrap;}
 
-.msg{padding:11px 15px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:.87rem;font-weight:600;}
+.msg{padding:11px 15px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:.87rem;font-weight:600;box-shadow:var(--shadow-lg);}
+#msgBox{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:3000;width:min(92vw,420px);pointer-events:none;}
+#msgBox .msg{pointer-events:auto;margin-bottom:10px;}
 .msg.ok{background:var(--green-bg);color:#166534;}
 .msg.err{background:var(--red-bg);color:#991b1b;}
 
@@ -873,6 +875,7 @@ textarea{resize:vertical;}
     </aside>
 
     <main>
+        <div id="msgBox"></div>
         <div id="subjectManagerPanel">
             <div class="subj-mgr-head">
                 <h2>📚 Quản lý môn học &amp; chương / đề</h2>
@@ -1444,7 +1447,6 @@ textarea{resize:vertical;}
 
         <div id="mainAppArea" class="hidden">
         <div class="context-bar" id="contextBar"></div>
-        <div id="msgBox"></div>
 
         <div class="tabs">
             <button class="tab active" data-tab="list" onclick="switchTab('list')">📖 Danh sách câu hỏi</button>
@@ -3191,6 +3193,7 @@ enableDragReorder('subjectList', '.side-item', el => el.dataset.id, null, reorde
 enableDragReorder('chapterList', '.side-item', el => el.dataset.chapter, () => chapterSelectMode, reorderChapters);
 enableDragReorder('qList', '.q-item', el => Number(el.dataset.id), null, reorderQuestions);
 enableDragReorder('quickLinkList', '.side-item', el => el.dataset.id, null, reorderQuickLinks);
+enableDragReorder('sepayPkgList', '.side-item', el => el.dataset.id, null, reorderSepayPackages);
 
 // ============================================================================
 // QUẢN LÝ NỘI DUNG: TÀI LIỆU / CÔNG CỤ / SẢN PHẨM
@@ -3753,6 +3756,7 @@ function sepayPkgRowHtml(pkg){
     if (pkg.popular) badges.push('<span class="hint-inline" style="color:#b45309;"> · Phổ biến nhất</span>');
     return `
         <div class="side-item" data-id="${pkg.id}">
+            <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
             <span class="prev-ico color-swatch ${color}" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="${escapeHtml(icon)}"></i></span>
             <span class="name">${escapeHtml(pkg.name || '(chưa đặt tên)')}<span class="hint-inline"> · ${priceText} / ${durationText}${badges.join('')}</span></span>
             <span class="right-cluster">
@@ -3771,6 +3775,26 @@ function renderSepayPackagesList(rows){
     if (!rows.length){ box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Chưa có gói nào. Bấm "+ Thêm gói" để tạo gói đầu tiên.</div>`; return; }
     box.innerHTML = rows.map(sepayPkgRowHtml).join('');
     sepayPkgListCache = rows;
+}
+async function reorderSepayPackages(fromId, toId){
+    if (!fromId || !toId || fromId === toId) return;
+    const fromIdx = sepayPkgListCache.findIndex(p => String(p.id) === String(fromId));
+    const toIdx = sepayPkgListCache.findIndex(p => String(p.id) === String(toId));
+    if (fromIdx < 0 || toIdx < 0) return;
+
+    const reordered = sepayPkgListCache.slice();
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+
+    sepayPkgListCache = reordered;
+    renderSepayPackagesList(reordered);
+
+    const results = await Promise.all(
+        reordered.map((p, i) => sb.from('pro_packages').update({ order_no: i + 1 }).eq('id', p.id))
+    );
+    const failed = results.find(r => r.error);
+    if (failed) showMsg('Lỗi lưu thứ tự: ' + failed.error.message, 'err');
+    loadSepayPackagesList();
 }
 let sepayPkgListCache = [];
 function toggleSepayPkgMenu(id, btn){

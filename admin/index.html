@@ -988,7 +988,7 @@ textarea{resize:vertical;}
                     <p class="hint" id="sepayPkgMsg" style="margin-top:10px;min-height:1.2em;"></p>
                 </div>
                 <div class="subj-mgr-col">
-                    <div id="sepayPkgForm" class="mini-form hidden">
+                    <div id="sepayPkgForm" class="mini-form show" style="display:flex;">
                         <div class="mini-form-title" id="sepayPkgFormTitle">Thêm gói</div>
                         <input type="hidden" id="sepayPkgId" value="">
                         <label>Tên gói</label>
@@ -3488,12 +3488,17 @@ function openSepayPackageForm(id){
     document.getElementById('sepayPkgDuration').value = pkg ? pkg.duration_days : '';
     document.getElementById('sepayPkgActive').checked = pkg ? (pkg.active !== false) : true;
     title.innerText = pkg ? ('Sửa gói: ' + pkg.name) : 'Thêm gói mới';
-    form.classList.add('show');
+    form.style.display = 'flex';
+    form.scrollIntoView({ behavior:'smooth', block:'center' });
     document.getElementById('sepayPkgName').focus();
 }
 function closeSepayPackageForm(){
-    const form = document.getElementById('sepayPkgForm');
-    if (form) form.classList.remove('show');
+    document.getElementById('sepayPkgId').value = '';
+    document.getElementById('sepayPkgName').value = '';
+    document.getElementById('sepayPkgPrice').value = '';
+    document.getElementById('sepayPkgDuration').value = '';
+    document.getElementById('sepayPkgActive').checked = true;
+    document.getElementById('sepayPkgFormTitle').innerText = 'Thêm gói mới';
 }
 async function saveSepayPackage(){
     const msgEl = document.getElementById('sepayPkgMsg');

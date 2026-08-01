@@ -1004,23 +1004,27 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             <button class="filter-pill" data-filter="paid" type="button">Trả phí</button>
         </div>
 
-        <div class="doc-cat" data-cat="free">
+        <div class="doc-cat">
             <div class="doc-cat-head">
-                <div class="doc-cat-name"><i class="fa-solid fa-gift" style="color:var(--green)"></i> Tài liệu miễn phí</div>
-                <span class="doc-count" id="docFreeCount">Đang tải...</span>
+                <div class="doc-cat-name"><i class="fa-solid fa-book" style="color:var(--green)"></i> Tất cả tài liệu</div>
+                <span class="doc-count" id="docAllCount">Đang tải...</span>
             </div>
-            <div id="docFreeGrid">
+            <div id="docAllGrid">
                 <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
             </div>
         </div>
 
-        <div class="doc-cat" data-cat="paid">
+        <div class="doc-cat" id="docHistorySec" style="display:none">
             <div class="doc-cat-head">
-                <div class="doc-cat-name"><i class="fa-solid fa-lock" style="color:var(--amber)"></i> Tài liệu trả phí</div>
-                <span class="doc-count" id="docPaidCount">Đang tải...</span>
+                <div class="doc-cat-name"><i class="fa-solid fa-clock-rotate-left" style="color:var(--brand)"></i> Lịch sử mua tài liệu</div>
             </div>
-            <div id="docPaidGrid">
-                <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
+            <div class="acct-order-card">
+                <div class="acc-loading" id="docOrderLoading">Đang tải lịch sử...</div>
+                <div id="docOrderList" style="display:none"></div>
+                <div class="acc-empty" id="docOrderEmpty" style="display:none">
+                    <i class="fa-solid fa-receipt"></i>
+                    <p>Chưa có giao dịch mua tài liệu nào thành công.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -1097,6 +1101,19 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                     <i class="fa-solid fa-receipt"></i>
                     <p>Chưa có giao dịch nào.<br>Lịch sử nâng cấp gói Pro của bạn sẽ hiện tại đây sau khi thanh toán.</p>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ TAB: LỊCH SỬ MUA HÀNG (toàn bộ đơn thành công) ============ -->
+    <section class="tab-panel" id="panel-history" style="display:none">
+        <div class="sec-head"><h2>Lịch sử mua hàng</h2></div>
+        <div class="acct-order-card">
+            <div class="acc-loading" id="histOrderLoading">Đang tải lịch sử...</div>
+            <div id="histOrderList" style="display:none"></div>
+            <div class="acc-empty" id="histOrderEmpty" style="display:none">
+                <i class="fa-solid fa-receipt"></i>
+                <p>Chưa có giao dịch nào thành công.<br>Mọi đơn thanh toán thành công (tài liệu, khoá học, gói Pro) sẽ hiện tại đây.</p>
             </div>
         </div>
     </section>
@@ -1287,7 +1304,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     // ---------------- ĐĂNG NHẬP / ĐĂNG KÝ — chỉ chặn khi bấm vào Trắc nghiệm, Tài liệu, Công cụ, Sản phẩm ----------------
     // Trang chủ và Hỗ trợ luôn hiện tự do trước, không bị chuyển trang ngay.
-    const GATED_TABS = ['quiz', 'doc', 'tool', 'product', 'account'];
+    const GATED_TABS = ['quiz', 'doc', 'tool', 'product', 'account', 'history'];
     let currentSession = null;
 
     function loginUrl(nextKey){
@@ -1797,7 +1814,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         if (!isPaid){
             const href = item.link || '#';
             return `
-                <a class="card" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
+                <a class="card" data-cat="free" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
                     ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
                     ${topHtml}
                     <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
@@ -1815,7 +1832,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         if (owned){
             const href = item.link || '#';
             return `
-                <a class="card" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
+                <a class="card" data-cat="paid" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
                     ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
                     ${topHtml}
                     <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
@@ -1826,7 +1843,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
         const idAttr = escapeHtmlHome(docId);
         return `
-            <div class="card" role="button" tabindex="0" style="cursor:pointer" onclick="openDocPurchase('${idAttr}')" onkeydown="if(event.key==='Enter')openDocPurchase('${idAttr}')">
+            <div class="card" data-cat="paid" role="button" tabindex="0" style="cursor:pointer" onclick="openDocPurchase('${idAttr}')" onkeydown="if(event.key==='Enter')openDocPurchase('${idAttr}')">
                 <div class="card-arrow"><i class="fa-solid fa-lock"></i></div>
                 ${topHtml}
                 <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
@@ -1841,20 +1858,28 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const paid = Array.isArray(payload.paid) ? payload.paid : [];
         DOC_PAID_ITEMS_MAP = {};
 
-        const freeGrid = document.getElementById('docFreeGrid');
-        const paidGrid = document.getElementById('docPaidGrid');
-        const freeCount = document.getElementById('docFreeCount');
-        const paidCount = document.getElementById('docPaidCount');
-        if (freeCount) freeCount.textContent = free.length + ' tài liệu';
-        if (paidCount) paidCount.textContent = paid.length + ' tài liệu';
+        const allGrid = document.getElementById('docAllGrid');
+        const allCount = document.getElementById('docAllCount');
+        const total = free.length + paid.length;
+        if (allCount) allCount.textContent = total + ' tài liệu';
 
-        freeGrid.innerHTML = free.length
-            ? `<div class="grid">${free.map(it => docItemCardHtml(it, false)).join('')}</div>`
-            : `<div class="empty-state small"><div class="empty-icon" style="background:var(--green-bg); color:var(--green)"><i class="fa-solid fa-folder-open"></i></div><div class="empty-title">Chưa có tài liệu miễn phí</div></div>`;
+        const cardsHtml = free.map(it => docItemCardHtml(it, false)).join('')
+            + paid.map(it => docItemCardHtml(it, true)).join('');
 
-        paidGrid.innerHTML = paid.length
-            ? `<div class="grid">${paid.map(it => docItemCardHtml(it, true)).join('')}</div>`
-            : `<div class="empty-state small"><div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-crown"></i></div><div class="empty-title">Chưa có tài liệu trả phí</div></div>`;
+        allGrid.innerHTML = total
+            ? `<div class="grid">${cardsHtml}</div>`
+            : `<div class="empty-state small"><div class="empty-icon" style="background:var(--green-bg); color:var(--green)"><i class="fa-solid fa-folder-open"></i></div><div class="empty-title">Chưa có tài liệu nào</div></div>`;
+
+        applyDocFilter();
+        loadDocOrderHistory();
+    }
+
+    function applyDocFilter(){
+        const activePill = document.querySelector('.filter-pill.active');
+        const f = activePill ? activePill.dataset.filter : 'all';
+        document.querySelectorAll('#docAllGrid .card').forEach(card=>{
+            card.style.display = (f === 'all' || card.dataset.cat === f) ? '' : 'none';
+        });
     }
 
     // ---- Modal xác nhận mua tài liệu ----
@@ -2412,6 +2437,108 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         }).join('');
     }
 
+    // ---------------- Lịch sử mua hàng (dùng chung) — chỉ lấy đơn đã thanh toán thành công ----------------
+    async function fetchPaidOrders(orderType, limit){
+        if (!currentSession) return [];
+        try{
+            let query = sb
+                .from('sepay_orders')
+                .select('id, order_type, plan_id, course_id, amount, status, invoice_number, created_at, paid_at')
+                .eq('user_id', currentSession.user.id)
+                .eq('status', 'paid')
+                .order('created_at', { ascending:false });
+            if (orderType) query = query.eq('order_type', orderType);
+            if (limit) query = query.limit(limit);
+            const { data, error } = await query;
+            return (!error && Array.isArray(data)) ? data : [];
+        }catch(e){ return []; }
+    }
+
+    function orderDisplayMeta(row){
+        if (row.order_type === 'subscription'){
+            const pkgNameById = {};
+            (proUpgradeItems || []).forEach(p => { pkgNameById[p.id] = p.name; });
+            return { icon:'fa-crown', title: pkgNameById[row.plan_id] || 'Gói Premium' };
+        }
+        if (row.order_type === 'document'){
+            const doc = DOC_PAID_ITEMS_MAP[String(row.course_id)];
+            return { icon:'fa-file-lines', title: (doc && doc.title) || 'Tài liệu' };
+        }
+        if (row.order_type === 'course'){
+            return { icon:'fa-graduation-cap', title:'Khoá học' };
+        }
+        return { icon:'fa-receipt', title: row.invoice_number || 'Đơn hàng' };
+    }
+
+    function orderHistoryItemHtml(row){
+        const meta = orderDisplayMeta(row);
+        const dateSrc = row.paid_at || row.created_at;
+        const dateText = dateSrc ? new Date(dateSrc).toLocaleString('vi-VN') : '';
+        const amountText = Number(row.amount || 0).toLocaleString('vi-VN') + 'đ';
+        return `<div class="acc-history-item">
+            <div class="acc-history-icon"><i class="fa-solid ${meta.icon}"></i></div>
+            <div>
+                <div class="acc-history-title">${escapeHtmlHome(meta.title)} — ${amountText}</div>
+                <div class="acc-history-meta">${escapeHtmlHome(dateText)}</div>
+            </div>
+            <span class="acct-order-status paid">Đã thanh toán</span>
+        </div>`;
+    }
+
+    // Lịch sử mua tài liệu (hiển thị ngay trong tab Tài liệu, chỉ đơn thành công)
+    async function loadDocOrderHistory(){
+        const sec = document.getElementById('docHistorySec');
+        const loadingEl = document.getElementById('docOrderLoading');
+        const listEl = document.getElementById('docOrderList');
+        const emptyEl = document.getElementById('docOrderEmpty');
+        if (!sec || !loadingEl || !listEl || !emptyEl) return;
+
+        if (!currentSession){ sec.style.display = 'none'; return; }
+        sec.style.display = '';
+        loadingEl.style.display = 'block';
+        listEl.style.display = 'none';
+        emptyEl.style.display = 'none';
+
+        const rows = await fetchPaidOrders('document', 20);
+
+        loadingEl.style.display = 'none';
+        if (!rows.length){
+            emptyEl.style.display = 'flex';
+            return;
+        }
+        listEl.style.display = 'block';
+        listEl.innerHTML = rows.map(orderHistoryItemHtml).join('');
+    }
+
+    // Tab "Lịch sử mua hàng" — toàn bộ đơn (tài liệu + khoá học + gói Pro), chỉ đơn thành công
+    async function loadFullPurchaseHistory(){
+        const loadingEl = document.getElementById('histOrderLoading');
+        const listEl = document.getElementById('histOrderList');
+        const emptyEl = document.getElementById('histOrderEmpty');
+        if (!loadingEl || !listEl || !emptyEl) return;
+
+        if (!currentSession){
+            loadingEl.style.display = 'none';
+            listEl.style.display = 'none';
+            emptyEl.style.display = 'flex';
+            return;
+        }
+
+        loadingEl.style.display = 'block';
+        listEl.style.display = 'none';
+        emptyEl.style.display = 'none';
+
+        const rows = await fetchPaidOrders(null, 50);
+
+        loadingEl.style.display = 'none';
+        if (!rows.length){
+            emptyEl.style.display = 'flex';
+            return;
+        }
+        listEl.style.display = 'block';
+        listEl.innerHTML = rows.map(orderHistoryItemHtml).join('');
+    }
+
     // ---------------- MENU ĐIỀU HƯỚNG — ẩn/hiện + sắp xếp thứ tự tab, quản lý ở trang admin (site_settings) ----------------
     const NAV_TABS_DEFAULT = [
         { key:'home',    label:'Trang chủ',   icon:'fa-solid fa-house' },
@@ -2420,6 +2547,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         { key:'tool',    label:'Công cụ',     icon:'fa-solid fa-toolbox' },
         { key:'product', label:'Sản phẩm',    icon:'fa-solid fa-bag-shopping' },
         { key:'account', label:'Tài khoản', icon:'fa-solid fa-crown' },
+        { key:'history', label:'Lịch sử mua hàng', icon:'fa-solid fa-receipt' },
         { key:'support', label:'Hỗ trợ',      icon:'fa-solid fa-headset' }
     ];
 
@@ -2500,7 +2628,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         blue:   { bg:'#e8f3ff',         fg:'#0068ff' },
         red:    { bg:'#fde8e8',         fg:'#dc2626' }
     };
-    const QL_KNOWN_TABS = ['home', 'doc', 'quiz', 'tool', 'product', 'account', 'support'];
+    const QL_KNOWN_TABS = ['home', 'doc', 'quiz', 'tool', 'product', 'account', 'history', 'support'];
 
     function quickTileHtml(q){
         const style = QL_COLOR_MAP[q.color] || QL_COLOR_MAP.indigo;
@@ -2549,7 +2677,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     proFeaturesConfigPromise = loadProUpgradeFeaturesConfig();
     loadPromoBanner();
 
-    const panels = { home:'panel-home', quiz:'panel-quiz', doc:'panel-doc', tool:'panel-tool', product:'panel-product', account:'panel-account', support:'panel-support' };
+    const panels = { home:'panel-home', quiz:'panel-quiz', doc:'panel-doc', tool:'panel-tool', product:'panel-product', account:'panel-account', history:'panel-history', support:'panel-support' };
     const TAB_TITLES = {
         home:    ['Trang chủ', ''],
         quiz:    ['Trắc nghiệm', ''],
@@ -2557,6 +2685,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         tool:    ['Công cụ', ''],
         product: ['Sản phẩm', ''],
         account: ['Tài khoản', ''],
+        history: ['Lịch sử mua hàng', ''],
         support: ['Hỗ trợ', '']
     };
     const topbarTitle = document.querySelector('.topbar-title');
@@ -2574,6 +2703,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         Object.values(panels).forEach(id => document.getElementById(id).style.display = 'none');
         document.getElementById(panels[key]).style.display = '';
         if (key === 'account') refreshSessionAndRenderAccount();
+        if (key === 'history') loadFullPurchaseHistory();
         document.querySelectorAll('.side-link[data-tab]').forEach(el => el.classList.toggle('active', el.dataset.tab === key));
         const [t, sub] = TAB_TITLES[key] || [key, ''];
         topbarTitle.innerHTML = t + '<span>' + sub + '</span>';
@@ -2691,10 +2821,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         pill.addEventListener('click', ()=>{
             document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
             pill.classList.add('active');
-            const f = pill.dataset.filter;
-            document.querySelectorAll('.doc-cat').forEach(cat=>{
-                cat.style.display = (f === 'all' || cat.dataset.cat === f) ? '' : 'none';
-            });
+            applyDocFilter();
         });
     });
 </script>

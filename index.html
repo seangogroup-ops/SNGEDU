@@ -313,9 +313,24 @@
     .acct-subpanel.active{ display:block; animation:accPop .18s ease; }
 
     /* ----- khối "Đổi mật khẩu" thu gọn, bấm mới hiện ----- */
-    .acctpw-toggle{ cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:space-between; }
-    .acctpw-chevron{ color:var(--ink-mute); font-size:.85rem; transition:transform .2s ease; }
-    .acctpw-toggle.open .acctpw-chevron{ transform:rotate(180deg); }
+    .acctpw-toggle{
+        cursor:pointer; user-select:none; display:flex; align-items:center; gap:12px;
+        background:var(--card); border:1.5px solid var(--line); border-radius:16px;
+        padding:16px 20px; margin-bottom:0; transition:border-color .15s ease, background .15s ease;
+    }
+    .acctpw-toggle:hover{ border-color:var(--brand); }
+    .acctpw-toggle .acctpw-toggle-icon{
+        width:36px; height:36px; border-radius:10px; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center; font-size:.95rem;
+        background:var(--brand-bg); color:var(--brand);
+    }
+    .acctpw-toggle h2{ flex:1; }
+    .acctpw-toggle-hint{ font-size:.78rem; font-weight:600; color:var(--ink-mute); margin-right:4px; }
+    .acctpw-chevron{ color:var(--ink-mute); font-size:.9rem; transition:transform .2s ease; flex-shrink:0; }
+    .acctpw-toggle.open{ border-color:var(--brand); border-bottom-left-radius:0; border-bottom-right-radius:0; margin-bottom:0 !important; }
+    .acctpw-toggle.open .acctpw-chevron{ transform:rotate(180deg); color:var(--brand); }
+    .acctpw-card{ border-top-left-radius:0 !important; border-top-right-radius:0 !important; border-top:none !important; }
+    @media (max-width: 480px){ .acctpw-toggle-hint{ display:none; } }
 
     /* ----- đổi mật khẩu (trang Tài khoản đầy đủ) ----- */
     .acctpw-card{
@@ -981,7 +996,9 @@
             </div>
 
             <div class="sec-head acctpw-toggle" id="acctPwToggle" role="button" tabindex="0" aria-expanded="false">
+                <div class="acctpw-toggle-icon"><i class="fa-solid fa-key"></i></div>
                 <h2>Đổi mật khẩu</h2>
+                <span class="acctpw-toggle-hint">Bấm để mở</span>
                 <i class="fa-solid fa-chevron-down acctpw-chevron" id="acctPwChevron"></i>
             </div>
             <div class="acctpw-card" id="acctPwCard" style="display:none;">
@@ -1448,11 +1465,13 @@
     (function initAcctPwToggle(){
         const toggle = document.getElementById('acctPwToggle');
         const card = document.getElementById('acctPwCard');
+        const hint = toggle ? toggle.querySelector('.acctpw-toggle-hint') : null;
         if (!toggle || !card) return;
         const setOpen = (open) => {
             toggle.classList.toggle('open', open);
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             card.style.display = open ? 'block' : 'none';
+            if (hint) hint.textContent = open ? 'Bấm để đóng' : 'Bấm để mở';
         };
         toggle.addEventListener('click', () => setOpen(card.style.display === 'none'));
         toggle.addEventListener('keydown', (e) => {

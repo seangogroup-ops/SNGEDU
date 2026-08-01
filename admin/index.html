@@ -143,6 +143,13 @@ aside{
 .doc-type-opt:hover{border-color:var(--accent);}
 .doc-type-opt.selected.free{background:rgba(46,211,146,.14);border-color:#16a34a;color:#16a34a;}
 .doc-type-opt.selected.paid{background:rgba(180,83,9,.14);border-color:var(--amber);color:var(--amber);}
+.fmgr-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.fmgr-tab{background:var(--white);border:1px solid var(--border);color:var(--gray);padding:6px 12px;font-size:.78rem;font-weight:600;border-radius:7px;font-family:var(--font-display);cursor:pointer;}
+.fmgr-tab:hover{border-color:var(--accent);color:var(--accent);}
+.fmgr-tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.fmgr-pin-btn{background:transparent;border:1px solid var(--border);color:var(--gray);padding:4px 10px;font-size:.72rem;font-weight:700;border-radius:6px;font-family:var(--font-display);cursor:pointer;white-space:nowrap;}
+.fmgr-pin-btn:hover{border-color:var(--accent);color:var(--accent);}
+.fmgr-pin-btn.pinned{background:rgba(46,211,146,.14);border-color:#16a34a;color:#16a34a;}
 .side-add{
     background:transparent;border:1px dashed #454e72;color:#98a0c2;
     padding:6px 10px;font-size:.74rem;border-radius:7px;font-family:var(--font-display);
@@ -817,6 +824,12 @@ textarea{resize:vertical;}
                 <div class="side-item settings-item" data-setkey="home_hero" onclick="openSettingsPanel('home_hero')">
                     <span class="set-ico">🏠</span><span class="name">Trang chủ</span>
                 </div>
+                <div class="side-item settings-item" data-setkey="home_texts" onclick="openSettingsPanel('home_texts')">
+                    <span class="set-ico">✏️</span><span class="name">Chữ trang chủ</span>
+                </div>
+                <div class="side-item settings-item" id="navFeatured" onclick="showFeaturedManager()">
+                    <span class="set-ico">⭐</span><span class="name">Ghim nổi bật</span>
+                </div>
                 <div class="side-item settings-item" data-setkey="site_footer" onclick="openSettingsPanel('site_footer')">
                     <span class="set-ico">📄</span><span class="name">Chân trang</span>
                 </div>
@@ -1015,6 +1028,34 @@ textarea{resize:vertical;}
             <div id="cmListsWrap"></div>
         </div>
 
+        <!-- ================= GHIM NỔI BẬT (site_settings key 'home_featured') ================= -->
+        <div id="featuredPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>⭐ Ghim nổi bật</h2>
+                <p class="hint">Chọn Học phần / Tài liệu / Công cụ / Sản phẩm để ghim vào khối "Nổi bật" hiện ở đầu trang chủ. Kéo thả (⋮⋮) trong danh sách "Đang ghim" để đổi thứ tự hiển thị.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col" style="max-width:460px;">
+                    <div class="subj-mgr-col-head">
+                        <h4><i class="fa-solid fa-star"></i> Đang ghim</h4>
+                    </div>
+                    <div id="featuredPinnedList" class="side-list subj-mgr-list"></div>
+                </div>
+                <div class="subj-mgr-col">
+                    <div class="subj-mgr-col-head">
+                        <h4>Chọn mục để ghim</h4>
+                    </div>
+                    <div class="fmgr-tabs" id="featuredSourceTabs">
+                        <button type="button" class="fmgr-tab active" data-src="subject" onclick="switchFeaturedSourceTab('subject')">📝 Học phần</button>
+                        <button type="button" class="fmgr-tab" data-src="doc" onclick="switchFeaturedSourceTab('doc')">📁 Tài liệu</button>
+                        <button type="button" class="fmgr-tab" data-src="tool" onclick="switchFeaturedSourceTab('tool')">🧰 Công cụ</button>
+                        <button type="button" class="fmgr-tab" data-src="product" onclick="switchFeaturedSourceTab('product')">🛍️ Sản phẩm</button>
+                    </div>
+                    <div id="featuredSourceList" class="side-list subj-mgr-list"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- ================= QUẢN LÝ GÓI THANH TOÁN TỰ ĐỘNG (bảng pro_packages, dùng cho SePay) ================= -->
         <div id="sepayPackagesPanel" class="hidden">
             <div class="subj-mgr-head">
@@ -1177,6 +1218,25 @@ textarea{resize:vertical;}
                     <label>Tiêu đề chính</label>
                     <input id="setHeroTitle" placeholder="Ôn tập trắc nghiệm...">
                 </div>
+
+                <div id="setFieldsTexts" class="hidden">
+                    <label>Tiêu đề khối "Nổi bật" (chỉ hiện khi có mục được ghim)</label>
+                    <input id="setTextFeatured" placeholder="⭐ Nổi bật">
+                    <label style="margin-top:10px;">Tiêu đề "Truy cập nhanh"</label>
+                    <input id="setTextQuick" placeholder="Truy cập nhanh">
+                    <label style="margin-top:10px;">Tiêu đề "Học phần nổi bật" (trang chủ)</label>
+                    <input id="setTextHomeSubjects" placeholder="Học phần nổi bật">
+                    <label style="margin-top:10px;">Tiêu đề tab "Trắc nghiệm"</label>
+                    <input id="setTextQuiz" placeholder="Học phần đại cương">
+                    <label style="margin-top:10px;">Tiêu đề tab "Tài liệu"</label>
+                    <input id="setTextDoc" placeholder="Tài liệu">
+                    <label style="margin-top:10px;">Tiêu đề tab "Công cụ"</label>
+                    <input id="setTextTool" placeholder="Công cụ">
+                    <label style="margin-top:10px;">Tiêu đề tab "Sản phẩm"</label>
+                    <input id="setTextProduct" placeholder="Sản phẩm">
+                    <div class="hint" style="margin-top:6px;">Để trống ô nào thì trang chủ dùng đúng chữ mặc định như placeholder ở ô đó.</div>
+                </div>
+
 
                 <div id="setFieldsFooter" class="hidden">
                     <label>Nội dung chân trang</label>
@@ -1609,6 +1669,7 @@ function restoreLastAdminPanel(){
         if (last === 'sepayPkg')          return showSepayPackages();
         if (last === 'accounts')          return showAccountsManager();
         if (last === 'generalSettings')   return showGeneralSettings();
+        if (last === 'featured')          return showFeaturedManager();
     }
     showSubjectManager(); // mặc định (và trường hợp last === 'subjectMgr')
 }
@@ -1617,7 +1678,7 @@ function restoreLastAdminPanel(){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel'];
+const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -4033,6 +4094,149 @@ async function saveContentList(subKey){
     return error;
 }
 
+// ---------- GHIM NỔI BẬT (site_settings key 'home_featured') ----------
+// Cho phép ghim Học phần / Tài liệu / Công cụ / Sản phẩm vào khối "Nổi bật" ở đầu trang chủ.
+let featuredPins = []; // [{type:'subject'|'doc'|'tool'|'product', ref_id:string}], thứ tự = thứ tự hiển thị
+let featuredSourceData = { subject: [], doc: [], tool: [], product: [] };
+let featuredActiveTab = 'subject';
+const FEATURED_TYPE_META = {
+    subject: { label: 'Học phần', icon: '📝' },
+    doc:     { label: 'Tài liệu', icon: '📁' },
+    tool:    { label: 'Công cụ',  icon: '🧰' },
+    product: { label: 'Sản phẩm', icon: '🛍️' },
+};
+
+async function showFeaturedManager(){
+    rememberAdminPanel('featured');
+    showAdminPanel('featuredPanel', 'navFeatured');
+    document.getElementById('featuredPinnedList').innerHTML = `<div class="empty-state" style="padding:14px 4px;">Đang tải...</div>`;
+    document.getElementById('featuredSourceList').innerHTML = `<div class="empty-state" style="padding:14px 4px;">Đang tải...</div>`;
+    await Promise.all([loadFeaturedPins(), loadFeaturedSources()]);
+    featuredActiveTab = 'subject';
+    document.querySelectorAll('#featuredSourceTabs .fmgr-tab').forEach(el => el.classList.toggle('active', el.dataset.src === 'subject'));
+    renderFeaturedPinnedList();
+    renderFeaturedSourceList();
+}
+
+function subjectStatusLabelAdmin(status){
+    if (status === 'maintenance') return 'Bảo trì';
+    if (status === 'pending') return 'Chưa cập nhật';
+    if (status === 'hidden') return 'Đang ẩn';
+    return 'Sẵn sàng';
+}
+
+async function loadFeaturedPins(){
+    const { data, error } = await sb.from('site_settings').select('*').eq('key', 'home_featured').single();
+    if (error && error.code !== 'PGRST116') showMsg('Lỗi tải danh sách ghim: ' + error.message, 'err');
+    const payload = (data && data.payload) ? data.payload : { items: [] };
+    featuredPins = Array.isArray(payload.items) ? payload.items.map(x => ({ type: x.type, ref_id: x.ref_id })) : [];
+}
+
+async function loadFeaturedSources(){
+    const { data: subs } = await sb.from('subjects').select('id,name,status').order('order_no', { ascending: true, nullsFirst: false }).order('id');
+    featuredSourceData.subject = (subs || []).map(s => ({ id: s.id, title: s.name, sub: subjectStatusLabelAdmin(s.status) }));
+
+    const { data: docRow } = await sb.from('site_settings').select('*').eq('key', 'doc_content').single();
+    const docPayload = (docRow && docRow.payload) ? docRow.payload : { free: [], paid: [] };
+    const freeArr = (Array.isArray(docPayload.free) ? docPayload.free : []).map(it => ({ id: String(it.id), title: it.title || '(chưa đặt tên)', sub: 'Miễn phí' }));
+    const paidArr = (Array.isArray(docPayload.paid) ? docPayload.paid : []).map(it => ({ id: String(it.id), title: it.title || '(chưa đặt tên)', sub: 'Trả phí' }));
+    featuredSourceData.doc = freeArr.concat(paidArr);
+
+    const { data: toolRow } = await sb.from('site_settings').select('*').eq('key', 'tool_content').single();
+    const toolItems = (toolRow && toolRow.payload && Array.isArray(toolRow.payload.items)) ? toolRow.payload.items : [];
+    featuredSourceData.tool = toolItems.map(it => ({ id: String(it.id), title: it.title || '(chưa đặt tên)', sub: it.status === 'ready' ? 'Sẵn sàng' : 'Sắp ra mắt' }));
+
+    const { data: prodRow } = await sb.from('site_settings').select('*').eq('key', 'product_content').single();
+    const prodItems = (prodRow && prodRow.payload && Array.isArray(prodRow.payload.items)) ? prodRow.payload.items : [];
+    featuredSourceData.product = prodItems.map(it => ({ id: String(it.id), title: it.title || '(chưa đặt tên)', sub: it.price || '' }));
+}
+
+function switchFeaturedSourceTab(src){
+    featuredActiveTab = src;
+    document.querySelectorAll('#featuredSourceTabs .fmgr-tab').forEach(el => el.classList.toggle('active', el.dataset.src === src));
+    renderFeaturedSourceList();
+}
+
+function isFeaturedPinned(type, refId){
+    return featuredPins.some(p => p.type === type && String(p.ref_id) === String(refId));
+}
+
+function renderFeaturedSourceList(){
+    const box = document.getElementById('featuredSourceList');
+    if (!box) return;
+    const list = featuredSourceData[featuredActiveTab] || [];
+    if (!list.length){ box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Chưa có mục nào ở đây.</div>`; return; }
+    box.innerHTML = list.map(it => {
+        const pinned = isFeaturedPinned(featuredActiveTab, it.id);
+        return `
+        <div class="side-item" style="cursor:default;">
+            <span class="name">${escapeHtml(it.title)}<span class="hint-inline">${it.sub ? ' · ' + escapeHtml(String(it.sub)) : ''}</span></span>
+            <span class="right-cluster">
+                <button class="fmgr-pin-btn ${pinned ? 'pinned' : ''}" onclick="toggleFeaturedPin('${featuredActiveTab}','${escapeHtml(String(it.id))}')">${pinned ? '✔ Đã ghim' : '📌 Ghim'}</button>
+            </span>
+        </div>`;
+    }).join('');
+}
+
+function renderFeaturedPinnedList(){
+    const box = document.getElementById('featuredPinnedList');
+    if (!box) return;
+    if (!featuredPins.length){ box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Chưa ghim mục nào. Chọn ở cột bên phải để ghim.</div>`; return; }
+    box.innerHTML = featuredPins.map(p => {
+        const meta = FEATURED_TYPE_META[p.type] || { label: p.type, icon: '⭐' };
+        const src = featuredSourceData[p.type] || [];
+        const found = src.find(x => String(x.id) === String(p.ref_id));
+        const title = found ? found.title : ('(#' + p.ref_id + ' — không còn tồn tại)');
+        const domId = p.type + ':' + p.ref_id;
+        return `
+        <div class="side-item" data-id="${escapeHtml(domId)}">
+            <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
+            <span class="prev-ico color-swatch indigo" style="width:26px;height:26px;min-width:26px;font-size:.78rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;">${meta.icon}</span>
+            <span class="name">${escapeHtml(title)}<span class="hint-inline"> · ${escapeHtml(meta.label)}</span></span>
+            <span class="right-cluster">
+                <button class="icon-x" title="Bỏ ghim" onclick="toggleFeaturedPin('${p.type}','${escapeHtml(String(p.ref_id))}')">✕</button>
+            </span>
+        </div>`;
+    }).join('');
+}
+
+async function toggleFeaturedPin(type, refId){
+    const idx = featuredPins.findIndex(p => p.type === type && String(p.ref_id) === String(refId));
+    const wasPinned = idx >= 0;
+    if (wasPinned) featuredPins.splice(idx, 1);
+    else featuredPins.push({ type, ref_id: refId });
+    renderFeaturedPinnedList();
+    renderFeaturedSourceList();
+    const err = await saveFeaturedPins();
+    if (err) showMsg('Lỗi lưu ghim: ' + err.message, 'err');
+    else showMsg(wasPinned ? 'Đã bỏ ghim.' : 'Đã ghim vào khối "Nổi bật".', 'ok');
+}
+
+async function reorderFeaturedPins(fromId, toId){
+    if (!fromId || !toId || fromId === toId) return;
+    const idOf = p => p.type + ':' + p.ref_id;
+    const fromIdx = featuredPins.findIndex(p => idOf(p) === fromId);
+    const toIdx = featuredPins.findIndex(p => idOf(p) === toId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const reordered = featuredPins.slice();
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    featuredPins = reordered;
+    renderFeaturedPinnedList();
+    const err = await saveFeaturedPins();
+    if (err) showMsg('Lỗi lưu thứ tự: ' + err.message, 'err');
+}
+
+async function saveFeaturedPins(){
+    const payload = { items: featuredPins.map(p => ({ type: p.type, ref_id: p.ref_id })) };
+    const { error } = await sb.from('site_settings')
+        .upsert({ key: 'home_featured', payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    return error;
+}
+// featuredPinnedList là container tĩnh, cố định trong HTML (không bị innerHTML-wipe từ ngoài như cmList_*),
+// nên chỉ gắn drag-reorder đúng 1 lần ở đây — tránh gọi lại trong showFeaturedManager() làm chồng listener mỗi lần vào lại trang.
+enableDragReorder('featuredPinnedList', '.side-item', el => el.dataset.id, null, (fromId, toId) => reorderFeaturedPins(fromId, toId));
+
 // ---------- KHỐI GIỚI THIỆU ĐẦU TAB "HỖ TRỢ" (site_settings key 'support_content', field intro_title/intro_desc) ----------
 async function loadSupportIntro(){
     const { data } = await sb.from('site_settings').select('*').eq('key', 'support_content').single();
@@ -4709,6 +4913,7 @@ let bannerEffect = 'subtle';
 
 const SETTINGS_META = {
     home_hero: { title: 'Trang chủ', hint: 'Khối giới thiệu (hero) ở đầu trang chủ, và các thẻ Truy cập nhanh bên dưới nó.' },
+    home_texts: { title: 'Chữ trang chủ', hint: 'Tuỳ chỉnh tiêu đề của từng khu vực trên trang chủ và các tab. Mô tả/nội dung từng thẻ vẫn quản lý riêng ở các mục Tài liệu, Trắc nghiệm, Công cụ, Sản phẩm...' },
     site_footer: { title: 'Chân trang', hint: 'Dòng chữ bản quyền / chân trang, dùng chung và đồng bộ trên mọi trang.' },
     report_banner: { title: 'Banner góp ý', hint: 'Banner "Gặp câu hỏi sai?" ở trang danh sách môn học — chỉnh chữ và link đích.' },
     promo_banner: { title: 'Banner Premium', hint: 'Banner đếm ngược + giới hạn suất ở đầu trang chủ, bấm vào sẽ mở popup "Nâng cấp Pro".' },
@@ -4735,15 +4940,17 @@ async function openSettingsPanel(key){
     document.getElementById('setFormHint').innerText = meta.hint;
 
     const isHero = key === 'home_hero';
+    const isTexts = key === 'home_texts';
     const isFooter = key === 'site_footer';
     const isBanner = key === 'report_banner';
     const isPromo = key === 'promo_banner';
     document.getElementById('setFieldsHero').classList.toggle('hidden', !isHero);
+    document.getElementById('setFieldsTexts').classList.toggle('hidden', !isTexts);
     document.getElementById('setFieldsFooter').classList.toggle('hidden', !isFooter);
     document.getElementById('setFieldsBanner').classList.toggle('hidden', !isBanner);
     document.getElementById('setFieldsPromo').classList.toggle('hidden', !isPromo);
-    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero || isFooter || isBanner || isPromo);
-    document.getElementById('quickLinksSection').classList.toggle('hidden', isFooter || isBanner || isPromo);
+    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero || isTexts || isFooter || isBanner || isPromo);
+    document.getElementById('quickLinksSection').classList.toggle('hidden', isTexts || isFooter || isBanner || isPromo);
 
     const { data, error } = await sb.from('site_settings').select('*').eq('key', key).single();
     if (error && error.code !== 'PGRST116'){
@@ -4755,6 +4962,14 @@ async function openSettingsPanel(key){
         document.getElementById('setHeroPageTitle').value = currentSetPayload.pageTitle || '';
         document.getElementById('setHeroEyebrow').value = currentSetPayload.eyebrow || '';
         document.getElementById('setHeroTitle').value = currentSetPayload.title || '';
+    } else if (isTexts){
+        document.getElementById('setTextFeatured').value = currentSetPayload.featuredTitle || '';
+        document.getElementById('setTextQuick').value = currentSetPayload.quickTitle || '';
+        document.getElementById('setTextHomeSubjects').value = currentSetPayload.homeSubjectsTitle || '';
+        document.getElementById('setTextQuiz').value = currentSetPayload.quizTitle || '';
+        document.getElementById('setTextDoc').value = currentSetPayload.docTitle || '';
+        document.getElementById('setTextTool').value = currentSetPayload.toolTitle || '';
+        document.getElementById('setTextProduct').value = currentSetPayload.productTitle || '';
     } else if (isFooter){
         const defaultFooter = 'SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải';
         document.getElementById('setFooterText').value = currentSetPayload.text || '';
@@ -4984,6 +5199,16 @@ async function saveSiteSetting(){
             pageTitle: document.getElementById('setHeroPageTitle').value.trim(),
             eyebrow: document.getElementById('setHeroEyebrow').value.trim(),
             title: document.getElementById('setHeroTitle').value.trim(),
+        };
+    } else if (currentSetKey === 'home_texts'){
+        payload = {
+            featuredTitle: document.getElementById('setTextFeatured').value.trim(),
+            quickTitle: document.getElementById('setTextQuick').value.trim(),
+            homeSubjectsTitle: document.getElementById('setTextHomeSubjects').value.trim(),
+            quizTitle: document.getElementById('setTextQuiz').value.trim(),
+            docTitle: document.getElementById('setTextDoc').value.trim(),
+            toolTitle: document.getElementById('setTextTool').value.trim(),
+            productTitle: document.getElementById('setTextProduct').value.trim(),
         };
     } else if (currentSetKey === 'site_footer'){
         payload = {

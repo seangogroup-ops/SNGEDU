@@ -230,74 +230,28 @@
     .state-card a{ color:var(--accent); font-weight:700; text-decoration:none; }
     .state-card a:hover{ text-decoration:underline; }
 
-    /* ---------------- report banner (màu / kiểu dáng / hiệu ứng / kích thước tuỳ biến qua class) ---------------- */
+    /* ---------------- report banner ---------------- */
     .report-banner{
-        display:flex; align-items:center; justify-content:center; gap:var(--rb-gap, 10px); flex-wrap:wrap;
-        background:var(--rb-bg, var(--amber-bg)); border:1.5px solid var(--rb-border, var(--amber));
-        border-radius:var(--rb-radius, 20px); padding:var(--rb-pad, 13px 22px); margin:clamp(28px, 5vw, 36px) auto 0; width:fit-content; max-width:100%;
+        display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+        background:var(--amber-bg); border:1.5px solid var(--amber);
+        border-radius:20px; padding:13px 22px; margin:clamp(28px, 5vw, 36px) auto 0; width:fit-content; max-width:100%;
         text-decoration:none; position:relative;
         box-shadow:var(--shadow);
+        animation: bannerGlow 2s ease-in-out infinite;
     }
     @media (hover:hover){ .report-banner:hover{ transform:translateY(-1px) scale(1.015); box-shadow:var(--shadow-hov); } }
     .report-banner:active{ transform:scale(.98); }
-    .report-banner .icon{ font-size:var(--rb-icon, 16px); flex-shrink:0; display:inline-block; }
+    .report-banner .icon{ font-size:16px; flex-shrink:0; display:inline-block; animation: iconShake 1.8s ease-in-out infinite; }
     .report-banner span:not(.icon):not(.arrow){
-        color:var(--rb-text, #8a5a06); font-size:var(--rb-font, 12.5px); font-weight:800; letter-spacing:.3px; text-transform:uppercase; text-align:center;
+        color:#8a5a06; font-size:12.5px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; text-align:center;
     }
-    html[data-theme="dark"] .report-banner span:not(.icon):not(.arrow){ color:var(--rb-text-dark, var(--amber)); }
+    html[data-theme="dark"] .report-banner span:not(.icon):not(.arrow){ color:var(--amber); }
     .report-banner span u{ text-decoration-thickness:2px; }
-    .report-banner .arrow{ font-size:var(--rb-arrow, 15px); flex-shrink:0; }
-
-    /* ----- kích thước ----- */
-    .report-banner--sm{ --rb-pad:9px 16px; --rb-font:10.5px; --rb-icon:14px; --rb-arrow:13px; --rb-gap:8px; }
-    .report-banner--md{ --rb-pad:13px 22px; --rb-font:12.5px; --rb-icon:16px; --rb-arrow:15px; --rb-gap:10px; }
-    .report-banner--lg{ --rb-pad:17px 30px; --rb-font:14.5px; --rb-icon:19px; --rb-arrow:18px; --rb-gap:12px; }
-
-    /* ----- màu sắc ----- */
-    .report-banner--amber{ --rb-bg:var(--amber-bg); --rb-border:var(--amber); --rb-text:#8a5a06; --rb-text-dark:var(--amber); --rb-glow:245,165,36; }
-    .report-banner--blue{ --rb-bg:#e7f0ff; --rb-border:#2563eb; --rb-text:#1d4ed8; --rb-text-dark:#8ab4ff; --rb-glow:37,99,235; }
-    html[data-theme="dark"] .report-banner--blue{ --rb-bg:#152238; --rb-border:#3b6fdb; }
-    .report-banner--green{ --rb-bg:#e7f9f0; --rb-border:#16a34a; --rb-text:#0f7a37; --rb-text-dark:#4ade80; --rb-glow:22,163,74; }
-    html[data-theme="dark"] .report-banner--green{ --rb-bg:#123521; --rb-border:#1e9750; }
-    .report-banner--red{ --rb-bg:#fdeaea; --rb-border:#dc2626; --rb-text:#b91c1c; --rb-text-dark:#f87171; --rb-glow:220,38,38; }
-    html[data-theme="dark"] .report-banner--red{ --rb-bg:#391414; --rb-border:#c62d2d; }
-    .report-banner--purple{ --rb-bg:#f1ecfe; --rb-border:#8b5cf6; --rb-text:#6d28d9; --rb-text-dark:#c4b5fd; --rb-glow:139,92,246; }
-    html[data-theme="dark"] .report-banner--purple{ --rb-bg:#241c3d; --rb-border:#9a72f2; }
-    .report-banner--indigo{ --rb-bg:#ecebfe; --rb-border:#4f4ee0; --rb-text:#3c3ab8; --rb-text-dark:#a5a4ff; --rb-glow:79,78,224; }
-    html[data-theme="dark"] .report-banner--indigo{ --rb-bg:#1d1c3a; --rb-border:#5f5ef0; }
-
-    /* ----- kiểu dáng ----- */
-    .report-banner--pill{ --rb-radius:999px; }
-    .report-banner--rounded{ --rb-radius:14px; }
-    .report-banner--square{ --rb-radius:6px; }
-
-    /* ----- hiệu ứng ----- */
-    .report-banner--effect-subtle{ animation: bannerGlow 2s ease-in-out infinite; }
-    .report-banner--effect-subtle .icon{ animation: iconShake 1.8s ease-in-out infinite; }
-    .report-banner--effect-subtle .arrow{ animation: arrowNudge 1s ease-in-out infinite; }
-
-    .report-banner--effect-pulse{ animation: bannerPulse 1.4s ease-in-out infinite; }
-    .report-banner--effect-pulse .arrow{ animation: arrowNudge 1s ease-in-out infinite; }
-
-    .report-banner--effect-shake{ animation: bannerShake 2.4s ease-in-out infinite; }
-    .report-banner--effect-shake .icon{ animation: iconShake 1.8s ease-in-out infinite; }
-
-    .report-banner--effect-none{ animation:none; }
-    .report-banner--effect-none .icon, .report-banner--effect-none .arrow{ animation:none; }
-
+    .report-banner .arrow{ font-size:15px; flex-shrink:0; animation: arrowNudge 1s ease-in-out infinite; }
     @keyframes arrowNudge{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(4px); } }
     @keyframes bannerGlow{
-        0%,100%{ box-shadow:var(--shadow), 0 0 0 0 rgba(var(--rb-glow, 245,165,36),.4); }
-        50%{ box-shadow:var(--shadow-hov), 0 0 0 9px rgba(var(--rb-glow, 245,165,36),0); }
-    }
-    @keyframes bannerPulse{
-        0%,100%{ transform:scale(1); box-shadow:var(--shadow), 0 0 0 0 rgba(var(--rb-glow, 245,165,36),.55); }
-        50%{ transform:scale(1.045); box-shadow:var(--shadow-hov), 0 0 0 12px rgba(var(--rb-glow, 245,165,36),0); }
-    }
-    @keyframes bannerShake{
-        0%,8%,100%{ transform:rotate(0deg) translateX(0); }
-        2%{ transform:rotate(-2deg) translateX(-1px); } 4%{ transform:rotate(2deg) translateX(1px); }
-        6%{ transform:rotate(-1.5deg) translateX(-1px); }
+        0%,100%{ box-shadow:var(--shadow), 0 0 0 0 rgba(245,165,36,.4); }
+        50%{ box-shadow:var(--shadow-hov), 0 0 0 9px rgba(245,165,36,0); }
     }
     @keyframes iconShake{
         0%,60%,100%{ transform:rotate(0deg); }
@@ -305,7 +259,7 @@
         85%{ transform:rotate(-7deg); } 92%{ transform:rotate(4deg); }
     }
     @media (prefers-reduced-motion: reduce){
-        .report-banner, .report-banner *{ animation:none !important; }
+        .report-banner, .report-banner .icon, .report-banner .arrow{ animation:none; }
     }
 
     footer{
@@ -332,9 +286,8 @@
         .chapter-card{ padding:16px; gap:12px; }
         .c-name{ font-size:.92rem; }
         .section-label{ font-size:.72rem; }
-        .report-banner--sm{ --rb-pad:7px 13px; --rb-font:9.5px; --rb-icon:12px; --rb-arrow:11px; }
-        .report-banner--md{ --rb-pad:12px 18px; --rb-font:11.5px; --rb-icon:15px; --rb-arrow:14px; }
-        .report-banner--lg{ --rb-pad:15px 24px; --rb-font:13px; --rb-icon:17px; --rb-arrow:16px; }
+        .report-banner{ padding:12px 18px; }
+        .report-banner span:not(.icon):not(.arrow){ font-size:11.5px; }
     }
     @media (max-width: 400px){
         .chapter-screen{ padding-left:14px; padding-right:14px; }
@@ -374,88 +327,25 @@
 
     <div id="content"><div class="state-card"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải dữ liệu môn học...</div></div>
 
-    <a href="https://forms.gle/CMZj35G3BMGfo1AZ8" target="_blank" rel="noopener" class="report-banner report-banner--amber report-banner--pill report-banner--md report-banner--effect-subtle" id="reportBanner">
-        <span class="icon" id="reportBannerIconLeft">🔔</span>
-        <span id="reportBannerText">Gặp câu hỏi sai? <u>Click vào đây</u> góp ý giúp tôi!</span>
-        <span class="arrow" id="reportBannerIconRight">👉</span>
+    <a href="https://forms.gle/CMZj35G3BMGfo1AZ8" target="_blank" rel="noopener" class="report-banner">
+        <span class="icon">🔔</span>
+        <span>Gặp câu hỏi sai? <u>Click vào đây</u> góp ý giúp tôi!</span>
+        <span class="arrow">👉</span>
     </a>
 
-    <footer id="siteFooter">SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải</footer>
+    <div style="text-align:center; padding:20px;">
+        <button onclick="thanhToanGoiThanhVien('thang')" style="padding:12px 24px; background:#4f6bff; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer;">
+            TEST: Mua Gói 1 tháng (49.000đ)
+        </button>
+    </div>
+
+    <footer>SNG © H.N.TấnHải · sngedu.site</footer>
 </div>
 
 <script>
 const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ---------------- CHÂN TRANG — đọc từ Supabase site_settings, đồng bộ mọi trang ----------------
-async function loadFooterSettings(){
-    const { data, error } = await sb.from('site_settings').select('*').eq('key', 'site_footer').single();
-    if (error || !data || !data.payload || !data.payload.text) return; // chưa cấu hình -> giữ chữ mặc định
-    const el = document.getElementById('siteFooter');
-    if (el) el.textContent = data.payload.text;
-}
-loadFooterSettings();
-
-// ---------------- BANNER "GẶP CÂU HỎI SAI" — đọc từ Supabase site_settings ----------------
-const REPORT_BANNER_COLORS  = ['amber','blue','green','red','purple','indigo'];
-const REPORT_BANNER_SHAPES  = ['pill','rounded','square'];
-const REPORT_BANNER_SIZES   = ['sm','md','lg'];
-const REPORT_BANNER_EFFECTS = ['subtle','pulse','shake','none'];
-
-async function loadReportBannerSettings(){
-    const { data, error } = await sb.from('site_settings').select('*').eq('key', 'report_banner').single();
-    if (error || !data || !data.payload) return; // chưa cấu hình -> giữ nội dung + giao diện mặc định (amber/pill/subtle)
-    const b = data.payload;
-    const linkEl = document.getElementById('reportBanner');
-    const textEl = document.getElementById('reportBannerText');
-    const iconLeftEl = document.getElementById('reportBannerIconLeft');
-    const iconRightEl = document.getElementById('reportBannerIconRight');
-    if (!linkEl || !textEl) return;
-
-    if (b.link) linkEl.href = b.link;
-    if (b.text){
-        let html = escapeHtmlBanner(b.text);
-        if (b.underline){
-            const u = escapeHtmlBanner(b.underline);
-            html = html.replace(u, '<u>' + u + '</u>');
-        }
-        textEl.innerHTML = html;
-    }
-    if (b.iconLeft && iconLeftEl) iconLeftEl.textContent = b.iconLeft;
-    if (b.iconRight && iconRightEl) iconRightEl.textContent = b.iconRight;
-
-    // Áp màu / kiểu dáng / hiệu ứng tuỳ biến qua class — nếu payload không có giá trị hợp lệ thì giữ nguyên class mặc định đã có sẵn trong HTML
-    if (b.color && REPORT_BANNER_COLORS.includes(b.color)){
-        linkEl.classList.remove(...REPORT_BANNER_COLORS.map(c => 'report-banner--' + c));
-        linkEl.classList.add('report-banner--' + b.color);
-    }
-    if (b.shape && REPORT_BANNER_SHAPES.includes(b.shape)){
-        linkEl.classList.remove(...REPORT_BANNER_SHAPES.map(s => 'report-banner--' + s));
-        linkEl.classList.add('report-banner--' + b.shape);
-    }
-    if (b.size && REPORT_BANNER_SIZES.includes(b.size)){
-        linkEl.classList.remove(...REPORT_BANNER_SIZES.map(s => 'report-banner--' + s));
-        linkEl.classList.add('report-banner--' + b.size);
-    }
-    if (b.effect && REPORT_BANNER_EFFECTS.includes(b.effect)){
-        linkEl.classList.remove(...REPORT_BANNER_EFFECTS.map(e => 'report-banner--effect-' + e));
-        linkEl.classList.add('report-banner--effect-' + b.effect);
-    }
-}
-function escapeHtmlBanner(s){
-    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-loadReportBannerSettings();
-
-// ---------------- Bắt buộc đăng nhập mới xem được trang này ----------------
-(async function requireLogin(){
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session){
-        const next = location.pathname + location.search;
-        location.href = 'account/login.html?next=' + encodeURIComponent(next);
-    }
-})();
 
 // Chương thuộc nhóm này sẽ mở giao diện làm bài thi (quiz-exam.html) thay vì
 // giao diện ôn tập thường (quiz-dynamic.html)
@@ -635,5 +525,6 @@ themeBtn.addEventListener('click', ()=>{
 loadPage();
 </script>
 
+<script src="frontend/sepay-checkout.js"></script>
 </body>
 </html>

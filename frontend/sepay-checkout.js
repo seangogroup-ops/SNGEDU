@@ -23,6 +23,14 @@ async function thanhToanGoiThanhVien(planId) {
   await batDauThanhToan({ order_type: 'subscription', plan_id: planId });
 }
 
+/**
+ * Bắt đầu thanh toán mua 1 tài liệu trả phí.
+ * @param {string} documentId - id tài liệu trong site_settings.doc_content.paid[]
+ */
+async function thanhToanTaiLieu(documentId) {
+  await batDauThanhToan({ order_type: 'document', document_id: documentId });
+}
+
 async function batDauThanhToan(orderPayload) {
   try {
     const { data: { session } } = await sb.auth.getSession();

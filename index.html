@@ -940,8 +940,12 @@
     const accLogoutBtn = document.getElementById('accLogoutBtn');
     let accHistoryLoaded = false;
 
-    function openAccountModal(){
+    async function openAccountModal(){
         if (!currentSession || !accOverlay) return;
+        try{
+            const { data, error } = await sb.auth.refreshSession();
+            if (!error && data && data.session) currentSession = data.session;
+        }catch(e){ /* mạng lỗi thì cứ dùng dữ liệu cũ đang có */ }
         const user = currentSession.user;
         const email = user.email || '';
         const initial = (email.trim()[0] || 'U').toUpperCase();
@@ -1467,6 +1471,17 @@
     }
 
     // ---------------- Đổ dữ liệu tài khoản đang đăng nhập vào tab "Tài khoản & Gói Pro" ----------------
+    // Trước khi hiển thị, làm mới session để lấy user_metadata mới nhất từ server
+    // (tránh hiện hạn Premium/số dư cũ do session cache trong trình duyệt sau khi vừa thanh toán/được admin chỉnh).
+    async function refreshSessionAndRenderAccount(){
+        renderAccountPanelInfo(); // hiện tạm dữ liệu đang có ngay, tránh giật màn hình
+        try{
+            const { data, error } = await sb.auth.refreshSession();
+            if (!error && data && data.session) currentSession = data.session;
+        }catch(e){ /* mạng lỗi thì cứ dùng dữ liệu cũ đang có */ }
+        renderAccountPanelInfo();
+    }
+
     function renderAccountPanelInfo(){
         if (!document.getElementById('panel-account')) return;
         const emailEl = document.getElementById('acctPageEmail');
@@ -1628,7 +1643,7 @@
         currentTabKey = key;
         Object.values(panels).forEach(id => document.getElementById(id).style.display = 'none');
         document.getElementById(panels[key]).style.display = '';
-        if (key === 'account') renderAccountPanelInfo();
+        if (key === 'account') refreshSessionAndRenderAccount();
         document.querySelectorAll('.side-link[data-tab]').forEach(el => el.classList.toggle('active', el.dataset.tab === key));
         const [t, sub] = TAB_TITLES[key] || [key, ''];
         topbarTitle.innerHTML = t + '<span>' + sub + '</span>';

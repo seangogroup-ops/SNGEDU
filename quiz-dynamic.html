@@ -140,6 +140,10 @@
 </head>
 <body>
 
+<div id="authGateOverlay" style="position:fixed;inset:0;z-index:99999;background:#14151c;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Be Vietnam Pro',sans-serif;font-size:.95rem;gap:10px;">
+    <i class="fa-solid fa-spinner fa-spin"></i> Đang kiểm tra đăng nhập...
+</div>
+
 <header>
     <div class="header-left" onclick="location.reload()">
         <i class="fa-solid fa-rotate-right"></i> <span>Làm lại bài</span>
@@ -195,12 +199,18 @@
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // ---------------- Bắt buộc đăng nhập mới xem được trang này ----------------
+    // Lớp phủ #authGateOverlay che toàn trang ngay từ đầu (xem HTML phía trên <body>),
+    // chỉ gỡ ra SAU KHI xác nhận có phiên đăng nhập — trước đó code load câu hỏi bên dưới
+    // vẫn chạy song song nhưng không ai nhìn thấy được vì bị overlay che kín.
     (async function requireLogin(){
         const { data: { session } } = await sb.auth.getSession();
         if (!session){
             const next = location.pathname + location.search;
             location.href = 'account/login.html?next=' + encodeURIComponent(next);
+            return;
         }
+        const overlay = document.getElementById('authGateOverlay');
+        if (overlay) overlay.remove();
     })();
 
     // Lấy subject + chapter từ URL, vd: quiz-dynamic.html?subject=KTCT&chapter=1-40

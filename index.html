@@ -1131,10 +1131,7 @@
                 if (c) c.textContent = initial;
             });
             if (sideProBtn){
-                const meta = currentSession.user.user_metadata || {};
-                const premiumUntil = meta.premium_until ? new Date(meta.premium_until) : null;
-                const isPremiumActive = meta.plan === 'premium' && (!premiumUntil || premiumUntil > new Date());
-                sideProBtn.style.display = isPremiumActive ? 'none' : 'flex';
+                sideProBtn.style.display = 'flex';
             }
         } else {
             sideName.textContent = 'Khách';

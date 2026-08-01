@@ -804,6 +804,38 @@
 .pro-confirm-ok{ background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff; }
 .pro-confirm-ok:hover{ filter:brightness(1.05); }
 .pro-confirm-ok:disabled{ opacity:.65; cursor:not-allowed; }
+
+/* ---------------- banner khuyến mãi Premium (đếm ngược + giới hạn suất) ---------------- */
+.promo-banner{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    background:linear-gradient(135deg, var(--amber-bg), var(--card));
+    border:1.5px solid var(--amber); border-radius:16px;
+    padding:14px 20px; margin-bottom:22px; cursor:pointer;
+    box-shadow:var(--shadow); flex-wrap:wrap;
+    transition:transform .18s ease, box-shadow .18s ease;
+}
+.promo-banner:hover{ transform:translateY(-2px); box-shadow:var(--shadow-hov); }
+.promo-banner.hidden{ display:none; }
+.promo-banner-left{ display:flex; align-items:center; gap:12px; min-width:0; flex:1 1 260px; }
+.promo-crown{ font-size:1.25rem; flex-shrink:0; }
+.promo-msg{ font-size:.86rem; font-weight:600; color:var(--ink); line-height:1.5; }
+.promo-banner-right{ display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.promo-pill{ font-size:.76rem; font-weight:800; padding:6px 14px; border-radius:99px; white-space:nowrap; }
+.promo-pill.hidden{ display:none; }
+.promo-pill-slots{ background:var(--brand-bg); color:var(--brand); border:1px solid var(--brand); }
+.promo-pill-timer{ background:#fdecec; color:#e03131; border:1px solid #e03131; font-variant-numeric:tabular-nums; }
+html[data-theme="dark"] .promo-pill-timer{ background:#3a1414; color:#ff8787; border-color:#ff8787; }
+.promo-close{
+    width:26px; height:26px; border-radius:50%; border:none; background:transparent;
+    color:var(--ink-mute); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; font-size:.85rem;
+}
+.promo-close:hover{ background:var(--line); color:var(--ink); }
+@media (max-width:640px){
+    .promo-banner{ padding:12px 16px; }
+    .promo-msg{ font-size:.8rem; }
+    .promo-banner-right{ width:100%; justify-content:flex-start; }
+}
 </style>
 </head>
 <body>
@@ -867,6 +899,18 @@
 
     <!-- ============ TAB: TRANG CHỦ ============ -->
     <section class="tab-panel" id="panel-home">
+
+        <div class="promo-banner hidden" id="promoBanner" onclick="openProUpgradeModal()">
+            <div class="promo-banner-left">
+                <span class="promo-crown">👑</span>
+                <span class="promo-msg" id="promoBannerMsg"></span>
+            </div>
+            <div class="promo-banner-right">
+                <span class="promo-pill promo-pill-slots hidden" id="promoSlotsPill"></span>
+                <span class="promo-pill promo-pill-timer hidden" id="promoTimerPill"></span>
+                <button type="button" class="promo-close" id="promoCloseBtn" title="Đóng" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
 
         <div class="hero">
             <div class="hero-card">
@@ -1846,6 +1890,72 @@
     ];
     let PRO_UPGRADE_FEATURES = PRO_UPGRADE_FEATURES_DEFAULT;
 
+    // ---------------- Banner khuyến mãi Premium (đếm ngược + giới hạn suất) — nội dung cấu hình trong Admin > Banner Premium ----------------
+    let promoCountdownTimer = null;
+    async function loadPromoBanner(){
+        const banner = document.getElementById('promoBanner');
+        if (!banner) return;
+        try{
+            const { data, error } = await sb.from('site_settings').select('*').eq('key', 'promo_banner').single();
+            const payload = (!error && data && data.payload) ? data.payload : null;
+
+            if (promoCountdownTimer){ clearInterval(promoCountdownTimer); promoCountdownTimer = null; }
+
+            if (!payload || !payload.enabled || !payload.end_at){ banner.classList.add('hidden'); return; }
+
+            const endAt = new Date(payload.end_at);
+            if (isNaN(endAt.getTime()) || endAt.getTime() <= Date.now()){ banner.classList.add('hidden'); return; }
+
+            const dismissKey = 'promoBannerDismiss_' + payload.end_at;
+            if (localStorage.getItem(dismissKey) === '1'){ banner.classList.add('hidden'); return; }
+
+            document.getElementById('promoBannerMsg').innerText = payload.message || '';
+
+            const slotsLeft = Number(payload.slots_left) || 0;
+            const slotsTotal = Number(payload.slots_total) || 0;
+            const slotsPill = document.getElementById('promoSlotsPill');
+            if (slotsLeft > 0 && slotsTotal > 0){
+                slotsPill.textContent = `còn ${slotsLeft}/${slotsTotal} suất`;
+                slotsPill.classList.remove('hidden');
+            } else {
+                slotsPill.classList.add('hidden');
+            }
+
+            const timerPill = document.getElementById('promoTimerPill');
+            function tickPromoCountdown(){
+                const diff = endAt.getTime() - Date.now();
+                if (diff <= 0){
+                    banner.classList.add('hidden');
+                    if (promoCountdownTimer){ clearInterval(promoCountdownTimer); promoCountdownTimer = null; }
+                    return;
+                }
+                const totalSec = Math.floor(diff / 1000);
+                const days = Math.floor(totalSec / 86400);
+                const hours = Math.floor((totalSec % 86400) / 3600);
+                const mins = Math.floor((totalSec % 3600) / 60);
+                const secs = totalSec % 60;
+                const pad = n => String(n).padStart(2, '0');
+                timerPill.textContent = (days > 0 ? days + 'n ' : '') + `${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+                timerPill.classList.remove('hidden');
+            }
+            tickPromoCountdown();
+            promoCountdownTimer = setInterval(tickPromoCountdown, 1000);
+
+            banner.classList.remove('hidden');
+
+            const closeBtn = document.getElementById('promoCloseBtn');
+            closeBtn.onclick = (e) => {
+                e.stopPropagation();
+                banner.classList.add('hidden');
+                if (promoCountdownTimer){ clearInterval(promoCountdownTimer); promoCountdownTimer = null; }
+                localStorage.setItem(dismissKey, '1');
+            };
+        }catch(e){
+            // Banner chỉ là nội dung marketing phụ trợ — lỗi mạng/chưa cấu hình thì âm thầm ẩn đi, không chặn trang.
+            banner.classList.add('hidden');
+        }
+    }
+
     let proFeaturesConfigPromise = null;
     // Tải danh sách tính năng do admin cấu hình (trang admin > Cài đặt > "Tính năng gói Pro") — nếu chưa cấu hình thì dùng mặc định ở trên.
     async function loadProUpgradeFeaturesConfig(){
@@ -2277,6 +2387,7 @@
     renderProductContent();
     renderProContent();
     proFeaturesConfigPromise = loadProUpgradeFeaturesConfig();
+    loadPromoBanner();
 
     const panels = { home:'panel-home', quiz:'panel-quiz', doc:'panel-doc', tool:'panel-tool', product:'panel-product', account:'panel-account', support:'panel-support' };
     const TAB_TITLES = {

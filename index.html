@@ -970,13 +970,18 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             </div>
         </div>
 
-        <div class="sec-head"><h2>Truy cập nhanh</h2></div>
+        <div id="featuredSection" style="display:none;">
+            <div class="sec-head"><h2 id="featuredSectionTitle">⭐ Nổi bật</h2></div>
+            <div class="grid" id="featuredGrid"></div>
+        </div>
+
+        <div class="sec-head"><h2 id="quickAccessTitle">Truy cập nhanh</h2></div>
         <div class="quick-grid" id="quickGrid">
             <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
         </div>
 
 
-        <div class="sec-head" style="margin-top:8px"><h2>Học phần nổi bật</h2><span id="homeSubjectCount">Đang tải...</span></div>
+        <div class="sec-head" style="margin-top:8px"><h2 id="homeSubjectsTitle">Học phần nổi bật</h2><span id="homeSubjectCount">Đang tải...</span></div>
         <div class="grid" id="homeSubjectGrid">
             <div class="empty-state small"><div class="empty-title">Đang tải danh sách môn học...</div></div>
         </div>
@@ -987,7 +992,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     <section class="tab-panel" id="panel-quiz" style="display:none">
 
         <div class="sec-head">
-            <h2>Học phần đại cương</h2>
+            <h2 id="quizSectionTitle">Học phần đại cương</h2>
             <span id="quizSubjectCount">Đang tải...</span>
         </div>
 
@@ -999,7 +1004,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     <!-- ============ TAB: TÀI LIỆU ============ -->
     <section class="tab-panel" id="panel-doc" style="display:none">
-        <div class="sec-head"><h2>Tài liệu</h2><span>2 loại</span></div>
+        <div class="sec-head"><h2 id="docSectionTitle">Tài liệu</h2><span>2 loại</span></div>
 
         <div class="pill-row">
             <button class="filter-pill active" data-filter="all" type="button">Tất cả</button>
@@ -1034,7 +1039,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     <!-- ============ TAB: CÔNG CỤ ============ -->
     <section class="tab-panel" id="panel-tool" style="display:none">
-        <div class="sec-head"><h2>Công cụ</h2></div>
+        <div class="sec-head"><h2 id="toolSectionTitle">Công cụ</h2></div>
         <div id="toolGrid" class="grid">
             <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
         </div>
@@ -1042,7 +1047,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     <!-- ============ TAB: SẢN PHẨM ============ -->
     <section class="tab-panel" id="panel-product" style="display:none">
-        <div class="sec-head"><h2>Sản phẩm</h2></div>
+        <div class="sec-head"><h2 id="productSectionTitle">Sản phẩm</h2></div>
         <div id="productGrid">
             <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
         </div>
@@ -1764,6 +1769,27 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     }
     loadHeroSettings();
 
+    // ---------------- CHỮ TRANG CHỦ (tiêu đề các khu vực) — đọc từ Supabase site_settings 'home_texts' ----------------
+    // Lưu ý: fetchSiteSettingPayload được khai báo bằng "function" (hoisted) ở dưới trong file này,
+    // nên gọi được ngay tại đây dù thứ tự đọc code nằm trước phần khai báo.
+    async function loadHomeTexts(){
+        const payload = await fetchSiteSettingPayload('home_texts', {});
+        const map = {
+            featuredSectionTitle: payload.featuredTitle,
+            quickAccessTitle: payload.quickTitle,
+            homeSubjectsTitle: payload.homeSubjectsTitle,
+            quizSectionTitle: payload.quizTitle,
+            docSectionTitle: payload.docTitle,
+            toolSectionTitle: payload.toolTitle,
+            productSectionTitle: payload.productTitle,
+        };
+        Object.keys(map).forEach(id => {
+            const val = map[id];
+            if (val){ const el = document.getElementById(id); if (el) el.textContent = val; }
+        });
+    }
+    loadHomeTexts();
+
     // ---------------- CHÂN TRANG — đọc từ Supabase site_settings, đồng bộ mọi trang ----------------
     async function loadFooterSettings(){
         const { data, error } = await sb.from('site_settings').select('*').eq('key', 'site_footer').single();
@@ -1875,6 +1901,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
         applyDocFilter();
         loadDocOrderHistory();
+        renderFeaturedSection();
     }
 
     function applyDocFilter(){
@@ -1964,6 +1991,74 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         } else {
             grid.innerHTML = `<div class="grid">${items.map(productItemCardHtml).join('')}</div>`;
         }
+    }
+
+    // ---------------- KHỐI "NỔI BẬT" TRÊN TRANG CHỦ — ghim từ Học phần / Tài liệu / Công cụ / Sản phẩm ----------------
+    // Quản lý ở trang admin > Ghim nổi bật (site_settings key 'home_featured').
+    async function renderFeaturedSection(){
+        const section = document.getElementById('featuredSection');
+        const grid = document.getElementById('featuredGrid');
+        if (!section || !grid) return;
+
+        const payload = await fetchSiteSettingPayload('home_featured', { items: [] });
+        const pins = Array.isArray(payload.items) ? payload.items : [];
+        if (!pins.length){ section.style.display = 'none'; return; }
+
+        const subjectIds = pins.filter(p => p.type === 'subject').map(p => p.ref_id);
+        const docIds     = pins.filter(p => p.type === 'doc').map(p => String(p.ref_id));
+        const toolIds    = pins.filter(p => p.type === 'tool').map(p => String(p.ref_id));
+        const productIds = pins.filter(p => p.type === 'product').map(p => String(p.ref_id));
+
+        const subjectsMap = {};
+        if (subjectIds.length){
+            const { data } = await sb.from('subjects').select('*').in('id', subjectIds);
+            (data || []).forEach(s => { subjectsMap[s.id] = s; });
+        }
+        const docsMap = {};
+        if (docIds.length){
+            const docPayload = await fetchSiteSettingPayload('doc_content', DEFAULT_DOC_CONTENT);
+            (docPayload.free || []).forEach(it => { docsMap[String(it.id)] = { item: it, isPaid: false }; });
+            (docPayload.paid || []).forEach(it => { docsMap[String(it.id)] = { item: it, isPaid: true }; });
+        }
+        const toolsMap = {};
+        if (toolIds.length){
+            const toolPayload = await fetchSiteSettingPayload('tool_content', DEFAULT_TOOL_CONTENT);
+            (toolPayload.items || []).forEach(it => { toolsMap[String(it.id)] = it; });
+        }
+        const productsMap = {};
+        if (productIds.length){
+            const productPayload = await fetchSiteSettingPayload('product_content', DEFAULT_PRODUCT_CONTENT);
+            (productPayload.items || []).forEach(it => { productsMap[String(it.id)] = it; });
+        }
+
+        let html = '';
+        const readySubjectsForCount = [];
+        pins.forEach((p, idx) => {
+            if (p.type === 'subject'){
+                const s = subjectsMap[p.ref_id];
+                if (!s || (s.status || 'ready') === 'hidden') return;
+                const style = styleForSubject(s, idx);
+                const status = s.status || 'ready';
+                if (status === 'maintenance') html += maintenanceCardHtml(s, style, idx + 1);
+                else if (status === 'pending') html += pendingCardHtml(s, style, idx + 1);
+                else { html += readyCardHtml(s, style, idx + 1); readySubjectsForCount.push(s); }
+            } else if (p.type === 'doc'){
+                const entry = docsMap[String(p.ref_id)];
+                if (entry) html += docItemCardHtml(entry.item, entry.isPaid);
+            } else if (p.type === 'tool'){
+                const it = toolsMap[String(p.ref_id)];
+                if (it) html += toolItemCardHtml(it);
+            } else if (p.type === 'product'){
+                const it = productsMap[String(p.ref_id)];
+                if (it) html += productItemCardHtml(it);
+            }
+        });
+
+        if (!html){ section.style.display = 'none'; return; }
+        section.style.display = '';
+        grid.innerHTML = html;
+        bindLockedCards();
+        if (readySubjectsForCount.length) loadQuestionCounts(readySubjectsForCount);
     }
 
     // ---------------- HỖ TRỢ — nội dung động, quản lý ở trang admin > Hỗ trợ (site_settings key 'support_content') ----------------

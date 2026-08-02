@@ -592,8 +592,10 @@ let sngUsageLogged = false;  // tránh ghi log 2 lần nếu finishQuiz bị g�
             <i class="fa-solid fa-lock" style="font-size:2rem;color:#f5a524;"></i>
             <h2 style="margin:14px 0 8px;">Đã hết lượt làm trắc nghiệm hôm nay</h2>
             <p style="color:#6b7280;margin-bottom:18px;">Tài khoản miễn phí được làm tối đa ${usageCheck.limit} lượt/ngày. Nâng cấp Pro để làm bài không giới hạn.</p>
-            <a href="index.html?openPro=1" style="display:inline-block;padding:10px 22px;background:#3258db;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Về trang chủ</a>
+            <p style="color:#9ca3af;font-size:.85rem;margin-bottom:14px;">Đang chuyển đến bảng nâng cấp Pro...</p>
+            <a href="index.html?openPro=1" style="display:inline-block;padding:10px 22px;background:#3258db;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Nâng cấp Pro ngay</a>
         </div>`;
+        setTimeout(()=>{ location.href = 'index.html?openPro=1'; }, 1200);
         return;
     }
     sngUsageChecked = true;

@@ -195,6 +195,11 @@
         position:relative; transition:transform .18s ease, box-shadow .18s ease;
     }
     .topbar .avatar-btn:hover{ transform:translateY(-1px); box-shadow:0 0 0 1px var(--brand); }
+    .topbar .avatar-btn.is-pro{
+        background:linear-gradient(135deg, #f6b93b, #ffd97a);
+        box-shadow:0 0 0 2px var(--card), 0 0 0 3px #f5a524, 0 0 14px -2px rgba(245,165,36,.65);
+    }
+    .topbar .avatar-btn.is-pro:hover{ box-shadow:0 0 0 2px var(--card), 0 0 0 3px #f5a524, 0 0 18px -1px rgba(245,165,36,.8); }
     .avatar-btn .online-dot, .side-avatar .online-dot{
         position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:50%;
         background:var(--green); border:2px solid var(--card);

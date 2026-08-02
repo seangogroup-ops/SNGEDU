@@ -548,6 +548,14 @@
 
     /* ---------------- quick access tiles ---------------- */
     .quick-grid{ display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; margin-bottom:34px; }
+    /* Khi có ít hơn 5 thẻ, chia đều đúng số thẻ để lấp đầy hàng (không để trống lệch tỷ lệ như dư ra 1 cột rỗng).
+       Chỉ áp dụng ở màn hình lớn — dưới 1020px đã có breakpoint riêng ép về 2 cột, xem media query bên dưới. */
+    @media (min-width:1021px){
+        .quick-grid[data-count="1"]{ grid-template-columns:repeat(1, 1fr); }
+        .quick-grid[data-count="2"]{ grid-template-columns:repeat(2, 1fr); }
+        .quick-grid[data-count="3"]{ grid-template-columns:repeat(3, 1fr); }
+        .quick-grid[data-count="4"]{ grid-template-columns:repeat(4, 1fr); }
+    }
     .quick-tile{
         background:var(--card); border:1px solid var(--line); border-radius:16px;
         padding:16px; display:flex; align-items:center; gap:12px;
@@ -3417,6 +3425,10 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         }
 
         grid.innerHTML = links.map(quickTileHtml).join('');
+        // Số thẻ <=4 -> chia đều lấp đầy 1 hàng (khớp đúng số lượng); từ 5 thẻ trở lên -> dùng lưới 5 cột mặc định,
+        // dư ra tự xuống hàng tiếp theo. Xem CSS ".quick-grid[data-count]" ở @media (min-width:1021px).
+        if (links.length < 5) grid.dataset.count = String(links.length);
+        else grid.removeAttribute('data-count');
 
         // Thẻ trỏ tới 1 tab có sẵn (home/doc/quiz/tool/product/support) -> chuyển tab như menu bên trái
         grid.querySelectorAll('[data-go]').forEach(el=>{

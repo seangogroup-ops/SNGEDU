@@ -286,6 +286,18 @@
     .acc-logout-btn:hover{ background:#fadadd; }
     html[data-theme="dark"] .acc-logout-btn:hover{ background:#472525; }
 
+    /* ----- nút "Nâng cấp Pro" trong popup tài khoản nhanh ----- */
+    .acc-upgrade-btn{
+        width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+        margin-top:12px; border:none; border-radius:12px; padding:12px;
+        background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff;
+        font-family:inherit; font-weight:800; font-size:.86rem; cursor:pointer;
+        box-shadow:0 6px 16px -6px rgba(108,92,246,.55);
+        transition:transform .15s ease, box-shadow .15s ease;
+    }
+    .acc-upgrade-btn:hover{ transform:translateY(-1px); box-shadow:0 8px 20px -6px rgba(108,92,246,.65); }
+    .acc-upgrade-btn i{ font-size:.9rem; }
+
     /* ----- gói sử dụng (Miễn phí / Premium) ----- */
     .acc-plan-badge{
         display:inline-flex; align-items:center; gap:5px; padding:3px 11px; border-radius:999px;
@@ -1354,6 +1366,9 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="accInfoName">—</span></div>
                 <div class="acc-info-row"><span class="label">Gói sử dụng</span><span class="value"><span class="acc-plan-badge" id="accPlanBadge">Miễn phí</span></span></div>
                 <div class="acc-info-row" id="accBalanceRow" style="display:none"><span class="label">Số dư</span><span class="value" id="accBalanceValue">—</span></div>
+                <button class="acc-upgrade-btn" id="accUpgradeBtn" type="button" style="display:none" onclick="closeAccountModal(); openProUpgradeModal();">
+                    <i class="fa-solid fa-crown"></i> Nâng cấp Pro
+                </button>
                 <button class="acc-changepw-btn" type="button" onclick="closeAccountModal(); goTab('account');">
                     <i class="fa-solid fa-gear"></i> Đổi mật khẩu &amp; quản lý gói Pro
                 </button>
@@ -1363,7 +1378,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <div id="accHistoryList" style="display:none"></div>
                 <div class="acc-empty" id="accHistoryEmpty" style="display:none">
                     <i class="fa-solid fa-clock-rotate-left"></i>
-                    <p>Chưa có lịch sử ôn tập nào.<br>Hãy bắt đầu làm trắc nghiệm để lưu lại tiến trình của bạn!</p>
+                    <p>Chưa có giao dịch nào.<br>Lịch sử nâng cấp Pro / mua tài liệu của bạn sẽ hiện tại đây sau khi thanh toán.</p>
                 </div>
             </div>
         </div>
@@ -1521,6 +1536,9 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 planBadge.className = 'acc-plan-badge';
             }
         }
+        // ----- Nút "Nâng cấp Pro": chỉ hiện khi tài khoản chưa dùng Premium -----
+        const upgradeBtn = document.getElementById('accUpgradeBtn');
+        if (upgradeBtn) upgradeBtn.style.display = isPremiumActive ? 'none' : 'flex';
         // ----- Số dư: số dư tiền (VNĐ) của tài khoản, lấy từ bảng profiles -----
         loadAndRenderBalance(user.id, 'accBalanceRow', 'accBalanceValue');
 
@@ -1550,17 +1568,9 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         listEl.style.display = 'none';
         emptyEl.style.display = 'none';
 
-        let rows = [];
-        try{
-            // Bảng lịch sử làm bài (nếu đã được thiết lập ở phía Supabase); nếu chưa có, sẽ rơi vào trạng thái rỗng bên dưới.
-            const { data, error } = await sb
-                .from('quiz_history')
-                .select('*')
-                .eq('user_id', currentSession.user.id)
-                .order('created_at', { ascending:false })
-                .limit(20);
-            if (!error && Array.isArray(data)) rows = data;
-        }catch(e){ rows = []; }
+        // Lịch sử giao dịch đã thanh toán thành công (gói Pro / tài liệu / khoá học) — lấy từ bảng sepay_orders,
+        // dùng chung logic với trang "Lịch sử mua hàng" nên luôn có dữ liệu thật thay vì bảng quiz_history chưa từng được ghi.
+        const rows = await fetchPaidOrders(null, 20);
 
         loadingEl.style.display = 'none';
         if (!rows.length){
@@ -1568,19 +1578,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             return;
         }
         listEl.style.display = 'block';
-        listEl.innerHTML = rows.map(r=>{
-            const title = r.subject_name || r.subject || 'Bài trắc nghiệm';
-            const date = r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '';
-            const score = (r.score !== undefined && r.score !== null) ? r.score : '';
-            return `<div class="acc-history-item">
-                <div class="acc-history-icon"><i class="fa-solid fa-list-check"></i></div>
-                <div>
-                    <div class="acc-history-title">${title}</div>
-                    <div class="acc-history-meta">${date}</div>
-                </div>
-                <div class="acc-history-score">${score}</div>
-            </div>`;
-        }).join('');
+        listEl.innerHTML = rows.map(orderHistoryItemHtml).join('');
     }
 
     document.querySelectorAll('.acc-tab').forEach(btn=>{

@@ -292,8 +292,8 @@ aside{
 }
 .subj-mgr-head h2{margin:0 0 4px;font-size:1.22rem;letter-spacing:-.02em;}
 .subj-mgr-head p.hint{margin:0;color:var(--gray);font-size:.86rem;}
-.subj-mgr-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
-@media (max-width: 860px){.subj-mgr-grid{grid-template-columns:1fr;}}
+.subj-mgr-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;}
+@media (max-width: 860px){.subj-mgr-grid{grid-template-columns:minmax(0,1fr);}}
 .subj-mgr-col{background:var(--white);border:1px solid var(--border);border-radius:18px;padding:22px;box-shadow:var(--shadow-sm);}
 .subj-mgr-col-head{
     display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;flex-wrap:wrap;
@@ -719,7 +719,7 @@ textarea{resize:vertical;}
    .side-item/.menu-drop dùng style tối màu thiết kế cho sidebar bị lộ ra
    giữa nền trắng -> nhìn lệch tông, xấu. Toàn bộ khối dưới đây tự viết riêng. */
 .acct-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px;}
-@media (max-width:640px){.acct-stats{grid-template-columns:1fr;}}
+@media (max-width:640px){.acct-stats{grid-template-columns:minmax(0,1fr);}}
 .acct-stat-card{
     background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);
     padding:16px 18px;box-shadow:var(--shadow-xs);display:flex;align-items:center;gap:13px;
@@ -990,7 +990,7 @@ textarea{resize:vertical;}
     .q-item .actions{flex-wrap:wrap;}
 
     /* Khu vực tài khoản: thẻ hành động full-width, xếp 1 cột cho dễ đọc */
-    .acct-detail-grid{grid-template-columns:1fr;}
+    .acct-detail-grid{grid-template-columns:minmax(0,1fr);}
     .acct-detail-head{padding:16px;gap:12px;}
     .acct-toolbar{flex-wrap:wrap;}
     .acct-search-wrap{flex:1 1 100%;}

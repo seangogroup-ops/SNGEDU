@@ -1568,17 +1568,98 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         listEl.style.display = 'none';
         emptyEl.style.display = 'none';
 
-        // Lịch sử giao dịch đã thanh toán thành công (gói Pro / tài liệu / khoá học) — lấy từ bảng sepay_orders,
-        // dùng chung logic với trang "Lịch sử mua hàng" nên luôn có dữ liệu thật thay vì bảng quiz_history chưa từng được ghi.
-        const rows = await fetchPaidOrders(null, 20);
+        // Gộp 3 nguồn hoạt động của tài khoản, sắp xếp theo thời gian mới nhất:
+        // 1) Đơn hàng đã thanh toán thành công (gói Pro / tài liệu / khoá học) — bảng sepay_orders
+        // 2) Admin cộng/trừ số dư thủ công — bảng balance_transactions
+        // 3) Admin nâng cấp/huỷ Pro thủ công — bảng pro_grants
+        const userId = currentSession.user.id;
+        const [orders, balanceTx, proGrants] = await Promise.all([
+            fetchPaidOrders(null, 20),
+            fetchBalanceTransactions(userId, 20),
+            fetchProGrants(userId, 20),
+        ]);
+
+        const items = [
+            ...orders.map(r => ({ type:'order', date: r.paid_at || r.created_at, row:r })),
+            ...balanceTx.map(r => ({ type:'balance', date: r.created_at, row:r })),
+            ...proGrants.map(r => ({ type: r.action === 'revoke' ? 'pro_revoke' : 'pro_grant', date: r.created_at, row:r })),
+        ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
 
         loadingEl.style.display = 'none';
-        if (!rows.length){
+        if (!items.length){
             emptyEl.style.display = 'flex';
             return;
         }
         listEl.style.display = 'block';
-        listEl.innerHTML = rows.map(orderHistoryItemHtml).join('');
+        listEl.innerHTML = items.map(activityItemHtml).join('');
+    }
+
+    // ---------------- Lịch sử hoạt động: admin cộng/trừ số dư ----------------
+    async function fetchBalanceTransactions(userId, limit){
+        try{
+            const { data, error } = await sb
+                .from('balance_transactions')
+                .select('amount, balance_after, note, created_at')
+                .eq('user_id', userId)
+                .order('created_at', { ascending:false })
+                .limit(limit);
+            return (!error && Array.isArray(data)) ? data : [];
+        }catch(e){ return []; }
+    }
+
+    // ---------------- Lịch sử hoạt động: admin nâng cấp / huỷ Pro thủ công ----------------
+    async function fetchProGrants(userId, limit){
+        try{
+            const { data, error } = await sb
+                .from('pro_grants')
+                .select('action, plan_id, days, premium_until, note, created_at')
+                .eq('user_id', userId)
+                .order('created_at', { ascending:false })
+                .limit(limit);
+            return (!error && Array.isArray(data)) ? data : [];
+        }catch(e){ return []; }
+    }
+
+    // ---------------- Gộp hiển thị 1 dòng trong tab "Lịch sử" (đơn hàng / admin cộng-trừ tiền / admin Pro) ----------------
+    function activityItemHtml(item){
+        if (item.type === 'order') return orderHistoryItemHtml(item.row);
+
+        const r = item.row;
+        const dateText = r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '';
+
+        if (item.type === 'balance'){
+            const isCredit = Number(r.amount) >= 0;
+            const amountText = (isCredit ? '+' : '') + Number(r.amount).toLocaleString('vi-VN') + 'đ';
+            return `<div class="acc-history-item">
+                <div class="acc-history-icon" style="background:${isCredit ? '#e7f7ee' : '#fdeeee'};color:${isCredit ? '#1a9e5c' : '#e5484d'};">
+                    <i class="fa-solid ${isCredit ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
+                </div>
+                <div>
+                    <div class="acc-history-title">${isCredit ? 'Admin cộng tiền' : 'Admin trừ tiền'} — ${amountText}</div>
+                    <div class="acc-history-meta">${escapeHtmlHome(dateText)}${r.note ? (' · ' + escapeHtmlHome(r.note)) : ''}</div>
+                </div>
+            </div>`;
+        }
+
+        if (item.type === 'pro_revoke'){
+            return `<div class="acc-history-item">
+                <div class="acc-history-icon"><i class="fa-solid fa-crown"></i></div>
+                <div>
+                    <div class="acc-history-title">Admin huỷ gói Pro</div>
+                    <div class="acc-history-meta">${escapeHtmlHome(dateText)}${r.note ? (' · ' + escapeHtmlHome(r.note)) : ''}</div>
+                </div>
+            </div>`;
+        }
+
+        // pro_grant
+        const untilText = r.premium_until ? new Date(r.premium_until).toLocaleDateString('vi-VN') : '';
+        return `<div class="acc-history-item">
+            <div class="acc-history-icon"><i class="fa-solid fa-crown"></i></div>
+            <div>
+                <div class="acc-history-title">Admin nâng cấp Pro${untilText ? (' — hết hạn ' + untilText) : ''}</div>
+                <div class="acc-history-meta">${escapeHtmlHome(dateText)}${r.note ? (' · ' + escapeHtmlHome(r.note)) : ''}</div>
+            </div>
+        </div>`;
     }
 
     document.querySelectorAll('.acc-tab').forEach(btn=>{

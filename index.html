@@ -3137,6 +3137,14 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         currentSession = session;
         updateAccountUI();
 
+        // ---------------- Vừa bị chặn vì hết lượt làm trắc nghiệm miễn phí (?openPro=1) -> tự mở bảng nâng cấp Pro ----------------
+        const initParams = new URLSearchParams(location.search);
+        if (initParams.get('openPro') === '1'){
+            history.replaceState({}, '', location.pathname + location.hash);
+            if (currentSession) openProUpgradeModal();
+            else location.href = loginUrl('home');
+        }
+
         const sideUserEl = document.querySelector('.side-user');
         const topAvatarEl = document.querySelector('.avatar-btn');
         if (sideUserEl) sideUserEl.style.cursor = 'pointer';

@@ -159,7 +159,7 @@ aside{
     font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#6b7299;font-family:var(--font-display);font-weight:700;
     margin:0 0 9px;padding:0 4px;display:flex;justify-content:space-between;align-items:center;
 }
-.side-list{display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto;}
+.side-list{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;}
 /* Sidebar admin: nhóm gọn theo danh mục (Trang chủ / Nội dung / Kinh doanh / Hệ thống) dạng accordion,
    thay cho danh sách phẳng 14 mục dài lê thê trước đây. */
 #settingsNavList{max-height:none !important;overflow-y:visible !important;overflow:visible !important;gap:2px;}
@@ -185,20 +185,20 @@ aside{
 .side-group-body .side-item.settings-item{padding-top:8px;padding-bottom:8px;padding-left:9px;font-size:.84rem;}
 .side-group-body .side-item.settings-item .set-ico{width:21px;height:21px;font-size:.68rem;}
 .side-item{
-    padding:10px 9px 10px 11px;border-radius:var(--radius-sm);font-size:.87rem;cursor:pointer;
-    display:flex;justify-content:space-between;align-items:center;gap:6px;color:var(--navy-text);
-    transition:background .12s ease,opacity .15s ease,box-shadow .12s ease,color .12s ease;
+    padding:11px 10px 11px 12px;border-radius:12px;font-size:.87rem;cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--navy-text);
+    transition:background .12s ease,opacity .15s ease,box-shadow .12s ease,color .12s ease,transform .12s ease;
 }
 .side-item:hover{background:var(--navy-2);color:#fff;}
-.side-item.active{background:var(--accent);color:#fff;font-weight:600;box-shadow:0 6px 16px rgba(79,78,224,.35);}
+.side-item.active{background:var(--accent);color:#fff;font-weight:700;box-shadow:0 8px 18px -4px rgba(79,107,255,.45);}
 .side-item .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.side-item .right-cluster{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
+.side-item .right-cluster{display:flex;align-items:center;gap:7px;flex:0 0 auto;}
 .side-item .code{
     flex:0 0 auto;font-size:.66rem;font-weight:700;letter-spacing:.03em;font-family:var(--font-display);
-    background:rgba(255,255,255,.1);color:#c3c9e6;padding:2px 7px;border-radius:5px;
+    background:rgba(255,255,255,.1);color:#c3c9e6;padding:3px 9px;border-radius:99px;
 }
 .side-item.active .code{background:rgba(255,255,255,.28);color:#fff;}
-.status-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;}
+.status-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 3px rgba(255,255,255,.06);}
 .status-dot.ready{background:#2ed392;}
 .status-dot.empty{background:#767ea0;}
 .status-dot.maintenance{background:#f5a524;}
@@ -227,10 +227,11 @@ aside{
 .fmgr-pin-btn:hover{border-color:var(--accent);color:var(--accent);}
 .fmgr-pin-btn.pinned{background:rgba(46,211,146,.14);border-color:#16a34a;color:#16a34a;}
 .side-add{
-    background:transparent;border:1px dashed #454e72;color:#98a0c2;
-    padding:6px 10px;font-size:.74rem;border-radius:7px;font-family:var(--font-display);
+    display:inline-flex;align-items:center;justify-content:center;gap:5px;
+    background:rgba(79,107,255,.14);border:1px solid rgba(79,107,255,.3);color:#c9d1ff;
+    padding:7px 13px;font-size:.78rem;font-weight:700;border-radius:99px;font-family:var(--font-display);
 }
-.side-add:hover{border-color:var(--accent);border-style:solid;color:#fff;background:rgba(79,78,224,.18);}
+.side-add:hover{border-color:var(--accent);color:#fff;background:rgba(79,107,255,.28);}
 .mini-form{display:none;flex-direction:column;gap:7px;margin-top:9px;padding:12px;background:var(--navy-2);border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,.05);}
 .mini-form.show{display:flex;}
 .mini-form input,.mini-form select{background:#161b32;border-color:#343a63;color:#fff;font-size:.82rem;padding:8px 10px;}
@@ -242,55 +243,72 @@ aside{
 .btn-mini-cancel{background:#2b3159;color:#c7cce3;}
 .side-item-row{display:block;}
 .icon-x,.icon-edit{
-    width:23px;height:23px;border-radius:7px;
+    width:26px;height:26px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;flex:0 0 auto;
     border:none;padding:0;
 }
 .icon-x{background:rgba(220,38,38,.16);color:#e8a3a3;}
-.icon-edit{background:rgba(79,78,224,.18);color:#b3b2f7;}
+.icon-edit{background:rgba(79,107,255,.18);color:#b7c1ff;}
 .icon-x svg,.icon-edit svg{width:12px;height:12px;display:block;}
 .icon-x:hover{background:rgba(220,38,38,.35);color:#ffb3b3;}
-.icon-edit:hover{background:rgba(79,78,224,.4);color:#e2e1ff;}
+.icon-edit:hover{background:rgba(79,107,255,.4);color:#e6eaff;}
 .side-item.active .icon-x,.side-item.active .icon-edit{background:rgba(255,255,255,.2);color:#fff;}
 .side-item.active .icon-x:hover,.side-item.active .icon-edit:hover{background:rgba(255,255,255,.35);}
 .side-item{cursor:pointer;}
 .side-item.dragging{opacity:.4;}
 .side-item.drag-over{box-shadow:inset 0 0 0 2px var(--accent);background:var(--navy-2);}
 .side-item.select-mode{cursor:pointer;}
-.folder-group{margin-bottom:4px;}
+.folder-group{margin-bottom:6px;}
 .folder-header{
-    display:flex;align-items:center;gap:7px;padding:8px 8px;border-radius:var(--radius-sm);cursor:pointer;
+    display:flex;align-items:center;gap:8px;padding:9px 9px 9px 8px;border-radius:12px;cursor:pointer;
     font-size:.79rem;font-weight:700;color:#c3c9e6;user-select:none;font-family:var(--font-display);
 }
 .folder-header:hover{background:var(--navy-2);}
+.folder-header .folder-icon{
+    width:24px;height:24px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.08);font-size:.78rem;flex:0 0 auto;
+}
 .folder-arrow{display:inline-block;font-size:.7rem;color:#8e96bd;transition:transform .15s ease;}
 .folder-arrow.collapsed{transform:rotate(-90deg);}
 .folder-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .folder-count{
     flex:0 0 auto;font-size:.64rem;font-weight:700;color:#9aa0c2;
-    background:rgba(255,255,255,.08);padding:1px 7px;border-radius:10px;
+    background:rgba(255,255,255,.08);padding:2px 8px;border-radius:10px;
 }
-.folder-items{display:flex;flex-direction:column;gap:3px;padding-left:14px;border-left:1px solid #2d3358;margin:2px 0 6px 11px;}
+.folder-items{display:flex;flex-direction:column;gap:4px;padding-left:14px;border-left:2px solid #262c50;margin:3px 0 8px 20px;}
 .folder-items.hidden{display:none;}
 .chap-cb{width:auto;flex:0 0 auto;accent-color:var(--accent);margin:0;}
-.side-toolbar{display:flex;gap:6px;margin-bottom:9px;}
-.side-toolbar .side-add{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:7px 4px;}
+.side-toolbar{display:flex;gap:8px;margin-bottom:9px;}
+.side-toolbar .side-add{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:8px 4px;}
 
 /* ---------- SUBJECT MANAGER (Môn học + Chương/đề, khu vực chính) ---------- */
 #subjectManagerPanel.hidden{display:none;}
 .subj-mgr-head{margin-bottom:22px;}
-.subj-mgr-head h2{margin:0 0 4px;font-size:1.28rem;letter-spacing:-.02em;}
+.subj-mgr-head.with-icon{display:flex;align-items:center;gap:14px;}
+.subj-mgr-head .smh-ico{
+    width:46px;height:46px;border-radius:14px;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+    background:linear-gradient(135deg,var(--accent-soft),#dbe0ff);box-shadow:0 6px 16px -6px var(--accent-glow);
+}
+.subj-mgr-head h2{margin:0 0 4px;font-size:1.22rem;letter-spacing:-.02em;}
+.subj-mgr-head p.hint{margin:0;color:var(--gray);font-size:.86rem;}
 .subj-mgr-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
 @media (max-width: 860px){.subj-mgr-grid{grid-template-columns:1fr;}}
-.subj-mgr-col{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-xs);}
-.subj-mgr-col-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px;flex-wrap:wrap;}
-.subj-mgr-col-head h4{margin:0;font-size:.94rem;letter-spacing:-.01em;}
-.subj-mgr-col-head .hint-inline{font-weight:500;color:var(--gray);font-size:.8rem;font-family:var(--font-body);}
+.subj-mgr-col{background:var(--white);border:1px solid var(--border);border-radius:18px;padding:22px;box-shadow:var(--shadow-sm);}
+.subj-mgr-col-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;flex-wrap:wrap;
+    padding-bottom:14px;border-bottom:1px solid var(--border);
+}
+.subj-mgr-col-head h4{margin:0;font-size:1rem;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
+.subj-mgr-col-head .hint-inline{
+    font-weight:700;color:var(--accent);font-size:.74rem;font-family:var(--font-display);
+    background:var(--accent-soft);padding:2px 9px;border-radius:99px;
+}
 .subj-mgr-list{max-height:none;}
 
 /* Khối Môn học/Chương·đề nằm trên card nền trắng (không phải sidebar tối) —
    toàn bộ màu chữ/viền được viết riêng cho nền sáng để đảm bảo độ tương phản. */
-.subj-mgr-col .side-item{padding:12px 11px 12px 12px;font-size:.9rem;color:var(--text);}
+.subj-mgr-col .side-item{padding:13px 12px 13px 13px;font-size:.9rem;color:var(--text);border:1px solid transparent;}
 .subj-mgr-col .side-item:hover{background:var(--bg);color:var(--text);}
 .subj-mgr-col .side-item.active{color:#fff;}
 .subj-mgr-col .side-item .code{background:var(--bg);color:var(--gray);}
@@ -304,16 +322,19 @@ aside{
 .subj-mgr-col .side-item.dragging .code{background:var(--bg);color:var(--gray);}
 .subj-mgr-col .side-item.dragging .drag-handle{color:var(--accent);}
 
-.subj-mgr-col .side-add{background:var(--white);border:1px solid var(--border);color:var(--gray);}
-.subj-mgr-col .side-add:hover{border-color:var(--accent);border-style:solid;color:var(--accent);background:var(--accent-soft);}
+.subj-mgr-col .side-add{background:var(--accent-soft);border:1px solid transparent;color:var(--accent);}
+.subj-mgr-col .side-add:hover{border-color:var(--accent);color:var(--accent-dark);background:#dde3ff;}
+.subj-mgr-col .side-toolbar .side-add:nth-child(2){background:var(--bg);color:var(--gray);}
+.subj-mgr-col .side-toolbar .side-add:nth-child(2):hover{background:#e9ebf4;color:var(--text);border-color:var(--border);}
 
 .subj-mgr-col .folder-header{color:var(--text);}
 .subj-mgr-col .folder-header:hover{background:var(--bg);}
+.subj-mgr-col .folder-header .folder-icon{background:var(--accent-soft);}
 .subj-mgr-col .folder-arrow{color:var(--gray);}
 .subj-mgr-col .folder-count{color:var(--gray);background:var(--bg);border:1px solid var(--border);}
 .subj-mgr-col .folder-items{border-left-color:var(--border);}
 
-.subj-mgr-col .mini-form{margin-top:13px;background:var(--bg);border:1px solid var(--border);}
+.subj-mgr-col .mini-form{margin-top:13px;background:var(--bg);border:1px solid var(--border);border-radius:14px;}
 .subj-mgr-col .mini-form input,.subj-mgr-col .mini-form select{background:var(--white);border:1px solid var(--border);color:var(--text);}
 .subj-mgr-col .mini-form input::placeholder{color:#a3a8bf;}
 .subj-mgr-col .mini-form input:focus,.subj-mgr-col .mini-form select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
@@ -322,7 +343,7 @@ aside{
 .subj-mgr-col .btn-mini-cancel{background:var(--white);color:var(--gray);border:1px solid var(--border);}
 .subj-mgr-col .btn-mini-cancel:hover{color:var(--text);border-color:var(--gray);background:var(--bg);}
 
-.subj-mgr-col .chap-bulk-bar{background:var(--bg);border:1px solid var(--border);color:var(--text);}
+.subj-mgr-col .chap-bulk-bar{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:12px;}
 .subj-mgr-col .chap-bulk-actions .btn-mini-cancel{background:var(--white);}
 
 .subj-mgr-col .menu-drop{background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-md);}
@@ -1102,9 +1123,12 @@ textarea{resize:vertical;}
         </div>
         <div id="msgBox"></div>
         <div id="subjectManagerPanel">
-            <div class="subj-mgr-head">
-                <h2>📚 Quản lý môn học &amp; chương / đề</h2>
-                <p class="hint">Chọn một môn học, sau đó chọn chương/đề để bắt đầu soạn câu hỏi.</p>
+            <div class="subj-mgr-head with-icon">
+                <div class="smh-ico">📚</div>
+                <div>
+                    <h2>Quản lý môn học &amp; chương / đề</h2>
+                    <p class="hint">Chọn một môn học, sau đó chọn chương/đề để bắt đầu soạn câu hỏi.</p>
+                </div>
             </div>
             <div class="subj-mgr-grid">
                 <div class="subj-mgr-col">
@@ -2365,7 +2389,7 @@ function renderSubjectList(){
     box.innerHTML = html;
 
     const nameEl = document.getElementById('chapCurrentSubjectName');
-    if (nameEl) nameEl.textContent = currentSubject ? '· ' + currentSubject.name : '';
+    if (nameEl) nameEl.textContent = currentSubject ? currentSubject.name : '';
 }
 async function reorderSubjects(fromId, toId){
     if (!fromId || !toId || fromId === toId) return;

@@ -187,6 +187,7 @@
     </div>
 </div>
 
+<script src="frontend/usage-limits.js"></script>
 <script>
     // ============================================================
     // CẤU HÌNH SUPABASE — thay 2 giá trị này bằng thông tin project của bạn
@@ -202,6 +203,7 @@
     // Lớp phủ #authGateOverlay che toàn trang ngay từ đầu (xem HTML phía trên <body>),
     // chỉ gỡ ra SAU KHI xác nhận có phiên đăng nhập — trước đó code load câu hỏi bên dưới
     // vẫn chạy song song nhưng không ai nhìn thấy được vì bị overlay che kín.
+    let sngUsageChecked = false; // đã kiểm tra & (nếu hợp lệ) sẵn sàng ghi log lượt làm bài này
     (async function requireLogin(){
         const { data: { session } } = await sb.auth.getSession();
         if (!session){
@@ -209,6 +211,20 @@
             location.href = 'account/login.html?next=' + encodeURIComponent(next);
             return;
         }
+
+        // ---------------- Giới hạn số lần làm trắc nghiệm/ngày (tài khoản Free) ----------------
+        const usageCheck = await SNG_USAGE.checkLimit(session.user, 'quiz_attempt');
+        if (!usageCheck.allowed){
+            document.body.innerHTML = `<div class="state-msg" style="max-width:520px;margin:120px auto;text-align:center;">
+                <i class="fa-solid fa-lock" style="font-size:2rem;color:#f5a524;"></i>
+                <h2 style="margin:14px 0 8px;">Đã hết lượt làm trắc nghiệm hôm nay</h2>
+                <p style="color:#6b7280;margin-bottom:18px;">Tài khoản miễn phí được làm tối đa ${usageCheck.limit} lượt/ngày. Nâng cấp Pro để làm bài không giới hạn.</p>
+                <a href="index.html" style="display:inline-block;padding:10px 22px;background:#3258db;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Về trang chủ</a>
+            </div>`;
+            return;
+        }
+        sngUsageChecked = true;
+
         const overlay = document.getElementById('authGateOverlay');
         if (overlay) overlay.remove();
     })();
@@ -351,6 +367,13 @@
         if (isSubmitted || (timeLeft > 0 && !confirm('Bạn muốn nộp bài?'))) return;
         isSubmitted = true;
         clearInterval(timerInterval);
+
+        // Ghi nhận lượt làm trắc nghiệm (chỉ tính khi thực sự nộp bài thành công)
+        if (sngUsageChecked){
+            sb.auth.getUser().then(({ data }) => {
+                if (data && data.user) SNG_USAGE.logUsage(data.user.id, 'quiz_attempt', `${subjectId}:${chapter}`);
+            });
+        }
 
         let correctCount = 0;
         questions.forEach((q, i) => {

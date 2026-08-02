@@ -775,6 +775,38 @@ textarea{resize:vertical;}
 .acct-meta .balance-val{font-weight:700;color:var(--text);}
 .acct-stat-card.pro .ico{background:#fff3d6;color:#9a6300;}
 .acct-stat-card.balance .ico{background:var(--accent-soft);color:var(--accent);}
+.acct-stat-card.revenue .ico{background:var(--green-bg);color:var(--green);}
+.acct-stat-card.today .ico{background:var(--accent-soft);color:var(--accent);}
+.acct-stat-card.month .ico{background:#fff3d6;color:#9a6300;}
+.acct-stat-card.pending .ico{background:var(--amber-bg);color:var(--amber);}
+.acct-stat-card.failed .ico{background:var(--red-bg);color:var(--red);}
+
+/* ---------- THỐNG KÊ (statsPanel) ---------- */
+.stats-type-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+.stats-type-card{
+    flex:1;min-width:180px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);
+    padding:14px 16px;box-shadow:var(--shadow-xs);
+}
+.stats-type-card .stc-label{font-size:.78rem;color:var(--gray);font-weight:700;margin-bottom:4px;}
+.stats-type-card .stc-num{font-family:var(--font-display);font-weight:800;font-size:1.1rem;color:var(--text);}
+.stats-type-card .stc-sub{font-size:.79rem;color:var(--gray);margin-top:2px;}
+.stats-order-list{display:flex;flex-direction:column;gap:8px;}
+.stats-order-row{
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+    padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-xs);
+}
+.stats-order-ico{
+    width:38px;height:38px;min-width:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    background:var(--green-bg);color:var(--green);font-size:1rem;flex:0 0 auto;
+}
+.stats-order-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.stats-order-info .soi-title{font-weight:700;font-size:.88rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.stats-order-info .soi-meta{font-size:.78rem;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.stats-order-amount{flex:0 0 auto;font-family:var(--font-display);font-weight:800;color:var(--green);font-size:.92rem;white-space:nowrap;}
+@media (max-width:640px){
+    .stats-type-row{flex-direction:column;}
+    .stats-order-amount{font-size:.85rem;}
+}
 .acct-row-actions{flex:0 0 auto;display:flex;align-items:center;gap:6px;}
 .acct-btn-pwd{
     background:var(--accent-soft);color:var(--accent);padding:8px 12px;font-size:.8rem;white-space:nowrap;
@@ -1034,6 +1066,10 @@ textarea{resize:vertical;}
 
         <div class="side-section">
             <div class="side-list" id="settingsNavList">
+                <div class="side-item settings-item active" id="navStats" onclick="showStatsPanel()" style="margin-bottom:16px;background:rgba(255,255,255,.05);">
+                    <span class="set-ico">📊</span><span class="name">Thống kê</span>
+                </div>
+
                 <div class="side-group" data-group="home">
                     <div class="side-group-head" onclick="toggleSideGroup('home')">
                         <span class="sg-ico">🏠</span><span class="sg-label">Trang chủ</span>
@@ -1073,7 +1109,7 @@ textarea{resize:vertical;}
                         <div class="side-item settings-item" id="nav_doc" onclick="showContentManager('doc')">
                             <span class="set-ico">📁</span><span class="name">Tài liệu</span>
                         </div>
-                        <div class="side-item settings-item active" id="navSubjectMgr" onclick="showSubjectManager()">
+                        <div class="side-item settings-item" id="navSubjectMgr" onclick="showSubjectManager()">
                             <span class="set-ico">📝</span><span class="name">Trắc nghiệm</span>
                         </div>
                         <div class="side-item settings-item" id="nav_tool" onclick="showContentManager('tool')">
@@ -1131,10 +1167,68 @@ textarea{resize:vertical;}
                     <path d="M6 11.5V16c0 1.7 2.7 3.5 6 3.5s6-1.8 6-3.5v-4.5l-6 3-6-3Z" fill="#fff" fill-opacity=".92"/>
                 </svg>
             </span>
-            <div class="admin-topbar-title" id="adminTopbarTitle">Trắc nghiệm</div>
+            <div class="admin-topbar-title" id="adminTopbarTitle">Thống kê</div>
         </div>
         <div id="msgBox"></div>
-        <div id="subjectManagerPanel">
+
+        <!-- ================= THỐNG KÊ (trang đầu tiên khi đăng nhập) ================= -->
+        <div id="statsPanel">
+            <div class="subj-mgr-head">
+                <h2>📊 Thống kê</h2>
+                <p class="hint">Tổng quan đơn hàng &amp; doanh thu trên toàn hệ thống. Chỉ tính các đơn ở trạng thái tương ứng, không tính đơn trùng lặp.</p>
+            </div>
+
+            <div class="acct-stats">
+                <div class="acct-stat-card total">
+                    <span class="ico">🧾</span>
+                    <div><div class="num" id="statPaidCount">0</div><div class="lbl">Đơn hàng thành công</div></div>
+                </div>
+                <div class="acct-stat-card revenue">
+                    <span class="ico">💰</span>
+                    <div><div class="num" id="statTotalRevenue">0đ</div><div class="lbl">Tổng số tiền đã chuyển</div></div>
+                </div>
+                <div class="acct-stat-card today">
+                    <span class="ico">📅</span>
+                    <div><div class="num" id="statTodayRevenue">0đ</div><div class="lbl">Doanh thu hôm nay</div></div>
+                </div>
+                <div class="acct-stat-card month">
+                    <span class="ico">🗓️</span>
+                    <div><div class="num" id="statMonthRevenue">0đ</div><div class="lbl">Doanh thu tháng này</div></div>
+                </div>
+                <div class="acct-stat-card pending">
+                    <span class="ico">⏳</span>
+                    <div><div class="num" id="statPendingCount">0</div><div class="lbl">Đang chờ thanh toán</div></div>
+                </div>
+                <div class="acct-stat-card failed">
+                    <span class="ico">❌</span>
+                    <div><div class="num" id="statFailedCount">0</div><div class="lbl">Thất bại / đã huỷ</div></div>
+                </div>
+            </div>
+
+            <div class="section-label">Theo loại đơn hàng</div>
+            <div class="stats-type-row" id="statTypeRow">
+                <div class="stats-type-card">
+                    <div class="stc-label">🎓 Khoá học</div>
+                    <div class="stc-num" id="statCourseCount">0 đơn</div>
+                    <div class="stc-sub" id="statCourseAmount">0đ</div>
+                </div>
+                <div class="stats-type-card">
+                    <div class="stc-label">👑 Gói thành viên</div>
+                    <div class="stc-num" id="statSubCount">0 đơn</div>
+                    <div class="stc-sub" id="statSubAmount">0đ</div>
+                </div>
+            </div>
+
+            <div class="subj-mgr-col-head" style="margin-bottom:10px;">
+                <h4>Đơn hàng thành công gần đây</h4>
+                <button class="side-add" onclick="loadStatsData()">🔄 Làm mới</button>
+            </div>
+            <div class="stats-order-list" id="statsRecentList">
+                <div class="empty-state" style="padding:20px;">Đang tải...</div>
+            </div>
+        </div>
+
+        <div id="subjectManagerPanel" class="hidden">
             <div class="subj-mgr-head with-icon">
                 <div class="smh-ico">📚</div>
                 <div>
@@ -2060,15 +2154,17 @@ function restoreLastAdminPanel(){
         if (last === 'usageLimits')       return showUsageLimitsPanel();
         if (last === 'generalSettings')   return showGeneralSettings();
         if (last === 'featured')          return showFeaturedManager();
+        if (last === 'subjectMgr')        return showSubjectManager();
+        if (last === 'stats')             return showStatsPanel();
     }
-    showSubjectManager(); // mặc định (và trường hợp last === 'subjectMgr')
+    showStatsPanel(); // mặc định: lần đăng nhập đầu tiên / chưa từng chọn màn nào -> luôn vào Thống kê trước
 }
 
 // ---------- CHUYỂN ĐỔI GIỮA 3 KHU VỰC CHÍNH ----------
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel'];
+const ADMIN_PANEL_IDS = ['statsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -2093,6 +2189,83 @@ function showComingSoon(key){
 function showSubjectManager(){
     rememberAdminPanel('subjectMgr');
     showAdminPanel('subjectManagerPanel', 'navSubjectMgr');
+}
+
+// ---------- THỐNG KÊ (trang đầu tiên khi vào admin) ----------
+// Đọc trực tiếp bảng sepay_orders (yêu cầu RLS cho phép profiles.role='admin'
+// SELECT toàn bộ bảng này — xem migration 0002_admin_orders_stats_policy.sql).
+function showStatsPanel(){
+    rememberAdminPanel('stats');
+    showAdminPanel('statsPanel', 'navStats');
+    loadStatsData();
+}
+
+const STATS_TYPE_LABEL = { course: 'Khoá học', subscription: 'Gói thành viên' };
+const STATS_METHOD_LABEL = { BANK_TRANSFER: 'Chuyển khoản', CARD: 'Thẻ', NAPAS_BANK_TRANSFER: 'Napas' };
+
+async function loadStatsData(){
+    const listEl = document.getElementById('statsRecentList');
+    listEl.innerHTML = `<div class="empty-state" style="padding:20px;">Đang tải...</div>`;
+    const { data, error } = await sb
+        .from('sepay_orders')
+        .select('id, invoice_number, order_type, amount, status, payment_method, created_at, paid_at')
+        .order('created_at', { ascending: false })
+        .limit(5000);
+    if (error){
+        listEl.innerHTML = `<div class="empty-state" style="padding:20px;color:var(--red);">Không tải được dữ liệu đơn hàng: ${escapeHtml(error.message)}</div>`;
+        return;
+    }
+    renderStatsData(data || []);
+}
+
+function renderStatsData(orders){
+    const now = new Date();
+    const paid = orders.filter(o => o.status === 'paid');
+    const pending = orders.filter(o => o.status === 'pending');
+    const failed = orders.filter(o => o.status === 'failed' || o.status === 'cancelled');
+
+    const totalRevenue = paid.reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+
+    const isSameDay = (d, ref) => d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth() && d.getDate() === ref.getDate();
+    const isSameMonth = (d, ref) => d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
+    const todayRevenue = paid.filter(o => o.paid_at && isSameDay(new Date(o.paid_at), now)).reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+    const monthRevenue = paid.filter(o => o.paid_at && isSameMonth(new Date(o.paid_at), now)).reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+
+    const courseOrders = paid.filter(o => o.order_type === 'course');
+    const subOrders = paid.filter(o => o.order_type === 'subscription');
+    const courseAmount = courseOrders.reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+    const subAmount = subOrders.reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+
+    document.getElementById('statPaidCount').innerText = paid.length;
+    document.getElementById('statTotalRevenue').innerText = fmtMoney(totalRevenue);
+    document.getElementById('statTodayRevenue').innerText = fmtMoney(todayRevenue);
+    document.getElementById('statMonthRevenue').innerText = fmtMoney(monthRevenue);
+    document.getElementById('statPendingCount').innerText = pending.length;
+    document.getElementById('statFailedCount').innerText = failed.length;
+    document.getElementById('statCourseCount').innerText = courseOrders.length + ' đơn';
+    document.getElementById('statCourseAmount').innerText = fmtMoney(courseAmount);
+    document.getElementById('statSubCount').innerText = subOrders.length + ' đơn';
+    document.getElementById('statSubAmount').innerText = fmtMoney(subAmount);
+
+    const listEl = document.getElementById('statsRecentList');
+    const recent = paid.slice(0, 20);
+    if (!recent.length){
+        listEl.innerHTML = `<div class="empty-state" style="padding:30px 14px;text-align:center;">Chưa có đơn hàng thành công nào.</div>`;
+        return;
+    }
+    listEl.innerHTML = recent.map(o => {
+        const typeLabel = STATS_TYPE_LABEL[o.order_type] || o.order_type || '—';
+        const methodLabel = STATS_METHOD_LABEL[o.payment_method] || o.payment_method || '';
+        return `
+        <div class="stats-order-row">
+            <span class="stats-order-ico">✅</span>
+            <span class="stats-order-info">
+                <span class="soi-title">${escapeHtml(o.invoice_number || o.id)}</span>
+                <span class="soi-meta">${escapeHtml(typeLabel)}${methodLabel ? ' · ' + escapeHtml(methodLabel) : ''} · ${fmtDate(o.paid_at || o.created_at)}</span>
+            </span>
+            <span class="stats-order-amount">+${fmtMoney(o.amount)}</span>
+        </div>`;
+    }).join('');
 }
 function showQuestionsPanel(){
     showAdminPanel('mainAppArea', 'navSubjectMgr');

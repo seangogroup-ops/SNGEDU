@@ -803,9 +803,41 @@ textarea{resize:vertical;}
 .stats-order-info .soi-title{font-weight:700;font-size:.88rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .stats-order-info .soi-meta{font-size:.78rem;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .stats-order-amount{flex:0 0 auto;font-family:var(--font-display);font-weight:800;color:var(--green);font-size:.92rem;white-space:nowrap;}
+.stats-head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+.btn-stats-reset{background:var(--red-bg);color:var(--red);padding:9px 15px;font-size:.82rem;font-weight:700;border-radius:var(--radius-sm);white-space:nowrap;display:inline-flex;align-items:center;gap:6px;}
+.btn-stats-reset:hover{background:#fde3e3;}
+
+.stats-view-tabs{margin-top:6px;}
+.stats-range-bar{margin:-4px 0 16px;min-height:1px;}
+.stats-range-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.stats-range-nav .srn-btn{width:32px;height:32px;padding:0;border-radius:8px;background:var(--white);border:1px solid var(--border);color:var(--text);font-size:1rem;font-weight:700;line-height:1;}
+.stats-range-nav .srn-btn:hover{border-color:var(--accent);color:var(--accent);}
+.stats-range-nav input[type=date],.stats-range-nav input[type=month],.stats-range-nav input[type=number]{
+    width:auto;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;font-family:var(--font-display);font-weight:600;color:var(--text);background:var(--white);
+}
+.stats-range-nav .srn-today{background:var(--accent-soft);color:var(--accent-dark);padding:8px 13px;font-size:.8rem;font-weight:700;border-radius:8px;}
+.stats-range-nav .srn-today:hover{background:#dfe3ff;}
+
+.stats-chart-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px 8px;margin-bottom:20px;box-shadow:var(--shadow-xs);}
+.stats-chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.stats-chart-head h4{margin:0;font-size:.92rem;font-weight:700;color:var(--text);}
+.stats-chart-total{font-family:var(--font-display);font-weight:800;color:var(--green);font-size:1rem;}
+.stats-chart-box{width:100%;overflow-x:auto;}
+.stats-chart-box svg{min-width:100%;}
+.stats-chart-box .bar-col{cursor:default;}
+.stats-chart-box .bar-col.clickable{cursor:pointer;}
+.stats-chart-box .bar-col.clickable:hover rect.bar{opacity:.78;}
+.stats-chart-box rect.bar{transition:opacity .12s ease;}
+
+#resetStatsOverlay .confirm-box input[type=password]{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem;margin-top:4px;font-family:var(--font-body);}
+#resetStatsOverlay .confirm-box p.rs-note{background:var(--amber-bg);color:#7a4a06;padding:10px 12px;border-radius:var(--radius-sm);font-size:.8rem;line-height:1.55;margin:10px 0;text-align:left;}
+#resetStatsErr{color:var(--red);font-size:.79rem;min-height:1.1em;margin:6px 0 0;}
+
 @media (max-width:640px){
     .stats-type-row{flex-direction:column;}
     .stats-order-amount{font-size:.85rem;}
+    .stats-chart-card{padding:14px 12px 6px;}
+    .btn-stats-reset{width:100%;justify-content:center;}
 }
 .acct-row-actions{flex:0 0 auto;display:flex;align-items:center;gap:6px;}
 .acct-btn-pwd{
@@ -1173,9 +1205,12 @@ textarea{resize:vertical;}
 
         <!-- ================= THỐNG KÊ (trang đầu tiên khi đăng nhập) ================= -->
         <div id="statsPanel">
-            <div class="subj-mgr-head">
-                <h2>📊 Thống kê</h2>
-                <p class="hint">Tổng quan đơn hàng &amp; doanh thu trên toàn hệ thống. Chỉ tính các đơn ở trạng thái tương ứng, không tính đơn trùng lặp.</p>
+            <div class="subj-mgr-head stats-head-row">
+                <div>
+                    <h2>📊 Thống kê</h2>
+                    <p class="hint">Tổng quan đơn hàng &amp; doanh thu trên toàn hệ thống. Chỉ tính các đơn ở trạng thái tương ứng, không tính đơn trùng lặp.</p>
+                </div>
+                <button class="btn-stats-reset" onclick="openResetStatsModal()">🗑️ Reset tất cả giao dịch</button>
             </div>
 
             <div class="acct-stats">
@@ -1205,6 +1240,24 @@ textarea{resize:vertical;}
                 </div>
             </div>
 
+            <div class="tabs stats-view-tabs" id="statsViewTabs">
+                <button type="button" class="tab active" data-view="overview" onclick="switchStatsView('overview')">Tổng quan</button>
+                <button type="button" class="tab" data-view="day" onclick="switchStatsView('day')">Theo ngày</button>
+                <button type="button" class="tab" data-view="month" onclick="switchStatsView('month')">Theo tháng</button>
+                <button type="button" class="tab" data-view="year" onclick="switchStatsView('year')">Theo năm</button>
+            </div>
+            <div class="stats-range-bar" id="statsRangeBar"></div>
+
+            <div class="stats-chart-card">
+                <div class="stats-chart-head">
+                    <h4 id="statsChartTitle">Doanh thu 14 ngày gần đây</h4>
+                    <div class="stats-chart-total" id="statsChartTotal">0đ</div>
+                </div>
+                <div class="stats-chart-box" id="statsChartBox">
+                    <div class="empty-state" style="padding:20px;">Đang tải...</div>
+                </div>
+            </div>
+
             <div class="section-label">Theo loại đơn hàng</div>
             <div class="stats-type-row" id="statTypeRow">
                 <div class="stats-type-card">
@@ -1220,7 +1273,7 @@ textarea{resize:vertical;}
             </div>
 
             <div class="subj-mgr-col-head" style="margin-bottom:10px;">
-                <h4>Đơn hàng thành công gần đây</h4>
+                <h4 id="statsListTitle">Đơn hàng thành công gần đây</h4>
                 <button class="side-add" onclick="loadStatsData()">🔄 Làm mới</button>
             </div>
             <div class="stats-order-list" id="statsRecentList">
@@ -1941,6 +1994,23 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
     </div>
 </div>
 
+<!-- ================= RESET GIAO DỊCH (nhập mật khẩu xác nhận) ================= -->
+<div id="resetStatsOverlay" class="hidden">
+    <div class="confirm-box">
+        <div class="confirm-icon">🗑️</div>
+        <h4>Reset tất cả giao dịch</h4>
+        <p>Thao tác này sẽ xoá vĩnh viễn toàn bộ lịch sử đơn hàng và đưa số liệu thống kê (doanh thu, số đơn...) về 0.</p>
+        <p class="rs-note">✅ Tài khoản khách hàng, gói Pro đang dùng và tài liệu đã mua <b>KHÔNG</b> bị ảnh hưởng — chỉ số liệu thống kê bị xoá.</p>
+        <label style="display:block;text-align:left;font-size:.8rem;font-weight:700;color:var(--gray);margin-top:4px;">Nhập mật khẩu xác nhận</label>
+        <input id="resetStatsPwd" type="password" placeholder="••••••••" autocomplete="off">
+        <p id="resetStatsErr"></p>
+        <div class="confirm-actions">
+            <button class="btn-confirm-cancel" onclick="closeResetStatsModal()">Hủy</button>
+            <button class="btn-confirm-danger" id="resetStatsConfirmBtn" onclick="submitResetStats()">Xoá toàn bộ</button>
+        </div>
+    </div>
+</div>
+
 <!-- ================= MERGE (TỔNG HỢP) MODAL ================= -->
 <div id="mergeOverlay" class="hidden">
     <div class="merge-box">
@@ -2193,7 +2263,7 @@ function showSubjectManager(){
 
 // ---------- THỐNG KÊ (trang đầu tiên khi vào admin) ----------
 // Đọc trực tiếp bảng sepay_orders (yêu cầu RLS cho phép profiles.role='admin'
-// SELECT toàn bộ bảng này — xem migration 0002_admin_orders_stats_policy.sql).
+// SELECT/DELETE toàn bộ bảng này — xem migration 0002_admin_orders_stats_policy.sql).
 function showStatsPanel(){
     rememberAdminPanel('stats');
     showAdminPanel('statsPanel', 'navStats');
@@ -2202,10 +2272,23 @@ function showStatsPanel(){
 
 const STATS_TYPE_LABEL = { course: 'Khoá học', subscription: 'Gói thành viên' };
 const STATS_METHOD_LABEL = { BANK_TRANSFER: 'Chuyển khoản', CARD: 'Thẻ', NAPAS_BANK_TRANSFER: 'Napas' };
+const STATS_RESET_PASSWORD = 'SNGEDU';
+
+let statsOrdersCache = [];
+let statsView = 'overview';           // 'overview' | 'day' | 'month' | 'year'
+let statsDayDate = new Date();
+let statsMonthDate = new Date();
+let statsYear = new Date().getFullYear();
+
+function ymd(d){
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
 
 async function loadStatsData(){
     const listEl = document.getElementById('statsRecentList');
+    const chartEl = document.getElementById('statsChartBox');
     listEl.innerHTML = `<div class="empty-state" style="padding:20px;">Đang tải...</div>`;
+    if (chartEl) chartEl.innerHTML = `<div class="empty-state" style="padding:20px;">Đang tải...</div>`;
     const { data, error } = await sb
         .from('sepay_orders')
         .select('id, invoice_number, order_type, amount, status, payment_method, created_at, paid_at')
@@ -2213,12 +2296,16 @@ async function loadStatsData(){
         .limit(5000);
     if (error){
         listEl.innerHTML = `<div class="empty-state" style="padding:20px;color:var(--red);">Không tải được dữ liệu đơn hàng: ${escapeHtml(error.message)}</div>`;
+        if (chartEl) chartEl.innerHTML = '';
         return;
     }
-    renderStatsData(data || []);
+    statsOrdersCache = data || [];
+    renderStatsSummary(statsOrdersCache);
+    renderStatsView();
 }
 
-function renderStatsData(orders){
+// ----- 6 thẻ tổng quan + phân loại theo loại đơn hàng (không đổi theo tab đang xem) -----
+function renderStatsSummary(orders){
     const now = new Date();
     const paid = orders.filter(o => o.status === 'paid');
     const pending = orders.filter(o => o.status === 'pending');
@@ -2246,14 +2333,188 @@ function renderStatsData(orders){
     document.getElementById('statCourseAmount').innerText = fmtMoney(courseAmount);
     document.getElementById('statSubCount').innerText = subOrders.length + ' đơn';
     document.getElementById('statSubAmount').innerText = fmtMoney(subAmount);
+}
 
-    const listEl = document.getElementById('statsRecentList');
-    const recent = paid.slice(0, 20);
-    if (!recent.length){
-        listEl.innerHTML = `<div class="empty-state" style="padding:30px 14px;text-align:center;">Chưa có đơn hàng thành công nào.</div>`;
+// ----- Chuyển tab Tổng quan / Theo ngày / Theo tháng / Theo năm -----
+function switchStatsView(view){
+    statsView = view;
+    document.querySelectorAll('#statsViewTabs .tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+    renderStatsView();
+}
+
+function renderStatsView(){
+    const paid = statsOrdersCache.filter(o => o.status === 'paid');
+    document.getElementById('statsRangeBar').innerHTML = renderStatsRangeBarHtml();
+    if (statsView === 'day') renderStatsDayView(paid);
+    else if (statsView === 'month') renderStatsMonthView(paid);
+    else if (statsView === 'year') renderStatsYearView(paid);
+    else renderStatsOverviewView(paid);
+}
+
+function renderStatsRangeBarHtml(){
+    if (statsView === 'day'){
+        return `<div class="stats-range-nav">
+            <button type="button" class="srn-btn" onclick="statsShiftDay(-1)">‹</button>
+            <input type="date" id="statsDayInput" value="${ymd(statsDayDate)}" onchange="statsDayInputChanged()">
+            <button type="button" class="srn-btn" onclick="statsShiftDay(1)">›</button>
+            <button type="button" class="srn-today" onclick="statsGotoToday()">Hôm nay</button>
+        </div>`;
+    }
+    if (statsView === 'month'){
+        const v = statsMonthDate.getFullYear() + '-' + String(statsMonthDate.getMonth() + 1).padStart(2, '0');
+        return `<div class="stats-range-nav">
+            <button type="button" class="srn-btn" onclick="statsShiftMonth(-1)">‹</button>
+            <input type="month" id="statsMonthInput" value="${v}" onchange="statsMonthInputChanged()">
+            <button type="button" class="srn-btn" onclick="statsShiftMonth(1)">›</button>
+            <button type="button" class="srn-today" onclick="statsGotoThisMonth()">Tháng này</button>
+        </div>`;
+    }
+    if (statsView === 'year'){
+        return `<div class="stats-range-nav">
+            <button type="button" class="srn-btn" onclick="statsShiftYear(-1)">‹</button>
+            <input type="number" id="statsYearInput" value="${statsYear}" onchange="statsYearInputChanged()" style="width:96px;text-align:center;">
+            <button type="button" class="srn-btn" onclick="statsShiftYear(1)">›</button>
+            <button type="button" class="srn-today" onclick="statsGotoThisYear()">Năm nay</button>
+        </div>`;
+    }
+    return '';
+}
+
+function statsShiftDay(delta){ statsDayDate = new Date(statsDayDate.getFullYear(), statsDayDate.getMonth(), statsDayDate.getDate() + delta); renderStatsView(); }
+function statsDayInputChanged(){ const v = document.getElementById('statsDayInput').value; if (v) statsDayDate = new Date(v + 'T00:00:00'); renderStatsView(); }
+function statsGotoToday(){ statsDayDate = new Date(); renderStatsView(); }
+
+function statsShiftMonth(delta){ statsMonthDate = new Date(statsMonthDate.getFullYear(), statsMonthDate.getMonth() + delta, 1); renderStatsView(); }
+function statsMonthInputChanged(){
+    const v = document.getElementById('statsMonthInput').value;
+    if (v){ const [y, m] = v.split('-').map(Number); statsMonthDate = new Date(y, m - 1, 1); }
+    renderStatsView();
+}
+function statsGotoThisMonth(){ const n = new Date(); statsMonthDate = new Date(n.getFullYear(), n.getMonth(), 1); renderStatsView(); }
+
+function statsShiftYear(delta){ statsYear += delta; renderStatsView(); }
+function statsYearInputChanged(){ const v = Number(document.getElementById('statsYearInput').value); if (v) statsYear = v; renderStatsView(); }
+function statsGotoThisYear(){ statsYear = new Date().getFullYear(); renderStatsView(); }
+
+// Click vào cột biểu đồ để đi sâu hơn: năm -> tháng, tháng/tổng quan -> ngày
+function jumpToDay(dateKey){ statsDayDate = new Date(dateKey + 'T00:00:00'); switchStatsView('day'); }
+function jumpToMonth(monthKey){ const [y, m] = monthKey.split('-').map(Number); statsMonthDate = new Date(y, m - 1, 1); switchStatsView('month'); }
+
+// ----- Tổng quan: doanh thu 14 ngày gần đây -----
+function renderStatsOverviewView(paid){
+    document.getElementById('statsListTitle').innerText = 'Đơn hàng thành công gần đây';
+    document.getElementById('statsChartTitle').innerText = 'Doanh thu 14 ngày gần đây';
+    const now = new Date();
+    const days = [];
+    for (let i = 13; i >= 0; i--){
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const key = ymd(d);
+        const dayOrders = paid.filter(o => o.paid_at && ymd(new Date(o.paid_at)) === key);
+        const value = dayOrders.reduce((s, o) => s + (Number(o.amount) || 0), 0);
+        days.push({ key, label: d.getDate() + '/' + (d.getMonth() + 1), value, tooltip: `${d.toLocaleDateString('vi-VN')}: ${fmtMoney(value)} (${dayOrders.length} đơn)` });
+    }
+    const total = days.reduce((s, d) => s + d.value, 0);
+    document.getElementById('statsChartTotal').innerText = fmtMoney(total);
+    renderStatsBarChart('statsChartBox', days, { onBarClick: 'jumpToDay' });
+    renderStatsOrderList(paid.slice(0, 20));
+}
+
+// ----- Theo ngày: doanh thu theo từng giờ trong ngày đã chọn -----
+function renderStatsDayView(paid){
+    const d = statsDayDate;
+    const key = ymd(d);
+    document.getElementById('statsListTitle').innerText = 'Giao dịch ngày ' + d.toLocaleDateString('vi-VN');
+    document.getElementById('statsChartTitle').innerText = 'Doanh thu theo giờ — ' + d.toLocaleDateString('vi-VN');
+    const dayOrders = paid.filter(o => o.paid_at && ymd(new Date(o.paid_at)) === key);
+    const hours = [];
+    for (let h = 0; h < 24; h++){
+        const hourOrders = dayOrders.filter(o => new Date(o.paid_at).getHours() === h);
+        const value = hourOrders.reduce((s, o) => s + (Number(o.amount) || 0), 0);
+        hours.push({ key: String(h), label: h + 'h', value, tooltip: `${h}h: ${fmtMoney(value)} (${hourOrders.length} đơn)` });
+    }
+    const total = dayOrders.reduce((s, o) => s + (Number(o.amount) || 0), 0);
+    document.getElementById('statsChartTotal').innerText = fmtMoney(total) + ' · ' + dayOrders.length + ' đơn';
+    renderStatsBarChart('statsChartBox', hours, {});
+    renderStatsOrderList(dayOrders);
+}
+
+// ----- Theo tháng: doanh thu theo từng ngày trong tháng đã chọn -----
+function renderStatsMonthView(paid){
+    const y = statsMonthDate.getFullYear(), m = statsMonthDate.getMonth();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    document.getElementById('statsListTitle').innerText = 'Giao dịch tháng ' + (m + 1) + '/' + y;
+    document.getElementById('statsChartTitle').innerText = 'Doanh thu theo ngày — tháng ' + (m + 1) + '/' + y;
+    const monthOrders = paid.filter(o => { if (!o.paid_at) return false; const dd = new Date(o.paid_at); return dd.getFullYear() === y && dd.getMonth() === m; });
+    const days = [];
+    for (let day = 1; day <= daysInMonth; day++){
+        const dayOrders = monthOrders.filter(o => new Date(o.paid_at).getDate() === day);
+        const value = dayOrders.reduce((s, o) => s + (Number(o.amount) || 0), 0);
+        const key = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        days.push({ key, label: String(day), value, tooltip: `${day}/${m + 1}/${y}: ${fmtMoney(value)} (${dayOrders.length} đơn)` });
+    }
+    const total = monthOrders.reduce((s, o) => s + (Number(o.amount) || 0), 0);
+    document.getElementById('statsChartTotal').innerText = fmtMoney(total) + ' · ' + monthOrders.length + ' đơn';
+    renderStatsBarChart('statsChartBox', days, { onBarClick: 'jumpToDay' });
+    renderStatsOrderList(monthOrders.slice(0, 50));
+}
+
+// ----- Theo năm: doanh thu theo từng tháng trong năm đã chọn -----
+function renderStatsYearView(paid){
+    const y = statsYear;
+    document.getElementById('statsListTitle').innerText = 'Giao dịch năm ' + y;
+    document.getElementById('statsChartTitle').innerText = 'Doanh thu theo tháng — năm ' + y;
+    const yearOrders = paid.filter(o => o.paid_at && new Date(o.paid_at).getFullYear() === y);
+    const months = [];
+    for (let m = 0; m < 12; m++){
+        const mOrders = yearOrders.filter(o => new Date(o.paid_at).getMonth() === m);
+        const value = mOrders.reduce((s, o) => s + (Number(o.amount) || 0), 0);
+        const key = y + '-' + String(m + 1).padStart(2, '0');
+        months.push({ key, label: 'T' + (m + 1), value, tooltip: `Tháng ${m + 1}/${y}: ${fmtMoney(value)} (${mOrders.length} đơn)` });
+    }
+    const total = yearOrders.reduce((s, o) => s + (Number(o.amount) || 0), 0);
+    document.getElementById('statsChartTotal').innerText = fmtMoney(total) + ' · ' + yearOrders.length + ' đơn';
+    renderStatsBarChart('statsChartBox', months, { onBarClick: 'jumpToMonth' });
+    renderStatsOrderList(yearOrders.slice(0, 50));
+}
+
+// ----- Vẽ biểu đồ cột (SVG thuần, không cần thư viện ngoài) -----
+function renderStatsBarChart(containerId, items, opts){
+    opts = opts || {};
+    const box = document.getElementById(containerId);
+    if (!box) return;
+    if (!items.length){
+        box.innerHTML = `<div class="empty-state" style="padding:24px;">Không có dữ liệu.</div>`;
         return;
     }
-    listEl.innerHTML = recent.map(o => {
+    const max = Math.max.apply(null, items.map(i => i.value).concat([1]));
+    const H = 176, padBottom = 24, padTop = 10;
+    const colW = 40;
+    const W = Math.max(items.length * colW, 320);
+    const step = W / items.length;
+    const barW = Math.min(26, step - 10);
+    const cols = items.map((it, i) => {
+        const h = max > 0 ? Math.round((it.value / max) * (H - padBottom - padTop)) : 0;
+        const x = i * step + (step - barW) / 2;
+        const y = H - padBottom - h;
+        const clickable = opts.onBarClick ? ' clickable' : '';
+        const onclick = opts.onBarClick ? ` onclick="${opts.onBarClick}('${it.key}')"` : '';
+        return `<g class="bar-col${clickable}"${onclick}>
+            <title>${escapeHtml(it.tooltip || it.label)}</title>
+            <rect class="bar" x="${x.toFixed(1)}" y="${y}" width="${barW}" height="${Math.max(h, it.value > 0 ? 2 : 0)}" rx="4" style="fill:${it.value > 0 ? 'var(--accent)' : 'var(--border)'};"></rect>
+            <text x="${(x + barW / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle" style="font-size:10px;fill:var(--gray);font-family:var(--font-body);">${escapeHtml(it.label)}</text>
+        </g>`;
+    }).join('');
+    box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMid meet" style="width:100%;min-height:${H}px;display:block;">${cols}</svg>`;
+}
+
+// ----- Danh sách giao dịch (dùng chung cho mọi tab) -----
+function renderStatsOrderList(list){
+    const listEl = document.getElementById('statsRecentList');
+    if (!list.length){
+        listEl.innerHTML = `<div class="empty-state" style="padding:30px 14px;text-align:center;">Không có giao dịch nào trong khoảng thời gian này.</div>`;
+        return;
+    }
+    listEl.innerHTML = list.map(o => {
         const typeLabel = STATS_TYPE_LABEL[o.order_type] || o.order_type || '—';
         const methodLabel = STATS_METHOD_LABEL[o.payment_method] || o.payment_method || '';
         return `
@@ -2266,6 +2527,38 @@ function renderStatsData(orders){
             <span class="stats-order-amount">+${fmtMoney(o.amount)}</span>
         </div>`;
     }).join('');
+}
+
+// ----- Reset tất cả giao dịch (chỉ xoá số liệu sepay_orders, không đụng tài khoản / Pro / tài liệu) -----
+function openResetStatsModal(){
+    document.getElementById('resetStatsPwd').value = '';
+    document.getElementById('resetStatsErr').innerText = '';
+    document.getElementById('resetStatsOverlay').classList.remove('hidden');
+    setTimeout(() => document.getElementById('resetStatsPwd').focus(), 50);
+}
+function closeResetStatsModal(){
+    document.getElementById('resetStatsOverlay').classList.add('hidden');
+}
+async function submitResetStats(){
+    const pwdEl = document.getElementById('resetStatsPwd');
+    const errEl = document.getElementById('resetStatsErr');
+    const pwd = pwdEl.value;
+    if (!pwd){ errEl.innerText = 'Vui lòng nhập mật khẩu xác nhận.'; return; }
+    if (pwd !== STATS_RESET_PASSWORD){ errEl.innerText = 'Sai mật khẩu xác nhận.'; pwdEl.value = ''; pwdEl.focus(); return; }
+    errEl.innerText = '';
+    const btn = document.getElementById('resetStatsConfirmBtn');
+    btn.disabled = true;
+    btn.innerText = 'Đang xoá...';
+    const { error } = await sb.from('sepay_orders').delete().not('id', 'is', null);
+    btn.disabled = false;
+    btn.innerText = 'Xoá toàn bộ';
+    if (error){
+        errEl.innerText = 'Lỗi khi xoá: ' + error.message;
+        return;
+    }
+    closeResetStatsModal();
+    showMsg('Đã reset toàn bộ số liệu giao dịch. Tài khoản, gói Pro và tài liệu của khách hàng không bị ảnh hưởng.', 'ok');
+    loadStatsData();
 }
 function showQuestionsPanel(){
     showAdminPanel('mainAppArea', 'navSubjectMgr');

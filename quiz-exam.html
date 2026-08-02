@@ -288,6 +288,7 @@ async function init(){
     // khỏi danh sách "Nguồn" ở đây, nếu không sẽ bị cộng dồn 2 lần vào tổng "Tất cả"
     // (khớp với EXAM_GROUP dùng ở index.html và mon-hoc.html).
     const EXAM_GROUP = 'Đề thi thử';
+    const CALC_GROUP = 'Bài tập tính toán';
     const contentChapRows = chapRows.filter(c => (c.group_name || 'Nội dung chính') !== EXAM_GROUP);
     if (!contentChapRows.length){
         showState(`<i class="fa-solid fa-circle-exclamation"></i>Môn học này chưa có chương nào.<br>Vui lòng quay lại <a href="index.html">trang chủ</a>.`);
@@ -295,7 +296,9 @@ async function init(){
     }
 
     // gom câu hỏi theo từng chương để dựng "database" giống cấu trúc file gốc
-    database = contentChapRows.map(c => ({ key: c.chapter, name: c.label, questions: [] }));
+    // isCalc: đánh dấu chương thuộc nhóm "Bài tập tính toán" — vẫn hiện trong danh
+    // sách Nguồn để chọn riêng, nhưng KHÔNG cộng vào tổng "Tất cả" (xem buildSrcOptions/getPool).
+    database = contentChapRows.map(c => ({ key: c.chapter, name: c.label, isCalc: (c.group_name === CALC_GROUP), questions: [] }));
     const byKey = Object.fromEntries(database.map(d => [d.key, d]));
     qRows.forEach(r => {
         const bucket = byKey[r.chapter];
@@ -319,7 +322,9 @@ async function init(){
 
 function buildSrcOptions(){
     const selSrc = document.getElementById('sel-src');
-    const total = database.reduce((s,d)=>s+d.questions.length, 0);
+    // Câu hỏi thuộc "Bài tập tính toán" không cộng vào tổng "Tất cả", chỉ tính khi
+    // người dùng chọn đích danh nguồn này trong danh sách.
+    const total = database.reduce((s,d)=>s+(d.isCalc ? 0 : d.questions.length), 0);
     let html = `<option value="all">Tất cả (${total} câu)</option>`;
     database.forEach((d,i) => {
         html += `<option value="${i}">${escapeHtml(d.name)} (${d.questions.length} câu)</option>`;
@@ -331,7 +336,7 @@ function getPool(){
     const v = document.getElementById('sel-src').value;
     let pool = [];
     if (v === 'all'){
-        database.forEach(d => pool = pool.concat(d.questions.map(q => ({...q, src: d.name}))));
+        database.forEach(d => { if (!d.isCalc) pool = pool.concat(d.questions.map(q => ({...q, src: d.name}))); });
     } else {
         const d = database[+v];
         pool = d.questions.map(q => ({...q, src: d.name}));

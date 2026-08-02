@@ -156,6 +156,22 @@
         background:linear-gradient(135deg, #9aa0b1, #6f7488);
         box-shadow:0 0 0 2px var(--card), 0 0 0 3px rgba(154,160,177,.3);
     }
+    /* ----- avatar "nổi bật" khi tài khoản đang dùng gói Pro: viền vàng gradient + huy hiệu vương miện ----- */
+    .side-avatar.is-pro, .avatar-btn.is-pro{
+        background:linear-gradient(135deg, #f6b93b, #ffd97a);
+        box-shadow:0 0 0 2px var(--card), 0 0 0 3px #f5a524, 0 0 14px -2px rgba(245,165,36,.65);
+    }
+    .side-avatar .pro-badge, .avatar-btn .pro-badge, .acc-modal-avatar .pro-badge{
+        display:none;
+        position:absolute; right:-2px; bottom:-2px; width:16px; height:16px; border-radius:50%;
+        background:linear-gradient(135deg, #f6b93b, #ffd97a);
+        border:2px solid var(--card);
+        align-items:center; justify-content:center;
+        color:#7a4a00; font-size:.5rem;
+        box-shadow:0 2px 5px rgba(0,0,0,.25);
+    }
+    .side-avatar.is-pro .online-dot, .avatar-btn.is-pro .online-dot{ display:none; }
+    .side-avatar.is-pro .pro-badge, .avatar-btn.is-pro .pro-badge, .acc-modal-avatar.is-pro .pro-badge{ display:flex; }
     .side-avatar .avt-content, .avatar-btn .avt-content{ display:flex; align-items:center; justify-content:center; width:100%; height:100%; }
     .side-user .u-name{ font-size:.86rem; font-weight:700; line-height:1.3; }
     .side-user .u-sub{ font-size:.74rem; color:var(--ink-mute); }
@@ -225,7 +241,14 @@
         background:linear-gradient(135deg, var(--brand), #7c5cfc);
         display:flex; align-items:center; justify-content:center;
         color:#fff; font-weight:800; font-size:1.2rem;
+        position:relative;
     }
+    .acc-modal-avatar .avt-content{ display:flex; align-items:center; justify-content:center; width:100%; height:100%; }
+    .acc-modal-avatar.is-pro{
+        background:linear-gradient(135deg, #f6b93b, #ffd97a);
+        box-shadow:0 0 0 3px var(--card), 0 0 0 5px #f5a524, 0 0 18px -2px rgba(245,165,36,.65);
+    }
+    .acc-modal-avatar .pro-badge{ width:20px; height:20px; font-size:.62rem; }
     .acc-modal-name{ font-weight:800; font-size:1rem; line-height:1.3; word-break:break-word; }
     .acc-modal-sub{ font-size:.78rem; color:var(--ink-mute); margin-top:2px; }
     .acc-modal-close{
@@ -714,6 +737,37 @@
     .toast-btn:hover{ background:rgba(255,255,255,.24); }
     .toast-btn.done{ background:var(--green); border-color:var(--green); cursor:default; }
 
+    /* ---------------- site toast (thông báo hệ thống: thanh toán / nâng cấp Pro) ---------------- */
+    .site-toast{
+        position:fixed; top:20px; right:20px; z-index:120; max-width:360px;
+        background:var(--card); color:var(--ink); border:1px solid var(--line); border-radius:16px;
+        padding:14px 16px; display:flex; align-items:flex-start; gap:12px;
+        box-shadow:var(--shadow-hov);
+        opacity:0; pointer-events:none; transform:translateY(-10px);
+        transition:opacity .25s ease, transform .25s ease;
+    }
+    .site-toast.show{ opacity:1; pointer-events:auto; transform:translateY(0); }
+    .site-toast-icon{
+        width:38px; height:38px; border-radius:50%; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center; font-size:1rem;
+        background:var(--brand-bg); color:var(--brand);
+    }
+    .site-toast.success .site-toast-icon{ background:var(--green-bg); color:var(--green); }
+    .site-toast.error .site-toast-icon{ background:#fdeeee; color:#e5484d; }
+    html[data-theme="dark"] .site-toast.error .site-toast-icon{ background:#3a2020; color:#ff7875; }
+    .site-toast.pro .site-toast-icon{ background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff; }
+    .site-toast-body{ min-width:0; }
+    .site-toast-title{ font-weight:800; font-size:.9rem; margin-bottom:2px; }
+    .site-toast-msg{ font-size:.82rem; color:var(--ink-mute); line-height:1.5; }
+    .site-toast-close{
+        margin-left:auto; flex-shrink:0; background:none; border:none; color:var(--ink-mute);
+        cursor:pointer; font-size:.85rem; padding:4px; border-radius:8px;
+    }
+    .site-toast-close:hover{ background:var(--brand-bg); color:var(--brand); }
+    @media (max-width:520px){
+        .site-toast{ left:12px; right:12px; top:12px; max-width:none; }
+    }
+
     /* ---------------- responsive ---------------- */
     .mobile-menu-btn{
         display:none; width:38px; height:38px; border-radius:12px;
@@ -974,7 +1028,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <i class="fa-solid fa-crown"></i> <span class="lbl">Nâng cấp Pro</span>
             </button>
             <div class="side-user">
-                <div class="side-avatar is-guest"><span class="avt-content"><i class="fa-solid fa-user"></i></span><span class="online-dot"></span></div>
+                <div class="side-avatar is-guest"><span class="avt-content"><i class="fa-solid fa-user"></i></span><span class="online-dot"></span><span class="pro-badge"><i class="fa-solid fa-crown"></i></span></div>
                 <div class="u-info">
                     <div class="u-name">Khách</div>
                     <div class="u-sub">Nhấn để xem hồ sơ</div>
@@ -998,7 +1052,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                     <i class="fa-solid fa-moon"></i>
                     <i class="fa-solid fa-sun"></i>
                 </button>
-                <div class="avatar-btn is-guest"><span class="avt-content"><i class="fa-solid fa-user"></i></span><span class="online-dot"></span></div>
+                <div class="avatar-btn is-guest"><span class="avt-content"><i class="fa-solid fa-user"></i></span><span class="online-dot"></span><span class="pro-badge"><i class="fa-solid fa-crown"></i></span></div>
             </div>
         </div>
         <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
@@ -1203,7 +1257,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <div id="acctOrderList" style="display:none"></div>
                 <div class="acc-empty" id="acctOrderEmpty" style="display:none">
                     <i class="fa-solid fa-receipt"></i>
-                    <p>Chưa có giao dịch nào.<br>Lịch sử nâng cấp gói Pro của bạn sẽ hiện tại đây sau khi thanh toán.</p>
+                    <p>Chưa có giao dịch nào.<br>Lịch sử nâng cấp gói Pro của bạn (tự thanh toán hoặc do admin điều chỉnh) sẽ hiện tại đây.</p>
                 </div>
             </div>
         </div>
@@ -1236,6 +1290,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <button type="button" class="hist-filter-chip" data-histtype="subscription"><i class="fa-solid fa-crown"></i> Gói Pro</button>
                 <button type="button" class="hist-filter-chip" data-histtype="document"><i class="fa-solid fa-file-lines"></i> Tài liệu</button>
                 <button type="button" class="hist-filter-chip" data-histtype="course"><i class="fa-solid fa-graduation-cap"></i> Khoá học</button>
+                <button type="button" class="hist-filter-chip" data-histtype="admin"><i class="fa-solid fa-user-shield"></i> Admin điều chỉnh</button>
             </div>
             <div class="hist-search">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -1248,7 +1303,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             <div id="histOrderList" style="display:none"></div>
             <div class="acc-empty" id="histOrderEmpty" style="display:none">
                 <i class="fa-solid fa-receipt"></i>
-                <p>Chưa có giao dịch nào thành công.<br>Mọi đơn thanh toán thành công (tài liệu, khoá học, gói Pro) sẽ hiện tại đây.</p>
+                <p>Chưa có giao dịch nào thành công.<br>Mọi đơn thanh toán thành công (tài liệu, khoá học, gói Pro) và các lần admin điều chỉnh tài khoản sẽ hiện tại đây.</p>
             </div>
             <div class="acc-empty" id="histFilterEmpty" style="display:none">
                 <i class="fa-solid fa-filter-circle-xmark"></i>
@@ -1282,6 +1337,15 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     <i class="fa-solid fa-hourglass-half"></i>
     <span id="toastMsg">Học phần này đang được biên soạn, quay lại sau nhé.</span>
     <button class="toast-btn" id="toastBtn" type="button">Quan tâm</button>
+</div>
+
+<div class="site-toast" id="siteToast">
+    <div class="site-toast-icon" id="siteToastIcon"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="site-toast-body">
+        <div class="site-toast-title" id="siteToastTitle">Thông báo</div>
+        <div class="site-toast-msg" id="siteToastMsg"></div>
+    </div>
+    <button type="button" class="site-toast-close" id="siteToastClose" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
 </div>
 
 <!-- ============ MODAL: Nâng cấp Pro (chọn gói kiểu thẻ + danh sách tính năng) ============ -->
@@ -1349,7 +1413,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 <div class="acc-overlay" id="accOverlay">
     <div class="acc-modal" role="dialog" aria-modal="true" aria-label="Tài khoản">
         <div class="acc-modal-head">
-            <div class="acc-modal-avatar" id="accAvatar">K</div>
+            <div class="acc-modal-avatar" id="accAvatar"><span class="avt-content" id="accAvatarInitial">K</span><span class="pro-badge"><i class="fa-solid fa-crown"></i></span></div>
             <div>
                 <div class="acc-modal-name" id="accName">Khách</div>
                 <div class="acc-modal-sub" id="accSub"></div>
@@ -1427,6 +1491,77 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         toastTimer = setTimeout(()=> toast.classList.remove('show'), 1800);
     });
 
+    // ---------------- Thông báo hệ thống (thanh toán / nâng cấp Pro) ----------------
+    const siteToastEl = document.getElementById('siteToast');
+    const siteToastIconEl = document.getElementById('siteToastIcon');
+    const siteToastTitleEl = document.getElementById('siteToastTitle');
+    const siteToastMsgEl = document.getElementById('siteToastMsg');
+    const siteToastCloseBtn = document.getElementById('siteToastClose');
+    let siteToastTimer;
+
+    function showSiteToast(opts){
+        opts = opts || {};
+        if (!siteToastEl) return;
+        const title = opts.title || 'Thông báo';
+        const message = opts.message || '';
+        const type = opts.type || 'default'; // 'default' | 'success' | 'error' | 'pro'
+        const icon = opts.icon || 'fa-circle-check';
+        const duration = opts.duration || 6000;
+
+        siteToastTitleEl.textContent = title;
+        siteToastMsgEl.textContent = message;
+        siteToastIconEl.innerHTML = `<i class="fa-solid ${icon}"></i>`;
+        siteToastEl.className = 'site-toast show' + (type !== 'default' ? (' ' + type) : '');
+
+        clearTimeout(siteToastTimer);
+        siteToastTimer = setTimeout(()=> siteToastEl.classList.remove('show'), duration);
+    }
+    if (siteToastCloseBtn){
+        siteToastCloseBtn.addEventListener('click', ()=>{
+            siteToastEl.classList.remove('show');
+            clearTimeout(siteToastTimer);
+        });
+    }
+
+    // Chỉ hiện thông báo "Tài khoản Pro đang hoạt động" MỘT LẦN DUY NHẤT cho mỗi lần được nâng cấp
+    // (dù nâng cấp bằng cách tự thanh toán hay được admin cộng/nâng cấp thủ công) — dựa vào việc so sánh
+    // với trạng thái premium_until đã lưu trong localStorage của trình duyệt.
+    function proNoticeStorageKey(userId){ return 'sng-pro-notice-' + userId; }
+
+    function markProNoticeSeen(userId, meta){
+        try{
+            if (meta && meta.plan === 'premium'){
+                localStorage.setItem(proNoticeStorageKey(userId), meta.premium_until || 'unlimited');
+            }
+        }catch(e){}
+    }
+
+    function checkProUpgradeNotice(){
+        if (!currentSession) return;
+        const user = currentSession.user;
+        const meta = user.user_metadata || {};
+        const premiumUntil = meta.premium_until ? new Date(meta.premium_until) : null;
+        const isPremiumActive = meta.plan === 'premium' && (!premiumUntil || premiumUntil > new Date());
+        if (!isPremiumActive) return;
+
+        const stateKey = meta.premium_until || 'unlimited';
+        const storageKey = proNoticeStorageKey(user.id);
+        let seen = null;
+        try{ seen = localStorage.getItem(storageKey); }catch(e){}
+        if (seen === stateKey) return; // lần nâng cấp này đã thông báo rồi
+
+        try{ localStorage.setItem(storageKey, stateKey); }catch(e){}
+        showSiteToast({
+            title: 'Tài khoản Pro đang hoạt động',
+            message: premiumUntil
+                ? ('Gói Premium của bạn có hiệu lực đến ' + premiumUntil.toLocaleDateString('vi-VN') + '.')
+                : 'Bạn đang sử dụng gói Premium.',
+            type: 'pro',
+            icon: 'fa-crown',
+            duration: 7000,
+        });
+    }
+
     function bindLockedCards(){
         document.querySelectorAll('[data-locked="true"]:not([data-bound])').forEach(el=>{
             el.dataset.bound = '1';
@@ -1466,9 +1601,13 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             const initial = (email.trim()[0] || 'U').toUpperCase();
             sideName.textContent = email.split('@')[0];
             sideSub.textContent = 'Nhấn để xem hồ sơ';
+            const meta = currentSession.user.user_metadata || {};
+            const premiumUntil = meta.premium_until ? new Date(meta.premium_until) : null;
+            const isPremiumActive = meta.plan === 'premium' && (!premiumUntil || premiumUntil > new Date());
             [sideAvatar, topAvatar].forEach(el=>{
                 if (!el) return;
                 el.classList.remove('is-guest');
+                el.classList.toggle('is-pro', isPremiumActive);
                 const c = el.querySelector('.avt-content');
                 if (c) c.textContent = initial;
             });
@@ -1481,6 +1620,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             [sideAvatar, topAvatar].forEach(el=>{
                 if (!el) return;
                 el.classList.add('is-guest');
+                el.classList.remove('is-pro');
                 const c = el.querySelector('.avt-content');
                 if (c) c.innerHTML = '<i class="fa-solid fa-user"></i>';
             });
@@ -1513,7 +1653,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const initial = (email.trim()[0] || 'U').toUpperCase();
         const displayName = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || email.split('@')[0];
 
-        document.getElementById('accAvatar').textContent = initial;
+        document.getElementById('accAvatarInitial').textContent = initial;
         document.getElementById('accName').textContent = displayName;
         document.getElementById('accSub').textContent = email;
         document.getElementById('accInfoEmail').textContent = email || '—';
@@ -1524,6 +1664,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const meta = user.user_metadata || {};
         const premiumUntil = meta.premium_until ? new Date(meta.premium_until) : null;
         const isPremiumActive = meta.plan === 'premium' && (!premiumUntil || premiumUntil > new Date());
+        document.getElementById('accAvatar').classList.toggle('is-pro', isPremiumActive);
         const planBadge = document.getElementById('accPlanBadge');
         if (planBadge){
             if (isPremiumActive){
@@ -1568,22 +1709,9 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         listEl.style.display = 'none';
         emptyEl.style.display = 'none';
 
-        // Gộp 3 nguồn hoạt động của tài khoản, sắp xếp theo thời gian mới nhất:
-        // 1) Đơn hàng đã thanh toán thành công (gói Pro / tài liệu / khoá học) — bảng sepay_orders
-        // 2) Admin cộng/trừ số dư thủ công — bảng balance_transactions
-        // 3) Admin nâng cấp/huỷ Pro thủ công — bảng pro_grants
-        const userId = currentSession.user.id;
-        const [orders, balanceTx, proGrants] = await Promise.all([
-            fetchPaidOrders(null, 20),
-            fetchBalanceTransactions(userId, 20),
-            fetchProGrants(userId, 20),
-        ]);
-
-        const items = [
-            ...orders.map(r => ({ type:'order', date: r.paid_at || r.created_at, row:r })),
-            ...balanceTx.map(r => ({ type:'balance', date: r.created_at, row:r })),
-            ...proGrants.map(r => ({ type: r.action === 'revoke' ? 'pro_revoke' : 'pro_grant', date: r.created_at, row:r })),
-        ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
+        // Gộp mọi nguồn hoạt động của tài khoản (đơn thanh toán + admin cộng/trừ tiền + admin nâng/huỷ Pro),
+        // sắp xếp theo thời gian mới nhất. Dùng chung fetchMergedActivity để đồng bộ với các bảng lịch sử khác.
+        const items = await fetchMergedActivity(null, 20);
 
         loadingEl.style.display = 'none';
         if (!items.length){
@@ -2721,6 +2849,10 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         failed:    { text:'Thất bại',              cls:'failed' },
         cancelled: { text:'Đã huỷ',                cls:'cancelled' },
     };
+    // Lịch sử giao dịch của trang Tài khoản: đơn nâng cấp Pro qua thanh toán (sepay_orders)
+    // ĐỒNG BỘ với admin cộng/trừ tiền thủ công (balance_transactions) và admin nâng cấp/huỷ Pro thủ công (pro_grants) —
+    // tất cả các nguồn hoạt động liên quan tới Pro/tiền của tài khoản đều gộp chung vào đây, giống hệt bảng
+    // "Lịch sử" trong popup tài khoản nhanh, để 2 nơi luôn khớp nhau.
     async function loadAcctOrderHistory(){
         const loadingEl = document.getElementById('acctOrderLoading');
         const listEl = document.getElementById('acctOrderList');
@@ -2738,43 +2870,15 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         listEl.style.display = 'none';
         emptyEl.style.display = 'none';
 
-        let rows = [];
-        try{
-            const { data, error } = await sb
-                .from('sepay_orders')
-                .select('id, order_type, plan_id, amount, status, invoice_number, created_at, paid_at')
-                .eq('user_id', currentSession.user.id)
-                .eq('order_type', 'subscription')
-                .order('created_at', { ascending:false })
-                .limit(20);
-            if (!error && Array.isArray(data)) rows = data;
-        }catch(e){ rows = []; }
+        const items = await fetchMergedActivity('subscription', 30);
 
         loadingEl.style.display = 'none';
-        if (!rows.length){
+        if (!items.length){
             emptyEl.style.display = 'flex';
             return;
         }
         listEl.style.display = 'block';
-
-        // Tên gói lấy từ proUpgradeItems (đã tải sẵn khi render lưới gói Pro) — không cần query thêm.
-        const pkgNameById = {};
-        (proUpgradeItems || []).forEach(p => { pkgNameById[p.id] = p.name; });
-
-        listEl.innerHTML = rows.map(r => {
-            const name = pkgNameById[r.plan_id] || 'Gói Premium';
-            const date = r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '';
-            const amountText = Number(r.amount || 0).toLocaleString('vi-VN') + 'đ';
-            const st = ORDER_STATUS_LABEL[r.status] || { text:r.status || '—', cls:'pending' };
-            return `<div class="acc-history-item">
-                <div class="acc-history-icon"><i class="fa-solid fa-crown"></i></div>
-                <div>
-                    <div class="acc-history-title">${escapeHtmlHome(name)} — ${amountText}</div>
-                    <div class="acc-history-meta">${escapeHtmlHome(date)}</div>
-                </div>
-                <span class="acct-order-status ${st.cls}">${st.text}</span>
-            </div>`;
-        }).join('');
+        listEl.innerHTML = items.map(activityItemHtml).join('');
     }
 
     // ---------------- Lịch sử mua hàng (dùng chung) — chỉ lấy đơn đã thanh toán thành công ----------------
@@ -2792,6 +2896,25 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             const { data, error } = await query;
             return (!error && Array.isArray(data)) ? data : [];
         }catch(e){ return []; }
+    }
+
+    // ---------------- Gộp & đồng bộ mọi hoạt động của tài khoản: đơn thanh toán + admin cộng/trừ tiền + admin nâng/huỷ Pro ----------------
+    // Dùng chung cho popup "Lịch sử" nhanh, subtab "Lịch sử giao dịch" (trang Tài khoản) và trang "Lịch sử mua hàng" đầy đủ,
+    // để cả 3 nơi luôn hiển thị đồng bộ, không nơi nào "thiếu" thao tác admin thực hiện thủ công.
+    async function fetchMergedActivity(orderType, limit){
+        if (!currentSession) return [];
+        const userId = currentSession.user.id;
+        const [orders, balanceTx, proGrants] = await Promise.all([
+            fetchPaidOrders(orderType || null, limit),
+            fetchBalanceTransactions(userId, limit),
+            fetchProGrants(userId, limit),
+        ]);
+        const items = [
+            ...orders.map(r => ({ type:'order', date: r.paid_at || r.created_at, row:r })),
+            ...balanceTx.map(r => ({ type:'balance', date: r.created_at, row:r })),
+            ...proGrants.map(r => ({ type: r.action === 'revoke' ? 'pro_revoke' : 'pro_grant', date: r.created_at, row:r })),
+        ].sort((a, b) => new Date(b.date) - new Date(a.date));
+        return limit ? items.slice(0, limit) : items;
     }
 
     function orderDisplayMeta(row){
@@ -2858,12 +2981,32 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         listEl.innerHTML = rows.map(orderHistoryItemHtml).join('');
     }
 
-    // Tab "Lịch sử mua hàng" — toàn bộ đơn (tài liệu + khoá học + gói Pro), chỉ đơn thành công
+    // Tab "Lịch sử mua hàng" — toàn bộ đơn (tài liệu + khoá học + gói Pro) ĐỒNG BỘ với admin cộng/trừ tiền
+    // (balance_transactions) và admin nâng cấp/huỷ Pro thủ công (pro_grants), giống hệt popup "Lịch sử" nhanh
+    // và subtab "Lịch sử giao dịch" ở trang Tài khoản — 3 nơi này luôn khớp dữ liệu với nhau.
     let fullHistoryCache = [];
     let fullHistoryActiveType = '';
     let fullHistoryListenersBound = false;
 
-    function fullHistoryRowHtml(row){
+    // Nhóm phân loại của 1 dòng hoạt động, dùng để lọc theo chip ("Gói Pro" / "Tài liệu" / "Khoá học" / "Admin điều chỉnh")
+    function histItemCategories(item){
+        if (item.type === 'order') return [item.row.order_type];
+        if (item.type === 'balance') return ['admin'];
+        if (item.type === 'pro_grant' || item.type === 'pro_revoke') return ['subscription', 'admin'];
+        return ['other'];
+    }
+
+    function histItemSearchText(item){
+        if (item.type === 'order'){
+            const meta = orderDisplayMeta(item.row);
+            return ((meta.title || '') + ' ' + (item.row.invoice_number || '')).toLowerCase();
+        }
+        if (item.type === 'balance') return ('admin cộng trừ tiền ' + (item.row.note || '')).toLowerCase();
+        if (item.type === 'pro_revoke') return ('admin huỷ gói pro ' + (item.row.note || '')).toLowerCase();
+        return ('admin nâng cấp pro ' + (item.row.note || '')).toLowerCase();
+    }
+
+    function fullHistoryOrderRowHtml(row){
         const meta = orderDisplayMeta(row);
         const dateSrc = row.paid_at || row.created_at;
         const dateText = dateSrc ? new Date(dateSrc).toLocaleString('vi-VN') : '';
@@ -2893,27 +3036,72 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         return `<div class="hist-row">${inner}</div>`;
     }
 
+    // Dòng hoạt động do admin thực hiện thủ công (cộng/trừ tiền, nâng cấp/huỷ Pro) — hiển thị cùng danh sách,
+    // dùng style "hist-row" giống hệt đơn hàng để đồng bộ giao diện.
+    function fullHistoryAdminRowHtml(item){
+        const r = item.row;
+        const dateText = r.created_at ? new Date(r.created_at).toLocaleString('vi-VN') : '';
+        const noteHtml = r.note ? `<span class="hist-dot">·</span><span>${escapeHtmlHome(r.note)}</span>` : '';
+
+        if (item.type === 'balance'){
+            const isCredit = Number(r.amount) >= 0;
+            const amountText = (isCredit ? '+' : '') + Number(r.amount).toLocaleString('vi-VN') + 'đ';
+            return `<div class="hist-row">
+                <div class="hist-icon type-other"><i class="fa-solid ${isCredit ? 'fa-arrow-up' : 'fa-arrow-down'}"></i></div>
+                <div class="hist-body">
+                    <div class="hist-title">${isCredit ? 'Admin cộng tiền' : 'Admin trừ tiền'}</div>
+                    <div class="hist-meta"><span>${escapeHtmlHome(dateText)}</span>${noteHtml}</div>
+                </div>
+                <div class="hist-side">
+                    <span class="hist-amount">${amountText}</span>
+                    <span class="acct-order-status pending">Admin điều chỉnh</span>
+                </div>
+            </div>`;
+        }
+
+        if (item.type === 'pro_revoke'){
+            return `<div class="hist-row">
+                <div class="hist-icon type-subscription"><i class="fa-solid fa-crown"></i></div>
+                <div class="hist-body">
+                    <div class="hist-title">Admin huỷ gói Pro</div>
+                    <div class="hist-meta"><span>${escapeHtmlHome(dateText)}</span>${noteHtml}</div>
+                </div>
+                <div class="hist-side"><span class="acct-order-status cancelled">Admin điều chỉnh</span></div>
+            </div>`;
+        }
+
+        // pro_grant
+        const untilText = r.premium_until ? new Date(r.premium_until).toLocaleDateString('vi-VN') : '';
+        return `<div class="hist-row">
+            <div class="hist-icon type-subscription"><i class="fa-solid fa-crown"></i></div>
+            <div class="hist-body">
+                <div class="hist-title">Admin nâng cấp Pro${untilText ? (' — hết hạn ' + untilText) : ''}</div>
+                <div class="hist-meta"><span>${escapeHtmlHome(dateText)}</span>${noteHtml}</div>
+            </div>
+            <div class="hist-side"><span class="acct-order-status paid">Admin điều chỉnh</span></div>
+        </div>`;
+    }
+
+    function fullHistoryRowHtml(item){
+        return item.type === 'order' ? fullHistoryOrderRowHtml(item.row) : fullHistoryAdminRowHtml(item);
+    }
+
     function renderFullHistoryList(){
         const listEl = document.getElementById('histOrderList');
         const filterEmptyEl = document.getElementById('histFilterEmpty');
         if (!listEl) return;
         const q = (document.getElementById('histSearchInput')?.value || '').trim().toLowerCase();
-        let rows = fullHistoryCache;
-        if (fullHistoryActiveType) rows = rows.filter(r => r.order_type === fullHistoryActiveType);
-        if (q){
-            rows = rows.filter(r => {
-                const meta = orderDisplayMeta(r);
-                return (meta.title || '').toLowerCase().includes(q) || (r.invoice_number || '').toLowerCase().includes(q);
-            });
-        }
-        if (!rows.length){
+        let items = fullHistoryCache;
+        if (fullHistoryActiveType) items = items.filter(item => histItemCategories(item).includes(fullHistoryActiveType));
+        if (q) items = items.filter(item => histItemSearchText(item).includes(q));
+        if (!items.length){
             listEl.style.display = 'none';
             if (filterEmptyEl) filterEmptyEl.style.display = 'flex';
             return;
         }
         if (filterEmptyEl) filterEmptyEl.style.display = 'none';
         listEl.style.display = 'block';
-        listEl.innerHTML = rows.map(fullHistoryRowHtml).join('');
+        listEl.innerHTML = items.map(fullHistoryRowHtml).join('');
     }
 
     function bindFullHistoryToolbar(){
@@ -2960,20 +3148,21 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         if (statsEl) statsEl.style.display = 'none';
         if (toolbarEl) toolbarEl.style.display = 'none';
 
-        const rows = await fetchPaidOrders(null, 50);
-        fullHistoryCache = rows;
+        const items = await fetchMergedActivity(null, 50);
+        fullHistoryCache = items;
 
         loadingEl.style.display = 'none';
-        if (!rows.length){
+        if (!items.length){
             emptyEl.style.display = 'flex';
             return;
         }
 
-        // Thống kê nhanh: tổng số đơn + tổng đã chi tiêu
-        const totalAmount = rows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+        // Thống kê nhanh: tổng số đơn + tổng đã chi tiêu — chỉ tính đơn hàng thanh toán thật (không tính admin cộng/trừ).
+        const orderItems = items.filter(item => item.type === 'order');
+        const totalAmount = orderItems.reduce((sum, item) => sum + Number(item.row.amount || 0), 0);
         const statCountEl = document.getElementById('histStatCount');
         const statAmountEl = document.getElementById('histStatAmount');
-        if (statCountEl) statCountEl.textContent = rows.length;
+        if (statCountEl) statCountEl.textContent = orderItems.length;
         if (statAmountEl) statAmountEl.textContent = totalAmount.toLocaleString('vi-VN') + 'đ';
         if (statsEl) statsEl.style.display = 'flex';
         if (toolbarEl) toolbarEl.style.display = 'flex';
@@ -3189,9 +3378,11 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         if (paymentStatus === 'success') {
             // IPN của SePay có thể xử lý chậm hơn vài giây so với lúc redirect về,
             // nên thử làm mới vài lần trong lúc chờ.
+            let latestUser = null;
             for (let i = 0; i < 5; i++) {
                 await sb.auth.refreshSession();
                 const { data: { user } } = await sb.auth.getUser();
+                latestUser = user || null;
                 if (isDocOrder) {
                     await loadPurchasedDocIds();
                     if (purchasedDocIds.size) break; // tối thiểu đã có 1 tài liệu -> IPN chắc chắn đã xử lý xong
@@ -3201,15 +3392,25 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 await new Promise(r => setTimeout(r, 2000));
             }
             renderDocContent();
-            if (typeof notyf !== 'undefined') {
-                notyf.success(isDocOrder
-                    ? 'Thanh toán thành công! Tài liệu đã được mở khoá, có thể tải ngay.'
-                    : 'Thanh toán thành công! Tài khoản của bạn đã được nâng cấp.');
+            showSiteToast({
+                title: isDocOrder ? 'Thanh toán thành công' : 'Nâng cấp thành công',
+                message: isDocOrder
+                    ? 'Tài liệu đã được mở khoá, có thể tải ngay.'
+                    : 'Tài khoản của bạn đã được nâng cấp lên Pro.',
+                type: isDocOrder ? 'success' : 'pro',
+                icon: isDocOrder ? 'fa-file-circle-check' : 'fa-crown',
+            });
+            // Đánh dấu đã thông báo cho lần nâng cấp Pro này, để checkProUpgradeNotice() không hiện lại lần nữa.
+            if (!isDocOrder && latestUser){
+                markProNoticeSeen(latestUser.id, latestUser.user_metadata || {});
             }
         } else if (paymentStatus === 'error' || paymentStatus === 'cancel') {
-            if (typeof notyf !== 'undefined') {
-                notyf.error('Giao dịch chưa hoàn tất. Vui lòng thử lại.');
-            }
+            showSiteToast({
+                title: 'Giao dịch chưa hoàn tất',
+                message: 'Vui lòng thử lại.',
+                type: 'error',
+                icon: 'fa-triangle-exclamation',
+            });
         }
     })();
 
@@ -3244,10 +3445,14 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             updateAccountUI();
             renderAccountPanelInfo();
             loadPurchasedDocIds().then(renderDocContent);
+            checkProUpgradeNotice();
         });
 
         await loadPurchasedDocIds();
         renderDocContent();
+        // Thông báo nổi "Tài khoản Pro đang hoạt động" — chỉ hiện 1 lần duy nhất mỗi khi tài khoản
+        // vừa được nâng cấp lên Pro, dù là tự thanh toán hay được admin cộng/nâng cấp thủ công.
+        checkProUpgradeNotice();
 
         const tabsConfig = await loadNavTabsConfig();
         tabsConfig.forEach(t => { TAB_TITLES[t.key] = [t.label, '']; });

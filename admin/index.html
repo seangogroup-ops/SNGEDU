@@ -513,9 +513,12 @@ textarea{resize:vertical;}
 ::-webkit-scrollbar-thumb{background:#343a63;border-radius:4px;}
 
 /* ---------- CONFIRM MODAL ---------- */
+/* z-index cao hơn các modal khác (acctFormOverlay, mergeOverlay đều 1000) để luôn hiện ĐÈ LÊN TRÊN
+   khi được mở từ bên trong 1 modal khác (vd: bấm "Huỷ Pro ngay" trong modal "Quản lý Pro"),
+   tránh bị modal cha che khuất / hiện sai lớp nền. */
 #confirmOverlay{
     position:fixed;inset:0;background:rgba(12,14,30,.6);backdrop-filter:blur(3px);
-    display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;
+    display:flex;align-items:center;justify-content:center;z-index:1500;padding:20px;
 }
 .confirm-box{
     background:var(--white);border-radius:var(--radius-lg);padding:28px;max-width:380px;width:100%;

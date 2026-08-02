@@ -32,20 +32,20 @@
 <script src="frontend/sepay-checkout.js" defer></script>
 <style>
     :root{
-        --bg:        #f5f7fb;
-        --card:      #ffffff;
-        --line:      #e8eaf1;
-        --ink:       #1f2433;
-        --ink-soft:  #6b7180;
-        --ink-mute:  #9aa0b1;
+        --bg:        #eef0f6;
+        --card:      #fcfcfe;
+        --line:      #dfe2ec;
+        --ink:       #262b3a;
+        --ink-soft:  #666c7d;
+        --ink-mute:  #8b91a3;
         --green:     #17b26a;
         --green-bg:  #e7f9f0;
         --amber:     #f5a524;
         --amber-bg:  #fef3e0;
         --brand:     #4f6bff;
         --brand-bg:  #eef1ff;
-        --shadow:    0 1px 2px rgba(20,22,40,.04), 0 8px 24px -12px rgba(20,22,40,.08);
-        --shadow-hov:0 4px 10px rgba(20,22,40,.05), 0 20px 40px -16px rgba(20,22,40,.16);
+        --shadow:    0 1px 2px rgba(20,22,40,.05), 0 8px 24px -12px rgba(20,22,40,.10);
+        --shadow-hov:0 4px 10px rgba(20,22,40,.06), 0 20px 40px -16px rgba(20,22,40,.18);
     }
     html[data-theme="dark"]{
         --bg:        #14151c;
@@ -604,6 +604,69 @@
     .doc-cat-name{ display:flex; align-items:center; gap:8px; font-weight:700; font-size:.94rem; }
     .doc-count{ font-size:.78rem; color:var(--ink-mute); }
 
+    /* ---------------- document tab (thiết kế riêng, gọn & thực tế hơn) ---------------- */
+    #panel-doc .doc-hero{
+        display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+        background:linear-gradient(135deg, var(--brand-bg), transparent 70%);
+        border:1px solid var(--line); border-radius:20px; padding:20px 24px; margin-bottom:18px;
+    }
+    #panel-doc .doc-hero h2{ font-size:1.15rem; font-weight:800; margin-bottom:4px; }
+    #panel-doc .doc-hero-sub{ font-size:.84rem; color:var(--ink-mute); }
+    #panel-doc .doc-hero-stat{
+        display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line);
+        border-radius:999px; padding:9px 16px; font-weight:700; font-size:.84rem; color:var(--brand); flex-shrink:0;
+    }
+    #panel-doc .doc-hero-stat i{ font-size:.9rem; }
+
+    #panel-doc .doc-grid{
+        display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:8px;
+    }
+    #panel-doc .doc-card{
+        position:relative; display:flex; flex-direction:column; gap:12px;
+        background:var(--card); border:1px solid var(--line); border-radius:18px;
+        padding:18px; text-decoration:none; color:var(--ink);
+        box-shadow:var(--shadow); cursor:pointer;
+        transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    #panel-doc .doc-card:hover, #panel-doc .doc-card:focus-visible{
+        transform:translateY(-4px); box-shadow:var(--shadow-hov); border-color:#dfe2ee;
+    }
+    #panel-doc .doc-card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    #panel-doc .doc-thumb{ width:100%; height:104px; object-fit:cover; border-radius:12px; }
+    #panel-doc .doc-icon{
+        width:46px; height:46px; border-radius:12px; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center; font-size:1.15rem;
+        background:var(--green-bg); color:var(--green);
+    }
+    #panel-doc .doc-card.is-paid .doc-icon{ background:var(--amber-bg); color:var(--amber); }
+    #panel-doc .doc-card.is-owned .doc-icon{ background:var(--brand-bg); color:var(--brand); }
+    #panel-doc .doc-tag{
+        display:inline-flex; align-items:center; gap:5px; flex-shrink:0;
+        font-size:.68rem; font-weight:800; padding:5px 10px; border-radius:999px; letter-spacing:.2px;
+    }
+    #panel-doc .doc-tag.free{ background:var(--green-bg); color:var(--green); }
+    #panel-doc .doc-tag.paid{ background:var(--amber-bg); color:var(--amber); }
+    #panel-doc .doc-tag.owned{ background:var(--brand-bg); color:var(--brand); }
+    #panel-doc .doc-title{ font-size:.96rem; font-weight:700; line-height:1.35; }
+    #panel-doc .doc-meta{ display:flex; align-items:center; gap:6px; font-size:.78rem; color:var(--ink-mute); }
+    #panel-doc .doc-desc{
+        font-size:.8rem; color:var(--ink-soft); line-height:1.45;
+        display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    #panel-doc .doc-cta{
+        margin-top:auto; display:flex; align-items:center; justify-content:center; gap:8px;
+        padding:10px 14px; border-radius:12px; font-weight:700; font-size:.84rem;
+        background:var(--green-bg); color:var(--green); transition:filter .18s ease;
+    }
+    #panel-doc .doc-card.is-paid .doc-cta{ background:var(--amber-bg); color:var(--amber); }
+    #panel-doc .doc-card.is-owned .doc-cta{ background:var(--brand-bg); color:var(--brand); }
+    #panel-doc .doc-card.is-disabled{ cursor:default; opacity:.7; }
+    #panel-doc .doc-card.is-disabled .doc-cta{ background:#f2f3f8; color:var(--ink-mute); }
+    #panel-doc .doc-card:hover .doc-cta{ filter:brightness(.96); }
+    @media (max-width:1300px){ #panel-doc .doc-grid{ grid-template-columns:repeat(3, 1fr); } }
+    @media (max-width:960px){ #panel-doc .doc-grid{ grid-template-columns:repeat(2, 1fr); } }
+    @media (max-width:600px){ #panel-doc .doc-grid{ grid-template-columns:1fr; } }
+
     /* ---------------- section heading ---------------- */
     .sec-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; }
     .sec-head h2{ font-size:1.15rem; font-weight:700; }
@@ -1156,7 +1219,13 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     <!-- ============ TAB: TÀI LIỆU ============ -->
     <section class="tab-panel" id="panel-doc" style="display:none">
-        <div class="sec-head"><h2 id="docSectionTitle">Tài liệu</h2><span>2 loại</span></div>
+        <div class="doc-hero">
+            <div>
+                <h2 id="docSectionTitle">Tài liệu ôn tập</h2>
+                <p class="doc-hero-sub">Đề cương, tóm tắt kiến thức &amp; tài liệu tổng hợp theo từng học phần.</p>
+            </div>
+            <div class="doc-hero-stat"><i class="fa-solid fa-folder-open"></i> <span id="docAllCount">Đang tải...</span></div>
+        </div>
 
         <div class="pill-row">
             <button class="filter-pill active" data-filter="all" type="button">Tất cả</button>
@@ -1164,14 +1233,8 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             <button class="filter-pill" data-filter="paid" type="button">Trả phí</button>
         </div>
 
-        <div class="doc-cat">
-            <div class="doc-cat-head">
-                <div class="doc-cat-name"><i class="fa-solid fa-book" style="color:var(--green)"></i> Tất cả tài liệu</div>
-                <span class="doc-count" id="docAllCount">Đang tải...</span>
-            </div>
-            <div id="docAllGrid">
-                <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
-            </div>
+        <div id="docAllGrid">
+            <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
         </div>
 
         <div class="doc-cat" id="docHistorySec" style="display:none">
@@ -2208,31 +2271,28 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     }
 
     function docItemCardHtml(item, isPaid){
-        const sizeBadge = item.size ? `<div class="badge-row"><i class="fa-solid fa-file-lines"></i> ${escapeHtmlHome(item.size)}</div>` : '';
+        const metaHtml = item.size ? `<div class="doc-meta"><i class="fa-solid fa-file-lines"></i> ${escapeHtmlHome(item.size)}</div>` : '';
+        const descHtml = item.desc ? `<div class="doc-desc">${escapeHtmlHome(item.desc)}</div>` : '';
         const topHtml = item.image
-            ? `<img src="${escapeHtmlHome(item.image)}" alt="" style="width:100%;height:110px;object-fit:cover;border-radius:12px;margin-bottom:10px;">`
-            : `<div class="card-top"><div class="icon-chip" style="background:${isPaid ? 'var(--amber-bg)' : 'var(--green-bg)'}; color:${isPaid ? 'var(--amber)' : 'var(--green)'}"><i class="fa-solid ${isPaid ? 'fa-lock' : 'fa-file-lines'}"></i></div></div>`;
+            ? `<img class="doc-thumb" src="${escapeHtmlHome(item.image)}" alt="">`
+            : '';
+        const iconHtml = `<div class="doc-icon"><i class="fa-solid ${isPaid ? 'fa-lock' : 'fa-file-lines'}"></i></div>`;
 
         // Tài liệu miễn phí: mở/tải trực tiếp như cũ (có kiểm tra giới hạn lượt/ngày cho tài khoản Free).
         if (!isPaid){
             const href = item.link || '#';
             const idAttr = escapeHtmlHome(String(item.id || ''));
-            if (item.link){
-                return `
-                    <a class="card" data-cat="free" href="${escapeHtmlHome(href)}" target="_blank" rel="noopener" onclick="return handleFreeDocClick(event, '${idAttr}', this)">
-                        <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                        ${topHtml}
-                        <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
-                        ${sizeBadge}
-                        <div class="status-text" style="color:var(--green)">${escapeHtmlHome(item.desc || 'Tài liệu miễn phí')}</div>
-                    </a>`;
-            }
+            const disabled = !item.link;
             return `
-                <a class="card" data-cat="free" href="#" onclick="return false;">
-                    ${topHtml}
-                    <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
-                    ${sizeBadge}
-                    <div class="status-text" style="color:var(--green)">${escapeHtmlHome(item.desc || 'Tài liệu miễn phí')}</div>
+                <a class="doc-card is-free${disabled ? ' is-disabled' : ''}" data-cat="free" href="${escapeHtmlHome(href)}" ${item.link ? `target="_blank" rel="noopener" onclick="return handleFreeDocClick(event, '${idAttr}', this)"` : 'onclick="return false;"'}>
+                    <div class="doc-card-top">
+                        ${topHtml || iconHtml}
+                        <span class="doc-tag free"><i class="fa-solid fa-unlock"></i> Miễn phí</span>
+                    </div>
+                    <div class="doc-title">${escapeHtmlHome(item.title || '')}</div>
+                    ${metaHtml}
+                    ${descHtml}
+                    <div class="doc-cta"><i class="fa-solid ${disabled ? 'fa-hourglass-half' : 'fa-download'}"></i> ${disabled ? 'Sắp ra mắt' : 'Tải xuống'}</div>
                 </a>`;
         }
 
@@ -2245,23 +2305,29 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         if (owned){
             const href = item.link || '#';
             return `
-                <a class="card" data-cat="paid" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
-                    ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
-                    ${topHtml}
-                    <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
-                    ${sizeBadge}
-                    <div class="status-text" style="color:var(--green)"><i class="fa-solid fa-circle-check"></i> Đã mua · Nhấn để tải</div>
+                <a class="doc-card is-owned" data-cat="paid" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
+                    <div class="doc-card-top">
+                        ${topHtml || iconHtml}
+                        <span class="doc-tag owned"><i class="fa-solid fa-circle-check"></i> Đã mua</span>
+                    </div>
+                    <div class="doc-title">${escapeHtmlHome(item.title || '')}</div>
+                    ${metaHtml}
+                    ${descHtml}
+                    <div class="doc-cta"><i class="fa-solid fa-download"></i> Tải xuống</div>
                 </a>`;
         }
 
         const idAttr = escapeHtmlHome(docId);
         return `
-            <div class="card" data-cat="paid" role="button" tabindex="0" style="cursor:pointer" onclick="openDocPurchase('${idAttr}')" onkeydown="if(event.key==='Enter')openDocPurchase('${idAttr}')">
-                <div class="card-arrow"><i class="fa-solid fa-lock"></i></div>
-                ${topHtml}
-                <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
-                ${sizeBadge}
-                <div class="status-text" style="color:var(--amber)">${priceLabel ? priceLabel + ' · Nhấn để mua' : 'Tài liệu trả phí'}</div>
+            <div class="doc-card is-paid" data-cat="paid" role="button" tabindex="0" onclick="openDocPurchase('${idAttr}')" onkeydown="if(event.key==='Enter')openDocPurchase('${idAttr}')">
+                <div class="doc-card-top">
+                    ${topHtml || iconHtml}
+                    <span class="doc-tag paid"><i class="fa-solid fa-lock"></i> Trả phí</span>
+                </div>
+                <div class="doc-title">${escapeHtmlHome(item.title || '')}</div>
+                ${metaHtml}
+                ${descHtml}
+                <div class="doc-cta"><i class="fa-solid fa-cart-shopping"></i> ${priceLabel ? 'Mua ngay · ' + priceLabel : 'Mua ngay'}</div>
             </div>`;
     }
 
@@ -2280,7 +2346,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             + paid.map(it => docItemCardHtml(it, true)).join('');
 
         allGrid.innerHTML = total
-            ? `<div class="grid">${cardsHtml}</div>`
+            ? `<div class="doc-grid">${cardsHtml}</div>`
             : `<div class="empty-state small"><div class="empty-icon" style="background:var(--green-bg); color:var(--green)"><i class="fa-solid fa-folder-open"></i></div><div class="empty-title">Chưa có tài liệu nào</div></div>`;
 
         applyDocFilter();
@@ -2291,7 +2357,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     function applyDocFilter(){
         const activePill = document.querySelector('.filter-pill.active');
         const f = activePill ? activePill.dataset.filter : 'all';
-        document.querySelectorAll('#docAllGrid .card').forEach(card=>{
+        document.querySelectorAll('#docAllGrid .doc-card').forEach(card=>{
             card.style.display = (f === 'all' || card.dataset.cat === f) ? '' : 'none';
         });
     }

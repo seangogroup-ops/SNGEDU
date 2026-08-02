@@ -667,6 +667,51 @@
     @media (max-width:960px){ #panel-doc .doc-grid{ grid-template-columns:repeat(2, 1fr); } }
     @media (max-width:600px){ #panel-doc .doc-grid{ grid-template-columns:1fr; } }
 
+    /* ---------------- product tab (thiết kế riêng) ---------------- */
+    #panel-product .prod-hero{
+        display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+        background:linear-gradient(135deg, var(--amber-bg), transparent 70%);
+        border:1px solid var(--line); border-radius:20px; padding:20px 24px; margin-bottom:18px;
+    }
+    #panel-product .prod-hero h2{ font-size:1.15rem; font-weight:800; margin-bottom:4px; }
+    #panel-product .prod-hero-sub{ font-size:.84rem; color:var(--ink-mute); }
+    #panel-product .prod-hero-stat{
+        display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line);
+        border-radius:999px; padding:9px 16px; font-weight:700; font-size:.84rem; color:var(--amber); flex-shrink:0;
+    }
+    #panel-product .prod-grid{
+        display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;
+    }
+    #panel-product .prod-card{
+        position:relative; display:flex; flex-direction:column; gap:12px;
+        background:var(--card); border:1px solid var(--line); border-radius:18px;
+        padding:18px; text-decoration:none; color:var(--ink);
+        box-shadow:var(--shadow); transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    #panel-product .prod-card:hover, #panel-product .prod-card:focus-visible{
+        transform:translateY(-4px); box-shadow:var(--shadow-hov); border-color:#dfe2ee;
+    }
+    #panel-product .prod-icon{
+        width:46px; height:46px; border-radius:12px; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center; font-size:1.2rem;
+    }
+    #panel-product .prod-title{ font-size:.98rem; font-weight:700; line-height:1.35; }
+    #panel-product .prod-desc{
+        font-size:.82rem; color:var(--ink-soft); line-height:1.45; flex-grow:1;
+        display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    #panel-product .prod-cta{
+        display:flex; align-items:center; justify-content:space-between; gap:8px;
+        padding:10px 14px; border-radius:12px; font-weight:700; font-size:.84rem;
+        background:var(--amber-bg); color:var(--amber); transition:filter .18s ease;
+    }
+    #panel-product .prod-card.no-link .prod-cta{ background:#f2f3f8; color:var(--ink-mute); justify-content:center; }
+    #panel-product .prod-card:hover .prod-cta{ filter:brightness(.96); }
+    #panel-product .prod-cta i{ font-size:.78rem; }
+    @media (max-width:1300px){ #panel-product .prod-grid{ grid-template-columns:repeat(3, 1fr); } }
+    @media (max-width:960px){ #panel-product .prod-grid{ grid-template-columns:repeat(2, 1fr); } }
+    @media (max-width:600px){ #panel-product .prod-grid{ grid-template-columns:1fr; } }
+
     /* ---------------- section heading ---------------- */
     .sec-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; }
     .sec-head h2{ font-size:1.15rem; font-weight:700; }
@@ -1262,7 +1307,13 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     <!-- ============ TAB: SẢN PHẨM ============ -->
     <section class="tab-panel" id="panel-product" style="display:none">
-        <div class="sec-head"><h2 id="productSectionTitle">Sản phẩm</h2></div>
+        <div class="prod-hero">
+            <div>
+                <h2 id="productSectionTitle">Sản phẩm &amp; gói nâng cao</h2>
+                <p class="prod-hero-sub">Khoá ôn thi, gói tài liệu tổng hợp và các sản phẩm hỗ trợ học tập khác.</p>
+            </div>
+            <div class="prod-hero-stat"><i class="fa-solid fa-bag-shopping"></i> <span id="productAllCount">Đang tải...</span></div>
+        </div>
         <div id="productGrid">
             <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
         </div>
@@ -2421,14 +2472,17 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     function productItemCardHtml(item){
         const style = QL_COLOR_MAP[item.color] || QL_COLOR_MAP.indigo;
+        const hasLink = !!item.link;
         const href = item.link || '#';
         return `
-            <a class="card" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
-                ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
-                <div class="card-top"><div class="icon-chip" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(item.icon || 'fa-solid fa-bag-shopping')}"></i></div></div>
-                <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
-                ${item.desc ? `<div class="badge-row"><i class="fa-solid fa-circle-info"></i> ${escapeHtmlHome(item.desc)}</div>` : ''}
-                ${item.price ? `<div class="status-text" style="color:${style.fg}">${escapeHtmlHome(item.price)}</div>` : ''}
+            <a class="prod-card${hasLink ? '' : ' no-link'}" href="${escapeHtmlHome(href)}" ${hasLink ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
+                <div class="prod-icon" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(item.icon || 'fa-solid fa-bag-shopping')}"></i></div>
+                <div class="prod-title">${escapeHtmlHome(item.title || '')}</div>
+                ${item.desc ? `<div class="prod-desc">${escapeHtmlHome(item.desc)}</div>` : ''}
+                <div class="prod-cta" style="${hasLink ? `background:${style.bg}; color:${style.fg}` : ''}">
+                    <span>${escapeHtmlHome(item.price || (hasLink ? 'Xem chi tiết' : 'Sắp ra mắt'))}</span>
+                    ${hasLink ? '<i class="fa-solid fa-arrow-right"></i>' : ''}
+                </div>
             </a>`;
     }
 
@@ -2436,10 +2490,12 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const payload = await fetchSiteSettingPayload('product_content', DEFAULT_PRODUCT_CONTENT);
         const items = Array.isArray(payload.items) ? payload.items : [];
         const grid = document.getElementById('productGrid');
+        const allCount = document.getElementById('productAllCount');
+        if (allCount) allCount.textContent = items.length + ' sản phẩm';
         if (!items.length){
             grid.innerHTML = `<div class="empty-state"><div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-bag-shopping"></i></div><div class="empty-title">Chưa có sản phẩm nào</div><div class="empty-sub">Gói tài liệu, khoá ôn thi nâng cao sẽ sớm ra mắt tại đây.</div></div>`;
         } else {
-            grid.innerHTML = `<div class="grid">${items.map(productItemCardHtml).join('')}</div>`;
+            grid.innerHTML = `<div class="prod-grid">${items.map(productItemCardHtml).join('')}</div>`;
         }
     }
 

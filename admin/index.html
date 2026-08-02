@@ -665,6 +665,12 @@ textarea{resize:vertical;}
 .btn-confirm-danger{background:var(--red);color:#fff;}
 .btn-confirm-danger:hover{background:#b91c1c;}
 
+/* ---------- RESET GIAO DỊCH MODAL ---------- */
+#resetStatsOverlay{
+    position:fixed;inset:0;background:rgba(12,14,30,.6);backdrop-filter:blur(3px);
+    display:flex;align-items:center;justify-content:center;z-index:1500;padding:20px;
+}
+
 /* ---------- MERGE (TỔNG HỢP) MODAL ---------- */
 #mergeOverlay{
     position:fixed;inset:0;background:rgba(12,14,30,.6);backdrop-filter:blur(3px);
@@ -1015,7 +1021,7 @@ textarea{resize:vertical;}
 
     /* Modal xác nhận / tổng hợp câu hỏi: bớt padding, không tràn ngang, tự cuộn nếu cao quá */
     .confirm-box,.merge-box{padding:19px;max-height:88vh;overflow-y:auto;}
-    #confirmOverlay,#mergeOverlay{padding:14px;}
+    #confirmOverlay,#mergeOverlay,#resetStatsOverlay{padding:14px;}
 
     /* Danh sách câu hỏi: cụm nút thao tác co giãn thay vì tràn hàng */
     .q-item{padding:14px;}
@@ -2500,7 +2506,7 @@ function renderStatsBarChart(containerId, items, opts){
         const onclick = opts.onBarClick ? ` onclick="${opts.onBarClick}('${it.key}')"` : '';
         return `<g class="bar-col${clickable}"${onclick}>
             <title>${escapeHtml(it.tooltip || it.label)}</title>
-            <rect class="bar" x="${x.toFixed(1)}" y="${y}" width="${barW}" height="${Math.max(h, it.value > 0 ? 2 : 0)}" rx="4" style="fill:${it.value > 0 ? 'var(--accent)' : 'var(--border)'};"></rect>
+            <rect class="bar" x="${x.toFixed(1)}" y="${it.value > 0 ? y : H - padBottom - 3}" width="${barW}" height="${it.value > 0 ? Math.max(h, 2) : 3}" rx="4" style="fill:${it.value > 0 ? 'var(--accent)' : 'var(--border)'};"></rect>
             <text x="${(x + barW / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle" style="font-size:10px;fill:var(--gray);font-family:var(--font-body);">${escapeHtml(it.label)}</text>
         </g>`;
     }).join('');

@@ -906,6 +906,9 @@ textarea{resize:vertical;}
                         <div class="side-item settings-item" id="navAccounts" onclick="showAccountsManager()">
                             <span class="set-ico">👤</span><span class="name">Tài khoản</span>
                         </div>
+                        <div class="side-item settings-item" id="navUsageLimits" onclick="showUsageLimitsPanel()">
+                            <span class="set-ico">⏳</span><span class="name">Giới hạn Free</span>
+                        </div>
                     </div>
                 </div>
 
@@ -1178,6 +1181,35 @@ textarea{resize:vertical;}
                             <button class="btn-mini-cancel" onclick="closeSepayPackageForm()">Hủy</button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="usageLimitsPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>⏳ Giới hạn Free</h2>
+                <p class="hint">Giới hạn số lượt sử dụng mỗi ngày cho tài khoản Miễn phí. Tài khoản Pro luôn không giới hạn ở cả 2 mục này. Tài liệu trả phí không bị ảnh hưởng bởi cài đặt này — luôn cần thanh toán để tải, không phân biệt Free hay Pro.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col" style="max-width:460px;">
+                    <div class="settings-form-card">
+                        <h3>📝 Làm trắc nghiệm</h3>
+                        <p class="hint">Số lượt làm trắc nghiệm (nộp bài) tối đa mỗi ngày cho tài khoản Miễn phí. Đặt 0 để tắt giới hạn (không giới hạn cho cả Free).</p>
+                        <label>Số lượt / ngày</label>
+                        <input id="ulQuizPerDay" type="number" min="0" step="1" placeholder="3">
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
+                        <h3>📁 Tải tài liệu miễn phí</h3>
+                        <p class="hint">Số lượt tải/mở tài liệu miễn phí tối đa mỗi ngày cho tài khoản Miễn phí. Không áp dụng cho tài liệu trả phí. Đặt 0 để tắt giới hạn.</p>
+                        <label>Số lượt / ngày</label>
+                        <input id="ulDocPerDay" type="number" min="0" step="1" placeholder="2">
+                    </div>
+
+                    <div class="mini-actions" style="margin-top:16px;">
+                        <button class="btn-mini-save" onclick="saveUsageLimits()">💾 Lưu thay đổi</button>
+                    </div>
+                    <div id="ulSaveMsg" class="hint" style="margin-top:10px;min-height:1.2em;"></div>
                 </div>
             </div>
         </div>
@@ -1767,6 +1799,7 @@ function restoreLastAdminPanel(){
         if (last.startsWith('content:'))  return showContentManager(last.slice(8));
         if (last === 'sepayPkg')          return showSepayPackages();
         if (last === 'accounts')          return showAccountsManager();
+        if (last === 'usageLimits')       return showUsageLimitsPanel();
         if (last === 'generalSettings')   return showGeneralSettings();
         if (last === 'featured')          return showFeaturedManager();
     }
@@ -1777,7 +1810,7 @@ function restoreLastAdminPanel(){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel'];
+const ADMIN_PANEL_IDS = ['subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -1806,6 +1839,42 @@ function showSubjectManager(){
 function showQuestionsPanel(){
     showAdminPanel('mainAppArea', 'navSubjectMgr');
 }
+function showUsageLimitsPanel(){
+    rememberAdminPanel('usageLimits');
+    showAdminPanel('usageLimitsPanel', 'navUsageLimits');
+    loadUsageLimits();
+}
+async function loadUsageLimits(){
+    const msgEl = document.getElementById('ulSaveMsg');
+    msgEl.innerText = '';
+    const { data, error } = await sb.from('site_settings').select('*').eq('key', 'usage_limits').single();
+    if (error && error.code !== 'PGRST116'){
+        msgEl.style.color = '#e5484d';
+        msgEl.innerText = 'Lỗi tải cấu hình: ' + error.message;
+    }
+    const payload = (data && data.payload) ? data.payload : {};
+    document.getElementById('ulQuizPerDay').value = (payload.quiz_per_day ?? 3);
+    document.getElementById('ulDocPerDay').value = (payload.doc_download_per_day ?? 2);
+}
+async function saveUsageLimits(){
+    const msgEl = document.getElementById('ulSaveMsg');
+    const quizVal = Math.max(0, parseInt(document.getElementById('ulQuizPerDay').value, 10) || 0);
+    const docVal = Math.max(0, parseInt(document.getElementById('ulDocPerDay').value, 10) || 0);
+    const payload = { quiz_per_day: quizVal, doc_download_per_day: docVal };
+
+    const { error } = await sb.from('site_settings')
+        .upsert({ key: 'usage_limits', payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+
+    if (error){
+        msgEl.style.color = 'var(--red)';
+        msgEl.innerText = 'Lỗi: ' + error.message;
+    } else {
+        msgEl.style.color = 'var(--green)';
+        msgEl.innerText = '✔ Đã lưu. Giới hạn mới áp dụng ngay từ lượt tiếp theo của người dùng.';
+        setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4000);
+    }
+}
+
 function showGeneralSettings(){
     rememberAdminPanel('generalSettings');
     showAdminPanel('generalSettingsPanel', 'navGeneralSettings');

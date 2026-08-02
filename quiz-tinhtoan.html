@@ -565,11 +565,15 @@ body{
   </div>
 </div>
 
+<script src="frontend/usage-limits.js"></script>
 <script>
 // ── SUPABASE CONFIG ──
 const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let sngUsageChecked = false; // đã kiểm tra & (nếu hợp lệ) sẵn sàng ghi log lượt làm bài này
+let sngUsageLogged = false;  // tránh ghi log 2 lần nếu finishQuiz bị gọi nhiều lần
 
 // ---------------- Bắt buộc đăng nhập mới xem được trang này ----------------
 // Lớp phủ #authGateOverlay che toàn trang ngay từ đầu, chỉ gỡ ra sau khi xác nhận có phiên đăng nhập.
@@ -580,6 +584,20 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         location.href = 'account/login.html?next=' + encodeURIComponent(next);
         return;
     }
+
+    // ---------------- Giới hạn số lần làm trắc nghiệm/ngày (tài khoản Free) ----------------
+    const usageCheck = await SNG_USAGE.checkLimit(session.user, 'quiz_attempt');
+    if (!usageCheck.allowed){
+        document.body.innerHTML = `<div class="state-card" style="max-width:520px;margin:120px auto;text-align:center;">
+            <i class="fa-solid fa-lock" style="font-size:2rem;color:#f5a524;"></i>
+            <h2 style="margin:14px 0 8px;">Đã hết lượt làm trắc nghiệm hôm nay</h2>
+            <p style="color:#6b7280;margin-bottom:18px;">Tài khoản miễn phí được làm tối đa ${usageCheck.limit} lượt/ngày. Nâng cấp Pro để làm bài không giới hạn.</p>
+            <a href="index.html" style="display:inline-block;padding:10px 22px;background:#3258db;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Về trang chủ</a>
+        </div>`;
+        return;
+    }
+    sngUsageChecked = true;
+
     const overlay = document.getElementById('authGateOverlay');
     if (overlay) overlay.remove();
 })();
@@ -936,6 +954,14 @@ function finishQuiz() {
   });
   showSum = true;
   renderSum();
+
+  // Ghi nhận lượt làm trắc nghiệm (chỉ tính khi thực sự nộp/hoàn thành bài, 1 lần duy nhất)
+  if (sngUsageChecked && !sngUsageLogged){
+    sngUsageLogged = true;
+    sb.auth.getUser().then(({ data }) => {
+      if (data && data.user) SNG_USAGE.logUsage(data.user.id, 'quiz_attempt', subjectId);
+    });
+  }
 }
 
 function restart() {

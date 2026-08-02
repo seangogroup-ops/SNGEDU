@@ -6,7 +6,7 @@
 <title>Quản trị · SNG EDU</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
 
 :root{
     --navy:#12162a;
@@ -17,8 +17,8 @@
     --border:#e4e6f1;
     --text:#181c30;
     --gray:#6d7286;
-    --accent:#4f4ee0;
-    --accent-dark:#3c3bc4;
+    --accent:#4f6bff;
+    --accent-dark:#3c56e6;
     --green:#16a34a;
     --green-bg:#eefaf1;
     --red:#dc2626;
@@ -28,18 +28,21 @@
     --radius:12px;
 
     /* thêm — không được JS tham chiếu, an toàn để tinh chỉnh riêng */
-    --radius-sm:8px;
+    --radius-sm:10px;
     --radius-lg:16px;
-    --accent-soft:#eef0ff;
-    --accent-glow:rgba(79,78,224,.22);
+    --accent-soft:#e7eaff;
+    --accent-glow:rgba(79,107,255,.22);
     --shadow-xs:0 1px 2px rgba(20,22,45,.05);
     --shadow-sm:0 2px 8px rgba(20,22,45,.06);
     --shadow-md:0 10px 28px rgba(20,22,45,.10);
     --shadow-lg:0 24px 60px rgba(12,15,35,.35);
-    --font-display:'Plus Jakarta Sans',Inter,-apple-system,"Segoe UI",sans-serif;
-    --font-body:'Inter',-apple-system,"Segoe UI",sans-serif;
+    --font-display:'Be Vietnam Pro',-apple-system,"Segoe UI",sans-serif;
+    --font-body:'Be Vietnam Pro',-apple-system,"Segoe UI",sans-serif;
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box;}
+html{ overflow-x:hidden; -webkit-text-size-adjust:100%; }
 body{
     margin:0;
     font-family:var(--font-body);
@@ -47,7 +50,9 @@ body{
     color:var(--text);
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
+    overflow-x:hidden;
 }
+body.no-scroll{ overflow:hidden; height:100vh; }
 h1,h2,h3,h4{font-family:var(--font-display);letter-spacing:-.01em;}
 button{cursor:pointer;border:none;border-radius:var(--radius-sm);font-weight:600;font-family:var(--font-display);transition:filter .12s,transform .12s,box-shadow .12s;}
 button:hover{filter:brightness(0.97);}
@@ -63,42 +68,93 @@ label{font-weight:700;font-size:.72rem;color:var(--gray);display:block;margin:12
 
 /* ---------- LOGIN ---------- */
 #loginScreen{
-    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
     background:
-        radial-gradient(circle at 15% 12%, rgba(79,78,224,.35), transparent 42%),
-        radial-gradient(circle at 88% 82%, rgba(79,78,224,.18), transparent 45%),
+        radial-gradient(circle at 14% 10%, rgba(79,107,255,.38), transparent 42%),
+        radial-gradient(circle at 88% 86%, rgba(139,124,246,.24), transparent 45%),
         var(--navy);
-    padding:20px;
+    padding:24px;
 }
+#loginScreen::before,#loginScreen::after{
+    content:'';position:absolute;border-radius:50%;pointer-events:none;
+    background:linear-gradient(135deg,var(--accent),#8b7cf6);opacity:.14;filter:blur(2px);
+}
+#loginScreen::before{width:260px;height:260px;top:-90px;left:-90px;}
+#loginScreen::after{width:200px;height:200px;bottom:-70px;right:-60px;}
 .login-card{
-    position:relative;
-    background:var(--white);border-radius:var(--radius-lg);padding:38px 34px;width:100%;max-width:380px;
+    position:relative;z-index:1;
+    background:var(--white);border-radius:20px;padding:36px 32px;width:100%;max-width:392px;
     box-shadow:var(--shadow-lg);
-    border-top:4px solid var(--accent);
 }
-.login-card h1{font-size:1.32rem;margin:0 0 3px;letter-spacing:-.02em;}
-.login-card p{color:var(--gray);font-size:.85rem;margin:0 0 20px;line-height:1.5;}
-.login-card button{width:100%;background:var(--accent);color:#fff;padding:12px;font-size:.95rem;margin-top:16px;box-shadow:0 8px 20px var(--accent-glow);}
+.login-brand{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:22px;}
+.login-brand .dot{
+    width:52px;height:52px;border-radius:15px;flex:0 0 auto;margin-bottom:14px;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--accent),#8b7cf6);
+    box-shadow:0 10px 24px var(--accent-glow);
+}
+.login-brand .dot svg{width:26px;height:26px;display:block;}
+.login-brand .name{font-family:var(--font-display);font-weight:800;font-size:1.24rem;color:var(--text);letter-spacing:-.02em;}
+.login-brand .tag{font-size:.78rem;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
+.login-field{position:relative;margin-top:14px;}
+.login-field:first-of-type{margin-top:0;}
+.login-field .fico{
+    position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--gray);
+    display:flex;align-items:center;justify-content:center;pointer-events:none;
+}
+.login-field .fico svg{width:16px;height:16px;display:block;}
+.login-field input{padding-left:40px;}
+.login-field input#loginPass{padding-right:42px;}
+.login-field .pwd-toggle{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    width:30px;height:30px;border-radius:8px;background:transparent;color:var(--gray);
+    display:flex;align-items:center;justify-content:center;
+}
+.login-field .pwd-toggle:hover{background:var(--bg);color:var(--accent);}
+.login-field .pwd-toggle svg{width:16px;height:16px;display:block;}
+.login-card button{
+    width:100%;background:var(--accent);color:#fff;padding:13px;font-size:.95rem;
+    margin-top:22px;box-shadow:0 8px 20px var(--accent-glow);border-radius:var(--radius-sm);
+}
 .login-card button:hover{background:var(--accent-dark);}
-#loginMsg{margin-top:10px;color:var(--red);font-size:.85rem;min-height:1.2em;font-weight:600;}
+#loginMsg{margin-top:10px;color:var(--red);font-size:.85rem;min-height:1.2em;font-weight:600;text-align:center;}
+.login-back{
+    display:flex;align-items:center;justify-content:center;gap:6px;margin-top:20px;
+    color:var(--navy-text);font-size:.82rem;font-weight:600;text-decoration:none;
+}
+.login-back:hover{color:#fff;}
+.login-back svg{width:14px;height:14px;}
 
 /* ---------- SHELL ---------- */
 #shell{display:flex;min-height:100vh;}
 aside{
-    width:272px;flex:0 0 272px;background:var(--navy);color:var(--navy-text);
-    padding:22px 16px;display:flex;flex-direction:column;gap:24px;
+    width:264px;flex:0 0 264px;background:var(--navy);color:var(--navy-text);
+    padding:20px 14px;display:flex;flex-direction:column;gap:20px;
     box-sizing:border-box;overflow-x:hidden;
-    border-right:1px solid rgba(255,255,255,.05);
+    border-right:1px solid rgba(255,255,255,.06);
+    position:sticky;top:0;height:100vh;overflow-y:auto;
 }
 .side-item .name{flex-shrink:1;min-width:0;}
-.brand{display:flex;align-items:center;gap:11px;color:#fff;font-weight:800;font-size:1rem;padding:0 4px 4px;letter-spacing:-.01em;}
+.brand{
+    display:flex;align-items:center;gap:11px;color:#fff;font-weight:800;font-size:1rem;
+    padding:6px 6px 14px;letter-spacing:-.01em;
+    border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:2px;
+}
 .brand span.dot{
-    width:32px;height:32px;border-radius:9px;flex:0 0 auto;
+    width:34px;height:34px;border-radius:10px;flex:0 0 auto;
     display:flex;align-items:center;justify-content:center;
     background:linear-gradient(135deg,var(--accent),#8b7cf6);
     box-shadow:0 4px 14px var(--accent-glow);
 }
 .brand span.dot svg{width:18px;height:18px;display:block;}
+.brand .brand-text{display:flex;flex-direction:column;line-height:1.2;}
+.brand .brand-text small{font-size:.68rem;font-weight:600;color:var(--navy-text);letter-spacing:.04em;text-transform:uppercase;}
+.aside-close{
+    display:none;position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:10px;
+    align-items:center;justify-content:center;background:rgba(255,255,255,.06);color:#fff;border:none;font-size:1.1rem;
+}
+.aside-close:hover{background:rgba(255,255,255,.14);}
 .side-section h4{
     font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#6b7299;font-family:var(--font-display);font-weight:700;
     margin:0 0 9px;padding:0 4px;display:flex;justify-content:space-between;align-items:center;
@@ -336,29 +392,48 @@ aside{
 .folder-select-option.muted{color:#8f96b8;}
 .folder-select-option.create{color:#a9b3ff;font-weight:600;border-top:1px solid #2a3153;}
 .folder-select-empty{padding:9px 10px;font-size:.78rem;color:#767ea0;}
-.sidebar-foot{margin-top:auto;border-top:1px solid rgba(255,255,255,.07);padding-top:15px;font-size:.8rem;}
-.sidebar-foot .email{color:#fff;font-weight:600;word-break:break-all;}
-.sidebar-foot button{width:100%;margin-top:11px;background:#242a4d;color:#dfe2f2;padding:9px;font-size:.82rem;}
-.sidebar-foot button:hover{background:#2d3459;}
+.sidebar-foot{
+    margin-top:auto;border-top:1px solid rgba(255,255,255,.07);padding-top:14px;font-size:.8rem;
+    display:flex;align-items:center;gap:10px;
+}
+.sidebar-foot .foot-avatar{
+    width:36px;height:36px;border-radius:50%;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--accent),#8b7cf6);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;
+}
+.sidebar-foot .foot-info{flex:1;min-width:0;}
+.sidebar-foot .email{color:#fff;font-weight:600;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sidebar-foot .foot-role{color:var(--navy-text);font-size:.7rem;font-weight:600;}
+.sidebar-foot button{
+    flex:0 0 auto;width:36px;height:36px;padding:0;border-radius:10px;
+    background:#242a4d;color:#dfe2f2;display:flex;align-items:center;justify-content:center;font-size:.95rem;
+}
+.sidebar-foot button:hover{background:rgba(220,38,38,.25);color:#ffb3b3;}
 
 /* ---------- TOPBAR (chỉ hiện trên di động) + menu trượt ---------- */
 .admin-topbar{
     display:none;align-items:center;gap:12px;
-    padding:13px 16px;background:var(--white);border-bottom:1px solid var(--border);
+    padding:calc(12px + var(--safe-top)) 16px 12px;background:var(--white);border-bottom:1px solid var(--border);
     position:sticky;top:0;z-index:1200;
+    box-shadow:0 2px 10px rgba(20,22,45,.04);
 }
 .mobile-menu-btn{
     display:none;align-items:center;justify-content:center;
-    width:38px;height:38px;border-radius:10px;flex:0 0 auto;
+    width:40px;height:40px;border-radius:11px;flex:0 0 auto;
     background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:1.05rem;
 }
-.mobile-menu-btn:hover{background:var(--accent-soft);color:var(--accent);}
+.mobile-menu-btn:hover,.mobile-menu-btn:active{background:var(--accent-soft);color:var(--accent);}
+.admin-topbar-brand{
+    display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--accent),#8b7cf6);box-shadow:0 3px 10px var(--accent-glow);
+}
+.admin-topbar-brand svg{width:16px;height:16px;display:block;}
 .admin-topbar-title{
-    font-family:var(--font-display);font-weight:800;font-size:1rem;letter-spacing:-.01em;
+    font-family:var(--font-display);font-weight:800;font-size:.98rem;letter-spacing:-.01em;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;
 }
 .sidebar-backdrop{
-    display:none;position:fixed;inset:0;background:rgba(8,9,20,.55);z-index:1490;
+    display:none;position:fixed;inset:0;background:rgba(8,9,20,.55);backdrop-filter:blur(2px);z-index:1490;
     opacity:0;pointer-events:none;transition:opacity .22s ease;
 }
 .sidebar-backdrop.show{opacity:1;pointer-events:auto;}
@@ -781,27 +856,35 @@ textarea{resize:vertical;}
     .mobile-menu-btn{display:flex;}
     .sidebar-backdrop{display:block;}
     aside{
-        position:fixed;left:0;top:0;height:100vh;width:280px;max-width:85vw;
+        position:fixed;left:0;top:0;height:100vh;height:100dvh;width:290px;max-width:85vw;
         z-index:1500;transform:translateX(-100%);
-        transition:transform .25s ease;box-shadow:0 0 44px rgba(0,0,0,.4);
+        transition:transform .28s cubic-bezier(.32,.72,0,1);
+        box-shadow:0 0 50px rgba(0,0,0,.45);
         display:flex;flex-direction:column;
-        padding:18px 14px;gap:0;
-        border-right:none;overflow-y:auto;
+        padding:calc(18px + var(--safe-top)) 16px calc(16px + var(--safe-bottom));gap:0;
+        border-right:none;border-radius:0 18px 18px 0;overflow-y:auto;
+        -webkit-overflow-scrolling:touch;
     }
     aside.mobile-open{transform:translateX(0);}
-    aside > *{margin-bottom:16px;}
+    .aside-close{display:flex;top:calc(14px + var(--safe-top));}
+    .brand{padding-right:44px;}
+    aside > *{margin-bottom:18px;}
     aside > *:last-child{margin-bottom:0;}
     .side-list{
         display:block;
         max-height:none;
         overflow:visible;
     }
+    /* Vùng chạm rộng rãi hơn hẳn trên di động cho từng mục menu */
+    .side-group-head{padding:11px 9px 11px 11px;}
+    .side-item{padding:12px 10px 12px 12px;font-size:.9rem;}
+    .side-group-body .side-item.settings-item{padding-top:11px;padding-bottom:11px;}
     .side-list .side-item{margin-bottom:3px;}
     .side-list .side-item:last-child{margin-bottom:0;}
     .side-list .folder-group{margin-bottom:4px;}
-    main{padding:18px 14px 40px;display:block;}
+    main{padding:18px 16px 48px;display:block;max-width:100%;}
     .admin-topbar{margin:-18px -14px 18px;}
-    .sidebar-foot{margin-top:0;}
+    .sidebar-foot{margin-top:0;padding-top:16px;}
 
     /* Thẻ Môn học/Chương·đề: đỡ tốn diện tích, dễ chạm hơn trên điện thoại */
     .subj-mgr-head{margin-bottom:16px;}
@@ -811,8 +894,8 @@ textarea{resize:vertical;}
     .subj-mgr-col .side-item{padding:12px 10px;}
 
     /* Panel/card nội dung câu hỏi, cài đặt trang chủ */
-    .panel{padding:17px;}
-    .settings-form-card{padding:17px;max-width:100%;}
+    .panel{padding:16px;border-radius:var(--radius-sm);}
+    .settings-form-card{padding:16px;max-width:100%;}
 
     /* Thanh ngữ cảnh (môn/chương đang chọn) */
     .context-bar{padding:13px 15px;gap:8px 10px;}
@@ -830,22 +913,33 @@ textarea{resize:vertical;}
     .content-order-col{flex:1 1 220px;}
 
     /* Nút icon Sửa/Xóa to hơn một chút để bấm tay chuẩn hơn */
-    .icon-x,.icon-edit{width:28px;height:28px;}
+    .icon-x,.icon-edit{width:30px;height:30px;}
     .icon-x svg,.icon-edit svg{width:13px;height:13px;}
 
-    /* Modal xác nhận / tổng hợp câu hỏi: bớt padding, không tràn ngang */
-    .confirm-box,.merge-box{padding:19px;}
+    /* Modal xác nhận / tổng hợp câu hỏi: bớt padding, không tràn ngang, tự cuộn nếu cao quá */
+    .confirm-box,.merge-box{padding:19px;max-height:88vh;overflow-y:auto;}
     #confirmOverlay,#mergeOverlay{padding:14px;}
 
     /* Danh sách câu hỏi: cụm nút thao tác co giãn thay vì tràn hàng */
     .q-item{padding:14px;}
     .q-item .actions{flex-wrap:wrap;}
+
+    /* Khu vực tài khoản: thẻ hành động full-width, xếp 1 cột cho dễ đọc */
+    .acct-detail-grid{grid-template-columns:1fr;}
+    .acct-detail-head{padding:16px;gap:12px;}
+    .acct-toolbar{flex-wrap:wrap;}
+    .acct-search-wrap{flex:1 1 100%;}
+
+    /* Form/modal chung: không tràn ngang trên màn hình hẹp */
+    .acct-form-box,.login-card{padding:22px;max-width:100%;}
 }
 @media (max-width: 420px){
     /* Màn hình rất nhỏ: các cặp nút Hủy/Lưu, Hủy/Xóa xếp dọc để vùng chạm rộng rãi hơn */
     .confirm-box .confirm-actions,.merge-actions{flex-direction:column;}
     .confirm-box .confirm-actions button,.merge-actions button{flex:none;width:100%;}
     .side-toolbar{flex-wrap:wrap;}
+    .acct-form-actions{flex-direction:column;}
+    .subj-mgr-col-head{gap:6px;}
 }
 </style>
 </head>
@@ -854,14 +948,39 @@ textarea{resize:vertical;}
 <!-- ================= LOGIN ================= -->
 <div id="loginScreen">
     <div class="login-card">
-        <h1>🔐 Đăng nhập quản trị</h1>
-        <p>SNG EDU · trang quản lý môn học, chương và câu hỏi</p>
+        <div class="login-brand">
+            <span class="dot">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 3 2 8l10 5 8-4.2V15h1.5V8L12 3Z" fill="#fff"/>
+                    <path d="M6 11.5V16c0 1.7 2.7 3.5 6 3.5s6-1.8 6-3.5v-4.5l-6 3-6-3Z" fill="#fff" fill-opacity=".92"/>
+                </svg>
+            </span>
+            <div class="name">SNG EDU</div>
+            <div class="tag">Trang quản trị</div>
+        </div>
         <label>Email</label>
-        <input id="loginEmail" type="email" placeholder="admin@example.com">
+        <div class="login-field">
+            <span class="fico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m22 6-10 7L2 6"/></svg>
+            </span>
+            <input id="loginEmail" type="email" placeholder="admin@example.com" autocomplete="username">
+        </div>
         <label>Mật khẩu</label>
-        <input id="loginPass" type="password" placeholder="••••••••">
+        <div class="login-field">
+            <span class="fico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            </span>
+            <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="pwd-toggle" id="loginPwdToggle" aria-label="Hiện mật khẩu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+        </div>
         <button onclick="doLogin()">Đăng nhập</button>
         <div id="loginMsg"></div>
+        <a class="login-back" href="../index.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+            Quay lại trang chủ
+        </a>
     </div>
 </div>
 
@@ -869,6 +988,7 @@ textarea{resize:vertical;}
 <div id="shell" class="hidden">
     <div class="sidebar-backdrop" id="adminSidebarBackdrop"></div>
     <aside id="adminSidebar">
+        <button type="button" class="aside-close" id="adminAsideCloseBtn" aria-label="Đóng menu">✕</button>
         <div class="brand">
             <span class="dot">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -876,7 +996,7 @@ textarea{resize:vertical;}
                     <path d="M6 11.5V16c0 1.7 2.7 3.5 6 3.5s6-1.8 6-3.5v-4.5l-6 3-6-3Z" fill="#fff" fill-opacity=".92"/>
                 </svg>
             </span>
-            SNG EDU · Admin
+            <span class="brand-text">SNG EDU<small>Trang quản trị</small></span>
         </div>
 
         <div class="side-section">
@@ -956,14 +1076,28 @@ textarea{resize:vertical;}
         </div>
 
         <div class="sidebar-foot">
-            <div class="email" id="userEmail"></div>
-            <button onclick="doLogout()">Đăng xuất</button>
+            <div class="foot-avatar" id="footAvatar">A</div>
+            <div class="foot-info">
+                <div class="email" id="userEmail"></div>
+                <div class="foot-role">Quản trị viên</div>
+            </div>
+            <button onclick="doLogout()" title="Đăng xuất" aria-label="Đăng xuất">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
         </div>
     </aside>
 
     <main>
         <div class="admin-topbar">
-            <button type="button" class="mobile-menu-btn" id="adminMobileMenuBtn" aria-label="Mở menu">☰</button>
+            <button type="button" class="mobile-menu-btn" id="adminMobileMenuBtn" aria-label="Mở menu">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <span class="admin-topbar-brand">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 3 2 8l10 5 8-4.2V15h1.5V8L12 3Z" fill="#fff"/>
+                    <path d="M6 11.5V16c0 1.7 2.7 3.5 6 3.5s6-1.8 6-3.5v-4.5l-6 3-6-3Z" fill="#fff" fill-opacity=".92"/>
+                </svg>
+            </span>
             <div class="admin-topbar-title" id="adminTopbarTitle">Trắc nghiệm</div>
         </div>
         <div id="msgBox"></div>
@@ -1758,14 +1892,33 @@ function expandGroupOfActiveNavItem(){
 }
 initSideGroups();
 
+document.addEventListener('DOMContentLoaded', () => {
+    const pwdInput = document.getElementById('loginPass');
+    const pwdToggle = document.getElementById('loginPwdToggle');
+    if (pwdToggle && pwdInput){
+        pwdToggle.addEventListener('click', () => {
+            const showing = pwdInput.type === 'text';
+            pwdInput.type = showing ? 'password' : 'text';
+            pwdToggle.setAttribute('aria-label', showing ? 'Hiện mật khẩu' : 'Ẩn mật khẩu');
+        });
+    }
+    const emailInput = document.getElementById('loginEmail');
+    [emailInput, pwdInput].forEach(el => {
+        if (!el) return;
+        el.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+    });
+});
+
 // ---------- MENU TRƯỢT TRÊN DI ĐỘNG (hamburger + backdrop) ----------
 function openAdminMobileMenu(){
     document.getElementById('adminSidebar').classList.add('mobile-open');
     document.getElementById('adminSidebarBackdrop').classList.add('show');
+    document.body.classList.add('no-scroll');
 }
 function closeAdminMobileMenu(){
     document.getElementById('adminSidebar').classList.remove('mobile-open');
     document.getElementById('adminSidebarBackdrop').classList.remove('show');
+    document.body.classList.remove('no-scroll');
 }
 function setAdminTopbarTitle(text){
     const el = document.getElementById('adminTopbarTitle');
@@ -1774,8 +1927,10 @@ function setAdminTopbarTitle(text){
 document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('adminMobileMenuBtn');
     const backdrop = document.getElementById('adminSidebarBackdrop');
+    const closeBtn = document.getElementById('adminAsideCloseBtn');
     if (btn) btn.addEventListener('click', openAdminMobileMenu);
     if (backdrop) backdrop.addEventListener('click', closeAdminMobileMenu);
+    if (closeBtn) closeBtn.addEventListener('click', closeAdminMobileMenu);
     // Chọn 1 mục điều hướng bất kỳ (kể cả trong nhóm "Cài đặt trang chủ") -> tự đóng menu
     // trên di động + cập nhật tiêu đề trên thanh trên cùng, không cần sửa từng onclick có sẵn.
     const navList = document.getElementById('settingsNavList');
@@ -1845,6 +2000,8 @@ function showAdmin(email){
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('shell').classList.remove('hidden');
     document.getElementById('userEmail').innerText = email;
+    const footAvatarEl = document.getElementById('footAvatar');
+    if (footAvatarEl) footAvatarEl.textContent = (email || '?').trim().charAt(0).toUpperCase();
     renderOptionForm();
     loadSubjects();
     restoreLastAdminPanel();

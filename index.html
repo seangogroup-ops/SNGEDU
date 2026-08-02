@@ -28,6 +28,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="frontend/usage-limits.js"></script>
 <script src="frontend/sepay-checkout.js" defer></script>
 <style>
     :root{
@@ -1965,18 +1966,60 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         purchasedDocIds = next;
     }
 
+    // ---- Kiểm tra giới hạn tải tài liệu miễn phí (tài khoản Free) trước khi mở link ----
+    let freeDocCheckBusy = false;
+    function handleFreeDocClick(evt, docId, linkEl){
+        if (!currentSession){
+            evt.preventDefault();
+            location.href = loginUrl('doc');
+            return false;
+        }
+        if (freeDocCheckBusy){ evt.preventDefault(); return false; }
+
+        // Không thể "await" trong onclick đồng bộ và vẫn giữ hành vi mở tab mới của trình duyệt
+        // (mở tab mới trong callback bất đồng bộ dễ bị chặn popup), nên chặn mặc định trước,
+        // kiểm tra giới hạn, rồi tự mở tab nếu hợp lệ.
+        evt.preventDefault();
+        freeDocCheckBusy = true;
+        const href = linkEl.getAttribute('href');
+
+        SNG_USAGE.checkLimit(currentSession.user, 'doc_download').then(result => {
+            freeDocCheckBusy = false;
+            if (!result.allowed){
+                alert(`Bạn đã hết ${result.limit} lượt tải tài liệu miễn phí hôm nay.\nNâng cấp Pro để tải không giới hạn.`);
+                return;
+            }
+            SNG_USAGE.logUsage(currentSession.user.id, 'doc_download', docId);
+            window.open(href, '_blank', 'noopener');
+        }).catch(() => {
+            freeDocCheckBusy = false;
+            window.open(href, '_blank', 'noopener'); // lỗi mạng -> không chặn nhầm người dùng
+        });
+        return false;
+    }
+
     function docItemCardHtml(item, isPaid){
         const sizeBadge = item.size ? `<div class="badge-row"><i class="fa-solid fa-file-lines"></i> ${escapeHtmlHome(item.size)}</div>` : '';
         const topHtml = item.image
             ? `<img src="${escapeHtmlHome(item.image)}" alt="" style="width:100%;height:110px;object-fit:cover;border-radius:12px;margin-bottom:10px;">`
             : `<div class="card-top"><div class="icon-chip" style="background:${isPaid ? 'var(--amber-bg)' : 'var(--green-bg)'}; color:${isPaid ? 'var(--amber)' : 'var(--green)'}"><i class="fa-solid ${isPaid ? 'fa-lock' : 'fa-file-lines'}"></i></div></div>`;
 
-        // Tài liệu miễn phí: mở/tải trực tiếp như cũ.
+        // Tài liệu miễn phí: mở/tải trực tiếp như cũ (có kiểm tra giới hạn lượt/ngày cho tài khoản Free).
         if (!isPaid){
             const href = item.link || '#';
+            const idAttr = escapeHtmlHome(String(item.id || ''));
+            if (item.link){
+                return `
+                    <a class="card" data-cat="free" href="${escapeHtmlHome(href)}" target="_blank" rel="noopener" onclick="return handleFreeDocClick(event, '${idAttr}', this)">
+                        <div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                        ${topHtml}
+                        <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
+                        ${sizeBadge}
+                        <div class="status-text" style="color:var(--green)">${escapeHtmlHome(item.desc || 'Tài liệu miễn phí')}</div>
+                    </a>`;
+            }
             return `
-                <a class="card" data-cat="free" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
-                    ${item.link ? '<div class="card-arrow"><i class="fa-solid fa-arrow-right"></i></div>' : ''}
+                <a class="card" data-cat="free" href="#" onclick="return false;">
                     ${topHtml}
                     <div class="card-title">${escapeHtmlHome(item.title || '')}</div>
                     ${sizeBadge}

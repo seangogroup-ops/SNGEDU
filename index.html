@@ -156,10 +156,9 @@
         background:linear-gradient(135deg, #9aa0b1, #6f7488);
         box-shadow:0 0 0 2px var(--card), 0 0 0 3px rgba(154,160,177,.3);
     }
-    /* ----- avatar "nổi bật" khi tài khoản đang dùng gói Pro: viền vàng gradient + huy hiệu vương miện ----- */
+    /* ----- avatar "nổi bật" khi tài khoản đang dùng gói Pro: chỉ thêm viền vàng, giữ nguyên màu nền avatar ----- */
     .side-avatar.is-pro, .avatar-btn.is-pro{
-        background:linear-gradient(135deg, #f6b93b, #ffd97a);
-        box-shadow:0 0 0 2px var(--card), 0 0 0 3px #f5a524, 0 0 14px -2px rgba(245,165,36,.65);
+        box-shadow:0 0 0 3px var(--card), 0 0 0 6px #f5a524, 0 0 18px -2px rgba(245,165,36,.75);
     }
     .side-avatar .pro-badge, .avatar-btn .pro-badge, .acc-modal-avatar .pro-badge{
         display:none;
@@ -245,8 +244,7 @@
     }
     .acc-modal-avatar .avt-content{ display:flex; align-items:center; justify-content:center; width:100%; height:100%; }
     .acc-modal-avatar.is-pro{
-        background:linear-gradient(135deg, #f6b93b, #ffd97a);
-        box-shadow:0 0 0 3px var(--card), 0 0 0 5px #f5a524, 0 0 18px -2px rgba(245,165,36,.65);
+        box-shadow:0 0 0 3px var(--card), 0 0 0 6px #f5a524, 0 0 18px -2px rgba(245,165,36,.75);
     }
     .acc-modal-avatar .pro-badge{ width:20px; height:20px; font-size:.62rem; }
     .acc-modal-name{ font-weight:800; font-size:1rem; line-height:1.3; word-break:break-word; }

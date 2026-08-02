@@ -574,6 +574,7 @@ main{flex:1;padding:30px 36px 60px;max-width:1020px;}
 .q-item.dragging{opacity:.4;}
 .q-item.drag-over{box-shadow:inset 0 0 0 2px var(--accent);background:var(--bg);}
 .q-item .q-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+.q-item .q-head>div{flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;}
 .q-item .q-head .drag-handle{color:#b6bad0;font-size:.9rem;padding-top:1px;touch-action:none;}
 .q-item b.qnum{color:var(--accent-dark);font-family:var(--font-display);}
 .q-item .opt{padding:4px 0 4px 4px;font-size:.88rem;color:var(--text);}
@@ -632,7 +633,7 @@ textarea{resize:vertical;}
     display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.85rem;
     padding:10px 13px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);
 }
-.file-list .file-row .fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
+.file-list .file-row .fname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
 .file-list .file-row .fcount{flex:0 0 auto;font-weight:700;font-family:var(--font-display);}
 .file-list .file-row .fcount.ok{color:var(--green);}
 .file-list .file-row .fcount.err{color:var(--red);}
@@ -864,6 +865,17 @@ textarea{resize:vertical;}
 @keyframes rbpvArrowNudge{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(4px); } }
 @keyframes rbpvPulse{ 0%,100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(var(--rbpv-glow, 245,165,36),.55); } 50%{ transform:scale(1.045); box-shadow:0 0 0 12px rgba(var(--rbpv-glow, 245,165,36),0); } }
 @keyframes rbpvShake{ 0%,8%,100%{ transform:rotate(0deg) translateX(0); } 2%{ transform:rotate(-2deg) translateX(-1px); } 4%{ transform:rotate(2deg) translateX(1px); } 6%{ transform:rotate(-1.5deg) translateX(-1px); } }
+
+/* =========================================================================
+   CHỐNG TRÀN NGANG DO CHUỖI DÀI (mô tả, tên file, link, mã...) — áp dụng
+   cho các khối nội dung/panel/form hay hiển thị văn bản tự do, để không
+   phải kéo ngang mới thấy hết nút bấm trên màn hình hẹp.
+   ========================================================================= */
+.panel, .q-item, .mini-form, .hint, .callout, .settings-form-card,
+.subj-mgr-col, .content-order-col, .file-list, .confirm-box, .merge-box,
+.acct-form-box, .expl, .opt{
+    overflow-wrap:anywhere;word-break:break-word;
+}
 
 /* =========================================================================
    MOBILE OVERRIDES — đặt cuối cùng trong <style> để thắng cascade tự nhiên

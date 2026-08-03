@@ -530,6 +530,44 @@ aside{
 .settings-preview .prev-text b{display:block;font-size:.94rem;font-family:var(--font-display);}
 .settings-preview .prev-text span{display:block;font-size:.78rem;color:var(--gray);margin-top:1px;}
 
+/* ---- Section captions bên trong form quản lý nội dung (Tài liệu/Công cụ/Sản phẩm...) ---- */
+.mini-form .cm-section{
+    display:flex;align-items:center;gap:8px;margin:16px 0 2px;padding-top:14px;border-top:1px solid var(--border);
+    font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--gray);
+    font-family:var(--font-display);
+}
+.mini-form .cm-section:first-of-type{margin-top:2px;padding-top:0;border-top:none;}
+.mini-form .cm-section i{color:var(--accent);font-size:.82rem;}
+
+/* ---- Preview thẻ tài liệu — mô phỏng đúng giao diện thẻ ngoài trang chủ để admin thấy trước khi lưu ---- */
+.doc-card-preview{
+    margin-top:18px;border:1px solid var(--border);border-radius:16px;padding:14px;background:var(--bg);
+}
+.doc-card-preview .dcp-label{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--gray);margin-bottom:10px;font-family:var(--font-display);}
+.doc-card-preview .dcp-card{
+    background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px;
+    box-shadow:var(--shadow-sm);max-width:220px;
+}
+.doc-card-preview .dcp-top{position:relative;margin-bottom:10px;}
+.doc-card-preview .dcp-thumb{width:100%;aspect-ratio:2/1;object-fit:cover;border-radius:10px;display:block;background:#eef0f6;}
+.doc-card-preview .dcp-icon{
+    width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-size:1rem;background:rgba(46,211,146,.14);color:#16a34a;
+}
+.doc-card-preview .dcp-tag{
+    position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;gap:4px;
+    font-size:.62rem;font-weight:800;padding:4px 8px;border-radius:999px;letter-spacing:.2px;
+    background:rgba(46,211,146,.16);color:#16a34a;box-shadow:0 2px 6px rgba(20,22,40,.15);
+}
+.doc-card-preview .dcp-tag.paid{background:rgba(180,83,9,.16);color:var(--amber);}
+.doc-card-preview .dcp-title{font-size:.86rem;font-weight:700;line-height:1.35;margin-bottom:4px;color:var(--text);}
+.doc-card-preview .dcp-desc{font-size:.74rem;color:var(--gray);line-height:1.4;margin-bottom:8px;}
+.doc-card-preview .dcp-cta{
+    display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 10px;border-radius:10px;
+    font-weight:700;font-size:.76rem;background:rgba(46,211,146,.14);color:#16a34a;
+}
+.doc-card-preview .dcp-cta.paid{background:rgba(180,83,9,.14);color:var(--amber);}
+
 main{flex:1;padding:30px 36px 60px;max-width:1020px;}
 .context-bar{
     display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--white);
@@ -4167,7 +4205,6 @@ const DOC_IMAGE_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 registerContentList('doc', 'doc_content', null, {
     label:'Tài liệu', icon:'fa-solid fa-file-lines', color:'green', defaultIcon:'fa-solid fa-file-lines',
     hideIconColor:true, // icon/màu không được dùng ở thẻ tài liệu ngoài trang chủ -> ẩn để đỡ rối
-    extraField:{ key:'size', label:'Dung lượng / định dạng', placeholder:'VD: PDF · 2.4MB' },
     priceField:true, docTypeField:true, visibilityField:true, sourceToggle:true,
     upload:true, linkLabel:'File tài liệu (PDF hoặc Word)',
     imageRatioHint:'Ảnh bìa hiện dạng dải ngang phía trên thẻ — nên dùng ảnh <b>ngang, tỉ lệ ~16:9 đến 2:1</b> (VD 800×450px hoặc 800×400px), đặt chủ thể chính (chữ/logo) ở giữa để không bị cắt mất trên-dưới. Ảnh dọc hoặc vuông sẽ bị crop bớt.'
@@ -4230,17 +4267,23 @@ function contentBlockHtml(subKey){
                 <div id="cmForm_${subKey}" class="mini-form">
                     <div id="cmFormTitle_${subKey}" class="mini-form-title">Thêm ${meta.label.toLowerCase()}</div>
                     ${meta.hideIconColor ? '' : `
+                    <div class="cm-section"><i class="fa-solid fa-palette"></i> Biểu tượng</div>
                     <label>Icon (mã lớp Font Awesome)</label>
                     <input id="cmIcon_${subKey}" placeholder="${escapeHtml(meta.defaultIcon)}" oninput="updateContentPreview('${subKey}')">
                     <div class="hint" style="margin:2px 0 0;">Xem mã icon tại <a href="https://fontawesome.com/search" target="_blank" rel="noopener">fontawesome.com/search</a>.</div>
                     <label style="margin-top:10px;">Màu icon</label>
                     <div class="color-swatch-row" id="cmColorRow_${subKey}">${contentColorSwatchesHtml(subKey)}</div>`}
                     ${meta.docTypeField ? `
+                    <div class="cm-section"><i class="fa-solid fa-tags"></i> Loại &amp; giá</div>
                     <label>Loại tài liệu</label>
                     <div class="doc-type-toggle" id="cmDocType_${subKey}">
                         <div class="doc-type-opt free" data-type="free" onclick="pickDocType('${subKey}','free')"><i class="fa-solid fa-gift"></i> Miễn phí</div>
                         <div class="doc-type-opt paid" data-type="paid" onclick="pickDocType('${subKey}','paid')"><i class="fa-solid fa-lock"></i> Trả phí</div>
-                    </div>` : ''}
+                    </div>
+                    <label style="margin-top:10px;">Giá bán (VNĐ)</label>
+                    <input id="cmPrice_${subKey}" type="number" min="0" step="1000" placeholder="VD: 20000" oninput="updateContentPreview('${subKey}')">
+                    <div class="hint" id="cmPriceHint_${subKey}" style="margin:2px 0 0;">Tài liệu miễn phí — giá tự động là 0đ, khách tải trực tiếp.</div>` : ''}
+                    <div class="cm-section"><i class="fa-solid fa-align-left"></i> Nội dung hiển thị</div>
                     <label>${escapeHtml(meta.titleLabel || 'Tiêu đề')}</label>
                     <input id="cmTitle_${subKey}" placeholder="${escapeHtml(meta.titleLabel || 'Tiêu đề')}" oninput="updateContentPreview('${subKey}')">
                     <label>${escapeHtml(meta.descLabel || 'Mô tả ngắn')}</label>
@@ -4250,7 +4293,8 @@ function contentBlockHtml(subKey){
                     ${meta.extraField ? `
                     <label>${escapeHtml(meta.extraField.label)}</label>
                     <input id="cmExtra_${subKey}" placeholder="${escapeHtml(meta.extraField.placeholder)}">` : ''}
-                    ${meta.priceField ? `
+                    ${meta.priceField && !meta.docTypeField ? `
+                    <div class="cm-section"><i class="fa-solid fa-tags"></i> Giá</div>
                     <label>Giá bán (VNĐ)</label>
                     <input id="cmPrice_${subKey}" type="number" min="0" step="1000" placeholder="VD: 20000" oninput="updateContentPreview('${subKey}')">
                     <div class="hint" id="cmPriceHint_${subKey}" style="margin:2px 0 0;">Bắt buộc &gt; 0. Khách phải thanh toán qua SePay mới tải được file này.</div>` : ''}
@@ -4261,6 +4305,7 @@ function contentBlockHtml(subKey){
                         <option value="ready">Sẵn sàng (mở khoá, bấm được)</option>
                     </select>` : ''}
                     ${meta.hideLink ? '' : `
+                    <div class="cm-section"><i class="fa-solid fa-paperclip"></i> ${meta.upload ? 'Tệp &amp; ảnh bìa' : 'Đường dẫn'}</div>
                     <label>${escapeHtml(meta.linkLabel)}</label>
                     ${meta.upload ? `
                     ${meta.sourceToggle ? `
@@ -4314,16 +4359,33 @@ function contentBlockHtml(subKey){
                     <div class="hint" style="margin-top:4px;">Chọn gói trong bảng giá tự động (pro_packages) để nút "Mua ngay" mở thẳng cổng SePay. Để "Không liên kết" nếu chỉ muốn hiển thị thẻ giới thiệu + link ngoài như cũ.</div>
                     ` : ''}
                     ${meta.visibilityField ? `
-                    <label class="cm-visibility-toggle" style="margin-top:10px;display:flex;align-items:center;gap:8px;cursor:pointer;">
-                        <input type="checkbox" id="cmVisible_${subKey}" checked style="width:16px;height:16px;">
+                    <div class="cm-section"><i class="fa-solid fa-eye"></i> Hiển thị</div>
+                    <label class="cm-visibility-toggle" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" id="cmVisible_${subKey}" checked style="width:16px;height:16px;" onchange="updateContentPreview('${subKey}')">
                         <span>Hiển thị trên trang chủ</span>
                     </label>
                     <div class="hint" style="margin-top:2px;">Bỏ chọn để ẩn tạm — mục vẫn được lưu, khách đã mua vẫn tải được bình thường, chỉ không hiện trong danh sách công khai nữa.</div>
                     ` : ''}
+                    ${meta.docTypeField ? `
+                    <div class="doc-card-preview">
+                        <div class="dcp-label"><i class="fa-solid fa-eye"></i> Xem trước thẻ ngoài trang chủ</div>
+                        <div class="dcp-card">
+                            <div class="dcp-top">
+                                <img class="dcp-thumb hidden" id="cmPrevThumb_${subKey}" alt="">
+                                <div class="dcp-icon" id="cmPrevIcon_${subKey}"><i class="fa-solid fa-file-lines"></i></div>
+                                <span class="dcp-tag" id="cmPrevTag_${subKey}"><i class="fa-solid fa-gift"></i> Miễn phí</span>
+                            </div>
+                            <div class="dcp-title" id="cmPreviewTitle_${subKey}">Tiêu đề tài liệu</div>
+                            <div class="dcp-desc" id="cmPreviewDesc_${subKey}"></div>
+                            <div class="dcp-cta" id="cmPrevCta_${subKey}"><i class="fa-solid fa-download"></i> Tải xuống</div>
+                        </div>
+                    </div>
+                    ` : `
                     <div class="settings-preview">
                         <div class="prev-ico" id="cmPreviewIco_${subKey}"><i class="fa-solid fa-star"></i></div>
                         <div class="prev-text"><b id="cmPreviewTitle_${subKey}">Tiêu đề</b><span id="cmPreviewDesc_${subKey}">Mô tả</span></div>
                     </div>
+                    `}
                     <div class="mini-actions">
                         <button class="btn-mini-save" onclick="saveContentItem('${subKey}')">Lưu</button>
                         <button class="btn-mini-cancel" onclick="closeContentForm('${subKey}')">Hủy</button>
@@ -4401,9 +4463,10 @@ function contentItemRowHtml(subKey, item){
         typeBadgeHtml = `<span class="status-badge ${isPaid ? 'maintenance' : 'ready'}" style="margin-right:6px;">${isPaid ? 'Trả phí' : 'Miễn phí'}</span>`;
         if (isPaid && item.price) extraLabel += ' · ' + Number(item.price).toLocaleString('vi-VN') + 'đ';
     }
+    const thumbSize = cfg.docTypeField ? 38 : 26;
     const thumbHtml = item.image
-        ? `<img src="${escapeHtml(item.image)}" style="width:26px;height:26px;min-width:26px;border-radius:8px;object-fit:cover;">`
-        : `<span class="prev-ico color-swatch ${color}" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="${escapeHtml(icon)}"></i></span>`;
+        ? `<img src="${escapeHtml(item.image)}" style="width:${thumbSize}px;height:${thumbSize}px;min-width:${thumbSize}px;border-radius:8px;object-fit:cover;border:1px solid var(--border);">`
+        : `<span class="prev-ico color-swatch ${color}" style="width:${thumbSize}px;height:${thumbSize}px;min-width:${thumbSize}px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="${escapeHtml(icon)}"></i></span>`;
     const isHidden = !!item.hidden;
     const hiddenBadgeHtml = isHidden ? `<span class="status-badge" style="margin-right:6px;background:rgba(220,38,38,.12);color:var(--red, #dc2626);">Đã ẩn</span>` : '';
     const eyeBtnHtml = cfg.visibilityField
@@ -4519,10 +4582,58 @@ function updateContentPreview(subKey){
     const titleEl = document.getElementById('cmTitle_' + subKey);
     const descEl = document.getElementById('cmDesc_' + subKey);
     if (!titleEl || !descEl) return;
-    const iconEl = document.getElementById('cmIcon_' + subKey);
-    const icon = iconEl ? (iconEl.value.trim() || cfg.meta.defaultIcon) : cfg.meta.defaultIcon;
     const title = titleEl.value.trim() || '—';
     const desc = descEl.value.trim() || '';
+    const titlePrevEl = document.getElementById('cmPreviewTitle_' + subKey);
+    const descPrevEl = document.getElementById('cmPreviewDesc_' + subKey);
+    if (titlePrevEl) titlePrevEl.innerText = title;
+    if (descPrevEl) descPrevEl.innerText = desc;
+
+    // Tài liệu: xem trước dạng thẻ giống hệt thẻ thật ngoài trang chủ (ảnh/icon + badge + giá/CTA).
+    if (cfg.meta.docTypeField){
+        const typeSel = document.querySelector('#cmDocType_' + subKey + ' .doc-type-opt.selected');
+        const isPaid = typeSel ? typeSel.dataset.type === 'paid' : false;
+
+        const tagEl = document.getElementById('cmPrevTag_' + subKey);
+        if (tagEl){
+            tagEl.className = 'dcp-tag' + (isPaid ? ' paid' : '');
+            tagEl.innerHTML = isPaid ? '<i class="fa-solid fa-lock"></i> Trả phí' : '<i class="fa-solid fa-gift"></i> Miễn phí';
+        }
+
+        const ctaEl = document.getElementById('cmPrevCta_' + subKey);
+        if (ctaEl){
+            const priceEl = document.getElementById('cmPrice_' + subKey);
+            const priceVal = priceEl ? Number(priceEl.value || 0) : 0;
+            ctaEl.className = 'dcp-cta' + (isPaid ? ' paid' : '');
+            ctaEl.innerHTML = isPaid
+                ? '<i class="fa-solid fa-cart-shopping"></i> Mua ngay' + (priceVal > 0 ? ' · ' + priceVal.toLocaleString('vi-VN') + 'đ' : '')
+                : '<i class="fa-solid fa-download"></i> Tải xuống';
+        }
+
+        const imgUrlEl = document.getElementById('cmImageUrl_' + subKey);
+        const imgUrl = imgUrlEl ? imgUrlEl.value.trim() : '';
+        const thumbEl = document.getElementById('cmPrevThumb_' + subKey);
+        const iconEl2 = document.getElementById('cmPrevIcon_' + subKey);
+        if (thumbEl && iconEl2){
+            if (imgUrl){
+                thumbEl.src = imgUrl;
+                thumbEl.classList.remove('hidden');
+                iconEl2.classList.add('hidden');
+            } else {
+                thumbEl.classList.add('hidden');
+                iconEl2.classList.remove('hidden');
+                iconEl2.innerHTML = '<i class="fa-solid ' + (isPaid ? 'fa-lock' : 'fa-file-lines') + '"></i>';
+            }
+        }
+
+        const visibleEl = document.getElementById('cmVisible_' + subKey);
+        const card = document.querySelector('#cmForm_' + subKey + ' .dcp-card');
+        if (card) card.style.opacity = (visibleEl && !visibleEl.checked) ? '.5' : '1';
+        return;
+    }
+
+    const iconEl = document.getElementById('cmIcon_' + subKey);
+    const icon = iconEl ? (iconEl.value.trim() || cfg.meta.defaultIcon) : cfg.meta.defaultIcon;
     const selected = document.querySelector('#cmColorRow_' + subKey + ' .color-swatch.selected');
     const color = selected ? selected.dataset.color : (cfg.meta.color || 'indigo');
     const prevIco = document.getElementById('cmPreviewIco_' + subKey);
@@ -4530,8 +4641,6 @@ function updateContentPreview(subKey){
         prevIco.innerHTML = `<i class="${escapeHtml(icon)}"></i>`;
         prevIco.className = 'prev-ico color-swatch ' + color;
     }
-    document.getElementById('cmPreviewTitle_' + subKey).innerText = title;
-    document.getElementById('cmPreviewDesc_' + subKey).innerText = desc;
 }
 
 function formatFileSize(bytes){
@@ -4673,10 +4782,6 @@ async function onContentFileSelected(subKey){
     document.getElementById('cmLink_' + subKey).value = pub.publicUrl;
     if (nameEl) nameEl.textContent = '📄 ' + file.name;
     if (hintEl){ hintEl.style.color = 'var(--green)'; hintEl.textContent = '✔ Đã tải lên. Bấm "Lưu" để hoàn tất.'; }
-
-    // Tự điền "Dung lượng / định dạng" nếu người quản trị chưa nhập
-    const extraEl = document.getElementById('cmExtra_' + subKey);
-    if (extraEl && !extraEl.value.trim()) extraEl.value = ext.toUpperCase() + ' · ' + formatFileSize(file.size);
     updateContentPreview(subKey);
 
     // Xóa file cũ trên storage nếu đang thay thế (best-effort, không chặn UI)

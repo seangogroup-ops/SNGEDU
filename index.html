@@ -629,48 +629,50 @@
     #panel-doc .doc-grid{
         display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:8px;
     }
-    #panel-doc .doc-card{
+    .doc-card{
         position:relative; display:flex; flex-direction:column; gap:12px;
         background:var(--card); border:1px solid var(--line); border-radius:18px;
         padding:18px; text-decoration:none; color:var(--ink);
         box-shadow:var(--shadow); cursor:pointer;
         transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
     }
-    #panel-doc .doc-card:hover, #panel-doc .doc-card:focus-visible{
+    .doc-card:hover, .doc-card:focus-visible{
         transform:translateY(-4px); box-shadow:var(--shadow-hov); border-color:#dfe2ee;
     }
-    #panel-doc .doc-card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-    #panel-doc .doc-thumb{ width:100%; height:104px; object-fit:cover; border-radius:12px; }
-    #panel-doc .doc-icon{
+    .doc-card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .doc-thumb{ width:100%; aspect-ratio:2/1; object-fit:cover; border-radius:12px; }
+    .doc-icon{
         width:46px; height:46px; border-radius:12px; flex-shrink:0;
         display:flex; align-items:center; justify-content:center; font-size:1.15rem;
         background:var(--green-bg); color:var(--green);
     }
-    #panel-doc .doc-card.is-paid .doc-icon{ background:var(--amber-bg); color:var(--amber); }
-    #panel-doc .doc-card.is-owned .doc-icon{ background:var(--brand-bg); color:var(--brand); }
-    #panel-doc .doc-tag{
+    .doc-card.is-paid .doc-icon{ background:var(--amber-bg); color:var(--amber); }
+    .doc-card.is-owned .doc-icon{ background:var(--brand-bg); color:var(--brand); }
+    .doc-tag{
         display:inline-flex; align-items:center; gap:5px; flex-shrink:0;
         font-size:.68rem; font-weight:800; padding:5px 10px; border-radius:999px; letter-spacing:.2px;
     }
-    #panel-doc .doc-tag.free{ background:var(--green-bg); color:var(--green); }
-    #panel-doc .doc-tag.paid{ background:var(--amber-bg); color:var(--amber); }
-    #panel-doc .doc-tag.owned{ background:var(--brand-bg); color:var(--brand); }
-    #panel-doc .doc-title{ font-size:.96rem; font-weight:700; line-height:1.35; }
-    #panel-doc .doc-meta{ display:flex; align-items:center; gap:6px; font-size:.78rem; color:var(--ink-mute); }
-    #panel-doc .doc-desc{
+    .doc-tag.free{ background:var(--green-bg); color:var(--green); }
+    .doc-tag.paid{ background:var(--amber-bg); color:var(--amber); }
+    .doc-tag.owned{ background:var(--brand-bg); color:var(--brand); }
+    .doc-title{ font-size:.96rem; font-weight:700; line-height:1.35; }
+    .doc-meta{ display:flex; align-items:center; gap:6px; font-size:.78rem; color:var(--ink-mute); }
+    .doc-desc{
         font-size:.8rem; color:var(--ink-soft); line-height:1.45;
         display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
     }
-    #panel-doc .doc-cta{
+    .doc-cta{
         margin-top:auto; display:flex; align-items:center; justify-content:center; gap:8px;
         padding:10px 14px; border-radius:12px; font-weight:700; font-size:.84rem;
         background:var(--green-bg); color:var(--green); transition:filter .18s ease;
     }
-    #panel-doc .doc-card.is-paid .doc-cta{ background:var(--amber-bg); color:var(--amber); }
-    #panel-doc .doc-card.is-owned .doc-cta{ background:var(--brand-bg); color:var(--brand); }
-    #panel-doc .doc-card.is-disabled{ cursor:default; opacity:.7; }
-    #panel-doc .doc-card.is-disabled .doc-cta{ background:#f2f3f8; color:var(--ink-mute); }
-    #panel-doc .doc-card:hover .doc-cta{ filter:brightness(.96); }
+    .doc-card.is-paid .doc-cta{ background:var(--amber-bg); color:var(--amber); }
+    .doc-card.is-owned .doc-cta{ background:var(--brand-bg); color:var(--brand); }
+    .doc-card.is-disabled{ cursor:default; opacity:.7; }
+    .doc-card.is-disabled .doc-cta{ background:#f2f3f8; color:var(--ink-mute); }
+    .doc-card:hover .doc-cta{ filter:brightness(.96); }
+    .grid-hscroll .doc-card{ flex:0 0 240px; width:240px; scroll-snap-align:start; }
+    @media (max-width:600px){ .grid-hscroll .doc-card{ flex:0 0 74vw; width:74vw; } }
     @media (max-width:1300px){ #panel-doc .doc-grid{ grid-template-columns:repeat(3, 1fr); } }
     @media (max-width:960px){ #panel-doc .doc-grid{ grid-template-columns:repeat(2, 1fr); } }
     @media (max-width:600px){ #panel-doc .doc-grid{ grid-template-columns:1fr; } }
@@ -2520,8 +2522,10 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     async function renderDocContent(){
         const payload = await fetchSiteSettingPayload('doc_content', DEFAULT_DOC_CONTENT);
-        const free = Array.isArray(payload.free) ? payload.free : [];
-        const paid = Array.isArray(payload.paid) ? payload.paid : [];
+        // Tài liệu bị ẩn (item.hidden) không hiện trong danh sách công khai.
+        // Ngoại lệ: tài liệu trả phí khách đã mua rồi vẫn hiện để họ tải lại được, dù admin đã ẩn khỏi trang chủ.
+        const free = (Array.isArray(payload.free) ? payload.free : []).filter(it => !it.hidden);
+        const paid = (Array.isArray(payload.paid) ? payload.paid : []).filter(it => !it.hidden || purchasedDocIds.has(String(it.id)));
         DOC_PAID_ITEMS_MAP = {};
 
         const allGrid = document.getElementById('docAllGrid');
@@ -2705,8 +2709,8 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         if (docIds.length){
             const docPayload = await fetchSiteSettingPayload('doc_content', DEFAULT_DOC_CONTENT);
             const docsMap = {};
-            (docPayload.free || []).forEach(it => { docsMap[String(it.id)] = { item: it, isPaid: false }; });
-            (docPayload.paid || []).forEach(it => { docsMap[String(it.id)] = { item: it, isPaid: true }; });
+            (docPayload.free || []).forEach(it => { if (!it.hidden) docsMap[String(it.id)] = { item: it, isPaid: false }; });
+            (docPayload.paid || []).forEach(it => { if (!it.hidden || purchasedDocIds.has(String(it.id))) docsMap[String(it.id)] = { item: it, isPaid: true }; });
             const html = docIds.map(id => { const e = docsMap[id]; return e ? docItemCardHtml(e.item, e.isPaid) : ''; }).join('');
             if (html){ docGrid.innerHTML = html; docSection.style.display = ''; } else { docSection.style.display = 'none'; }
         } else { docSection.style.display = 'none'; }

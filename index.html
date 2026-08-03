@@ -667,7 +667,6 @@
     .doc-meta{ display:flex; align-items:center; gap:6px; font-size:.78rem; color:var(--ink-mute); }
     .doc-desc{
         font-size:.8rem; color:var(--ink-soft); line-height:1.45;
-        display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
     }
     .doc-cta{
         margin-top:auto; display:flex; align-items:center; justify-content:center; gap:8px;
@@ -722,7 +721,6 @@
     .prod-title{ font-size:.98rem; font-weight:700; line-height:1.35; }
     .prod-desc{
         font-size:.82rem; color:var(--ink-soft); line-height:1.45; flex-grow:1;
-        display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
     }
     .prod-price{ font-size:.96rem; font-weight:800; color:var(--amber); }
     .prod-cta{
@@ -780,6 +778,15 @@
     .sec-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; }
     .sec-head h2{ font-size:1.15rem; font-weight:700; }
     .sec-head span{ font-size:.82rem; color:var(--ink-mute); }
+    .sec-head-right{ display:flex; align-items:baseline; gap:14px; }
+    .sec-view-all{
+        display:inline-flex; align-items:center; gap:5px; flex-shrink:0; white-space:nowrap;
+        font-size:.82rem; font-weight:700; color:var(--brand); text-decoration:none; cursor:pointer;
+        background:none; border:none; padding:0; font-family:inherit;
+    }
+    .sec-view-all i{ font-size:.72rem; transition:transform .15s ease; }
+    .sec-view-all:hover{ text-decoration:underline; }
+    .sec-view-all:hover i{ transform:translateX(2px); }
 
     /* ---------------- cards ---------------- */
     .grid{
@@ -1345,22 +1352,28 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         </div>
 
 
-        <div class="sec-head" style="margin-top:8px"><h2 id="homeSubjectsTitle">Học phần nổi bật</h2><span id="homeSubjectCount">Đang tải...</span></div>
+        <div class="sec-head" style="margin-top:8px">
+            <h2 id="homeSubjectsTitle">Học phần nổi bật</h2>
+            <div class="sec-head-right">
+                <span id="homeSubjectCount">Đang tải...</span>
+                <a class="sec-view-all" href="#" data-go="quiz">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        </div>
         <div class="grid grid-hscroll" id="homeSubjectGrid">
             <div class="empty-state small"><div class="empty-title">Đang tải danh sách môn học...</div></div>
         </div>
 
         <!-- Các khối "nổi bật" theo từng loại — ghim ở trang admin > Ghim nổi bật, tự ẩn nếu chưa ghim mục nào -->
         <div id="featuredDocSection" style="display:none; margin-top:8px">
-            <div class="sec-head"><h2 id="featuredDocTitle">Tài liệu nổi bật</h2></div>
+            <div class="sec-head"><h2 id="featuredDocTitle">Tài liệu nổi bật</h2><a class="sec-view-all" href="#" data-go="doc">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a></div>
             <div class="grid grid-hscroll" id="featuredDocGrid"></div>
         </div>
         <div id="featuredToolSection" style="display:none; margin-top:8px">
-            <div class="sec-head"><h2 id="featuredToolTitle">Công cụ nổi bật</h2></div>
+            <div class="sec-head"><h2 id="featuredToolTitle">Công cụ nổi bật</h2><a class="sec-view-all" href="#" data-go="tool">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a></div>
             <div class="grid grid-hscroll" id="featuredToolGrid"></div>
         </div>
         <div id="featuredProductSection" style="display:none; margin-top:8px">
-            <div class="sec-head"><h2 id="featuredProductTitle">Sản phẩm nổi bật</h2></div>
+            <div class="sec-head"><h2 id="featuredProductTitle">Sản phẩm nổi bật</h2><a class="sec-view-all" href="#" data-go="product">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a></div>
             <div class="grid grid-hscroll" id="featuredProductGrid"></div>
         </div>
 
@@ -1561,7 +1574,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         <div style="display:flex; flex-direction:column; gap:10px;" id="supportFaqList"></div>
     </section>
 
-    <footer id="siteFooter">SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải</footer>
+    <footer id="siteFooter"></footer>
 
         </div>
     </div>
@@ -2394,9 +2407,12 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     // ---------------- CHÂN TRANG — đọc từ Supabase site_settings, đồng bộ mọi trang ----------------
     async function loadFooterSettings(){
-        const { data, error } = await sb.from('site_settings').select('*').eq('key', 'site_footer').single();
-        if (error || !data || !data.payload || !data.payload.text) return; // chưa cấu hình -> giữ chữ mặc định
         const el = document.getElementById('siteFooter');
+        const { data, error } = await sb.from('site_settings').select('*').eq('key', 'site_footer').single();
+        if (error || !data || !data.payload || !data.payload.text){
+            if (el) el.textContent = ''; // chưa cấu hình ở admin -> để trống, không dùng chữ mặc định
+            return;
+        }
         if (el) el.textContent = data.payload.text;
     }
     loadFooterSettings();

@@ -1732,12 +1732,12 @@ textarea{resize:vertical;}
 
                 <div id="setFieldsFooter" class="hidden">
                     <label>Nội dung chân trang</label>
-                    <input id="setFooterText" placeholder="SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải">
-                    <div class="hint" style="margin:2px 0 10px;">Dòng chữ này hiện ở chân trang trên TẤT CẢ các trang (trang chủ, danh sách môn học...) — sửa một lần, mọi trang tự cập nhật giống nhau.</div>
+                    <input id="setFooterText" placeholder="VD: SNG EDU © 2025 – 2026. Để trống nếu không muốn hiện chân trang.">
+                    <div class="hint" style="margin:2px 0 10px;">Dòng chữ này hiện ở chân trang trên TẤT CẢ các trang (trang chủ, danh sách môn học...) — sửa một lần, mọi trang tự cập nhật giống nhau. Để trống thì chân trang sẽ không hiện chữ gì.</div>
                     <div style="margin-top:16px;padding:15px 17px;border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);">
                         <div class="hint" style="text-transform:uppercase;font-size:.7rem;font-weight:700;letter-spacing:.05em;margin-bottom:8px;">Xem trước</div>
                         <div style="background:var(--navy);border-radius:var(--radius-sm);padding:16px;text-align:center;">
-                            <span id="setFooterPreview" style="color:#9aa1c4;font-size:.85rem;">SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải</span>
+                            <span id="setFooterPreview" style="color:#9aa1c4;font-size:.85rem;">(chưa có nội dung)</span>
                         </div>
                     </div>
                 </div>
@@ -6132,9 +6132,8 @@ async function openSettingsPanel(key){
         document.getElementById('setTextTool').value = currentSetPayload.toolTitle || '';
         document.getElementById('setTextProduct').value = currentSetPayload.productTitle || '';
     } else if (isFooter){
-        const defaultFooter = 'SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải';
         document.getElementById('setFooterText').value = currentSetPayload.text || '';
-        document.getElementById('setFooterPreview').innerText = currentSetPayload.text || defaultFooter;
+        document.getElementById('setFooterPreview').innerText = currentSetPayload.text || '(chưa có nội dung)';
     } else if (isBanner){
         const defaultText = 'Gặp câu hỏi sai? Click vào đây góp ý giúp tôi!';
         const defaultUnderline = 'Click vào đây';
@@ -6212,7 +6211,7 @@ function updateSetPreview(){
 document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('setFooterText');
     if (el) el.addEventListener('input', () => {
-        document.getElementById('setFooterPreview').innerText = el.value.trim() || 'SNG EDU © 2025 – 2026 · Thực hiện bởi H.N.TấnHải';
+        document.getElementById('setFooterPreview').innerText = el.value.trim() || '(chưa có nội dung)';
     });
 });
 const BANNER_COLOR_STYLES = {

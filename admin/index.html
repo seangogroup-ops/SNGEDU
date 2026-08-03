@@ -66,6 +66,18 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
 label{font-weight:700;font-size:.72rem;color:var(--gray);display:block;margin:12px 0 5px;letter-spacing:.05em;text-transform:uppercase;}
 .hidden{display:none !important;}
 
+/* ---------- AUTH LOADING (che màn hình lúc đang kiểm tra phiên đăng nhập, tránh chớp form login) ---------- */
+#authLoading{
+    min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;
+    background:var(--navy);
+}
+#authLoading .auth-spin{
+    width:34px;height:34px;border-radius:50%;
+    border:3px solid rgba(255,255,255,.18);border-top-color:#fff;
+    animation:authSpin .7s linear infinite;
+}
+@keyframes authSpin{to{transform:rotate(360deg);}}
+
 /* ---------- LOGIN ---------- */
 #loginScreen{
     min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;
@@ -1087,8 +1099,11 @@ textarea{resize:vertical;}
 </head>
 <body>
 
+<!-- ================= AUTH LOADING (che màn hình trong lúc kiểm tra phiên đăng nhập) ================= -->
+<div id="authLoading"><div class="auth-spin"></div></div>
+
 <!-- ================= LOGIN ================= -->
-<div id="loginScreen">
+<div id="loginScreen" class="hidden">
     <div class="login-card">
         <div class="login-brand">
             <span class="dot">
@@ -2219,8 +2234,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // Lưu ý: đây là lớp chặn ở giao diện. Lớp chặn THẬT SỰ nằm ở RLS trên Supabase
 // (xem file supabase-admin-setup.sql) — nếu không bật RLS, người dùng vẫn có
 // thể gọi thẳng Supabase REST API bằng token của họ để sửa dữ liệu.
-async function isAdminUser(){
-    const { data: { user } } = await sb.auth.getUser();
+// truyền sẵn user (từ session đang có) để khỏi gọi getUser() thêm 1 lượt mạng nữa cho nhanh;
+// không truyền thì tự lấy (dùng khi vừa signInWithPassword xong).
+async function isAdminUser(knownUser){
+    let user = knownUser;
+    if (!user){
+        const { data } = await sb.auth.getUser();
+        user = data?.user;
+    }
     if (!user) return false;
     const { data: profile, error } = await sb
         .from('profiles')
@@ -2229,6 +2250,14 @@ async function isAdminUser(){
         .maybeSingle();
     if (error || !profile) return false;
     return profile.role === 'admin';
+}
+
+// Ẩn màn loading, hiện đúng 1 màn (login hoặc dashboard) — không để lộ form login rồi mới chuyển.
+function revealLoginScreen(msg){
+    document.getElementById('authLoading').classList.add('hidden');
+    document.getElementById('shell').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    if (msg) document.getElementById('loginMsg').innerText = msg;
 }
 
 async function doLogin(){
@@ -2241,7 +2270,7 @@ async function doLogin(){
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error){ msgEl.innerText = 'Sai email hoặc mật khẩu.'; return; }
 
-    const ok = await isAdminUser();
+    const ok = await isAdminUser(data.user);
     if (!ok){
         await sb.auth.signOut();
         msgEl.innerText = 'Tài khoản này không có quyền quản trị (admin).';
@@ -2255,17 +2284,18 @@ async function doLogout(){
 }
 async function checkSession(){
     const { data } = await sb.auth.getSession();
-    if (!data.session) return;
-    const ok = await isAdminUser();
+    if (!data.session){ revealLoginScreen(); return; }
+    const ok = await isAdminUser(data.session.user);
     if (!ok){
         // Có phiên đăng nhập nhưng không phải admin -> đá ra khỏi trang admin
         await sb.auth.signOut();
-        document.getElementById('loginMsg').innerText = 'Tài khoản này không có quyền quản trị (admin).';
+        revealLoginScreen('Tài khoản này không có quyền quản trị (admin).');
         return;
     }
     showAdmin(data.session.user.email);
 }
 function showAdmin(email){
+    document.getElementById('authLoading').classList.add('hidden');
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('shell').classList.remove('hidden');
     document.getElementById('userEmail').innerText = email;
@@ -6432,7 +6462,10 @@ async function saveSiteSetting(){
     }
 }
 
-checkSession();
+checkSession().catch((err) => {
+    console.error('checkSession lỗi:', err);
+    revealLoginScreen('Không kiểm tra được phiên đăng nhập, vui lòng thử lại.');
+});
 </script>
 </body>
 </html>

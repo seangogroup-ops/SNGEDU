@@ -1132,6 +1132,9 @@ textarea{resize:vertical;}
                         <div class="side-item settings-item" data-setkey="promo_banner" onclick="openSettingsPanel('promo_banner')">
                             <span class="set-ico">⏱️</span><span class="name">Banner Premium</span>
                         </div>
+                        <div class="side-item settings-item" data-setkey="announcement_popup" onclick="openSettingsPanel('announcement_popup')">
+                            <span class="set-ico">📢</span><span class="name">Thông báo nổi</span>
+                        </div>
                         <div class="side-item settings-item" id="navGeneralSettings" onclick="showGeneralSettings()">
                             <span class="set-ico">⚙️</span><span class="name">Cài đặt chung</span>
                         </div>
@@ -1792,6 +1795,35 @@ textarea{resize:vertical;}
                             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
                                 <span id="setPromoPreviewSlots" style="background:#232a4d;color:#a5a4ff;border:1px solid #7b93ff;border-radius:99px;padding:5px 12px;font-size:.75rem;font-weight:800;white-space:nowrap;">còn 12/100 suất</span>
                                 <span id="setPromoPreviewTimer" style="background:#3a1414;color:#ff8787;border:1px solid #ff8787;border-radius:99px;padding:5px 12px;font-size:.75rem;font-weight:800;white-space:nowrap;">1n 03:23:58</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="setFieldsAnnounce" class="hidden">
+                    <label style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="setAnnounceEnabled" style="width:auto;" onchange="updateAnnouncePreview()"> Bật hiển thị thông báo
+                    </label>
+                    <div class="hint" style="margin:2px 0 10px;">Popup hiện giữa màn hình ngay khi người dùng vào trang chủ (mỗi khi tải lại trang, trừ khi họ đang trong thời gian bấm "Ẩn tạm").</div>
+
+                    <label>Tiêu đề</label>
+                    <input type="text" id="setAnnounceTitle" placeholder="Thông báo" oninput="updateAnnouncePreview()">
+
+                    <label>Nội dung thông báo</label>
+                    <textarea id="setAnnounceMessage" rows="4" placeholder="Hệ thống sẽ bảo trì từ 23h đến 1h sáng mai, mong các bạn thông cảm." oninput="updateAnnouncePreview()"></textarea>
+
+                    <label>Ẩn tạm trong (giờ)</label>
+                    <input type="number" id="setAnnounceHideHours" min="1" step="1" placeholder="2" oninput="updateAnnouncePreview()">
+                    <div class="hint" style="margin:2px 0 10px;">Số giờ áp dụng cho nút "Ẩn trong X giờ" — người dùng bấm nút này sẽ không thấy lại thông báo cho tới khi hết thời gian này. Nút "Đóng" chỉ đóng cho lần xem hiện tại, lần vào lại vẫn sẽ thấy thông báo. Đổi nội dung/tiêu đề sẽ khiến thông báo hiện lại kể cả với người đã bấm "Ẩn tạm" trước đó.</div>
+
+                    <div style="margin-top:14px;padding:15px 17px;border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);">
+                        <div class="hint" style="text-transform:uppercase;font-size:.7rem;font-weight:700;letter-spacing:.05em;margin-bottom:8px;">Xem trước</div>
+                        <div style="background:var(--navy);border-radius:var(--radius-sm);padding:18px;text-align:center;">
+                            <div style="font-weight:800;color:#f0f1f6;font-size:.98rem;margin-bottom:6px;" id="setAnnouncePreviewTitle">Thông báo</div>
+                            <div style="color:#b8bccb;font-size:.85rem;line-height:1.5;white-space:pre-line;margin-bottom:12px;" id="setAnnouncePreviewMsg">Hệ thống sẽ bảo trì từ 23h đến 1h sáng mai...</div>
+                            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                                <span style="background:#232a4d;color:#c7c9db;border:1px solid #3a4270;border-radius:10px;padding:8px 14px;font-size:.78rem;font-weight:700;" id="setAnnouncePreviewHideBtn">Ẩn trong 2 giờ</span>
+                                <span style="background:#4f6bff;color:#fff;border-radius:10px;padding:8px 14px;font-size:.78rem;font-weight:700;">Đóng</span>
                             </div>
                         </div>
                     </div>
@@ -5849,6 +5881,7 @@ const SETTINGS_META = {
     site_footer: { title: 'Chân trang', hint: 'Dòng chữ bản quyền / chân trang, dùng chung và đồng bộ trên mọi trang.' },
     report_banner: { title: 'Banner góp ý', hint: 'Banner "Gặp câu hỏi sai?" ở trang danh sách môn học — chỉnh chữ và link đích.' },
     promo_banner: { title: 'Banner Premium', hint: 'Banner đếm ngược + giới hạn suất ở đầu trang chủ, bấm vào sẽ mở popup "Nâng cấp Pro".' },
+    announcement_popup: { title: 'Thông báo nổi', hint: 'Popup thông báo hiện giữa màn hình khi người dùng vào trang chủ. Có nút "Đóng" và nút "Ẩn trong X giờ" (X do bạn cấu hình).' },
 };
 
 async function openSettingsPanel(key){
@@ -5876,13 +5909,15 @@ async function openSettingsPanel(key){
     const isFooter = key === 'site_footer';
     const isBanner = key === 'report_banner';
     const isPromo = key === 'promo_banner';
+    const isAnnounce = key === 'announcement_popup';
     document.getElementById('setFieldsHero').classList.toggle('hidden', !isHero);
     document.getElementById('setFieldsTexts').classList.toggle('hidden', !isTexts);
     document.getElementById('setFieldsFooter').classList.toggle('hidden', !isFooter);
     document.getElementById('setFieldsBanner').classList.toggle('hidden', !isBanner);
     document.getElementById('setFieldsPromo').classList.toggle('hidden', !isPromo);
-    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero || isTexts || isFooter || isBanner || isPromo);
-    document.getElementById('quickLinksSection').classList.toggle('hidden', isTexts || isFooter || isBanner || isPromo);
+    document.getElementById('setFieldsAnnounce').classList.toggle('hidden', !isAnnounce);
+    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero || isTexts || isFooter || isBanner || isPromo || isAnnounce);
+    document.getElementById('quickLinksSection').classList.toggle('hidden', isTexts || isFooter || isBanner || isPromo || isAnnounce);
 
     const { data, error } = await sb.from('site_settings').select('*').eq('key', key).single();
     if (error && error.code !== 'PGRST116'){
@@ -5928,6 +5963,12 @@ async function openSettingsPanel(key){
         document.getElementById('setPromoSlotsTotal').value = currentSetPayload.slots_total ?? '';
         document.getElementById('setPromoEndAt').value = currentSetPayload.end_at || '';
         updatePromoPreview();
+    } else if (isAnnounce){
+        document.getElementById('setAnnounceEnabled').checked = !!currentSetPayload.enabled;
+        document.getElementById('setAnnounceTitle').value = currentSetPayload.title || '';
+        document.getElementById('setAnnounceMessage').value = currentSetPayload.message || '';
+        document.getElementById('setAnnounceHideHours').value = currentSetPayload.hide_hours ?? '';
+        updateAnnouncePreview();
     } else {
         document.getElementById('setCardIcon').value = currentSetPayload.icon || '';
         document.getElementById('setCardTitle').value = currentSetPayload.title || '';
@@ -6100,6 +6141,16 @@ function formatPromoCountdown(ms){
     const pad = n => String(n).padStart(2, '0');
     return (days > 0 ? days + 'n ' : '') + pad(hours) + ':' + pad(mins) + ':' + pad(secs);
 }
+function updateAnnouncePreview(){
+    const title = document.getElementById('setAnnounceTitle').value.trim() || 'Thông báo';
+    document.getElementById('setAnnouncePreviewTitle').innerText = title;
+
+    const msg = document.getElementById('setAnnounceMessage').value.trim() || 'Hệ thống sẽ bảo trì từ 23h đến 1h sáng mai...';
+    document.getElementById('setAnnouncePreviewMsg').innerText = msg;
+
+    const hours = Number(document.getElementById('setAnnounceHideHours').value) > 0 ? Number(document.getElementById('setAnnounceHideHours').value) : 2;
+    document.getElementById('setAnnouncePreviewHideBtn').innerText = `Ẩn trong ${hours} giờ`;
+}
 function updatePromoPreview(){
     const msg = document.getElementById('setPromoMessage').value.trim() || 'Người dùng Premium ghi nhớ hiệu quả hơn gấp 3 lần...';
     document.getElementById('setPromoPreviewMsg').innerText = msg;
@@ -6169,6 +6220,13 @@ async function saveSiteSetting(){
             slots_left: Number(document.getElementById('setPromoSlotsLeft').value) || 0,
             slots_total: Number(document.getElementById('setPromoSlotsTotal').value) || 0,
             end_at: document.getElementById('setPromoEndAt').value || '',
+        };
+    } else if (currentSetKey === 'announcement_popup'){
+        payload = {
+            enabled: document.getElementById('setAnnounceEnabled').checked,
+            title: document.getElementById('setAnnounceTitle').value.trim(),
+            message: document.getElementById('setAnnounceMessage').value.trim(),
+            hide_hours: Number(document.getElementById('setAnnounceHideHours').value) || 2,
         };
     } else {
         const selected = document.querySelector('#setColorRow .color-swatch.selected');

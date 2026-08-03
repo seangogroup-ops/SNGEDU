@@ -2347,7 +2347,7 @@ function showStatsPanel(){
     loadStatsData();
 }
 
-const STATS_TYPE_LABEL = { course: 'Khoá học', subscription: 'Gói thành viên' };
+const STATS_TYPE_LABEL = { course: 'Khoá học', subscription: 'Gói thành viên', document: 'Tài liệu', product: 'Sản phẩm' };
 const STATS_METHOD_LABEL = { BANK_TRANSFER: 'Chuyển khoản', CARD: 'Thẻ', NAPAS_BANK_TRANSFER: 'Napas' };
 const STATS_RESET_PASSWORD = 'SNGEDU';
 
@@ -4216,11 +4216,11 @@ registerContentList('tool_items', 'tool_content', 'items', {
 });
 registerContentList('product_items', 'product_content', 'items', {
     label:'Sản phẩm', icon:'fa-solid fa-bag-shopping', color:'indigo', defaultIcon:'fa-solid fa-bag-shopping',
-    extraField:{ key:'price', label:'Giá / nhãn phụ', placeholder:'VD: 49.000đ hoặc "Mới ra mắt"' },
+    priceField:true,
     descTextarea:true, descLabel:'Mô tả (hiện rút gọn ở thẻ, đầy đủ ở trang chi tiết)',
-    imageField:true,
+    imageField:true, visibilityField:true,
     imageRatioHint:'Khung hiển thị (thẻ &amp; modal chi tiết) đều là hình <b>vuông 1:1</b> — nên dùng ảnh vuông (VD 800×800px, 1000×1000px), đặt chủ thể chính (sản phẩm, logo) ở giữa để không bị cắt 2 bên.',
-    linkLabel:'Đường dẫn xem/mua chi tiết (mở khi khách bấm "Xem / mua sản phẩm")', linkPlaceholder:'https://...'
+    linkLabel:'Đường dẫn tải xuống / truy cập sản phẩm (chỉ lộ ra cho khách sau khi thanh toán thành công qua SePay)', linkPlaceholder:'https://...'
 });
 registerContentList('support_contacts', 'support_content', 'contacts', {
     label:'Kênh liên hệ', icon:'fa-solid fa-headset', color:'indigo', defaultIcon:'fa-solid fa-comment-dots',
@@ -4242,7 +4242,7 @@ registerContentList('pro_items', 'pro_content', 'items', {
 const CONTENT_MANAGER_GROUPS = {
     doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu (miễn phí & trả phí) hiển thị ở tab "Tài liệu" trên trang chủ. Tải file PDF/Word lên trực tiếp, không cần link ngoài. Chọn loại "Trả phí" và bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Tải xuống", trước đó file không lộ link công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn tải được bình thường khi bị ẩn.', subKeys:['doc'] },
     tool:    { title:'Công cụ',   icon:'🧰',  hint:'Quản lý các thẻ công cụ hiển thị ở tab "Công cụ" trên trang chủ.', subKeys:['tool_items'] },
-    product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ.', subKeys:['product_items'] },
+    product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ. Bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Mở/Tải sản phẩm" và link mới lộ ra, trước đó link không công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn xem/tải được bình thường khi bị ẩn.', subKeys:['product_items'] },
     pro:     { title:'Gói Pro',   icon:'👑',  hint:'Quản lý các gói Pro hiển thị ở tab "Tài khoản & Gói Pro" trên trang chủ. Chọn màu "amber" để đánh dấu gói "Phổ biến nhất". Mục "Gói thanh toán tự động (SePay)" cho phép chọn gói tương ứng trong bảng giá tự động — khi đã chọn, thẻ sẽ hiện nút "Mua ngay" mở thẳng cổng SePay thay vì link ngoài. Nếu để trống, thẻ vẫn hoạt động theo kiểu cũ: trỏ ra Zalo/Momo, sau khi khách chuyển khoản bạn vào mục "Tài khoản" bên dưới để gán Premium thủ công.', subKeys:['pro_items'] },
     support: { title:'Hỗ trợ',    icon:'🆘',  hint:'Quản lý nội dung tab "Hỗ trợ" trên trang chủ: khối giới thiệu đầu trang, các kênh liên hệ (Zalo, Form...) và danh sách câu hỏi thường gặp.', subKeys:['support_contacts','support_faq'], intro:true }
 };
@@ -5292,7 +5292,7 @@ async function loadFeaturedSources(){
 
     const { data: prodRow } = await sb.from('site_settings').select('*').eq('key', 'product_content').single();
     const prodItems = (prodRow && prodRow.payload && Array.isArray(prodRow.payload.items)) ? prodRow.payload.items : [];
-    featuredSourceData.product = prodItems.map(it => ({ id: String(it.id), title: it.title || '(chưa đặt tên)', sub: it.price || '' }));
+    featuredSourceData.product = prodItems.map(it => ({ id: String(it.id), title: it.title || '(chưa đặt tên)', sub: it.price ? Number(it.price).toLocaleString('vi-VN') + 'đ' : '' }));
 }
 
 function switchFeaturedSourceTab(src){

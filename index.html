@@ -639,8 +639,11 @@
     .doc-card:hover, .doc-card:focus-visible{
         transform:translateY(-4px); box-shadow:var(--shadow-hov); border-color:#dfe2ee;
     }
-    .doc-card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-    .doc-thumb{ width:100%; aspect-ratio:2/1; object-fit:cover; border-radius:12px; }
+    /* .doc-card-top là khung chứa ảnh bìa/icon; badge được ghim tuyệt đối lên góc trên-phải
+       thay vì nằm chung hàng flex với ảnh — tránh lỗi ảnh (width:100%) chèn ép badge làm
+       badge bị co lại chỉ còn icon hoặc tràn ra ngoài thẻ. */
+    .doc-card-top{ position:relative; }
+    .doc-thumb{ display:block; width:100%; aspect-ratio:2/1; object-fit:cover; border-radius:12px; }
     .doc-icon{
         width:46px; height:46px; border-radius:12px; flex-shrink:0;
         display:flex; align-items:center; justify-content:center; font-size:1.15rem;
@@ -649,12 +652,17 @@
     .doc-card.is-paid .doc-icon{ background:var(--amber-bg); color:var(--amber); }
     .doc-card.is-owned .doc-icon{ background:var(--brand-bg); color:var(--brand); }
     .doc-tag{
-        display:inline-flex; align-items:center; gap:5px; flex-shrink:0;
+        position:absolute; top:10px; right:10px; z-index:2;
+        display:inline-flex; align-items:center; gap:5px; flex-shrink:0; white-space:nowrap;
         font-size:.68rem; font-weight:800; padding:5px 10px; border-radius:999px; letter-spacing:.2px;
+        box-shadow:0 2px 8px rgba(20,22,40,.18);
     }
     .doc-tag.free{ background:var(--green-bg); color:var(--green); }
     .doc-tag.paid{ background:var(--amber-bg); color:var(--amber); }
     .doc-tag.owned{ background:var(--brand-bg); color:var(--brand); }
+    /* Không có ảnh bìa (chỉ icon 46px) -> badge quay lại nằm cùng hàng cạnh icon cho cân đối. */
+    .doc-card-top.no-thumb{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .doc-card-top.no-thumb .doc-tag{ position:static; box-shadow:none; }
     .doc-title{ font-size:.96rem; font-weight:700; line-height:1.35; }
     .doc-meta{ display:flex; align-items:center; gap:6px; font-size:.78rem; color:var(--ink-mute); }
     .doc-desc{
@@ -2466,6 +2474,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             ? `<img class="doc-thumb" src="${escapeHtmlHome(item.image)}" alt="">`
             : '';
         const iconHtml = `<div class="doc-icon"><i class="fa-solid ${isPaid ? 'fa-lock' : 'fa-file-lines'}"></i></div>`;
+        const topClass = item.image ? 'doc-card-top' : 'doc-card-top no-thumb';
 
         // Tài liệu miễn phí: mở/tải trực tiếp như cũ (có kiểm tra giới hạn lượt/ngày cho tài khoản Free).
         if (!isPaid){
@@ -2474,7 +2483,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             const disabled = !item.link;
             return `
                 <a class="doc-card is-free${disabled ? ' is-disabled' : ''}" data-cat="free" href="${escapeHtmlHome(href)}" ${item.link ? `target="_blank" rel="noopener" onclick="return handleFreeDocClick(event, '${idAttr}', this)"` : 'onclick="return false;"'}>
-                    <div class="doc-card-top">
+                    <div class="${topClass}">
                         ${topHtml || iconHtml}
                         <span class="doc-tag free"><i class="fa-solid fa-unlock"></i> Miễn phí</span>
                     </div>
@@ -2495,7 +2504,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             const href = item.link || '#';
             return `
                 <a class="doc-card is-owned" data-cat="paid" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
-                    <div class="doc-card-top">
+                    <div class="${topClass}">
                         ${topHtml || iconHtml}
                         <span class="doc-tag owned"><i class="fa-solid fa-circle-check"></i> Đã mua</span>
                     </div>
@@ -2509,7 +2518,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const idAttr = escapeHtmlHome(docId);
         return `
             <div class="doc-card is-paid" data-cat="paid" role="button" tabindex="0" onclick="openDocPurchase('${idAttr}')" onkeydown="if(event.key==='Enter')openDocPurchase('${idAttr}')">
-                <div class="doc-card-top">
+                <div class="${topClass}">
                     ${topHtml || iconHtml}
                     <span class="doc-tag paid"><i class="fa-solid fa-lock"></i> Trả phí</span>
                 </div>

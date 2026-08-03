@@ -1278,14 +1278,6 @@ textarea{resize:vertical;}
                     <span class="ico">🗓️</span>
                     <div><div class="num" id="statMonthRevenue">0đ</div><div class="lbl">Doanh thu tháng này</div></div>
                 </div>
-                <div class="acct-stat-card pending">
-                    <span class="ico">⏳</span>
-                    <div><div class="num" id="statPendingCount">0</div><div class="lbl">Đang chờ thanh toán</div></div>
-                </div>
-                <div class="acct-stat-card failed">
-                    <span class="ico">❌</span>
-                    <div><div class="num" id="statFailedCount">0</div><div class="lbl">Thất bại / đã huỷ</div></div>
-                </div>
             </div>
 
             <div class="tabs stats-view-tabs" id="statsViewTabs">
@@ -2385,8 +2377,6 @@ async function loadStatsData(){
 function renderStatsSummary(orders){
     const now = new Date();
     const paid = orders.filter(o => o.status === 'paid');
-    const pending = orders.filter(o => o.status === 'pending');
-    const failed = orders.filter(o => o.status === 'failed' || o.status === 'cancelled');
 
     const totalRevenue = paid.reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
 
@@ -2404,8 +2394,6 @@ function renderStatsSummary(orders){
     document.getElementById('statTotalRevenue').innerText = fmtMoney(totalRevenue);
     document.getElementById('statTodayRevenue').innerText = fmtMoney(todayRevenue);
     document.getElementById('statMonthRevenue').innerText = fmtMoney(monthRevenue);
-    document.getElementById('statPendingCount').innerText = pending.length;
-    document.getElementById('statFailedCount').innerText = failed.length;
     document.getElementById('statCourseCount').innerText = courseOrders.length + ' đơn';
     document.getElementById('statCourseAmount').innerText = fmtMoney(courseAmount);
     document.getElementById('statSubCount').innerText = subOrders.length + ' đơn';

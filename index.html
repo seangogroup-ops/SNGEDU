@@ -462,6 +462,7 @@
     }
     .hist-icon.type-subscription{ background:var(--amber-bg); color:var(--amber); }
     .hist-icon.type-document{ background:var(--brand-bg); color:var(--brand); }
+    .hist-icon.type-product{ background:var(--amber-bg); color:var(--amber); }
     .hist-icon.type-course{ background:#f0e7ff; color:#8b5cf6; }
     html[data-theme="dark"] .hist-icon.type-course{ background:#2e2140; color:#b794ff; }
     .hist-icon.type-other{ background:var(--line); color:var(--ink-mute); }
@@ -1448,6 +1449,20 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         <div id="productGrid">
             <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
         </div>
+
+        <div class="doc-cat" id="prodHistorySec" style="display:none">
+            <div class="doc-cat-head">
+                <div class="doc-cat-name"><i class="fa-solid fa-clock-rotate-left" style="color:var(--brand)"></i> Lịch sử mua sản phẩm</div>
+            </div>
+            <div class="acct-order-card">
+                <div class="acc-loading" id="prodOrderLoading">Đang tải lịch sử...</div>
+                <div id="prodOrderList" style="display:none"></div>
+                <div class="acc-empty" id="prodOrderEmpty" style="display:none">
+                    <i class="fa-solid fa-receipt"></i>
+                    <p>Chưa có giao dịch mua sản phẩm nào thành công.</p>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- ============ TAB: TÀI KHOẢN & GÓI PRO ============ -->
@@ -1536,6 +1551,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <button type="button" class="hist-filter-chip active" data-histtype="">Tất cả</button>
                 <button type="button" class="hist-filter-chip" data-histtype="subscription"><i class="fa-solid fa-crown"></i> Gói Pro</button>
                 <button type="button" class="hist-filter-chip" data-histtype="document"><i class="fa-solid fa-file-lines"></i> Tài liệu</button>
+                <button type="button" class="hist-filter-chip" data-histtype="product"><i class="fa-solid fa-bag-shopping"></i> Sản phẩm</button>
                 <button type="button" class="hist-filter-chip" data-histtype="course"><i class="fa-solid fa-graduation-cap"></i> Khoá học</button>
                 <button type="button" class="hist-filter-chip" data-histtype="admin"><i class="fa-solid fa-user-shield"></i> Admin điều chỉnh</button>
             </div>
@@ -2451,6 +2467,21 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         purchasedDocIds = next;
     }
 
+    // ---- Trạng thái mua sản phẩm trả phí của người dùng hiện tại (giống hệt cơ chế tài liệu ở trên) ----
+    let purchasedProductIds = new Set();
+
+    async function loadPurchasedProductIds(){
+        const next = new Set();
+        try{
+            const { data: { user } } = await sb.auth.getUser();
+            if (user){
+                const { data, error } = await sb.from('product_purchases').select('product_id').eq('user_id', user.id);
+                if (!error && data) data.forEach(r => next.add(String(r.product_id)));
+            }
+        }catch(e){ /* chưa đăng nhập hoặc lỗi mạng -> coi như chưa mua gì */ }
+        purchasedProductIds = next;
+    }
+
     // ---- Kiểm tra giới hạn tải tài liệu miễn phí (tài khoản Free) trước khi mở link ----
     let freeDocCheckBusy = false;
     function handleFreeDocClick(evt, docId, linkEl){
@@ -2644,14 +2675,30 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const mediaHtml = item.image
             ? `<img class="prod-thumb" src="${escapeHtmlHome(item.image)}" alt="">`
             : `<div class="prod-icon" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(item.icon || 'fa-solid fa-bag-shopping')}"></i></div>`;
+
+        const productId = String(item.id);
+        const owned = purchasedProductIds.has(productId);
+        const price = Number(item.price) || 0;
+        const priceLabel = price > 0 ? price.toLocaleString('vi-VN') + 'đ' : '';
+
+        let tagHtml = '';
+        let ctaHtml = '<span>Xem chi tiết</span><i class="fa-solid fa-arrow-right"></i>';
+        if (owned){
+            tagHtml = '<span class="doc-tag owned"><i class="fa-solid fa-circle-check"></i> Đã sở hữu</span>';
+            ctaHtml = '<span>Mở / Tải xuống</span><i class="fa-solid fa-download"></i>';
+        } else if (price > 0){
+            tagHtml = '<span class="doc-tag paid"><i class="fa-solid fa-lock"></i> Trả phí</span>';
+            ctaHtml = `<span>Mua ngay · ${priceLabel}</span><i class="fa-solid fa-cart-shopping"></i>`;
+        }
+
         return `
-            <a class="prod-card" href="#" onclick="event.preventDefault(); openProductDetail('${escapeHtmlHome(String(item.id))}');">
-                <div class="prod-thumb-wrap">${mediaHtml}</div>
+            <a class="prod-card" href="#" onclick="event.preventDefault(); openProductDetail('${escapeHtmlHome(productId)}');">
+                <div class="prod-thumb-wrap">${mediaHtml}${tagHtml}</div>
                 <div class="prod-body">
                     <div class="prod-title">${escapeHtmlHome(item.title || '')}</div>
                     ${item.desc ? `<div class="prod-desc">${escapeHtmlHome(item.desc)}</div>` : ''}
-                    ${item.price ? `<div class="prod-price">${escapeHtmlHome(item.price)}</div>` : ''}
-                    <div class="prod-cta"><span>Xem chi tiết</span><i class="fa-solid fa-arrow-right"></i></div>
+                    ${item.price ? `<div class="prod-price">${escapeHtmlHome(priceLabel)}</div>` : ''}
+                    <div class="prod-cta">${ctaHtml}</div>
                 </div>
             </a>`;
     }
@@ -2665,15 +2712,47 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             ? `<img src="${escapeHtmlHome(item.image)}" alt="">`
             : `<div class="prod-detail-icon" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtmlHome(item.icon || 'fa-solid fa-bag-shopping')}"></i></div>`;
         document.getElementById('prodDetailTitle').textContent = item.title || '';
+
+        const productId = String(item.id);
+        const owned = purchasedProductIds.has(productId);
+        const price = Number(item.price) || 0;
+        const priceLabel = price > 0 ? price.toLocaleString('vi-VN') + 'đ' : '';
+
         const priceEl = document.getElementById('prodDetailPrice');
-        priceEl.textContent = item.price || '';
-        priceEl.style.display = item.price ? '' : 'none';
+        priceEl.textContent = owned ? (priceLabel ? '✅ Đã sở hữu · ' + priceLabel : '✅ Đã sở hữu') : priceLabel;
+        priceEl.style.display = (priceLabel || owned) ? '' : 'none';
+
         const descEl = document.getElementById('prodDetailDesc');
         descEl.textContent = item.desc || '';
         descEl.style.display = item.desc ? '' : 'none';
+
         const cta = document.getElementById('prodDetailCta');
-        if (item.link){
-            cta.href = item.link; cta.classList.remove('disabled');
+        cta.onclick = null;
+        cta.removeAttribute('target');
+
+        if (owned){
+            // Đã mua rồi -> mở/tải thẳng sản phẩm, không cần thanh toán lại.
+            if (item.link){
+                cta.href = item.link; cta.setAttribute('target', '_blank'); cta.rel = 'noopener';
+                cta.classList.remove('disabled');
+                cta.style.background = 'var(--brand-bg)'; cta.style.color = 'var(--brand)';
+                cta.innerHTML = '<span>Mở / Tải sản phẩm</span><i class="fa-solid fa-arrow-up-right-from-square"></i>';
+            } else {
+                cta.href = '#'; cta.classList.add('disabled');
+                cta.style.background = 'var(--brand-bg)'; cta.style.color = 'var(--brand)';
+                cta.innerHTML = '<span><i class="fa-solid fa-circle-check"></i> Đã sở hữu</span>';
+            }
+        } else if (price > 0){
+            // Sản phẩm trả phí, chưa mua -> bấm để chuyển sang cổng thanh toán SePay.
+            cta.href = '#';
+            cta.classList.remove('disabled');
+            cta.style.background = 'var(--amber-bg)'; cta.style.color = 'var(--amber)';
+            cta.innerHTML = `<span>Mua ngay · ${priceLabel}</span><i class="fa-solid fa-cart-shopping"></i>`;
+            cta.onclick = (evt) => { evt.preventDefault(); purchaseProductFromModal(productId); };
+        } else if (item.link){
+            // Sản phẩm không thu phí qua site (giới thiệu / link ngoài) -> giữ hành vi cũ.
+            cta.href = item.link; cta.setAttribute('target', '_blank'); cta.rel = 'noopener';
+            cta.classList.remove('disabled');
             cta.style.background = style.bg; cta.style.color = style.fg;
             cta.innerHTML = '<span>Xem / mua sản phẩm</span><i class="fa-solid fa-arrow-up-right-from-square"></i>';
         } else {
@@ -2684,13 +2763,25 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         document.getElementById('prodDetailOverlay').classList.remove('hidden');
     }
 
+    // ---- Mua sản phẩm trả phí: chuyển sang cổng thanh toán SePay ----
+    function purchaseProductFromModal(id){
+        if (!currentSession){ location.href = loginUrl('product'); return; }
+        const cta = document.getElementById('prodDetailCta');
+        if (cta){
+            cta.classList.add('disabled');
+            cta.innerHTML = '<span><i class="fa-solid fa-spinner fa-spin"></i> Đang chuyển tới cổng thanh toán...</span>';
+        }
+        thanhToanSanPham(id); // hàm có sẵn trong frontend/sepay-checkout.js
+    }
+
     function closeProductDetail(){
         document.getElementById('prodDetailOverlay').classList.add('hidden');
     }
 
     async function renderProductContent(){
         const payload = await fetchSiteSettingPayload('product_content', DEFAULT_PRODUCT_CONTENT);
-        const items = Array.isArray(payload.items) ? payload.items : [];
+        // Sản phẩm bị ẩn (item.hidden) không hiện trong danh sách công khai, trừ khi khách đã mua rồi (vẫn cần mở/tải lại được).
+        const items = (Array.isArray(payload.items) ? payload.items : []).filter(it => !it.hidden || purchasedProductIds.has(String(it.id)));
         const grid = document.getElementById('productGrid');
         const allCount = document.getElementById('productAllCount');
         if (allCount) allCount.textContent = items.length + ' sản phẩm';
@@ -2699,6 +2790,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         } else {
             grid.innerHTML = `<div class="prod-grid">${items.map(productItemCardHtml).join('')}</div>`;
         }
+        loadProductOrderHistory();
     }
 
     // ---------------- HỆ THỐNG GHIM NỔI BẬT — mỗi loại ghim rơi đúng vào khối "nổi bật" tương ứng ----------------
@@ -3293,6 +3385,10 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             const doc = DOC_PAID_ITEMS_MAP[String(row.course_id)];
             return { icon:'fa-file-lines', title: (doc && doc.title) || 'Tài liệu', link: (doc && doc.link) || null };
         }
+        if (row.order_type === 'product'){
+            const prod = PRODUCT_DETAIL_MAP[String(row.course_id)];
+            return { icon:'fa-bag-shopping', title: (prod && prod.title) || 'Sản phẩm', link: (prod && prod.link) || null };
+        }
         if (row.order_type === 'course'){
             return { icon:'fa-graduation-cap', title:'Khoá học', link:null };
         }
@@ -3347,6 +3443,31 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         listEl.innerHTML = rows.map(orderHistoryItemHtml).join('');
     }
 
+    // Lịch sử mua sản phẩm (hiển thị ngay trong tab Sản phẩm, chỉ đơn thành công) — nhân bản y hệt cơ chế Tài liệu ở trên.
+    async function loadProductOrderHistory(){
+        const sec = document.getElementById('prodHistorySec');
+        const loadingEl = document.getElementById('prodOrderLoading');
+        const listEl = document.getElementById('prodOrderList');
+        const emptyEl = document.getElementById('prodOrderEmpty');
+        if (!sec || !loadingEl || !listEl || !emptyEl) return;
+
+        if (!currentSession){ sec.style.display = 'none'; return; }
+        sec.style.display = '';
+        loadingEl.style.display = 'block';
+        listEl.style.display = 'none';
+        emptyEl.style.display = 'none';
+
+        const rows = await fetchPaidOrders('product', 20);
+
+        loadingEl.style.display = 'none';
+        if (!rows.length){
+            emptyEl.style.display = 'flex';
+            return;
+        }
+        listEl.style.display = 'block';
+        listEl.innerHTML = rows.map(orderHistoryItemHtml).join('');
+    }
+
     // Tab "Lịch sử mua hàng" — toàn bộ đơn (tài liệu + khoá học + gói Pro) ĐỒNG BỘ với admin cộng/trừ tiền
     // (balance_transactions) và admin nâng cấp/huỷ Pro thủ công (pro_grants), giống hệt popup "Lịch sử" nhanh
     // và subtab "Lịch sử giao dịch" ở trang Tài khoản — 3 nơi này luôn khớp dữ liệu với nhau.
@@ -3377,7 +3498,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const dateSrc = row.paid_at || row.created_at;
         const dateText = dateSrc ? new Date(dateSrc).toLocaleString('vi-VN') : '';
         const amountText = Number(row.amount || 0).toLocaleString('vi-VN') + 'đ';
-        const typeCls = ['subscription','document','course'].includes(row.order_type) ? row.order_type : 'other';
+        const typeCls = ['subscription','document','product','course'].includes(row.order_type) ? row.order_type : 'other';
         const inner = `
             <div class="hist-icon type-${typeCls}"><i class="fa-solid ${meta.icon}"></i></div>
             <div class="hist-body">
@@ -3678,7 +3799,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     }
     renderQuickGrid();
     renderToolContent();
-    renderProductContent();
+    loadPurchasedProductIds().then(renderProductContent);
     renderSupportContent();
     renderProContent();
     proFeaturesConfigPromise = loadProUpgradeFeaturesConfig();
@@ -3742,6 +3863,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
         const inv = params.get('inv') || '';
         const isDocOrder = inv.startsWith('DOC-');
+        const isProductOrder = inv.startsWith('PRD-');
 
         // Xoá query param khỏi URL cho gọn, không ảnh hưởng logic bên dưới
         history.replaceState({}, '', location.pathname + location.hash);
@@ -3757,22 +3879,28 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 if (isDocOrder) {
                     await loadPurchasedDocIds();
                     if (purchasedDocIds.size) break; // tối thiểu đã có 1 tài liệu -> IPN chắc chắn đã xử lý xong
+                } else if (isProductOrder) {
+                    await loadPurchasedProductIds();
+                    if (purchasedProductIds.size) break; // tối thiểu đã có 1 sản phẩm -> IPN chắc chắn đã xử lý xong
                 } else if (user?.user_metadata?.plan === 'premium') {
                     break;
                 }
                 await new Promise(r => setTimeout(r, 2000));
             }
             renderDocContent();
+            if (isProductOrder) renderProductContent();
             showSiteToast({
-                title: isDocOrder ? 'Thanh toán thành công' : 'Nâng cấp thành công',
+                title: (isDocOrder || isProductOrder) ? 'Thanh toán thành công' : 'Nâng cấp thành công',
                 message: isDocOrder
                     ? 'Tài liệu đã được mở khoá, có thể tải ngay.'
-                    : 'Tài khoản của bạn đã được nâng cấp lên Pro.',
-                type: isDocOrder ? 'success' : 'pro',
-                icon: isDocOrder ? 'fa-file-circle-check' : 'fa-crown',
+                    : isProductOrder
+                        ? 'Sản phẩm đã được mở khoá, có thể mở/tải ngay.'
+                        : 'Tài khoản của bạn đã được nâng cấp lên Pro.',
+                type: (isDocOrder || isProductOrder) ? 'success' : 'pro',
+                icon: (isDocOrder || isProductOrder) ? 'fa-file-circle-check' : 'fa-crown',
             });
             // Đánh dấu đã thông báo cho lần nâng cấp Pro này, để checkProUpgradeNotice() không hiện lại lần nữa.
-            if (!isDocOrder && latestUser){
+            if (!isDocOrder && !isProductOrder && latestUser){
                 markProNoticeSeen(latestUser.id, latestUser.user_metadata || {});
             }
         } else if (paymentStatus === 'error' || paymentStatus === 'cancel') {
@@ -3816,6 +3944,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             updateAccountUI();
             renderAccountPanelInfo();
             loadPurchasedDocIds().then(renderDocContent);
+            loadPurchasedProductIds().then(renderProductContent);
             checkProUpgradeNotice();
         });
 

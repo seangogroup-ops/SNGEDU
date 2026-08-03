@@ -4177,7 +4177,9 @@ registerContentList('tool_items', 'tool_content', 'items', {
 registerContentList('product_items', 'product_content', 'items', {
     label:'Sản phẩm', icon:'fa-solid fa-bag-shopping', color:'indigo', defaultIcon:'fa-solid fa-bag-shopping',
     extraField:{ key:'price', label:'Giá / nhãn phụ', placeholder:'VD: 49.000đ hoặc "Mới ra mắt"' },
-    linkLabel:'Đường dẫn (nếu có)', linkPlaceholder:'https://...'
+    descTextarea:true, descLabel:'Mô tả (hiện rút gọn ở thẻ, đầy đủ ở trang chi tiết)',
+    imageField:true,
+    linkLabel:'Đường dẫn xem/mua chi tiết (mở khi khách bấm "Xem / mua sản phẩm")', linkPlaceholder:'https://...'
 });
 registerContentList('support_contacts', 'support_content', 'contacts', {
     label:'Kênh liên hệ', icon:'fa-solid fa-headset', color:'indigo', defaultIcon:'fa-solid fa-comment-dots',
@@ -4276,6 +4278,17 @@ function contentBlockHtml(subKey){
                     <input type="hidden" id="cmImageUrl_${subKey}" value="">
                     ` : `
                     <input id="cmLink_${subKey}" placeholder="${escapeHtml(meta.linkPlaceholder)}">
+                    ${meta.imageField ? `
+                    <label style="margin-top:10px;">Hình ảnh sản phẩm (hiện thay icon trên thẻ &amp; trang chi tiết)</label>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <input type="file" id="cmImage_${subKey}" accept="image/*" style="display:none;" onchange="onContentImageSelected('${subKey}')">
+                        <button type="button" class="side-add" onclick="document.getElementById('cmImage_${subKey}').click()">🖼️ Chọn ảnh</button>
+                        <span class="hint-inline" id="cmImageName_${subKey}"></span>
+                        <button type="button" class="btn-mini-cancel" id="cmImageRemoveBtn_${subKey}" style="display:none;padding:4px 10px;" onclick="removeContentImage('${subKey}')">Xóa ảnh</button>
+                    </div>
+                    <div class="hint" style="margin-top:4px;">Không bắt buộc — nếu bỏ trống sẽ hiện icon. Tối đa 5MB, nên dùng ảnh vuông.</div>
+                    <input type="hidden" id="cmImageUrl_${subKey}" value="">
+                    ` : ''}
                     `}`}
                     ${meta.planField ? `
                     <label style="margin-top:10px;">Gói thanh toán tự động (SePay)</label>
@@ -4904,7 +4917,7 @@ function openContentForm(subKey){
     const linkEl = document.getElementById('cmLink_' + subKey);
     if (linkEl){ linkEl.value = ''; linkEl.disabled = false; }
     if (cfg.meta.planField) refreshPlanSelect(subKey, '');
-    if (cfg.meta.upload) resetContentUploadUI(subKey, '', '');
+    if (cfg.meta.upload || cfg.meta.imageField) resetContentUploadUI(subKey, '', '');
     if (!cfg.meta.hideIconColor) pickContentColor(subKey, cfg.meta.color || 'indigo');
     if (cfg.meta.docTypeField) pickDocType(subKey, 'free');
     updateContentPreview(subKey);
@@ -4933,7 +4946,7 @@ function editContentItem(subKey, id){
     const linkEl = document.getElementById('cmLink_' + subKey);
     if (linkEl){ linkEl.value = item.link || ''; linkEl.disabled = false; }
     if (cfg.meta.planField) refreshPlanSelect(subKey, item.plan_id || '');
-    if (cfg.meta.upload) resetContentUploadUI(subKey, item.link || '', item.image || '');
+    if (cfg.meta.upload || cfg.meta.imageField) resetContentUploadUI(subKey, item.link || '', item.image || '');
     if (!cfg.meta.hideIconColor) pickContentColor(subKey, item.color || cfg.meta.color || 'indigo');
     if (cfg.meta.docTypeField) pickDocType(subKey, item.type === 'paid' ? 'paid' : 'free');
     if (cfg.meta.docTypeField && priceEl) priceEl.value = item.price || (item.type === 'paid' ? '' : 0);
@@ -4956,7 +4969,7 @@ async function saveContentItem(subKey){
 
     const item = { id: cfg.editingId || ('i' + Date.now().toString(36) + Math.random().toString(36).slice(2,6)), icon, color, title, desc, link };
     if (cfg.meta.planField) item.plan_id = planId || null;
-    if (cfg.meta.upload){
+    if (cfg.meta.upload || cfg.meta.imageField){
         const imgUrlEl = document.getElementById('cmImageUrl_' + subKey);
         item.image = imgUrlEl ? imgUrlEl.value.trim() : '';
     }
@@ -5010,7 +5023,7 @@ function deleteContentItem(subKey, id){
                 const path = storagePathFromPublicUrl(item.link, DOC_BUCKET);
                 if (path) sb.storage.from(DOC_BUCKET).remove([path]).catch(()=>{});
             }
-            if (cfg.meta.upload && item && item.image){
+            if ((cfg.meta.upload || cfg.meta.imageField) && item && item.image){
                 const imgPath = storagePathFromPublicUrl(item.image, DOC_BUCKET);
                 if (imgPath) sb.storage.from(DOC_BUCKET).remove([imgPath]).catch(()=>{});
             }

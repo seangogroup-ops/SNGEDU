@@ -219,6 +219,7 @@ aside{
 .doc-type-opt:hover{border-color:var(--accent);}
 .doc-type-opt.selected.free{background:rgba(46,211,146,.14);border-color:#16a34a;color:#16a34a;}
 .doc-type-opt.selected.paid{background:rgba(180,83,9,.14);border-color:var(--amber);color:var(--amber);}
+.doc-type-opt.selected.neutral{background:rgba(37,99,235,.12);border-color:#2563eb;color:#2563eb;}
 .fmgr-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
 .fmgr-tab{background:var(--white);border:1px solid var(--border);color:var(--gray);padding:6px 12px;font-size:.78rem;font-weight:600;border-radius:7px;font-family:var(--font-display);cursor:pointer;}
 .fmgr-tab:hover{border-color:var(--accent);color:var(--accent);}
@@ -4165,9 +4166,11 @@ const DOC_IMAGE_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 registerContentList('doc', 'doc_content', null, {
     label:'Tài liệu', icon:'fa-solid fa-file-lines', color:'green', defaultIcon:'fa-solid fa-file-lines',
+    hideIconColor:true, // icon/màu không được dùng ở thẻ tài liệu ngoài trang chủ -> ẩn để đỡ rối
     extraField:{ key:'size', label:'Dung lượng / định dạng', placeholder:'VD: PDF · 2.4MB' },
-    priceField:true, docTypeField:true,
-    upload:true, linkLabel:'File tài liệu (PDF hoặc Word)'
+    priceField:true, docTypeField:true, visibilityField:true, sourceToggle:true,
+    upload:true, linkLabel:'File tài liệu (PDF hoặc Word)',
+    imageRatioHint:'Ảnh bìa hiện dạng dải ngang phía trên thẻ — nên dùng ảnh <b>ngang, tỉ lệ ~16:9 đến 2:1</b> (VD 800×450px hoặc 800×400px), đặt chủ thể chính (chữ/logo) ở giữa để không bị cắt mất trên-dưới. Ảnh dọc hoặc vuông sẽ bị crop bớt.'
 });
 registerContentList('tool_items', 'tool_content', 'items', {
     label:'Công cụ', icon:'fa-solid fa-toolbox', color:'indigo', defaultIcon:'fa-solid fa-toolbox',
@@ -4179,6 +4182,7 @@ registerContentList('product_items', 'product_content', 'items', {
     extraField:{ key:'price', label:'Giá / nhãn phụ', placeholder:'VD: 49.000đ hoặc "Mới ra mắt"' },
     descTextarea:true, descLabel:'Mô tả (hiện rút gọn ở thẻ, đầy đủ ở trang chi tiết)',
     imageField:true,
+    imageRatioHint:'Khung hiển thị (thẻ &amp; modal chi tiết) đều là hình <b>vuông 1:1</b> — nên dùng ảnh vuông (VD 800×800px, 1000×1000px), đặt chủ thể chính (sản phẩm, logo) ở giữa để không bị cắt 2 bên.',
     linkLabel:'Đường dẫn xem/mua chi tiết (mở khi khách bấm "Xem / mua sản phẩm")', linkPlaceholder:'https://...'
 });
 registerContentList('support_contacts', 'support_content', 'contacts', {
@@ -4199,7 +4203,7 @@ registerContentList('pro_items', 'pro_content', 'items', {
 });
 
 const CONTENT_MANAGER_GROUPS = {
-    doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu (miễn phí & trả phí) hiển thị ở tab "Tài liệu" trên trang chủ. Tải file PDF/Word lên trực tiếp, không cần link ngoài. Chọn loại "Trả phí" và bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Tải xuống", trước đó file không lộ link công khai.', subKeys:['doc'] },
+    doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu (miễn phí & trả phí) hiển thị ở tab "Tài liệu" trên trang chủ. Tải file PDF/Word lên trực tiếp, không cần link ngoài. Chọn loại "Trả phí" và bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Tải xuống", trước đó file không lộ link công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn tải được bình thường khi bị ẩn.', subKeys:['doc'] },
     tool:    { title:'Công cụ',   icon:'🧰',  hint:'Quản lý các thẻ công cụ hiển thị ở tab "Công cụ" trên trang chủ.', subKeys:['tool_items'] },
     product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ.', subKeys:['product_items'] },
     pro:     { title:'Gói Pro',   icon:'👑',  hint:'Quản lý các gói Pro hiển thị ở tab "Tài khoản & Gói Pro" trên trang chủ. Chọn màu "amber" để đánh dấu gói "Phổ biến nhất". Mục "Gói thanh toán tự động (SePay)" cho phép chọn gói tương ứng trong bảng giá tự động — khi đã chọn, thẻ sẽ hiện nút "Mua ngay" mở thẳng cổng SePay thay vì link ngoài. Nếu để trống, thẻ vẫn hoạt động theo kiểu cũ: trỏ ra Zalo/Momo, sau khi khách chuyển khoản bạn vào mục "Tài khoản" bên dưới để gán Premium thủ công.', subKeys:['pro_items'] },
@@ -4259,12 +4263,26 @@ function contentBlockHtml(subKey){
                     ${meta.hideLink ? '' : `
                     <label>${escapeHtml(meta.linkLabel)}</label>
                     ${meta.upload ? `
+                    ${meta.sourceToggle ? `
+                    <div class="doc-type-toggle" id="cmSrc_${subKey}">
+                        <div class="doc-type-opt neutral" data-src="upload" onclick="pickDocSource('${subKey}','upload')"><i class="fa-solid fa-upload"></i> Tải file lên</div>
+                        <div class="doc-type-opt neutral" data-src="link" onclick="pickDocSource('${subKey}','link')"><i class="fa-solid fa-link"></i> Dùng link ngoài</div>
+                    </div>
+                    ` : ''}
+                    <div id="cmSrcUpload_${subKey}" style="margin-top:8px;">
                     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                         <input type="file" id="cmFile_${subKey}" accept=".pdf,.doc,.docx" style="display:none;" onchange="onContentFileSelected('${subKey}')">
                         <button type="button" class="side-add" onclick="document.getElementById('cmFile_${subKey}').click()">📎 Chọn file</button>
                         <span class="hint-inline" id="cmFileName_${subKey}"></span>
                     </div>
-                    <div class="hint" id="cmUploadHint_${subKey}" style="margin-top:4px;">Chỉ hỗ trợ .pdf, .doc, .docx — tối đa 20MB.</div>
+                    <div class="hint" id="cmUploadHint_${subKey}" style="margin-top:4px;">Chỉ hỗ trợ .pdf, .doc, .docx — tối đa 20MB. File được lưu trực tiếp trên hệ thống, khách bấm tải là có ngay.</div>
+                    </div>
+                    ${meta.sourceToggle ? `
+                    <div id="cmSrcLinkWrap_${subKey}" class="hidden" style="margin-top:8px;">
+                        <input id="cmExternalLink_${subKey}" placeholder="https://drive.google.com/... hoặc link tải trực tiếp">
+                        <div class="hint" style="margin-top:4px;">Dán link tài liệu có sẵn (Google Drive, Dropbox, link tải trực tiếp...) thay vì tải file lên hệ thống. Bạn tự đảm bảo link luôn còn hoạt động và đúng quyền chia sẻ (ai có link đều xem/tải được).</div>
+                    </div>
+                    ` : ''}
                     <input type="hidden" id="cmLink_${subKey}" value="">
 
                     <label style="margin-top:10px;">Ảnh bìa (tuỳ chọn)</label>
@@ -4274,7 +4292,7 @@ function contentBlockHtml(subKey){
                         <span class="hint-inline" id="cmImageName_${subKey}"></span>
                         <button type="button" class="btn-mini-cancel" id="cmImageRemoveBtn_${subKey}" style="display:none;padding:4px 10px;" onclick="removeContentImage('${subKey}')">Xóa ảnh</button>
                     </div>
-                    <div class="hint" style="margin-top:4px;">Hiện làm ảnh đại diện cho thẻ trên trang chủ thay vì icon. Không bắt buộc — tối đa 5MB.</div>
+                    <div class="hint" style="margin-top:4px;">Không bắt buộc — tối đa 5MB. Ảnh nhỏ hơn ~600px sẽ bị rỗ khi phóng to, nên dùng ảnh gốc tối thiểu 800px chiều rộng.${meta.imageRatioHint ? '<br>' + meta.imageRatioHint : ''}</div>
                     <input type="hidden" id="cmImageUrl_${subKey}" value="">
                     ` : `
                     <input id="cmLink_${subKey}" placeholder="${escapeHtml(meta.linkPlaceholder)}">
@@ -4286,7 +4304,7 @@ function contentBlockHtml(subKey){
                         <span class="hint-inline" id="cmImageName_${subKey}"></span>
                         <button type="button" class="btn-mini-cancel" id="cmImageRemoveBtn_${subKey}" style="display:none;padding:4px 10px;" onclick="removeContentImage('${subKey}')">Xóa ảnh</button>
                     </div>
-                    <div class="hint" style="margin-top:4px;">Không bắt buộc — nếu bỏ trống sẽ hiện icon. Tối đa 5MB, nên dùng ảnh vuông.</div>
+                    <div class="hint" style="margin-top:4px;">Không bắt buộc — nếu bỏ trống sẽ hiện icon. Tối đa 5MB. Ảnh nhỏ hơn ~600px sẽ bị rỗ khi phóng to, nên dùng ảnh gốc tối thiểu 800px chiều rộng.${meta.imageRatioHint ? '<br>' + meta.imageRatioHint : ''}</div>
                     <input type="hidden" id="cmImageUrl_${subKey}" value="">
                     ` : ''}
                     `}`}
@@ -4294,6 +4312,13 @@ function contentBlockHtml(subKey){
                     <label style="margin-top:10px;">Gói thanh toán tự động (SePay)</label>
                     <select id="cmPlan_${subKey}" onchange="onContentPlanChanged('${subKey}')"><option value="">— Đang tải danh sách gói... —</option></select>
                     <div class="hint" style="margin-top:4px;">Chọn gói trong bảng giá tự động (pro_packages) để nút "Mua ngay" mở thẳng cổng SePay. Để "Không liên kết" nếu chỉ muốn hiển thị thẻ giới thiệu + link ngoài như cũ.</div>
+                    ` : ''}
+                    ${meta.visibilityField ? `
+                    <label class="cm-visibility-toggle" style="margin-top:10px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" id="cmVisible_${subKey}" checked style="width:16px;height:16px;">
+                        <span>Hiển thị trên trang chủ</span>
+                    </label>
+                    <div class="hint" style="margin-top:2px;">Bỏ chọn để ẩn tạm — mục vẫn được lưu, khách đã mua vẫn tải được bình thường, chỉ không hiện trong danh sách công khai nữa.</div>
                     ` : ''}
                     <div class="settings-preview">
                         <div class="prev-ico" id="cmPreviewIco_${subKey}"><i class="fa-solid fa-star"></i></div>
@@ -4379,12 +4404,18 @@ function contentItemRowHtml(subKey, item){
     const thumbHtml = item.image
         ? `<img src="${escapeHtml(item.image)}" style="width:26px;height:26px;min-width:26px;border-radius:8px;object-fit:cover;">`
         : `<span class="prev-ico color-swatch ${color}" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="${escapeHtml(icon)}"></i></span>`;
+    const isHidden = !!item.hidden;
+    const hiddenBadgeHtml = isHidden ? `<span class="status-badge" style="margin-right:6px;background:rgba(220,38,38,.12);color:var(--red, #dc2626);">Đã ẩn</span>` : '';
+    const eyeBtnHtml = cfg.visibilityField
+        ? `<button class="icon-edit" title="${isHidden ? 'Hiện lại trên trang chủ' : 'Ẩn khỏi trang chủ'}" onclick="event.stopPropagation(); toggleContentItemHidden('${subKey}','${item.id}')"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'}"></i></button>`
+        : '';
     return `
-        <div class="side-item" data-id="${item.id}">
+        <div class="side-item" data-id="${item.id}" style="${isHidden ? 'opacity:.55;' : ''}">
             <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
             ${thumbHtml}
-            <span class="name">${typeBadgeHtml}${escapeHtml(item.title || '(chưa đặt tên)')}<span class="hint-inline">${extraLabel}</span></span>
+            <span class="name">${hiddenBadgeHtml}${typeBadgeHtml}${escapeHtml(item.title || '(chưa đặt tên)')}<span class="hint-inline">${extraLabel}</span></span>
             <span class="right-cluster">
+                ${eyeBtnHtml}
                 <span class="menu-wrap">
                     <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleContentMenu('${subKey}','${item.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
                     <div class="menu-drop hidden" id="cmmenu-${subKey}-${item.id}">
@@ -4394,6 +4425,16 @@ function contentItemRowHtml(subKey, item){
                 </span>
             </span>
         </div>`;
+}
+async function toggleContentItemHidden(subKey, id){
+    const cfg = contentLists[subKey];
+    const item = cfg.items.find(x => String(x.id) === String(id));
+    if (!item) return;
+    item.hidden = !item.hidden;
+    renderContentList(subKey);
+    const err = await saveContentList(subKey);
+    if (err) showMsg('Lỗi lưu: ' + err.message, 'err');
+    else showMsg(item.hidden ? 'Đã ẩn khỏi trang chủ.' : 'Đã hiện lại trên trang chủ.', 'ok');
 }
 function renderContentList(subKey){
     const cfg = contentLists[subKey];
@@ -4455,6 +4496,17 @@ function pickDocType(subKey, type){
             : 'Bắt buộc > 0. Khách phải thanh toán qua SePay mới tải được file này.';
     }
     updateContentPreview(subKey);
+}
+function pickDocSource(subKey, mode){
+    const wrap = document.getElementById('cmSrc_' + subKey);
+    if (wrap){
+        wrap.dataset.mode = mode;
+        wrap.querySelectorAll('.doc-type-opt').forEach(el => el.classList.toggle('selected', el.dataset.src === mode));
+    }
+    const uploadBox = document.getElementById('cmSrcUpload_' + subKey);
+    const linkBox = document.getElementById('cmSrcLinkWrap_' + subKey);
+    if (uploadBox) uploadBox.classList.toggle('hidden', mode !== 'upload');
+    if (linkBox) linkBox.classList.toggle('hidden', mode !== 'link');
 }
 function pickContentColor(subKey, color){
     document.querySelectorAll('#cmColorRow_' + subKey + ' .color-swatch').forEach(el=>{
@@ -4918,8 +4970,11 @@ function openContentForm(subKey){
     if (linkEl){ linkEl.value = ''; linkEl.disabled = false; }
     if (cfg.meta.planField) refreshPlanSelect(subKey, '');
     if (cfg.meta.upload || cfg.meta.imageField) resetContentUploadUI(subKey, '', '');
+    const extLinkEl = document.getElementById('cmExternalLink_' + subKey); if (extLinkEl) extLinkEl.value = '';
+    if (cfg.meta.sourceToggle) pickDocSource(subKey, 'upload');
     if (!cfg.meta.hideIconColor) pickContentColor(subKey, cfg.meta.color || 'indigo');
     if (cfg.meta.docTypeField) pickDocType(subKey, 'free');
+    const visibleEl = document.getElementById('cmVisible_' + subKey); if (visibleEl) visibleEl.checked = true;
     updateContentPreview(subKey);
     document.getElementById('cmForm_' + subKey).classList.add('show');
 }
@@ -4947,9 +5002,16 @@ function editContentItem(subKey, id){
     if (linkEl){ linkEl.value = item.link || ''; linkEl.disabled = false; }
     if (cfg.meta.planField) refreshPlanSelect(subKey, item.plan_id || '');
     if (cfg.meta.upload || cfg.meta.imageField) resetContentUploadUI(subKey, item.link || '', item.image || '');
+    if (cfg.meta.sourceToggle){
+        const isUploaded = !!(item.link && storagePathFromPublicUrl(item.link, DOC_BUCKET));
+        const extLinkEl = document.getElementById('cmExternalLink_' + subKey);
+        if (extLinkEl) extLinkEl.value = isUploaded ? '' : (item.link || '');
+        pickDocSource(subKey, isUploaded || !item.link ? 'upload' : 'link');
+    }
     if (!cfg.meta.hideIconColor) pickContentColor(subKey, item.color || cfg.meta.color || 'indigo');
     if (cfg.meta.docTypeField) pickDocType(subKey, item.type === 'paid' ? 'paid' : 'free');
     if (cfg.meta.docTypeField && priceEl) priceEl.value = item.price || (item.type === 'paid' ? '' : 0);
+    const visibleEl = document.getElementById('cmVisible_' + subKey); if (visibleEl) visibleEl.checked = !item.hidden;
     updateContentPreview(subKey);
     document.getElementById('cmForm_' + subKey).classList.add('show');
     document.getElementById('cmTitle_' + subKey).focus();
@@ -4961,7 +5023,15 @@ async function saveContentItem(subKey){
     const title = document.getElementById('cmTitle_' + subKey).value.trim();
     const desc = document.getElementById('cmDesc_' + subKey).value.trim();
     const linkEl = document.getElementById('cmLink_' + subKey);
-    const link = linkEl ? linkEl.value.trim() : '';
+    let link = linkEl ? linkEl.value.trim() : '';
+    if (cfg.meta.sourceToggle){
+        const srcWrap = document.getElementById('cmSrc_' + subKey);
+        const mode = srcWrap ? (srcWrap.dataset.mode || 'upload') : 'upload';
+        if (mode === 'link'){
+            const extLinkEl = document.getElementById('cmExternalLink_' + subKey);
+            link = extLinkEl ? extLinkEl.value.trim() : '';
+        }
+    }
     const planId = cfg.meta.planField ? (document.getElementById('cmPlan_' + subKey).value || '') : '';
     const selected = document.querySelector('#cmColorRow_' + subKey + ' .color-swatch.selected');
     const color = selected ? selected.dataset.color : (cfg.meta.color || 'indigo');
@@ -4995,6 +5065,10 @@ async function saveContentItem(subKey){
     }
     if (cfg.meta.statusField){
         item.status = document.getElementById('cmStatus_' + subKey).value;
+    }
+    if (cfg.meta.visibilityField){
+        const visibleEl = document.getElementById('cmVisible_' + subKey);
+        item.hidden = visibleEl ? !visibleEl.checked : false;
     }
 
     const wasEditing = cfg.editingId;

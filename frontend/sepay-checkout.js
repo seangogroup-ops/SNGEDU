@@ -31,6 +31,14 @@ async function thanhToanTaiLieu(documentId) {
   await batDauThanhToan({ order_type: 'document', document_id: documentId });
 }
 
+/**
+ * Bắt đầu thanh toán mua 1 sản phẩm trả phí.
+ * @param {string} productId - id sản phẩm trong site_settings.product_content.items[]
+ */
+async function thanhToanSanPham(productId) {
+  await batDauThanhToan({ order_type: 'product', product_id: productId });
+}
+
 async function batDauThanhToan(orderPayload) {
   try {
     const { data: { session } } = await sb.auth.getSession();

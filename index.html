@@ -730,6 +730,24 @@
         display:grid; grid-template-columns:repeat(5, 1fr); gap:16px;
         margin-bottom:36px;
     }
+    /* Biến thể cuộn ngang 1 hàng — dùng cho các khối ở trang chủ (Học phần/Tài liệu/Công cụ/Sản phẩm nổi bật) */
+    .grid-hscroll{
+        display:flex; flex-wrap:nowrap; gap:16px;
+        overflow-x:auto; overflow-y:hidden;
+        margin-bottom:36px; padding-bottom:14px;
+        scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch;
+    }
+    .grid-hscroll::-webkit-scrollbar{ height:6px; }
+    .grid-hscroll::-webkit-scrollbar-track{ background:var(--line); border-radius:99px; }
+    .grid-hscroll::-webkit-scrollbar-thumb{ background:var(--ink-mute); border-radius:99px; }
+    .grid-hscroll::-webkit-scrollbar-thumb:hover{ background:var(--ink); }
+    .grid-hscroll .card{
+        flex:0 0 240px; width:240px; scroll-snap-align:start;
+    }
+    .grid-hscroll .empty-state{ flex:1 1 auto; }
+    @media (max-width:600px){
+        .grid-hscroll .card{ flex:0 0 74vw; width:74vw; }
+    }
     .card{
         background:var(--card); border:1px solid var(--line); border-radius:18px;
         padding:20px; text-decoration:none; color:var(--ink);
@@ -963,6 +981,42 @@
     }
     .faq-item[open] summary::after{ content:'−'; }
     .faq-item p{ color:var(--ink-mute); font-size:.85rem; line-height:1.6; margin-top:10px; }
+
+/* ============ POPUP: Thông báo nổi khi vào trang (quản lý ở Admin > Thông báo nổi) ============ */
+.announce-popup-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:2400;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.announce-popup-overlay.hidden{ display:none; }
+.announce-popup-modal{
+    background:var(--card); border-radius:20px; max-width:420px; width:100%;
+    max-height:86vh; overflow-y:auto; padding:26px 24px 22px; position:relative;
+    box-shadow:0 24px 70px rgba(0,0,0,.4); text-align:center;
+}
+.announce-popup-close{
+    position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%;
+    border:1px solid var(--line); background:var(--card); color:var(--ink-mute);
+    cursor:pointer; font-size:.9rem; display:flex; align-items:center; justify-content:center;
+}
+.announce-popup-close:hover{ color:var(--ink); }
+.announce-popup-icon{
+    width:52px; height:52px; border-radius:50%; margin:0 auto 14px;
+    background:var(--brand-bg); color:var(--brand); font-size:1.3rem;
+    display:flex; align-items:center; justify-content:center;
+}
+.announce-popup-title{ font-size:1.08rem; font-weight:800; color:var(--ink); margin-bottom:8px; }
+.announce-popup-msg{
+    color:var(--ink-mute); font-size:.88rem; line-height:1.6; white-space:pre-line; margin-bottom:20px;
+}
+.announce-popup-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+.announce-popup-actions button{
+    flex:1; min-width:120px; padding:12px 14px; border-radius:12px; font-weight:700; font-size:.85rem;
+    cursor:pointer; border:1px solid var(--line);
+}
+.announce-popup-hide-btn{ background:var(--bg); color:var(--ink-mute); }
+.announce-popup-hide-btn:hover{ color:var(--ink); }
+.announce-popup-close-btn{ background:var(--brand); color:#fff; border-color:var(--brand); }
+.announce-popup-close-btn:hover{ filter:brightness(1.05); }
 
 /* ============ MODAL: Nâng cấp Pro (chọn gói kiểu thẻ + danh sách tính năng) ============ */
 .pro-upg-overlay{
@@ -1236,22 +1290,22 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
 
         <div class="sec-head" style="margin-top:8px"><h2 id="homeSubjectsTitle">Học phần nổi bật</h2><span id="homeSubjectCount">Đang tải...</span></div>
-        <div class="grid" id="homeSubjectGrid">
+        <div class="grid grid-hscroll" id="homeSubjectGrid">
             <div class="empty-state small"><div class="empty-title">Đang tải danh sách môn học...</div></div>
         </div>
 
         <!-- Các khối "nổi bật" theo từng loại — ghim ở trang admin > Ghim nổi bật, tự ẩn nếu chưa ghim mục nào -->
         <div id="featuredDocSection" style="display:none; margin-top:8px">
             <div class="sec-head"><h2 id="featuredDocTitle">Tài liệu nổi bật</h2></div>
-            <div class="grid" id="featuredDocGrid"></div>
+            <div class="grid grid-hscroll" id="featuredDocGrid"></div>
         </div>
         <div id="featuredToolSection" style="display:none; margin-top:8px">
             <div class="sec-head"><h2 id="featuredToolTitle">Công cụ nổi bật</h2></div>
-            <div class="grid" id="featuredToolGrid"></div>
+            <div class="grid grid-hscroll" id="featuredToolGrid"></div>
         </div>
         <div id="featuredProductSection" style="display:none; margin-top:8px">
             <div class="sec-head"><h2 id="featuredProductTitle">Sản phẩm nổi bật</h2></div>
-            <div class="grid" id="featuredProductGrid"></div>
+            <div class="grid grid-hscroll" id="featuredProductGrid"></div>
         </div>
 
     </section>
@@ -1470,6 +1524,20 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         <div class="site-toast-msg" id="siteToastMsg"></div>
     </div>
     <button type="button" class="site-toast-close" id="siteToastClose" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+</div>
+
+<!-- ============ POPUP: Thông báo nổi khi vào trang (quản lý ở Admin > Thông báo nổi) ============ -->
+<div class="announce-popup-overlay hidden" id="announcePopupOverlay">
+    <div class="announce-popup-modal" role="dialog" aria-modal="true" aria-label="Thông báo">
+        <button type="button" class="announce-popup-close" id="announcePopupCloseIcon" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        <div class="announce-popup-icon"><i class="fa-solid fa-bullhorn"></i></div>
+        <div class="announce-popup-title" id="announcePopupTitle">Thông báo</div>
+        <div class="announce-popup-msg" id="announcePopupMsg"></div>
+        <div class="announce-popup-actions">
+            <button type="button" class="announce-popup-hide-btn" id="announcePopupHideBtn">Ẩn trong 2 giờ</button>
+            <button type="button" class="announce-popup-close-btn" id="announcePopupCloseBtn">Đóng</button>
+        </div>
+    </div>
 </div>
 
 <!-- ============ MODAL: Nâng cấp Pro (chọn gói kiểu thẻ + danh sách tính năng) ============ -->
@@ -2740,6 +2808,46 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         }
     }
 
+    // ---------------- Popup thông báo nổi khi vào trang — nội dung cấu hình trong Admin > Thông báo nổi ----------------
+    async function loadAnnouncementPopup(){
+        const overlay = document.getElementById('announcePopupOverlay');
+        if (!overlay) return;
+        try{
+            const { data, error } = await sb.from('site_settings').select('*').eq('key', 'announcement_popup').single();
+            const payload = (!error && data && data.payload) ? data.payload : null;
+
+            if (!payload || !payload.enabled || !(payload.message || '').trim()){ overlay.classList.add('hidden'); return; }
+
+            // Khoá lưu ở localStorage gắn theo updated_at -> mỗi lần admin sửa/lưu lại nội dung, popup sẽ hiện lại
+            // kể cả với người đã từng bấm "Ẩn trong X giờ" cho nội dung cũ.
+            const version = (data && data.updated_at) ? data.updated_at : '';
+            const hideKey = 'announcePopupHideUntil_' + version;
+            const hideUntil = Number(localStorage.getItem(hideKey) || 0);
+            if (hideUntil && hideUntil > Date.now()){ overlay.classList.add('hidden'); return; }
+
+            document.getElementById('announcePopupTitle').innerText = (payload.title || '').trim() || 'Thông báo';
+            document.getElementById('announcePopupMsg').innerText = payload.message || '';
+
+            const hours = Number(payload.hide_hours) > 0 ? Number(payload.hide_hours) : 2;
+            const hideBtn = document.getElementById('announcePopupHideBtn');
+            hideBtn.innerText = `Ẩn trong ${hours} giờ`;
+            hideBtn.onclick = () => {
+                localStorage.setItem(hideKey, String(Date.now() + hours * 3600 * 1000));
+                overlay.classList.add('hidden');
+            };
+
+            const closeNow = () => overlay.classList.add('hidden');
+            document.getElementById('announcePopupCloseBtn').onclick = closeNow;
+            document.getElementById('announcePopupCloseIcon').onclick = closeNow;
+            overlay.onclick = (e) => { if (e.target === overlay) closeNow(); };
+
+            overlay.classList.remove('hidden');
+        }catch(e){
+            // Popup chỉ là nội dung thông báo phụ trợ — lỗi mạng/chưa cấu hình thì âm thầm ẩn đi, không chặn trang.
+            overlay.classList.add('hidden');
+        }
+    }
+
     let proFeaturesConfigPromise = null;
     // Tải danh sách tính năng do admin cấu hình (trang admin > Cài đặt > "Tính năng gói Pro") — nếu chưa cấu hình thì dùng mặc định ở trên.
     async function loadProUpgradeFeaturesConfig(){
@@ -3449,6 +3557,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     renderProContent();
     proFeaturesConfigPromise = loadProUpgradeFeaturesConfig();
     loadPromoBanner();
+    loadAnnouncementPopup();
 
     const panels = { home:'panel-home', quiz:'panel-quiz', doc:'panel-doc', tool:'panel-tool', product:'panel-product', account:'panel-account', history:'panel-history', support:'panel-support' };
     const TAB_TITLES = {

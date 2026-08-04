@@ -239,6 +239,11 @@ aside{
 .fmgr-pin-btn{background:transparent;border:1px solid var(--border);color:var(--gray);padding:4px 10px;font-size:.72rem;font-weight:700;border-radius:6px;font-family:var(--font-display);cursor:pointer;white-space:nowrap;}
 .fmgr-pin-btn:hover{border-color:var(--accent);color:var(--accent);}
 .fmgr-pin-btn.pinned{background:rgba(46,211,146,.14);border-color:#16a34a;color:#16a34a;}
+.fmgr-pin-group{margin-bottom:14px;}
+.fmgr-pin-group:last-child{margin-bottom:0;}
+.fmgr-pin-group-head{display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--gray);padding:0 4px 6px;}
+.fmgr-pin-group-head .fmgr-pin-count{background:var(--bg);color:var(--gray);border-radius:20px;padding:1px 8px;font-size:.7rem;font-weight:700;}
+.fmgr-pin-group .side-list{gap:4px;}
 .side-add{
     display:inline-flex;align-items:center;justify-content:center;gap:5px;
     background:rgba(79,107,255,.14);border:1px solid rgba(79,107,255,.3);color:#c9d1ff;
@@ -5344,22 +5349,32 @@ function renderFeaturedPinnedList(){
     const box = document.getElementById('featuredPinnedList');
     if (!box) return;
     if (!featuredPins.length){ box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Chưa ghim mục nào. Chọn ở cột bên phải để ghim.</div>`; return; }
-    box.innerHTML = featuredPins.map(p => {
-        const meta = FEATURED_TYPE_META[p.type] || { label: p.type, icon: '⭐' };
-        const src = featuredSourceData[p.type] || [];
-        const found = src.find(x => String(x.id) === String(p.ref_id));
-        const title = found ? found.title : ('(#' + p.ref_id + ' — không còn tồn tại)');
-        const domId = p.type + ':' + p.ref_id;
-        const isHidden = !!p.hidden;
+    const groupOrder = ['subject', 'doc', 'tool', 'product'];
+    const groups = {};
+    featuredPins.forEach(p => { (groups[p.type] || (groups[p.type] = [])).push(p); });
+    box.innerHTML = groupOrder.filter(t => groups[t] && groups[t].length).map(type => {
+        const meta = FEATURED_TYPE_META[type] || { label: type, icon: '⭐' };
+        const itemsHtml = groups[type].map(p => {
+            const src = featuredSourceData[p.type] || [];
+            const found = src.find(x => String(x.id) === String(p.ref_id));
+            const title = found ? found.title : ('(#' + p.ref_id + ' — không còn tồn tại)');
+            const domId = p.type + ':' + p.ref_id;
+            const isHidden = !!p.hidden;
+            return `
+            <div class="side-item" data-id="${escapeHtml(domId)}" style="${isHidden ? 'opacity:.55;' : ''}">
+                <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
+                <span class="prev-ico color-swatch indigo" style="width:26px;height:26px;min-width:26px;font-size:.78rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;">${meta.icon}</span>
+                <span class="name">${escapeHtml(title)}${isHidden ? '<span class="hint-inline"> · đang ẩn</span>' : ''}</span>
+                <span class="right-cluster">
+                    <button class="icon-x" title="${isHidden ? 'Hiện lại' : 'Ẩn tạm (vẫn giữ ghim)'}" onclick="toggleFeaturedPinHidden('${p.type}','${escapeHtml(String(p.ref_id))}')"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'}"></i></button>
+                    <button class="icon-x" title="Bỏ ghim" onclick="toggleFeaturedPin('${p.type}','${escapeHtml(String(p.ref_id))}')">✕</button>
+                </span>
+            </div>`;
+        }).join('');
         return `
-        <div class="side-item" data-id="${escapeHtml(domId)}" style="${isHidden ? 'opacity:.55;' : ''}">
-            <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
-            <span class="prev-ico color-swatch indigo" style="width:26px;height:26px;min-width:26px;font-size:.78rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;">${meta.icon}</span>
-            <span class="name">${escapeHtml(title)}<span class="hint-inline"> · ${escapeHtml(meta.label)}${isHidden ? ' · đang ẩn' : ''}</span></span>
-            <span class="right-cluster">
-                <button class="icon-x" title="${isHidden ? 'Hiện lại' : 'Ẩn tạm (vẫn giữ ghim)'}" onclick="toggleFeaturedPinHidden('${p.type}','${escapeHtml(String(p.ref_id))}')"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'}"></i></button>
-                <button class="icon-x" title="Bỏ ghim" onclick="toggleFeaturedPin('${p.type}','${escapeHtml(String(p.ref_id))}')">✕</button>
-            </span>
+        <div class="fmgr-pin-group">
+            <div class="fmgr-pin-group-head">${meta.icon} ${escapeHtml(meta.label)}<span class="fmgr-pin-count">${groups[type].length}</span></div>
+            <div class="side-list">${itemsHtml}</div>
         </div>`;
     }).join('');
 }

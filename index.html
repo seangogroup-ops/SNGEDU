@@ -1509,6 +1509,24 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <div class="acc-info-row" id="acctPageBalanceRow" style="display:none"><span class="label">Số dư</span><span class="value" id="acctPageBalanceValue">—</span></div>
             </div>
 
+            <div class="sec-head"><h2>🎁 Giới thiệu bạn bè</h2></div>
+            <div style="background:var(--card); border:1px solid var(--line); border-radius:20px; padding:22px 24px; margin-bottom:28px;">
+                <p class="hint" style="margin:0 0 14px;">Chia sẻ link dưới đây cho bạn bè. Khi bạn của bạn đăng ký & nâng cấp Pro lần đầu, cả hai đều được cộng tiền vào số dư tài khoản.</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <input type="text" id="referralLinkInput" readonly
+                        style="flex:1;min-width:200px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:.84rem;"
+                        onclick="this.select()">
+                    <button type="button" onclick="copyReferralLink()"
+                        style="padding:10px 18px;border:none;border-radius:8px;background:var(--brand);color:#fff;font-weight:700;font-size:.84rem;cursor:pointer;white-space:nowrap;">
+                        <i class="fa-regular fa-copy"></i> Sao chép
+                    </button>
+                </div>
+                <div style="display:flex;gap:22px;margin-top:16px;flex-wrap:wrap;">
+                    <div><span class="value" id="referralInvitedCount" style="font-weight:800;font-size:1.1rem;">0</span> <span class="hint">bạn đã mời</span></div>
+                    <div><span class="value" id="referralRewardedCount" style="font-weight:800;font-size:1.1rem;">0</span> <span class="hint">đã thưởng</span></div>
+                </div>
+            </div>
+
             <div class="sec-head acctpw-toggle" id="acctPwToggle" role="button" tabindex="0" aria-expanded="false">
                 <div class="acctpw-toggle-icon"><i class="fa-solid fa-key"></i></div>
                 <h2>Đổi mật khẩu</h2>
@@ -1681,6 +1699,19 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 </div>
                 <div class="price" id="proConfirmPrice">—</div>
             </div>
+
+            <!-- ============ Mã giảm giá ============ -->
+            <div class="pro-coupon-box" style="margin:14px 0 4px;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;">
+                <div style="display:flex;gap:8px;">
+                    <input type="text" id="proCouponInput" placeholder="Nhập mã giảm giá (nếu có)"
+                        style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:.86rem;text-transform:uppercase;"
+                        oninput="this.value = this.value.toUpperCase()">
+                    <button type="button" id="proCouponApplyBtn" onclick="applyProCoupon()"
+                        style="padding:9px 16px;border:none;border-radius:8px;background:var(--brand);color:#fff;font-weight:700;font-size:.84rem;cursor:pointer;white-space:nowrap;">Áp dụng</button>
+                </div>
+                <div id="proCouponMsg" style="margin-top:8px;font-size:.8rem;min-height:1em;"></div>
+            </div>
+
             <div class="pro-confirm-features" id="proConfirmFeatures"></div>
         </div>
         <div class="pro-confirm-actions">
@@ -2534,6 +2565,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 return;
             }
             SNG_USAGE.logUsage(currentSession.user.id, 'doc_download', docId);
+            SNG_USAGE.maybeShowLowQuotaBanner(result, 'doc_download');
             window.open(href, '_blank', 'noopener');
         }).catch(() => {
             freeDocCheckBusy = false;
@@ -3200,10 +3232,19 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         openProConfirm();
     }
 
+    // ---- Mã giảm giá đang áp dụng cho popup xác nhận Pro (reset mỗi lần mở popup / đổi gói) ----
+    let proAppliedCoupon = null; // { code, discount_amount, final_amount } hoặc null nếu chưa áp mã nào
+
     // ---- Popup xác nhận thanh toán (bước 2) — hiện đầy đủ gói + tính năng, chỉ gọi thanh toán khi bấm "Xác nhận" ----
     function openProConfirm(){
         const pkg = proUpgradeItems.find(p => p.id === proUpgradeSelectedId);
         if (!pkg) return;
+
+        proAppliedCoupon = null;
+        const couponInput = document.getElementById('proCouponInput');
+        const couponMsg = document.getElementById('proCouponMsg');
+        if (couponInput) couponInput.value = '';
+        if (couponMsg){ couponMsg.textContent = ''; couponMsg.style.color = ''; }
 
         document.getElementById('proConfirmName').textContent = pkg.name || '';
         document.getElementById('proConfirmDays').textContent = formatHomeDuration(pkg.duration_days);
@@ -3240,7 +3281,42 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         if (!proUpgradeSelectedId) return;
         const okBtn = document.getElementById('proConfirmOkBtn');
         if (okBtn){ okBtn.disabled = true; okBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chuyển tới cổng thanh toán...'; }
-        thanhToanGoiThanhVien(proUpgradeSelectedId); // hàm có sẵn trong frontend/sepay-checkout.js
+        // Mã giảm giá (nếu đã áp dụng hợp lệ ở bước trước) được gửi kèm để server tính lại giá cuối cùng —
+        // server luôn tự kiểm tra lại mã, không tin số tiền đã hiển thị ở giao diện.
+        thanhToanGoiThanhVien(proUpgradeSelectedId, proAppliedCoupon ? proAppliedCoupon.code : null); // hàm có sẵn trong frontend/sepay-checkout.js
+    }
+
+    // ---- Áp mã giảm giá trong popup xác nhận Pro (xem trước, chưa tạo đơn hàng) ----
+    async function applyProCoupon(){
+        const pkg = proUpgradeItems.find(p => p.id === proUpgradeSelectedId);
+        const input = document.getElementById('proCouponInput');
+        const msgEl = document.getElementById('proCouponMsg');
+        const btn = document.getElementById('proCouponApplyBtn');
+        const code = (input.value || '').trim();
+        if (!pkg || !code){ msgEl.style.color = '#e5484d'; msgEl.textContent = 'Vui lòng nhập mã giảm giá.'; return; }
+
+        btn.disabled = true;
+        const oldLabel = btn.textContent;
+        btn.textContent = 'Đang kiểm tra...';
+
+        const result = await xemTruocMaGiamGia({ order_type: 'subscription', plan_id: pkg.id, code }); // hàm có sẵn trong frontend/sepay-checkout.js
+
+        btn.disabled = false;
+        btn.textContent = oldLabel;
+
+        if (!result.valid){
+            proAppliedCoupon = null;
+            msgEl.style.color = '#e5484d';
+            msgEl.textContent = '✗ ' + (result.message || 'Mã giảm giá không hợp lệ.');
+            document.getElementById('proConfirmPrice').innerHTML = Number(pkg.price).toLocaleString('vi-VN') + 'đ';
+            return;
+        }
+
+        proAppliedCoupon = { code, discount_amount: result.discount_amount, final_amount: result.final_amount };
+        msgEl.style.color = 'var(--green)';
+        msgEl.textContent = `✓ Giảm ${Number(result.discount_amount).toLocaleString('vi-VN')}đ — còn phải trả ${Number(result.final_amount).toLocaleString('vi-VN')}đ.`;
+        document.getElementById('proConfirmPrice').innerHTML =
+            `<span style="text-decoration:line-through;opacity:.55;font-size:.8em;margin-right:6px;">${Number(pkg.price).toLocaleString('vi-VN')}đ</span>${Number(result.final_amount).toLocaleString('vi-VN')}đ`;
     }
 
     async function renderProContent(){
@@ -3310,7 +3386,46 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
         // ----- Số dư: số dư tiền (VNĐ) của tài khoản, lấy từ bảng profiles -----
         loadAndRenderBalance(user.id, 'acctPageBalanceRow', 'acctPageBalanceValue');
+
+        // ----- Giới thiệu bạn bè: link + số liệu -----
+        loadAndRenderReferral(user.id);
     }
+
+    // ---------------- Giới thiệu bạn bè ----------------
+    function loadAndRenderReferral(userId){
+        const input = document.getElementById('referralLinkInput');
+        if (input) input.value = `${location.origin}/index.html?ref=${userId}`;
+
+        sb.from('referrals').select('status').eq('referrer_id', userId).then(({ data, error }) => {
+            if (error || !data) return;
+            const invitedEl = document.getElementById('referralInvitedCount');
+            const rewardedEl = document.getElementById('referralRewardedCount');
+            if (invitedEl) invitedEl.textContent = data.length;
+            if (rewardedEl) rewardedEl.textContent = data.filter(r => r.status === 'rewarded').length;
+        });
+    }
+    function copyReferralLink(){
+        const input = document.getElementById('referralLinkInput');
+        if (!input) return;
+        input.select();
+        navigator.clipboard?.writeText(input.value).then(() => {
+            alert('Đã sao chép link giới thiệu!');
+        }).catch(() => {
+            document.execCommand('copy');
+        });
+    }
+    // Ghi nhớ mã giới thiệu (?ref=<user_id_của_người_giới_thiệu>) ngay khi trang được mở,
+    // để dùng lúc đăng ký tài khoản (kể cả khi người dùng bấm "Đăng ký" và điều hướng sang account/login.html).
+    // Giữ tối đa 30 ngày, không ghi đè nếu đã có sẵn 1 mã khác đang chờ (ưu tiên lượt giới thiệu đầu tiên).
+    (function captureReferralCode(){
+        try{
+            const ref = new URLSearchParams(location.search).get('ref');
+            if (ref && !localStorage.getItem('sng_ref_code')){
+                localStorage.setItem('sng_ref_code', ref);
+                localStorage.setItem('sng_ref_code_at', String(Date.now()));
+            }
+        }catch(e){}
+    })();
 
     // ---------------- Số dư tiền (VNĐ) — đọc từ bảng profiles.balance ----------------
     async function loadAndRenderBalance(userId, rowId, valueId){

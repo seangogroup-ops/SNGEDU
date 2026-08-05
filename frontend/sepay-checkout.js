@@ -18,9 +18,34 @@ async function thanhToanKhoaHoc(courseId) {
 /**
  * Bắt đầu thanh toán đăng ký gói thành viên.
  * @param {string} planId - id gói trong bảng `membership_plans`
+ * @param {string} [couponCode] - mã giảm giá (nếu có), đã được xác thực trước qua sepay-validate-coupon
  */
-async function thanhToanGoiThanhVien(planId) {
-  await batDauThanhToan({ order_type: 'subscription', plan_id: planId });
+async function thanhToanGoiThanhVien(planId, couponCode) {
+  await batDauThanhToan({ order_type: 'subscription', plan_id: planId, coupon_code: couponCode || undefined });
+}
+
+/**
+ * Gọi Edge Function sepay-validate-coupon để XEM TRƯỚC mức giảm giá của 1 mã,
+ * dùng cho nút "Áp dụng" trong modal xác nhận thanh toán — KHÔNG tạo đơn hàng.
+ * @returns {Promise<{valid:boolean, message:string, original_amount?:number, discount_amount?:number, final_amount?:number}>}
+ */
+async function xemTruocMaGiamGia(orderPayload) {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return { valid: false, message: 'Vui lòng đăng nhập.' };
+  try {
+    const res = await fetch(`${SEPAY_FUNCTIONS_BASE}/sepay-validate-coupon`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(orderPayload),
+    });
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    return { valid: false, message: 'Không thể kết nối máy chủ để kiểm tra mã giảm giá.' };
+  }
 }
 
 /**

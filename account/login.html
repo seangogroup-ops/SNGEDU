@@ -13,6 +13,17 @@
         }
     }catch(e){}
 </script>
+<script>
+    // Ghi nhớ mã giới thiệu (?ref=<id người giới thiệu>) nếu người dùng vào thẳng trang đăng nhập/đăng ký
+    // bằng link giới thiệu, không đi qua trang chủ trước — không ghi đè nếu đã có sẵn 1 mã đang chờ.
+    try{
+        var refCode = new URLSearchParams(location.search).get('ref');
+        if (refCode && !localStorage.getItem('sng_ref_code')){
+            localStorage.setItem('sng_ref_code', refCode);
+            localStorage.setItem('sng_ref_code_at', String(Date.now()));
+        }
+    }catch(e){}
+</script>
 <title>Đăng nhập · SNG EDU</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -401,6 +412,20 @@ async function doRegister(){
         try{
             await sb.from('profiles').upsert({ id: data.user.id, full_name: name });
         }catch(e){ /* bảng chưa tồn tại thì thôi, không chặn đăng ký */ }
+
+        // ---- Ghi nhận giới thiệu bạn bè (nếu người dùng này đến từ 1 link ?ref=<id người giới thiệu>) ----
+        // Chỉ làm được khi đã có session (đăng nhập ngay sau khi đăng ký) vì insert cần auth.uid() = referred_id (RLS).
+        // Nếu tài khoản cần xác nhận email trước, referral sẽ bị bỏ qua (không chặn đăng ký vì lỗi này).
+        if (data.session){
+            try{
+                const refId = localStorage.getItem('sng_ref_code');
+                if (refId && refId !== data.user.id){
+                    await sb.from('referrals').insert({ referrer_id: refId, referred_id: data.user.id });
+                    localStorage.removeItem('sng_ref_code');
+                    localStorage.removeItem('sng_ref_code_at');
+                }
+            }catch(e){ /* mã giới thiệu không hợp lệ / đã dùng / bảng chưa có -> bỏ qua êm, không chặn đăng ký */ }
+        }
     }
 
     if (data.session){

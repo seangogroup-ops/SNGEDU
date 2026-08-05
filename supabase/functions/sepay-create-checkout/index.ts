@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { SePayPgClient } from "npm:sepay-pg-node@latest";
+import { computeDiscount, loadValidCoupon } from "../_shared/coupon.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
     const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
     const body = await req.json();
-    const { order_type, course_id, plan_id } = body;
+    const { order_type, course_id, plan_id, coupon_code } = body;
     const payment_method = body.payment_method ?? "BANK_TRANSFER";
 
     let amount: number;
@@ -65,6 +66,18 @@ Deno.serve(async (req) => {
 
     if (!amount || amount <= 0) throw new Error("Số tiền không hợp lệ");
 
+    // --- Áp mã giảm giá (nếu có) — LUÔN validate lại ở server, không tin số tiền/discount từ client ---
+    const originalAmount = amount;
+    let discountAmount = 0;
+    let appliedCouponCode: string | null = null;
+    if (coupon_code && String(coupon_code).trim()) {
+      const check = await loadValidCoupon(db, coupon_code, order_type, originalAmount);
+      if (!check.ok) throw new Error(check.message);
+      discountAmount = computeDiscount(check.coupon, originalAmount);
+      appliedCouponCode = check.coupon.code;
+      amount = originalAmount - discountAmount;
+    }
+
     const invoiceNumber = `${order_type === "course" ? "CRS" : "SUB"}-${Date.now()}-${user.id.slice(0, 8)}`;
 
     const { error: insertErr } = await db.from("sepay_orders").insert({
@@ -74,6 +87,9 @@ Deno.serve(async (req) => {
       course_id: order_type === "course" ? course_id : null,
       plan_id: order_type === "subscription" ? plan_id : null,
       amount,
+      original_amount: originalAmount,
+      discount_amount: discountAmount,
+      coupon_code: appliedCouponCode,
       currency: "VND",
       status: "pending",
       payment_method,

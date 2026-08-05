@@ -894,6 +894,29 @@ textarea{resize:vertical;}
 .acct-stat-card.pending .ico{background:var(--amber-bg);color:var(--amber);}
 .acct-stat-card.failed .ico{background:var(--red-bg);color:var(--red);}
 
+/* ---------- GÓP Ý HỌC VIÊN (feedbackPanel) ---------- */
+.fb-nav-badge{
+    margin-left:auto;background:var(--red);color:#fff;font-size:.68rem;font-weight:800;
+    padding:1px 7px;border-radius:999px;font-family:var(--font-display);
+}
+.fb-row .acct-info .acct-name{font-size:.9rem;}
+.fb-row .fb-preview{
+    font-size:.83rem;color:var(--text);opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    display:block;margin-top:1px;
+}
+.fb-detail-msg{
+    background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 16px;font-size:.9rem;line-height:1.6;color:var(--text);white-space:pre-wrap;word-break:break-word;
+    margin:14px 0;
+}
+.fb-detail-note textarea{
+    width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;
+    font-family:var(--font-body);font-size:.86rem;resize:vertical;min-height:70px;
+}
+.acct-badge.new{background:var(--red-bg);color:var(--red);}
+.acct-badge.read{background:var(--amber-bg);color:var(--amber);}
+.acct-badge.resolved{background:var(--green-bg);color:var(--green);}
+
 /* ---------- THỐNG KÊ (statsPanel) ---------- */
 .stats-type-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
 .stats-type-card{
@@ -1239,6 +1262,10 @@ textarea{resize:vertical;}
                         <div class="side-item settings-item" data-setkey="report_banner" onclick="openSettingsPanel('report_banner')">
                             <span class="set-ico">🔔</span><span class="name">Banner góp ý</span>
                         </div>
+                        <div class="side-item settings-item" id="navFeedback" onclick="showFeedbackManager()">
+                            <span class="set-ico">💬</span><span class="name">Góp ý học viên</span>
+                            <span id="fbNavBadge" class="fb-nav-badge hidden">0</span>
+                        </div>
                         <div class="side-item settings-item" data-setkey="promo_banner" onclick="openSettingsPanel('promo_banner')">
                             <span class="set-ico">⏱️</span><span class="name">Banner Premium</span>
                         </div>
@@ -1531,6 +1558,50 @@ textarea{resize:vertical;}
             <div id="acctDetailView" class="hidden"></div>
         </div>
 
+        <!-- ================= GÓP Ý HỌC VIÊN (bảng feedback — thay cho link Google Form ngoài) ================= -->
+        <div id="feedbackPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>💬 Góp ý học viên</h2>
+                <p class="hint">Học viên bấm banner "Gặp câu hỏi sai?" ở trang chọn chương sẽ gửi thẳng vào đây — không cần qua form ngoài nữa.</p>
+            </div>
+
+            <div id="fbListView">
+                <div class="acct-stats">
+                    <div class="acct-stat-card total">
+                        <span class="ico">💬</span>
+                        <div><div class="num" id="fbStatTotal">0</div><div class="lbl">Tổng số góp ý</div></div>
+                    </div>
+                    <div class="acct-stat-card banned">
+                        <span class="ico">🔴</span>
+                        <div><div class="num" id="fbStatNew">0</div><div class="lbl">Chưa đọc</div></div>
+                    </div>
+                    <div class="acct-stat-card active">
+                        <span class="ico">✅</span>
+                        <div><div class="num" id="fbStatResolved">0</div><div class="lbl">Đã xử lý</div></div>
+                    </div>
+                </div>
+
+                <div class="acct-toolbar">
+                    <div class="acct-search-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input id="fbSearch" placeholder="Tìm theo email hoặc nội dung..." oninput="renderFeedbackList()">
+                    </div>
+                    <div class="acct-filter-chips" id="fbFilterChips">
+                        <button class="acct-chip active" data-f="all" onclick="setFbFilter('all')">Tất cả</button>
+                        <button class="acct-chip" data-f="new" onclick="setFbFilter('new')">Chưa đọc</button>
+                        <button class="acct-chip" data-f="read" onclick="setFbFilter('read')">Đã đọc</button>
+                        <button class="acct-chip" data-f="resolved" onclick="setFbFilter('resolved')">Đã xử lý</button>
+                    </div>
+                    <button class="side-add" onclick="loadFeedbackList()">↻ Tải lại</button>
+                </div>
+                <p class="hint" id="fbCount" style="margin:0 0 12px;"></p>
+
+                <div id="fbListWrap" class="acct-list"></div>
+            </div>
+
+            <div id="fbDetailView" class="hidden"></div>
+        </div>
+
         <div id="contentManagerPanel" class="hidden">
             <div class="subj-mgr-head">
                 <h2><span id="cmHeaderIcon">📁</span> <span id="cmHeaderTitle">Tài liệu</span></h2>
@@ -1806,8 +1877,9 @@ textarea{resize:vertical;}
                 </div>
 
                 <div id="setFieldsBanner" class="hidden">
-                    <label>Link đích (bấm vào banner sẽ mở link này)</label>
-                    <input id="setBannerLink" placeholder="https://forms.gle/...">
+                    <div class="hint" style="margin:0 0 14px;background:var(--green-bg);color:#0f6b3a;padding:10px 12px;border-radius:var(--radius-sm);">
+                        ✅ Banner giờ mở form góp ý ngay trong app — góp ý sẽ vào thẳng mục <b>"Góp ý học viên"</b> ở trang quản trị, không cần link ngoài (Google Form) nữa.
+                    </div>
                     <label>Nội dung banner</label>
                     <input id="setBannerText" placeholder="Gặp câu hỏi sai? Click vào đây góp ý giúp tôi!">
                     <label>Cụm từ cần gạch chân (phải trùng khớp với nội dung ở trên)</label>
@@ -2361,6 +2433,19 @@ function showAdmin(email){
     loadSubjects();
     restoreLastAdminPanel();
     expandGroupOfActiveNavItem();
+    refreshFeedbackBadge();
+}
+
+// Chỉ cập nhật số đếm "chưa đọc" trên menu, không đụng tới danh sách/panel đang mở
+async function refreshFeedbackBadge(){
+    try{
+        const { count, error } = await sb.from('feedback').select('id', { count:'exact', head:true }).eq('status', 'new');
+        if (error) return;
+        const badge = document.getElementById('fbNavBadge');
+        if (!badge) return;
+        if (count > 0){ badge.innerText = count; badge.classList.remove('hidden'); }
+        else { badge.classList.add('hidden'); }
+    }catch(e){}
 }
 
 // ---------- GHI NHỚ MÀN HÌNH ĐANG XEM — load lại trang (F5) sẽ quay về đúng màn đó thay vì luôn về "Trắc nghiệm" ----------
@@ -2376,6 +2461,7 @@ function restoreLastAdminPanel(){
         if (last.startsWith('content:'))  return showContentManager(last.slice(8));
         if (last === 'sepayPkg')          return showSepayPackages();
         if (last === 'accounts')          return showAccountsManager();
+        if (last === 'feedback')          return showFeedbackManager();
         if (last === 'usageLimits')       return showUsageLimitsPanel();
         if (last === 'generalSettings')   return showGeneralSettings();
         if (last === 'featured')          return showFeaturedManager();
@@ -2389,7 +2475,7 @@ function restoreLastAdminPanel(){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['statsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel'];
+const ADMIN_PANEL_IDS = ['statsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -5869,6 +5955,173 @@ function closeAllAcctMenus(){
 }
 document.addEventListener('click', () => closeAllAcctMenus());
 
+// ================= GÓP Ý HỌC VIÊN (bảng feedback) =================
+let feedbackCache = [];
+let fbFilter = 'all';
+
+async function showFeedbackManager(){
+    rememberAdminPanel('feedback');
+    showAdminPanel('feedbackPanel', 'navFeedback');
+    document.getElementById('fbSearch').value = '';
+    closeFeedbackDetail();
+    await loadFeedbackList();
+}
+
+async function loadFeedbackList(){
+    document.getElementById('fbListWrap').innerHTML = `<div class="empty-state" style="padding:20px;">Đang tải...</div>`;
+    const { data, error } = await sb.from('feedback').select('*').order('created_at', { ascending:false });
+    if (error){
+        document.getElementById('fbListWrap').innerHTML = `<div class="empty-state" style="padding:20px;color:var(--red);">${escapeHtml(error.message)}</div>`;
+        document.getElementById('fbCount').innerText = '';
+        return;
+    }
+    feedbackCache = data || [];
+
+    const newCount = feedbackCache.filter(f => f.status === 'new').length;
+    const resolvedCount = feedbackCache.filter(f => f.status === 'resolved').length;
+    document.getElementById('fbStatTotal').innerText = feedbackCache.length;
+    document.getElementById('fbStatNew').innerText = newCount;
+    document.getElementById('fbStatResolved').innerText = resolvedCount;
+
+    const badge = document.getElementById('fbNavBadge');
+    if (newCount > 0){ badge.innerText = newCount; badge.classList.remove('hidden'); }
+    else { badge.classList.add('hidden'); }
+
+    renderFeedbackList();
+}
+
+function setFbFilter(f){
+    fbFilter = f;
+    document.querySelectorAll('#fbFilterChips .acct-chip').forEach(el => el.classList.toggle('active', el.dataset.f === f));
+    renderFeedbackList();
+}
+
+function fbStatusLabel(s){
+    return s === 'resolved' ? 'Đã xử lý' : (s === 'read' ? 'Đã đọc' : 'Chưa đọc');
+}
+
+function renderFeedbackList(){
+    const q = (document.getElementById('fbSearch').value || '').trim().toLowerCase();
+    const list = feedbackCache.filter(f => {
+        if (fbFilter !== 'all' && f.status !== fbFilter) return false;
+        return !q || (f.email || '').toLowerCase().includes(q) || (f.message || '').toLowerCase().includes(q) || (f.full_name || '').toLowerCase().includes(q);
+    });
+    document.getElementById('fbCount').innerText = list.length + ' góp ý';
+    const wrap = document.getElementById('fbListWrap');
+    if (!list.length){
+        wrap.innerHTML = `<div class="empty-state" style="padding:36px 14px;text-align:center;">Không có góp ý nào khớp.</div>`;
+        return;
+    }
+    wrap.innerHTML = list.map(f => {
+        const initial = (f.full_name || f.email || '?').trim()[0].toUpperCase();
+        return `
+        <div class="acct-row fb-row" data-id="${f.id}" onclick="openFeedbackDetail('${f.id}')" style="cursor:pointer;">
+            <span class="acct-avatar">${escapeHtml(initial)}</span>
+            <span class="acct-info">
+                <span class="acct-name">${escapeHtml(f.full_name || f.email || 'Ẩn danh')}<span class="acct-badge ${f.status}">${fbStatusLabel(f.status)}</span></span>
+                <span class="acct-meta">${escapeHtml(f.email || '')}<span class="dot-sep">·</span>${fmtDate(f.created_at)}</span>
+                <span class="fb-preview">${escapeHtml((f.message || '').slice(0, 90))}${(f.message || '').length > 90 ? '…' : ''}</span>
+            </span>
+            <span class="acct-row-actions">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--gray);"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </span>
+        </div>`;
+    }).join('');
+}
+
+async function openFeedbackDetail(id){
+    const f = feedbackCache.find(x => x.id === id);
+    if (!f) return;
+    const wasNew = f.status === 'new';
+    if (wasNew) f.status = 'read'; // cập nhật cục bộ trước để hiển thị đúng ngay, đồng bộ server bên dưới
+
+    document.getElementById('fbDetailView').innerHTML = `
+        <button class="acct-detail-back" onclick="closeFeedbackDetail()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            Quay lại danh sách
+        </button>
+        <div class="acct-detail-head">
+            <span class="acct-avatar">${escapeHtml((f.full_name || f.email || '?').trim()[0].toUpperCase())}</span>
+            <div class="adh-info">
+                <div class="adh-name">${escapeHtml(f.full_name || 'Ẩn danh')}<span class="acct-badge ${f.status}" style="margin-left:8px;">${fbStatusLabel(f.status)}</span></div>
+                <div class="adh-email">${escapeHtml(f.email || '(không có email)')}</div>
+                <div class="adh-meta">Gửi lúc ${fmtDate(f.created_at)}${f.page_url ? ' · <a href="' + escapeHtml(f.page_url) + '" target="_blank" rel="noopener" style="color:var(--accent);">Xem trang gốc</a>' : ''}</div>
+            </div>
+        </div>
+
+        <div class="fb-detail-msg">${escapeHtml(f.message || '')}</div>
+
+        <div class="acct-detail-grid">
+            <div class="acct-action-card balance" onclick="setFeedbackStatus('${f.id}','read')">
+                <span class="aac-ico">👁️</span>
+                <span class="aac-title">Đánh dấu đã đọc</span>
+                <span class="aac-desc">Chỉ để đánh dấu bạn đã xem, chưa xử lý xong.</span>
+            </div>
+            <div class="acct-action-card pro" onclick="setFeedbackStatus('${f.id}','resolved')">
+                <span class="aac-ico">✅</span>
+                <span class="aac-title">Đánh dấu đã xử lý</span>
+                <span class="aac-desc">Đã sửa câu hỏi / phản hồi xong góp ý này.</span>
+            </div>
+            <div class="acct-action-card danger" onclick="deleteFeedbackItem('${f.id}')">
+                <span class="aac-ico">🗑️</span>
+                <span class="aac-title">Xoá góp ý</span>
+                <span class="aac-desc">Xoá vĩnh viễn góp ý này. Không thể hoàn tác.</span>
+            </div>
+        </div>
+
+        <div class="fb-detail-note" style="margin-top:18px;">
+            <label style="font-size:.78rem;font-weight:700;color:var(--gray);text-transform:uppercase;display:block;margin-bottom:6px;">Ghi chú nội bộ (không hiện cho học viên)</label>
+            <textarea id="fbNoteInput" placeholder="VD: đã sửa đáp án câu 12 chương 3...">${escapeHtml(f.admin_note || '')}</textarea>
+            <div id="fbNoteMsg" class="hint" style="margin-top:6px;min-height:1.1em;"></div>
+            <button class="btn-mini-save" style="margin-top:8px;" onclick="saveFeedbackNote('${f.id}')">Lưu ghi chú</button>
+        </div>`;
+
+    document.getElementById('fbListView').classList.add('hidden');
+    document.getElementById('fbDetailView').classList.remove('hidden');
+
+    // Tự động đánh dấu "đã đọc" khi mở xem, nếu đang ở trạng thái "chưa đọc"
+    if (f.status === 'new') await setFeedbackStatus(id, 'read', true);
+}
+function closeFeedbackDetail(){
+    document.getElementById('fbDetailView').classList.add('hidden');
+    document.getElementById('fbListView').classList.remove('hidden');
+}
+
+async function setFeedbackStatus(id, status, silent){
+    const { error } = await sb.from('feedback').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error){ if (!silent) showMsg('Lỗi: ' + error.message, 'err'); return; }
+    const f = feedbackCache.find(x => x.id === id);
+    if (f) f.status = status;
+    if (!silent){
+        showMsg('Đã cập nhật trạng thái.', 'ok');
+        if (!document.getElementById('fbDetailView').classList.contains('hidden')) openFeedbackDetail(id);
+    }
+    await loadFeedbackList();
+    if (!silent && !document.getElementById('fbDetailView').classList.contains('hidden')){
+        document.getElementById('fbListView').classList.add('hidden');
+        document.getElementById('fbDetailView').classList.remove('hidden');
+    }
+}
+
+async function saveFeedbackNote(id){
+    const note = document.getElementById('fbNoteInput').value.trim();
+    const msg = document.getElementById('fbNoteMsg');
+    const { error } = await sb.from('feedback').update({ admin_note: note, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error){ msg.style.color = 'var(--red)'; msg.innerText = 'Lỗi: ' + error.message; return; }
+    const f = feedbackCache.find(x => x.id === id);
+    if (f) f.admin_note = note;
+    msg.style.color = 'var(--green)'; msg.innerText = 'Đã lưu ghi chú.';
+}
+
+async function deleteFeedbackItem(id){
+    if (!confirm('Xoá vĩnh viễn góp ý này? Không thể hoàn tác.')) return;
+    const { error } = await sb.from('feedback').delete().eq('id', id);
+    if (error){ showMsg('Lỗi: ' + error.message, 'err'); return; }
+    showMsg('Đã xoá góp ý.', 'ok');
+    closeFeedbackDetail();
+    await loadFeedbackList();
+}
+
 // ---------- MODAL: đổi tên hiển thị ----------
 function openRenameModal(userId){
     const u = accountsCache.find(x => x.id === userId);
@@ -6224,7 +6477,6 @@ async function openSettingsPanel(key){
     } else if (isBanner){
         const defaultText = 'Gặp câu hỏi sai? Click vào đây góp ý giúp tôi!';
         const defaultUnderline = 'Click vào đây';
-        document.getElementById('setBannerLink').value = currentSetPayload.link || '';
         document.getElementById('setBannerText').value = currentSetPayload.text || '';
         document.getElementById('setBannerUnderline').value = currentSetPayload.underline || '';
         document.getElementById('setBannerIconLeft').value = currentSetPayload.iconLeft || '';
@@ -6481,7 +6733,6 @@ async function saveSiteSetting(){
         };
     } else if (currentSetKey === 'report_banner'){
         payload = {
-            link: document.getElementById('setBannerLink').value.trim(),
             text: document.getElementById('setBannerText').value.trim(),
             underline: document.getElementById('setBannerUnderline').value.trim(),
             iconLeft: document.getElementById('setBannerIconLeft').value.trim(),

@@ -261,6 +261,50 @@
     @media (prefers-reduced-motion: reduce){
         .report-banner, .report-banner .icon, .report-banner .arrow{ animation:none; }
     }
+    .report-banner{ cursor:pointer; font:inherit; }
+
+    /* ---------------- modal góp ý ---------------- */
+    .fb-overlay{
+        position:fixed; inset:0; z-index:9999; background:rgba(15,17,28,.55);
+        display:flex; align-items:center; justify-content:center; padding:18px;
+        backdrop-filter:blur(2px);
+    }
+    .fb-overlay.hidden{ display:none; }
+    .fb-box{
+        position:relative; background:var(--card); border:1px solid var(--line); border-radius:20px;
+        width:100%; max-width:460px; padding:26px 24px 22px; box-shadow:var(--shadow-hov);
+    }
+    .fb-close{
+        position:absolute; top:14px; right:14px; width:30px; height:30px; border-radius:9px;
+        background:var(--bg); border:1px solid var(--line); color:var(--ink-soft); font-size:.9rem;
+        display:flex; align-items:center; justify-content:center; cursor:pointer;
+    }
+    .fb-close:hover{ color:var(--ink); border-color:var(--ink-mute); }
+    .fb-head{ display:flex; gap:12px; align-items:flex-start; margin-bottom:16px; padding-right:26px; }
+    .fb-head-ico{
+        width:40px; height:40px; min-width:40px; border-radius:11px; background:var(--amber-bg);
+        display:flex; align-items:center; justify-content:center; font-size:1.15rem;
+    }
+    .fb-head h3{ font-size:1rem; font-weight:800; color:var(--ink); margin-bottom:4px; }
+    .fb-head p{ font-size:.82rem; color:var(--ink-soft); line-height:1.5; }
+    #fbMessage{
+        width:100%; border:1px solid var(--line); border-radius:12px; padding:12px 14px;
+        font-family:inherit; font-size:.9rem; color:var(--ink); background:var(--bg); resize:vertical;
+        min-height:110px;
+    }
+    #fbMessage:focus{ outline:none; border-color:var(--accent); background:var(--card); }
+    .fb-msg{ font-size:.82rem; min-height:1.2em; margin-top:8px; }
+    .fb-msg.ok{ color:var(--green); font-weight:700; }
+    .fb-msg.err{ color:#dc2626; font-weight:700; }
+    .fb-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:14px; }
+    .fb-btn-cancel, .fb-btn-submit{
+        border-radius:11px; padding:10px 18px; font-weight:700; font-size:.86rem; cursor:pointer; border:none;
+    }
+    .fb-btn-cancel{ background:var(--bg); color:var(--ink-soft); border:1px solid var(--line); }
+    .fb-btn-cancel:hover{ color:var(--ink); }
+    .fb-btn-submit{ background:var(--accent); color:#fff; }
+    .fb-btn-submit:hover{ filter:brightness(1.06); }
+    .fb-btn-submit:disabled{ opacity:.6; cursor:default; }
 
     footer{
         text-align:center; color:var(--ink-mute); font-size:.8rem;
@@ -331,13 +375,33 @@
 
     <div id="content"><div class="state-card"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải dữ liệu môn học...</div></div>
 
-    <a href="https://forms.gle/CMZj35G3BMGfo1AZ8" target="_blank" rel="noopener" class="report-banner">
+    <button type="button" class="report-banner" onclick="openFeedbackModal()">
         <span class="icon">🔔</span>
         <span>Gặp câu hỏi sai? <u>Click vào đây</u> góp ý giúp tôi!</span>
         <span class="arrow">👉</span>
-    </a>
+    </button>
 
     <footer>SNG © H.N.TấnHải · sngedu.site</footer>
+</div>
+
+<!-- ================= MODAL GÓP Ý (gửi thẳng vào bảng feedback, admin xem trong trang quản trị) ================= -->
+<div id="fbOverlay" class="fb-overlay hidden" onclick="if(event.target===this) closeFeedbackModal()">
+    <div class="fb-box">
+        <button type="button" class="fb-close" onclick="closeFeedbackModal()" aria-label="Đóng">✕</button>
+        <div class="fb-head">
+            <span class="fb-head-ico">🔔</span>
+            <div>
+                <h3>Gặp câu hỏi sai hoặc muốn góp ý?</h3>
+                <p>Nội dung sẽ gửi thẳng đến admin, không cần qua form ngoài. Ghi rõ câu hỏi/chương nào để mình sửa nhanh hơn nhé!</p>
+            </div>
+        </div>
+        <textarea id="fbMessage" rows="5" placeholder="VD: Chương 3, câu 12 — đáp án đúng phải là B chứ không phải A..."></textarea>
+        <div id="fbMsg" class="fb-msg"></div>
+        <div class="fb-actions">
+            <button type="button" class="fb-btn-cancel" onclick="closeFeedbackModal()">Hủy</button>
+            <button type="button" class="fb-btn-submit" id="fbSubmitBtn" onclick="submitFeedback()">Gửi góp ý</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -537,6 +601,49 @@ themeBtn.addEventListener('click', ()=>{
 });
 
 loadPage();
+
+// ---------------- Modal góp ý (gửi thẳng vào bảng feedback, admin xem trong trang quản trị) ----------------
+function openFeedbackModal(){
+    document.getElementById('fbMessage').value = '';
+    const msg = document.getElementById('fbMsg');
+    msg.className = 'fb-msg'; msg.innerText = '';
+    document.getElementById('fbOverlay').classList.remove('hidden');
+    setTimeout(()=> document.getElementById('fbMessage').focus(), 50);
+}
+function closeFeedbackModal(){
+    document.getElementById('fbOverlay').classList.add('hidden');
+}
+async function submitFeedback(){
+    const text = document.getElementById('fbMessage').value.trim();
+    const msg = document.getElementById('fbMsg');
+    const btn = document.getElementById('fbSubmitBtn');
+    if (!text){
+        msg.className = 'fb-msg err'; msg.innerText = 'Bạn nhập nội dung góp ý trước đã nhé.';
+        return;
+    }
+    btn.disabled = true; btn.innerText = 'Đang gửi...';
+    msg.className = 'fb-msg'; msg.innerText = '';
+
+    const { data: { session } } = await sb.auth.getSession();
+    const user = session ? session.user : null;
+
+    const { error } = await sb.from('feedback').insert({
+        user_id: user ? user.id : null,
+        email: user ? user.email : null,
+        full_name: (user && user.user_metadata) ? (user.user_metadata.full_name || null) : null,
+        message: text,
+        page_url: location.href
+    });
+
+    btn.disabled = false; btn.innerText = 'Gửi góp ý';
+
+    if (error){
+        msg.className = 'fb-msg err'; msg.innerText = 'Gửi thất bại: ' + error.message;
+        return;
+    }
+    msg.className = 'fb-msg ok'; msg.innerText = 'Đã gửi! Cảm ơn bạn đã góp ý 🙌';
+    setTimeout(closeFeedbackModal, 1200);
+}
 </script>
 
 <script src="frontend/sepay-checkout.js"></script>

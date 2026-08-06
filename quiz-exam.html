@@ -216,7 +216,6 @@ let sngUsageChecked = false; // đã kiểm tra & (nếu hợp lệ) sẵn sàng
         return;
     }
     sngUsageChecked = true;
-    SNG_USAGE.maybeShowLowQuotaBanner(usageCheck, 'quiz_attempt');
 
     const overlay = document.getElementById('authGateOverlay');
     if (overlay) overlay.remove();

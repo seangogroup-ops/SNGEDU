@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quản trị · SNG EDU</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<!-- ^ SheetJS: đọc/tạo file Excel (.xlsx/.xls) & .csv, dùng cho tính năng nhập câu hỏi hàng loạt từ Excel/CSV -->
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
 
@@ -1316,9 +1314,6 @@ textarea{resize:vertical;}
                             <span class="set-ico">💬</span><span class="name">Góp ý học viên</span>
                             <span id="fbNavBadge" class="fb-nav-badge hidden">0</span>
                         </div>
-                        <div class="side-item settings-item" id="navCoupons" onclick="showCouponsManager()">
-                            <span class="set-ico">🏷️</span><span class="name">Mã giảm giá</span>
-                        </div>
                         <div class="side-item settings-item" id="navUsageLimits" onclick="showUsageLimitsPanel()">
                             <span class="set-ico">⏳</span><span class="name">Giới hạn Free</span>
                         </div>
@@ -1716,67 +1711,6 @@ textarea{resize:vertical;}
                         <div class="mini-actions">
                             <button class="btn-mini-save" onclick="saveSepayPackage()">Lưu</button>
                             <button class="btn-mini-cancel" onclick="closeSepayPackageForm()">Hủy</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="couponsPanel" class="hidden">
-            <div class="subj-mgr-head">
-                <h2>🏷️ Mã giảm giá</h2>
-                <p class="hint">Tạo mã giảm giá cho gói Pro. Mã được kiểm tra & áp dụng an toàn ở máy chủ (Edge Function) khi khách bấm "Áp dụng" trong popup thanh toán — không thể sửa giá bằng cách chỉnh sửa trên trình duyệt.</p>
-            </div>
-            <div class="subj-mgr-grid">
-                <div class="subj-mgr-col" style="max-width:460px;">
-                    <div class="subj-mgr-col-head">
-                        <h4><i class="fa-solid fa-tags"></i> Danh sách mã</h4>
-                        <button class="side-add" onclick="openCouponForm()">+ Thêm mã</button>
-                    </div>
-                    <div id="couponList" class="side-list subj-mgr-list"></div>
-                    <p class="hint" id="couponMsg" style="margin-top:10px;min-height:1.2em;"></p>
-                </div>
-                <div class="subj-mgr-col">
-                    <div id="couponForm" class="mini-form show" style="display:flex;">
-                        <div class="mini-form-title" id="couponFormTitle">Thêm mã giảm giá</div>
-                        <input type="hidden" id="couponId" value="">
-
-                        <label>Mã giảm giá</label>
-                        <input id="couponCode" placeholder="VD: SNGKHAITRUONG" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
-                        <div class="hint" style="margin-top:4px;">Khách nhập đúng mã này (không phân biệt hoa/thường) trong popup thanh toán gói Pro.</div>
-
-                        <label style="margin-top:10px;">Mô tả nội bộ</label>
-                        <input id="couponDesc" placeholder="VD: Mã tặng dịp khai trương">
-
-                        <label style="margin-top:10px;">Loại giảm giá</label>
-                        <select id="couponType" onchange="updateCouponFormUnits()">
-                            <option value="percent">Theo phần trăm (%)</option>
-                            <option value="fixed">Số tiền cố định (VNĐ)</option>
-                        </select>
-
-                        <label style="margin-top:10px;" id="couponValueLabel">Giá trị giảm (%)</label>
-                        <input id="couponValue" type="number" min="0" step="1" placeholder="VD: 10">
-
-                        <label style="margin-top:10px;" id="couponMaxDiscountLabel">Giảm tối đa (VNĐ, chỉ áp dụng với %)</label>
-                        <input id="couponMaxDiscount" type="number" min="0" step="1000" placeholder="Để trống = không giới hạn">
-
-                        <label style="margin-top:10px;">Đơn tối thiểu (VNĐ)</label>
-                        <input id="couponMinAmount" type="number" min="0" step="1000" placeholder="0 = không yêu cầu">
-
-                        <label style="margin-top:10px;">Số lượt dùng tối đa</label>
-                        <input id="couponMaxUses" type="number" min="1" step="1" placeholder="Để trống = không giới hạn">
-
-                        <label style="margin-top:10px;">Ngày hết hạn</label>
-                        <input id="couponExpiresAt" type="date">
-
-                        <label style="margin-top:10px;display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="couponActive" style="width:auto;" checked>
-                            <span>Đang hoạt động</span>
-                        </label>
-
-                        <div class="mini-actions">
-                            <button class="btn-mini-save" onclick="saveCoupon()">Lưu</button>
-                            <button class="btn-mini-cancel" onclick="closeCouponForm()">Hủy</button>
                         </div>
                     </div>
                 </div>
@@ -2239,25 +2173,6 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
                 </div>
                 <div id="fileReadSummary"></div>
 
-                <div class="or-divider">hoặc nhập từ Excel/CSV</div>
-
-                <div class="callout">
-                    <b>Định dạng file Excel/CSV:</b> dòng đầu tiên là tiêu đề (bỏ qua khi đọc), mỗi dòng tiếp theo là 1 câu hỏi
-                    theo đúng thứ tự cột: <b>Câu hỏi</b> · <b>Đáp án A</b> · <b>Đáp án B</b> · <b>Đáp án C</b> · <b>Đáp án D</b> ·
-                    <b>Đáp án đúng</b> (ghi A/B/C/D) · <b>Giải thích</b> (không bắt buộc, có thể để trống).
-                    Bấm "Tải file mẫu" bên dưới để có sẵn đúng định dạng.
-                </div>
-                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
-                    <button type="button" class="btn-ghost" onclick="downloadBulkExcelTemplate()">⬇️ Tải file mẫu (.xlsx)</button>
-                </div>
-                <div class="file-drop" id="excelDrop">
-                    <input type="file" id="bulkExcelInput" accept=".xlsx,.xls,.csv" onchange="handleBulkExcelFile(this.files[0])">
-                    <div class="file-drop-icon">📊</div>
-                    <div class="file-drop-title">Bấm để chọn file Excel/CSV, hoặc kéo-thả vào đây</div>
-                    <div class="file-drop-sub">Đọc xong sẽ tự động ghép vào ô nội dung phía trên — kiểm tra lại rồi bấm "Nạp tất cả" như bình thường.</div>
-                </div>
-                <div id="excelReadSummary"></div>
-
                 <div style="display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap;">
                     <button class="btn-primary" onclick="bulkImport()">Nạp tất cả</button>
                     <button class="btn-ghost" onclick="clearBulkText()">Xóa nội dung</button>
@@ -2549,7 +2464,6 @@ function restoreLastAdminPanel(){
         if (last === 'sepayPkg')          return showSepayPackages();
         if (last === 'accounts')          return showAccountsManager();
         if (last === 'feedback')          return showFeedbackManager();
-        if (last === 'coupons')           return showCouponsManager();
         if (last === 'usageLimits')       return showUsageLimitsPanel();
         if (last === 'generalSettings')   return showGeneralSettings();
         if (last === 'featured')          return showFeaturedManager();
@@ -2563,7 +2477,7 @@ function restoreLastAdminPanel(){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['statsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'couponsPanel'];
+const ADMIN_PANEL_IDS = ['statsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -4269,79 +4183,6 @@ function clearBulkText(){
 })();
 
 // ---------- BULK IMPORT ----------
-// ---------- Nhập câu hỏi hàng loạt từ Excel/CSV ----------
-// Chuyển các dòng Excel/CSV thành đúng cú pháp text mà parseBulkText() đã hiểu (xem hàm ngay dưới đây),
-// rồi ghép vào #bulkText — tái sử dụng 100% logic đọc + validate + lưu đã có sẵn, không viết lại insert riêng.
-function downloadBulkExcelTemplate(){
-    const rows = [
-        ['Câu hỏi', 'Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D', 'Đáp án đúng (A/B/C/D)', 'Giải thích (không bắt buộc)'],
-        ['Thủ đô của Việt Nam là gì?', 'TP. Hồ Chí Minh', 'Hà Nội', 'Đà Nẵng', 'Huế', 'B', 'Hà Nội là thủ đô của Việt Nam.'],
-    ];
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [{wch:40},{wch:20},{wch:20},{wch:20},{wch:20},{wch:22},{wch:30}];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Câu hỏi');
-    XLSX.writeFile(wb, 'sngedu-mau-nhap-cau-hoi.xlsx');
-}
-async function handleBulkExcelFile(file){
-    const summaryEl = document.getElementById('excelReadSummary');
-    if (!file) return;
-    if (typeof XLSX === 'undefined'){
-        summaryEl.innerHTML = `<div class="hint" style="color:#e5484d;">Không tải được thư viện đọc Excel, vui lòng tải lại trang và thử lại.</div>`;
-        return;
-    }
-    summaryEl.innerHTML = `<div class="hint">Đang đọc file...</div>`;
-
-    try{
-        const data = await file.arrayBuffer();
-        const wb = XLSX.read(data, { type: 'array' });
-        const sheet = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-
-        const letters = ['A','B','C','D'];
-        let blockText = '';
-        let okCount = 0, skipCount = 0;
-        let n = 1;
-
-        // Bỏ qua dòng đầu tiên (tiêu đề) — luôn coi dòng 1 là header, đúng như hướng dẫn trong file mẫu.
-        rows.slice(1).forEach(row => {
-            const content = String(row[0] || '').trim();
-            const options = [row[1], row[2], row[3], row[4]].map(v => String(v || '').trim());
-            const correctLetter = String(row[5] || '').trim().toUpperCase();
-            const explanation = String(row[6] || '').trim();
-            const correctIdx = letters.indexOf(correctLetter);
-
-            if (!content || options.some(o => !o) || correctIdx < 0){
-                if (content || options.some(o => o)) skipCount++; // dòng có dữ liệu nhưng thiếu/sai -> đếm là bỏ qua; dòng trắng hoàn toàn thì lờ đi luôn
-                return;
-            }
-            blockText += `Câu ${n}: ${content}\n`;
-            letters.forEach((L, i) => {
-                blockText += `${i === correctIdx ? '*' : ''}${L}. ${options[i]}\n`;
-            });
-            if (explanation) blockText += `Gt: ${explanation}\n`;
-            blockText += `\n`;
-            n++; okCount++;
-        });
-
-        if (!okCount){
-            summaryEl.innerHTML = `<div class="hint" style="color:#e5484d;">Không đọc được câu hỏi hợp lệ nào. Kiểm tra lại: dòng 1 phải là tiêu đề, cột "Đáp án đúng" phải ghi đúng 1 chữ A/B/C/D.</div>`;
-            return;
-        }
-
-        const textarea = document.getElementById('bulkText');
-        textarea.value = (textarea.value.trim() ? textarea.value.trim() + '\n\n' : '') + blockText.trim() + '\n';
-
-        summaryEl.innerHTML = `<div class="hint" style="color:var(--green,#2ecc71);">
-            ✓ Đã đọc ${okCount} câu hỏi hợp lệ${skipCount ? ` (bỏ qua ${skipCount} dòng thiếu/sai dữ liệu)` : ''} và ghép vào ô nội dung phía trên.
-            Kiểm tra lại rồi bấm "Nạp tất cả" để lưu.
-        </div>`;
-        document.getElementById('bulkExcelInput').value = ''; // cho phép chọn lại cùng 1 file lần sau
-    }catch(err){
-        summaryEl.innerHTML = `<div class="hint" style="color:#e5484d;">Lỗi đọc file: ${err.message || err}. Kiểm tra file có đúng định dạng .xlsx/.xls/.csv không.</div>`;
-    }
-}
-
 function parseBulkText(text){
     const blocks = text.trim().split(/(?=Câu\s*\d+\s*:)/);
     const letters = ['A','B','C','D'];
@@ -5339,178 +5180,6 @@ function deleteSepayPackage(id){
         }
     );
 }
-
-// ---------- QUẢN LÝ MÃ GIẢM GIÁ (bảng coupons) ----------
-let couponListCache = [];
-function showCouponsManager(){
-    rememberAdminPanel('coupons');
-    showAdminPanel('couponsPanel', 'navCoupons');
-    closeCouponForm();
-    loadCouponsList();
-}
-function updateCouponFormUnits(){
-    const isPercent = document.getElementById('couponType').value === 'percent';
-    document.getElementById('couponValueLabel').textContent = isPercent ? 'Giá trị giảm (%)' : 'Giá trị giảm (VNĐ)';
-    document.getElementById('couponValue').placeholder = isPercent ? 'VD: 10' : 'VD: 20000';
-    document.getElementById('couponMaxDiscountLabel').style.display = isPercent ? '' : 'none';
-    document.getElementById('couponMaxDiscount').style.display = isPercent ? '' : 'none';
-}
-async function loadCouponsList(){
-    const box = document.getElementById('couponList');
-    const msgEl = document.getElementById('couponMsg');
-    msgEl.innerText = '';
-    box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Đang tải...</div>`;
-
-    const { data, error } = await sb.from('coupons').select('*').order('created_at', { ascending:false });
-    if (error){
-        box.innerHTML = '';
-        msgEl.style.color = '#e5484d';
-        msgEl.innerText = 'Lỗi tải danh sách mã: ' + error.message
-            + (error.code === '42P01' ? ' (chưa chạy migration 0003_coupons_and_referrals.sql trên Supabase)' : '');
-        return;
-    }
-    couponListCache = data || [];
-    renderCouponsList(couponListCache);
-}
-function couponRowHtml(c){
-    const valueText = c.discount_type === 'percent'
-        ? `${Number(c.discount_value)}%${c.max_discount_amount ? ' (tối đa ' + Number(c.max_discount_amount).toLocaleString('vi-VN') + 'đ)' : ''}`
-        : `${Number(c.discount_value).toLocaleString('vi-VN')}đ`;
-    const usesText = c.max_uses ? `${c.used_count}/${c.max_uses} lượt` : `${c.used_count} lượt (không giới hạn)`;
-    const expText = c.expires_at ? ` · hết hạn ${new Date(c.expires_at).toLocaleDateString('vi-VN')}` : '';
-    const inactive = c.active === false;
-    const isExpired = c.expires_at && new Date(c.expires_at) < new Date();
-    const statusBadge = inactive
-        ? '<span class="hint-inline" style="color:#e5484d;"> · Đang tắt</span>'
-        : (isExpired ? '<span class="hint-inline" style="color:#b45309;"> · Đã hết hạn</span>' : '');
-    return `
-        <div class="side-item" data-id="${c.id}">
-            <span class="prev-ico color-swatch amber" style="width:26px;height:26px;min-width:26px;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;"><i class="fa-solid fa-tag"></i></span>
-            <span class="name">${escapeHtml(c.code)}<span class="hint-inline"> · giảm ${valueText} · ${usesText}${expText}${statusBadge}</span></span>
-            <span class="right-cluster">
-                <span class="menu-wrap">
-                    <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleCouponMenu('${c.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
-                    <div class="menu-drop hidden" id="couponmenu-${c.id}">
-                        <button onclick="event.stopPropagation(); closeAllCouponMenus(); openCouponForm('${c.id}')">✏️ Sửa</button>
-                        <button onclick="event.stopPropagation(); closeAllCouponMenus(); deleteCoupon('${c.id}')">🗑️ Xóa</button>
-                    </div>
-                </span>
-            </span>
-        </div>`;
-}
-function renderCouponsList(rows){
-    const box = document.getElementById('couponList');
-    if (!rows.length){ box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Chưa có mã giảm giá nào. Bấm "+ Thêm mã" để tạo mã đầu tiên.</div>`; return; }
-    box.innerHTML = rows.map(couponRowHtml).join('');
-}
-function toggleCouponMenu(id, btn){
-    const menu = document.getElementById('couponmenu-' + id);
-    const wasHidden = menu.classList.contains('hidden');
-    closeAllCouponMenus();
-    if (wasHidden && btn){
-        const rect = btn.getBoundingClientRect();
-        menu.style.top = (rect.bottom + 4) + 'px';
-        menu.style.left = 'auto';
-        menu.style.right = (window.innerWidth - rect.right) + 'px';
-        menu.classList.remove('hidden');
-    }
-}
-function closeAllCouponMenus(){
-    document.querySelectorAll('[id^="couponmenu-"]').forEach(el => el.classList.add('hidden'));
-}
-document.addEventListener('click', () => closeAllCouponMenus());
-
-function openCouponForm(id){
-    const form = document.getElementById('couponForm');
-    const title = document.getElementById('couponFormTitle');
-    const c = id ? couponListCache.find(x => String(x.id) === String(id)) : null;
-    document.getElementById('couponId').value = c ? c.id : '';
-    document.getElementById('couponCode').value = c ? (c.code || '') : '';
-    document.getElementById('couponDesc').value = c ? (c.description || '') : '';
-    document.getElementById('couponType').value = c ? c.discount_type : 'percent';
-    document.getElementById('couponValue').value = c ? c.discount_value : '';
-    document.getElementById('couponMaxDiscount').value = c && c.max_discount_amount ? c.max_discount_amount : '';
-    document.getElementById('couponMinAmount').value = c ? (c.min_amount || 0) : '';
-    document.getElementById('couponMaxUses').value = c && c.max_uses ? c.max_uses : '';
-    document.getElementById('couponExpiresAt').value = c && c.expires_at ? c.expires_at.slice(0,10) : '';
-    document.getElementById('couponActive').checked = c ? (c.active !== false) : true;
-    updateCouponFormUnits();
-    title.innerText = c ? ('Sửa mã: ' + c.code) : 'Thêm mã giảm giá';
-    form.style.display = 'flex';
-    form.scrollIntoView({ behavior:'smooth', block:'center' });
-    document.getElementById('couponCode').focus();
-}
-function closeCouponForm(){
-    document.getElementById('couponId').value = '';
-    document.getElementById('couponCode').value = '';
-    document.getElementById('couponDesc').value = '';
-    document.getElementById('couponType').value = 'percent';
-    document.getElementById('couponValue').value = '';
-    document.getElementById('couponMaxDiscount').value = '';
-    document.getElementById('couponMinAmount').value = '';
-    document.getElementById('couponMaxUses').value = '';
-    document.getElementById('couponExpiresAt').value = '';
-    document.getElementById('couponActive').checked = true;
-    document.getElementById('couponFormTitle').innerText = 'Thêm mã giảm giá';
-    updateCouponFormUnits();
-}
-async function saveCoupon(){
-    const msgEl = document.getElementById('couponMsg');
-    const id = document.getElementById('couponId').value;
-    const code = document.getElementById('couponCode').value.trim().toUpperCase();
-    const description = document.getElementById('couponDesc').value.trim();
-    const discount_type = document.getElementById('couponType').value;
-    const discount_value = Number(document.getElementById('couponValue').value);
-    const max_discount_amount = document.getElementById('couponMaxDiscount').value ? Number(document.getElementById('couponMaxDiscount').value) : null;
-    const min_amount = Number(document.getElementById('couponMinAmount').value) || 0;
-    const max_uses = document.getElementById('couponMaxUses').value ? Number(document.getElementById('couponMaxUses').value) : null;
-    const expiresRaw = document.getElementById('couponExpiresAt').value;
-    const expires_at = expiresRaw ? new Date(expiresRaw + 'T23:59:59').toISOString() : null;
-    const active = document.getElementById('couponActive').checked;
-
-    if (!code){ showMsg('Vui lòng nhập mã giảm giá.', 'err'); return; }
-    if (!discount_value || discount_value <= 0){ showMsg('Vui lòng nhập giá trị giảm hợp lệ (lớn hơn 0).', 'err'); return; }
-    if (discount_type === 'percent' && discount_value > 100){ showMsg('Giảm theo % không được lớn hơn 100.', 'err'); return; }
-
-    const payload = {
-        code, description, discount_type, discount_value,
-        max_discount_amount: discount_type === 'percent' ? max_discount_amount : null,
-        min_amount, max_uses, expires_at, active,
-        applies_to: 'subscription', // hiện chỉ áp dụng cho gói Pro — xem ghi chú trong _shared/coupon.ts
-    };
-
-    let error;
-    if (id){
-        ({ error } = await sb.from('coupons').update(payload).eq('id', id));
-    } else {
-        ({ error } = await sb.from('coupons').insert(payload));
-    }
-    if (error){
-        const dup = error.code === '23505';
-        msgEl.style.color = '#e5484d';
-        msgEl.innerText = dup ? 'Mã này đã tồn tại, hãy chọn mã khác.' : ('Lỗi lưu mã: ' + error.message);
-        showMsg(dup ? 'Mã này đã tồn tại, hãy chọn mã khác.' : ('Lỗi lưu mã: ' + error.message), 'err');
-        return;
-    }
-    closeCouponForm();
-    showMsg((id ? 'Đã cập nhật mã "' : 'Đã thêm mã "') + code + '".', 'ok');
-    loadCouponsList();
-}
-function deleteCoupon(id){
-    const c = couponListCache.find(x => String(x.id) === String(id));
-    const code = c ? c.code : '';
-    showConfirm(
-        'Xóa mã giảm giá?',
-        `Xóa mã "${code}"? Không thể hoàn tác. Các đơn hàng đã dùng mã này trước đó vẫn giữ nguyên lịch sử.`,
-        async () => {
-            const { error } = await sb.from('coupons').delete().eq('id', id);
-            if (error){ showMsg('Lỗi xóa: ' + error.message, 'err'); return; }
-            showMsg('Đã xóa mã "' + code + '".', 'ok');
-            loadCouponsList();
-        }
-    );
-}
-
 function formatDurationAdmin(days){
     days = Number(days);
     if (days >= 360) return Math.round(days/365) + ' năm';

@@ -18,34 +18,9 @@ async function thanhToanKhoaHoc(courseId) {
 /**
  * Bắt đầu thanh toán đăng ký gói thành viên.
  * @param {string} planId - id gói trong bảng `membership_plans`
- * @param {string} [couponCode] - mã giảm giá (nếu có), đã được xác thực trước qua sepay-validate-coupon
  */
-async function thanhToanGoiThanhVien(planId, couponCode) {
-  await batDauThanhToan({ order_type: 'subscription', plan_id: planId, coupon_code: couponCode || undefined });
-}
-
-/**
- * Gọi Edge Function sepay-validate-coupon để XEM TRƯỚC mức giảm giá của 1 mã,
- * dùng cho nút "Áp dụng" trong modal xác nhận thanh toán — KHÔNG tạo đơn hàng.
- * @returns {Promise<{valid:boolean, message:string, original_amount?:number, discount_amount?:number, final_amount?:number}>}
- */
-async function xemTruocMaGiamGia(orderPayload) {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) return { valid: false, message: 'Vui lòng đăng nhập.' };
-  try {
-    const res = await fetch(`${SEPAY_FUNCTIONS_BASE}/sepay-validate-coupon`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify(orderPayload),
-    });
-    return await res.json();
-  } catch (err) {
-    console.error(err);
-    return { valid: false, message: 'Không thể kết nối máy chủ để kiểm tra mã giảm giá.' };
-  }
+async function thanhToanGoiThanhVien(planId) {
+  await batDauThanhToan({ order_type: 'subscription', plan_id: planId });
 }
 
 /**
@@ -79,14 +54,20 @@ async function batDauThanhToan(orderPayload) {
         'Authorization': `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({
-        ...orderPayload,
         payment_method: 'BANK_TRANSFER', // hoặc 'CARD' / 'NAPAS_BANK_TRANSFER'
+        ...orderPayload,
       }),
     });
 
     const data = await res.json();
     if (!res.ok) {
       alert(data.error || 'Có lỗi xảy ra khi tạo đơn thanh toán.');
+      return;
+    }
+
+    // Thanh toán bằng số dư ví: xử lý xong ngay, không có checkoutUrl để redirect
+    if (data.paid) {
+      window.location.href = `/thanh-toan-thanh-cong.html?inv=${encodeURIComponent(data.invoiceNumber)}&method=balance`;
       return;
     }
 
@@ -109,5 +90,64 @@ async function batDauThanhToan(orderPayload) {
   } catch (err) {
     console.error(err);
     alert('Không thể kết nối tới máy chủ thanh toán. Vui lòng thử lại.');
+  }
+}
+
+/**
+ * Nạp tiền vào ví qua SePay. Luôn chuyển sang cổng thanh toán
+ * (không thể nạp tiền bằng chính số dư ví).
+ * @param {number} amount - số tiền muốn nạp (VNĐ), tối thiểu 10.000đ
+ */
+async function napTienVaoVi(amount) {
+  await batDauThanhToan({ order_type: 'wallet_topup', amount: Number(amount) });
+}
+
+/**
+ * Thanh toán 1 dịch vụ (khoá học / gói Pro / tài liệu / sản phẩm) TRỰC TIẾP
+ * bằng số dư ví, không qua cổng SePay. Trả về ngay kết quả (không redirect ra ngoài).
+ * @param {object} orderPayload - vd: { order_type:'document', document_id:'...' }
+ * @returns {Promise<{ok:boolean, balance?:number, error?:string}>}
+ */
+async function thanhToanBangSoDu(orderPayload) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      window.location.href = '/account/login.html';
+      return { ok: false, error: 'Chưa đăng nhập' };
+    }
+
+    const res = await fetch(`${SEPAY_FUNCTIONS_BASE}/sepay-create-checkout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ ...orderPayload, use_balance: true }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.paid) {
+      return { ok: false, error: data.error || 'Có lỗi xảy ra khi thanh toán bằng số dư.' };
+    }
+    return { ok: true, balance: data.balance, invoiceNumber: data.invoiceNumber };
+  } catch (err) {
+    console.error(err);
+    return { ok: false, error: 'Không thể kết nối tới máy chủ thanh toán. Vui lòng thử lại.' };
+  }
+}
+
+/**
+ * Lấy số dư ví hiện tại của user đang đăng nhập (đọc trực tiếp từ bảng profiles).
+ * @returns {Promise<number>}
+ */
+async function laySoDuViHienTai() {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return 0;
+    const { data, error } = await sb.from('profiles').select('balance').eq('id', session.user.id).maybeSingle();
+    if (error || !data) return 0;
+    return Number(data.balance) || 0;
+  } catch (e) {
+    return 0;
   }
 }

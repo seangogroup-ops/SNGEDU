@@ -63,7 +63,15 @@
         .layout { display: flex; max-width: 1200px; margin: 80px auto 40px; padding: 0 20px; gap: 25px; align-items: flex-start; }
         .questions-col { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
         .q-card { background: var(--white); border-radius: 12px; padding: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .q-title { font-weight: 700; color: var(--azota-blue); margin-bottom: 8px; font-size: 1.1rem; }
+        .q-title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+        .q-title { font-weight: 700; color: var(--azota-blue); font-size: 1.1rem; }
+        .q-report-btn {
+            display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600;
+            color: var(--text-gray); background: #f3f4f6; border: 1px solid var(--border-color);
+            border-radius: 999px; padding: 5px 11px; cursor: pointer; text-decoration: none; flex-shrink: 0;
+            transition: 0.15s;
+        }
+        .q-report-btn:hover { color: var(--wrong-color); border-color: var(--wrong-color); background: #fef2f2; }
         .q-content { margin-bottom: 20px; font-size: 1.05rem; }
 
         .options-wrapper { display: flex; flex-direction: column; gap: 10px; }
@@ -302,6 +310,24 @@
         startTimer();
     }
 
+    function stripHtml(html){
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html || '';
+        return (tmp.textContent || tmp.innerText || '').trim();
+    }
+
+    function reportLinkFor(i){
+        const q = questions[i];
+        const excerpt = stripHtml(q.content).slice(0, 100);
+        const params = new URLSearchParams({
+            type: 'wrong_question',
+            subject: subjectId || '',
+            chapter: chapter || '',
+            question: `${q.label}${excerpt ? ' — ' + excerpt : ''}`
+        });
+        return 'gop-y.html?' + params.toString();
+    }
+
     function renderQuestions() {
         questions.forEach((q, i) => {
             const card = document.createElement('div');
@@ -317,7 +343,12 @@
             `).join('');
 
             card.innerHTML = `
-                <div class="q-title">${q.label}</div>
+                <div class="q-title-row">
+                    <div class="q-title">${q.label}</div>
+                    <a class="q-report-btn" href="${reportLinkFor(i)}" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-flag"></i> Báo lỗi câu này
+                    </a>
+                </div>
                 <div class="q-content">${q.content}</div>
                 <div class="options-wrapper">${optsHtml}</div>
                 ${showExpl ? `<div class="explanation-box" id="ex-${i}">

@@ -278,6 +278,8 @@
     .acc-info-row:last-child{ border-bottom:none; }
     .acc-info-row .label{ color:var(--ink-mute); font-weight:600; }
     .acc-info-row .value{ color:var(--ink); font-weight:700; text-align:right; word-break:break-word; }
+    .acc-info-row .value #acctPageBalanceValue,
+    .acc-info-row .value #accBalanceValue{ white-space:nowrap; word-break:normal; }
     .acc-history-item{
         display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);
     }
@@ -3064,7 +3066,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         intro_desc: 'Báo lỗi câu hỏi, góp ý tính năng, hay chỉ đơn giản chưa hiểu một đáp án nào đó trong đề — đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.',
         contacts: [
             { id:'c1', icon:'fa-solid fa-comment-dots', color:'blue',  title:'Nhắn Zalo',            desc:'Nhấn để mở Zalo chat', status_label:'Phản hồi trong ngày', link:'https://zalo.me/0825160035' },
-            { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi biểu mẫu góp ý',   desc:'Google Form',           status_label:'Báo lỗi & đề xuất',    link:'https://forms.gle/dLLMdpZttmZWYmuRA' }
+            { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi form góp ý',   desc:'Điền ngay trên web, không cần rời trang',           status_label:'Kèm ảnh, chọn đúng môn & câu',    link:'gop-y.html' }
         ],
         faq: [
             { id:'f1', title:'Tài liệu và trắc nghiệm trên SNG EDU có mất phí không?', desc:'Toàn bộ học phần đang mở đều miễn phí 100%. Các gói nâng cao (nếu có trong tương lai) sẽ được thông báo rõ trước khi ra mắt, không tự động trừ phí.' },

@@ -1562,7 +1562,7 @@ textarea{resize:vertical;}
         <div id="feedbackPanel" class="hidden">
             <div class="subj-mgr-head">
                 <h2>💬 Góp ý học viên</h2>
-                <p class="hint">Học viên bấm banner "Gặp câu hỏi sai?" ở trang chọn chương sẽ gửi thẳng vào đây — không cần qua form ngoài nữa.</p>
+                <p class="hint">Học viên gửi từ banner "Gặp câu hỏi sai?" ở trang chọn chương, từ trang <b>gop-y.html</b> (thẻ "Gửi form góp ý" ở tab Hỗ trợ, hoặc nút "Báo lỗi câu này" khi làm đề), sẽ vào thẳng đây — không cần qua form ngoài nữa.</p>
             </div>
 
             <div id="fbListView">
@@ -4344,7 +4344,7 @@ const CONTENT_DEFAULTS = {
         intro_desc: 'Báo lỗi câu hỏi, góp ý tính năng, hay chỉ đơn giản chưa hiểu một đáp án nào đó trong đề — đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.',
         contacts: [
             { id:'c1', icon:'fa-solid fa-comment-dots', color:'blue',  title:'Nhắn Zalo',          desc:'Nhấn để mở Zalo chat', status_label:'Phản hồi trong ngày', link:'https://zalo.me/0825160035' },
-            { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi biểu mẫu góp ý', desc:'Google Form',          status_label:'Báo lỗi & đề xuất',    link:'https://forms.gle/dLLMdpZttmZWYmuRA' }
+            { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi form góp ý', desc:'Điền ngay trên web, không cần rời trang',          status_label:'Kèm ảnh, chọn đúng môn & câu',    link:'gop-y.html' }
         ],
         faq: [
             { id:'f1', title:'Tài liệu và trắc nghiệm trên SNG EDU có mất phí không?', desc:'Toàn bộ học phần đang mở đều miễn phí 100%. Các gói nâng cao (nếu có trong tương lai) sẽ được thông báo rõ trước khi ra mắt, không tự động trừ phí.' },
@@ -6001,6 +6001,17 @@ function setFbFilter(f){
 function fbStatusLabel(s){
     return s === 'resolved' ? 'Đã xử lý' : (s === 'read' ? 'Đã đọc' : 'Chưa đọc');
 }
+function fbTypeMeta(t){
+    return {
+        wrong_question:  { label:'Câu hỏi sai',    ico:'⚠️' },
+        feature_request: { label:'Góp ý tính năng', ico:'💡' },
+        payment_issue:   { label:'Thanh toán',      ico:'💳' },
+        other:           { label:'Khác',            ico:'💬' }
+    }[t] || { label:'Khác', ico:'💬' };
+}
+function fbContextLine(f){
+    return [f.subject_name, f.chapter ? ('Chương ' + f.chapter) : '', f.question_ref].filter(Boolean).join(' · ');
+}
 
 function renderFeedbackList(){
     const q = (document.getElementById('fbSearch').value || '').trim().toLowerCase();
@@ -6016,13 +6027,15 @@ function renderFeedbackList(){
     }
     wrap.innerHTML = list.map(f => {
         const initial = (f.full_name || f.email || '?').trim()[0].toUpperCase();
+        const tMeta = fbTypeMeta(f.type);
+        const ctxLine = fbContextLine(f);
         return `
         <div class="acct-row fb-row" data-id="${f.id}" onclick="openFeedbackDetail('${f.id}')" style="cursor:pointer;">
             <span class="acct-avatar">${escapeHtml(initial)}</span>
             <span class="acct-info">
-                <span class="acct-name">${escapeHtml(f.full_name || f.email || 'Ẩn danh')}<span class="acct-badge ${f.status}">${fbStatusLabel(f.status)}</span></span>
-                <span class="acct-meta">${escapeHtml(f.email || '')}<span class="dot-sep">·</span>${fmtDate(f.created_at)}</span>
-                <span class="fb-preview">${escapeHtml((f.message || '').slice(0, 90))}${(f.message || '').length > 90 ? '…' : ''}</span>
+                <span class="acct-name">${escapeHtml(f.full_name || f.email || 'Ẩn danh')}<span class="acct-badge ${f.status}">${fbStatusLabel(f.status)}</span><span class="acct-badge" style="background:var(--bg2,#f1f2f6);color:var(--gray);">${tMeta.ico} ${tMeta.label}</span></span>
+                <span class="acct-meta">${escapeHtml(f.email || '')}<span class="dot-sep">·</span>${fmtDate(f.created_at)}${ctxLine ? '<span class="dot-sep">·</span>' + escapeHtml(ctxLine) : ''}</span>
+                <span class="fb-preview">${f.image_url ? '📷 ' : ''}${escapeHtml((f.message || '').slice(0, 90))}${(f.message || '').length > 90 ? '…' : ''}</span>
             </span>
             <span class="acct-row-actions">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;color:var(--gray);"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -6037,6 +6050,9 @@ async function openFeedbackDetail(id){
     const wasNew = f.status === 'new';
     if (wasNew) f.status = 'read'; // cập nhật cục bộ trước để hiển thị đúng ngay, đồng bộ server bên dưới
 
+    const tMeta = fbTypeMeta(f.type);
+    const ctxLine = fbContextLine(f);
+
     document.getElementById('fbDetailView').innerHTML = `
         <button class="acct-detail-back" onclick="closeFeedbackDetail()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -6045,13 +6061,17 @@ async function openFeedbackDetail(id){
         <div class="acct-detail-head">
             <span class="acct-avatar">${escapeHtml((f.full_name || f.email || '?').trim()[0].toUpperCase())}</span>
             <div class="adh-info">
-                <div class="adh-name">${escapeHtml(f.full_name || 'Ẩn danh')}<span class="acct-badge ${f.status}" style="margin-left:8px;">${fbStatusLabel(f.status)}</span></div>
+                <div class="adh-name">${escapeHtml(f.full_name || 'Ẩn danh')}<span class="acct-badge ${f.status}" style="margin-left:8px;">${fbStatusLabel(f.status)}</span><span class="acct-badge" style="margin-left:6px;background:var(--bg2,#f1f2f6);color:var(--gray);">${tMeta.ico} ${tMeta.label}</span></div>
                 <div class="adh-email">${escapeHtml(f.email || '(không có email)')}</div>
                 <div class="adh-meta">Gửi lúc ${fmtDate(f.created_at)}${f.page_url ? ' · <a href="' + escapeHtml(f.page_url) + '" target="_blank" rel="noopener" style="color:var(--accent);">Xem trang gốc</a>' : ''}</div>
+                ${ctxLine ? '<div class="adh-meta" style="margin-top:4px;"><b>' + escapeHtml(ctxLine) + '</b></div>' : ''}
             </div>
         </div>
 
         <div class="fb-detail-msg">${escapeHtml(f.message || '')}</div>
+        ${f.image_url ? `<a href="${escapeHtml(f.image_url)}" target="_blank" rel="noopener" style="display:block;margin-top:14px;">
+            <img src="${escapeHtml(f.image_url)}" alt="Ảnh minh hoạ" style="max-width:100%;max-height:320px;border-radius:12px;border:1px solid var(--line,#e5e7eb);">
+        </a>` : ''}
 
         <div class="acct-detail-grid">
             <div class="acct-action-card balance" onclick="setFeedbackStatus('${f.id}','read')">

@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+    try{
+        var savedTheme = localStorage.getItem('sng-theme');
+        if(savedTheme === 'dark' || savedTheme === 'light'){
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }else{
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    }catch(e){}
+</script>
+<title>Gửi góp ý · SNG EDU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+    :root{
+        --bg:        #eef2f9;
+        --card:      #ffffff;
+        --line:      #dde3ef;
+        --ink:       #131b2e;
+        --ink-soft:  #4d5673;
+        --ink-mute:  #8791a8;
+        --green:     #17b26a;
+        --green-bg:  #e7f9f0;
+        --red:       #e5484d;
+        --red-bg:    #fdeeee;
+        --amber:     #b7791f;
+        --amber-bg:  #fbedd6;
+        --brand:     #4f6bff;
+        --brand2:    #7b8fff;
+        --brand-bg:  #e7eaff;
+        --shadow:    0 1px 2px rgba(20,22,40,.06), 0 8px 24px -12px rgba(20,22,40,.12);
+    }
+    html[data-theme="dark"]{
+        --bg:        #14151c;
+        --card:      #1c1e28;
+        --line:      #2c2f3c;
+        --ink:       #f0f1f6;
+        --ink-soft:  #a2a7ba;
+        --ink-mute:  #6f7488;
+        --green:     #2ed392;
+        --green-bg:  #163a2c;
+        --red:       #ff7875;
+        --red-bg:    #3a2020;
+        --amber:     #ffbd4a;
+        --amber-bg:  #3a2e12;
+        --brand:     #7b93ff;
+        --brand2:    #a2b0ff;
+        --brand-bg:  #232a4d;
+        --shadow:    0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+    *{ box-sizing:border-box; }
+    html{ transition:background .25s ease; }
+    body{
+        margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+        font-family:'Be Vietnam Pro', sans-serif;
+        transition:background .25s ease, color .25s ease;
+    }
+    @media (prefers-reduced-motion: reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+
+    .theme-toggle{
+        position:fixed; top:18px; right:18px; z-index:20;
+        width:40px; height:40px; border-radius:50%;
+        border:1px solid var(--line); background:var(--card); cursor:pointer;
+        display:flex; align-items:center; justify-content:center;
+        color:var(--ink-soft); font-size:.95rem;
+        transition:background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .theme-toggle:hover{ background:var(--brand-bg); color:var(--brand); }
+    .theme-toggle .fa-sun{ display:none; }
+    html[data-theme="dark"] .theme-toggle .fa-sun{ display:inline; }
+    html[data-theme="dark"] .theme-toggle .fa-moon{ display:none; }
+
+    .wrap{ max-width:640px; margin:0 auto; padding:70px 20px 60px; }
+
+    .back-home{
+        display:inline-flex; align-items:center; gap:6px; color:var(--ink-mute); text-decoration:none;
+        font-size:.83rem; margin-bottom:18px; font-weight:600;
+    }
+    .back-home:hover{ color:var(--brand); }
+
+    .head-box{ margin-bottom:24px; }
+    .head-ico{
+        width:52px; height:52px; border-radius:16px; background:var(--brand-bg); color:var(--brand);
+        display:flex; align-items:center; justify-content:center; font-size:1.35rem; margin-bottom:14px;
+    }
+    h1{ font-size:1.55rem; margin:0 0 8px; font-weight:800; }
+    p.sub{ color:var(--ink-mute); font-size:.92rem; margin:0; line-height:1.6; max-width:520px; }
+
+    .card{
+        background:var(--card); border:1px solid var(--line); border-radius:20px;
+        padding:26px 26px 28px; box-shadow:var(--shadow); margin-top:24px;
+    }
+
+    .type-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+    @media (max-width:520px){ .type-grid{ grid-template-columns:1fr; } }
+    .type-opt{
+        display:flex; align-items:flex-start; gap:10px; padding:13px 14px; border-radius:14px;
+        border:1.5px solid var(--line); cursor:pointer; background:var(--bg);
+        transition:border-color .15s ease, background .15s ease;
+    }
+    .type-opt:hover{ border-color:var(--brand2); }
+    .type-opt.active{ border-color:var(--brand); background:var(--brand-bg); }
+    .type-opt input{ display:none; }
+    .type-opt .t-ico{ font-size:1rem; color:var(--brand); margin-top:1px; flex-shrink:0; }
+    .type-opt .t-txt{ font-size:.85rem; font-weight:700; color:var(--ink); line-height:1.4; }
+    .type-opt .t-desc{ font-size:.76rem; color:var(--ink-mute); font-weight:500; margin-top:2px; }
+
+    label{ display:block; font-size:.8rem; font-weight:700; color:var(--ink-soft); margin:20px 0 7px; }
+    label .opt{ font-weight:500; color:var(--ink-mute); text-transform:none; }
+    input[type=text], input[type=email], select, textarea{
+        width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line);
+        background:var(--bg); color:var(--ink); font-size:.9rem; outline:none; font-family:inherit;
+        transition:border-color .15s ease, box-shadow .15s ease;
+    }
+    textarea{ resize:vertical; min-height:110px; line-height:1.55; }
+    input::placeholder, textarea::placeholder{ color:var(--ink-mute); }
+    input:focus, select:focus, textarea:focus{ border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-bg); }
+    select{ appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238791a8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; background-size:16px; padding-right:36px; }
+
+    .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media (max-width:520px){ .row2{ grid-template-columns:1fr; } }
+
+    .img-drop{
+        margin-top:7px; border:1.5px dashed var(--line); border-radius:14px; padding:18px;
+        text-align:center; cursor:pointer; transition:border-color .15s ease, background .15s ease;
+        color:var(--ink-mute); font-size:.84rem;
+    }
+    .img-drop:hover{ border-color:var(--brand); background:var(--brand-bg); }
+    .img-drop i{ font-size:1.3rem; color:var(--brand); display:block; margin-bottom:8px; }
+    .img-preview-wrap{ margin-top:12px; position:relative; display:inline-block; }
+    .img-preview-wrap img{ max-width:100%; max-height:220px; border-radius:12px; border:1px solid var(--line); display:block; }
+    .img-remove{
+        position:absolute; top:-9px; right:-9px; width:26px; height:26px; border-radius:50%;
+        background:var(--red); color:#fff; border:2px solid var(--card); cursor:pointer;
+        display:flex; align-items:center; justify-content:center; font-size:.72rem;
+    }
+    .img-uploading{ margin-top:10px; font-size:.8rem; color:var(--brand); display:flex; align-items:center; gap:8px; }
+
+    .ctx-chip{
+        display:inline-flex; align-items:center; gap:7px; background:var(--brand-bg); color:var(--brand);
+        border-radius:999px; padding:7px 13px; font-size:.78rem; font-weight:700; margin:20px 0 0;
+    }
+
+    .btn-primary{
+        width:100%; margin-top:26px; padding:13px; border:none; border-radius:12px;
+        background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff; font-weight:700;
+        font-size:.94rem; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:8px;
+        transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    }
+    .btn-primary:hover:not(:disabled){ transform:translateY(-1px); box-shadow:0 10px 20px -10px rgba(79,107,255,.55); }
+    .btn-primary:disabled{ opacity:.6; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    .msg{ margin-top:14px; font-size:.83rem; padding:10px 12px; border-radius:10px; display:none; align-items:center; gap:8px; font-weight:600; }
+    .msg.err{ display:flex; background:var(--red-bg); color:var(--red); }
+    .msg.ok{ display:flex; background:var(--green-bg); color:var(--green); }
+
+    .form-hint{ font-size:.78rem; color:var(--ink-mute); margin-top:6px; line-height:1.5; }
+
+    /* ---- success state ---- */
+    .success-box{ text-align:center; padding:34px 10px 8px; }
+    .success-ico{
+        width:64px; height:64px; border-radius:50%; background:var(--green-bg); color:var(--green);
+        display:flex; align-items:center; justify-content:center; font-size:1.7rem; margin:0 auto 18px;
+    }
+    .success-box h2{ font-size:1.25rem; margin:0 0 8px; }
+    .success-box p{ color:var(--ink-mute); font-size:.88rem; line-height:1.6; max-width:400px; margin:0 auto; }
+    .success-actions{ display:flex; gap:10px; justify-content:center; margin-top:22px; flex-wrap:wrap; }
+    .btn-ghost{
+        padding:11px 18px; border-radius:10px; font-family:inherit;
+        background:transparent; color:var(--ink); border:1px solid var(--line); font-weight:700; font-size:.86rem; cursor:pointer;
+        text-decoration:none; display:inline-flex; align-items:center; gap:7px;
+    }
+    .btn-ghost:hover{ background:var(--brand-bg); color:var(--brand); border-color:var(--brand-bg); }
+    .btn-ghost.solid{ background:var(--brand); color:#fff; border-color:var(--brand); }
+    .btn-ghost.solid:hover{ opacity:.9; color:#fff; }
+
+    /* ---- previous submissions ---- */
+    .mine-head{ display:flex; align-items:center; justify-content:space-between; margin:34px 0 12px; }
+    .mine-head h3{ font-size:1rem; margin:0; }
+    .mine-item{
+        display:flex; gap:12px; padding:14px 4px; border-bottom:1px solid var(--line); align-items:flex-start;
+    }
+    .mine-item:last-child{ border-bottom:none; }
+    .mine-ico{
+        width:34px; height:34px; border-radius:10px; background:var(--bg); color:var(--ink-mute);
+        display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:.85rem;
+    }
+    .mine-body{ flex:1; min-width:0; }
+    .mine-top{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .mine-msg{ font-size:.85rem; color:var(--ink); font-weight:600; line-height:1.4; }
+    .mine-status{ font-size:.7rem; font-weight:700; padding:2px 9px; border-radius:999px; }
+    .mine-status.new{ background:var(--amber-bg); color:var(--amber); }
+    .mine-status.read{ background:var(--brand-bg); color:var(--brand); }
+    .mine-status.resolved{ background:var(--green-bg); color:var(--green); }
+    .mine-meta{ font-size:.75rem; color:var(--ink-mute); margin-top:3px; }
+    .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
+    <i class="fa-solid fa-sun"></i><i class="fa-solid fa-moon"></i>
+</button>
+
+<div class="wrap">
+    <a class="back-home" href="index.html#support"><i class="fa-solid fa-arrow-left"></i> Quay lại Hỗ trợ</a>
+
+    <div class="head-box">
+        <div class="head-ico"><i class="fa-solid fa-pen-to-square"></i></div>
+        <h1>Gửi góp ý cho SNG EDU</h1>
+        <p class="sub">Báo câu hỏi/đáp án sai, đề xuất tính năng mới, hay bất kỳ vướng mắc nào — điền ngay tại đây, đội SNG EDU đọc trực tiếp và phản hồi qua email hoặc Zalo, không qua chatbot.</p>
+    </div>
+
+    <!-- ================= FORM ================= -->
+    <div class="card" id="formCard">
+        <div id="ctxChipWrap"></div>
+
+        <label style="margin-top:0;">Bạn muốn góp ý về điều gì?</label>
+        <div class="type-grid" id="typeGrid">
+            <label class="type-opt" data-type="wrong_question">
+                <input type="radio" name="fbType" value="wrong_question">
+                <span class="t-ico"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                <span><span class="t-txt">Câu hỏi / đáp án sai</span><span class="t-desc">Sai đáp án, sai giải thích, đề lỗi...</span></span>
+            </label>
+            <label class="type-opt" data-type="feature_request">
+                <input type="radio" name="fbType" value="feature_request">
+                <span class="t-ico"><i class="fa-solid fa-lightbulb"></i></span>
+                <span><span class="t-txt">Góp ý tính năng</span><span class="t-desc">Đề xuất thêm/sửa tính năng</span></span>
+            </label>
+            <label class="type-opt" data-type="payment_issue">
+                <input type="radio" name="fbType" value="payment_issue">
+                <span class="t-ico"><i class="fa-solid fa-credit-card"></i></span>
+                <span><span class="t-txt">Vấn đề thanh toán</span><span class="t-desc">Nạp tiền, mua gói, hoá đơn...</span></span>
+            </label>
+            <label class="type-opt" data-type="other">
+                <input type="radio" name="fbType" value="other">
+                <span class="t-ico"><i class="fa-solid fa-comment-dots"></i></span>
+                <span><span class="t-txt">Khác</span><span class="t-desc">Vấn đề chưa có ở trên</span></span>
+            </label>
+        </div>
+
+        <div id="subjectFieldsWrap">
+            <div class="row2">
+                <div>
+                    <label>Môn học <span class="opt">(nếu liên quan)</span></label>
+                    <select id="fbSubject">
+                        <option value="">— Chọn môn học —</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Chương / Đề <span class="opt">(nếu liên quan)</span></label>
+                    <select id="fbChapter" disabled>
+                        <option value="">— Chọn môn trước —</option>
+                    </select>
+                </div>
+            </div>
+
+            <label>Câu hỏi liên quan <span class="opt">(vd: Câu 12, hoặc trích một phần câu hỏi)</span></label>
+            <input type="text" id="fbQuestionRef" placeholder="VD: Câu 12 — đáp án đúng phải là B chứ không phải A">
+        </div>
+
+        <label>Mô tả chi tiết <span class="opt">(bắt buộc)</span></label>
+        <textarea id="fbMessage" placeholder="Mô tả càng rõ càng giúp đội SNG EDU sửa nhanh hơn — nêu rõ môn/chương/câu, đáp án bạn nghĩ đúng là gì và vì sao..."></textarea>
+
+        <label>Ảnh chụp minh hoạ <span class="opt">(không bắt buộc, tối đa 5MB)</span></label>
+        <div class="img-drop" id="imgDropZone">
+            <i class="fa-solid fa-image"></i>
+            Bấm để chọn ảnh chụp màn hình câu hỏi, hoặc kéo thả ảnh vào đây
+        </div>
+        <input type="file" id="fbImageInput" accept="image/*" class="hidden">
+        <div id="imgPreviewWrap" class="img-preview-wrap hidden">
+            <img id="imgPreviewTag" src="" alt="Ảnh minh hoạ">
+            <button type="button" class="img-remove" id="imgRemoveBtn" aria-label="Xoá ảnh"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="img-uploading hidden" id="imgUploadingBox"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải ảnh lên...</div>
+
+        <label>Email liên hệ <span class="opt">(để nhận phản hồi)</span></label>
+        <input type="email" id="fbEmail" placeholder="ban@email.com">
+
+        <button type="button" class="btn-primary" id="fbSubmitBtn" onclick="submitFeedback()">
+            <i class="fa-solid fa-paper-plane"></i> Gửi góp ý
+        </button>
+        <div id="fbMsg" class="msg"></div>
+        <div class="form-hint">Cần phản hồi nhanh hơn? Nhắn trực tiếp qua <a href="https://zalo.me/0825160035" target="_blank" rel="noopener" style="color:var(--brand); font-weight:700;">Zalo</a>.</div>
+    </div>
+
+    <!-- ================= SUCCESS ================= -->
+    <div class="card hidden" id="successCard">
+        <div class="success-box">
+            <div class="success-ico"><i class="fa-solid fa-check"></i></div>
+            <h2>Đã gửi góp ý!</h2>
+            <p>Cảm ơn bạn đã dành thời gian góp ý 🙌 Đội SNG EDU sẽ đọc và xử lý sớm nhất có thể. Nếu để lại email, bạn sẽ nhận được phản hồi qua đó.</p>
+            <div class="success-actions">
+                <button type="button" class="btn-ghost solid" onclick="resetFormForNew()"><i class="fa-solid fa-plus"></i> Gửi thêm góp ý khác</button>
+                <a class="btn-ghost" href="index.html#support"><i class="fa-solid fa-house"></i> Về trang Hỗ trợ</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= LỊCH SỬ GÓP Ý CỦA TÔI (chỉ hiện khi đã đăng nhập) ================= -->
+    <div id="mineWrap" class="hidden">
+        <div class="mine-head"><h3>Góp ý bạn đã gửi</h3></div>
+        <div class="card" style="padding:6px 22px;">
+            <div id="mineList"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const IMG_BUCKET = 'feedback-images';
+
+const themeBtn = document.getElementById('themeToggle');
+themeBtn.addEventListener('click', ()=>{
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem('sng-theme', next); }catch(e){}
+});
+
+function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function fmtDate(iso){
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
+}
+
+let currentUser = null;
+let subjectsCache = [];
+let uploadedImageUrl = '';
+let uploadingImage = false;
+
+// ---------------- Đọc tham số URL (đến từ nút "Báo lỗi câu này" trong lúc làm đề) ----------------
+const qp = new URLSearchParams(location.search);
+const prefSubject = qp.get('subject') || '';
+const prefChapter = qp.get('chapter') || '';
+const prefQuestion = qp.get('question') || '';
+const prefType = qp.get('type') || (prefSubject ? 'wrong_question' : '');
+
+function selectType(type){
+    document.querySelectorAll('.type-opt').forEach(el => {
+        const active = el.dataset.type === type;
+        el.classList.toggle('active', active);
+        el.querySelector('input').checked = active;
+    });
+}
+document.querySelectorAll('.type-opt').forEach(el => {
+    el.addEventListener('click', () => selectType(el.dataset.type));
+});
+
+async function loadSubjects(){
+    const { data } = await sb.from('subjects').select('id,name,status').order('name');
+    subjectsCache = (data || []).filter(s => s.status !== 'hidden');
+    const sel = document.getElementById('fbSubject');
+    sel.innerHTML = '<option value="">— Chọn môn học —</option>' +
+        subjectsCache.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)}</option>`).join('');
+    if (prefSubject && subjectsCache.some(s => s.id === prefSubject)){
+        sel.value = prefSubject;
+        await loadChapters(prefSubject, prefChapter);
+    }
+}
+
+async function loadChapters(subjectId, presetChapter){
+    const chapSel = document.getElementById('fbChapter');
+    if (!subjectId){
+        chapSel.innerHTML = '<option value="">— Chọn môn trước —</option>';
+        chapSel.disabled = true;
+        return;
+    }
+    chapSel.disabled = true;
+    chapSel.innerHTML = '<option value="">Đang tải...</option>';
+    const { data } = await sb.from('chapters').select('chapter,label').eq('subject_id', subjectId).order('order_no');
+    const rows = data || [];
+    chapSel.innerHTML = '<option value="">— Chọn chương/đề —</option>' +
+        rows.map(c => `<option value="${escapeHtml(c.chapter)}">${escapeHtml(c.label || c.chapter)}</option>`).join('');
+    chapSel.disabled = false;
+    if (presetChapter && rows.some(c => c.chapter === presetChapter)) chapSel.value = presetChapter;
+}
+
+document.getElementById('fbSubject').addEventListener('change', (e) => loadChapters(e.target.value));
+
+function renderCtxChip(){
+    const wrap = document.getElementById('ctxChipWrap');
+    if (prefSubject || prefQuestion){
+        const subjName = (subjectsCache.find(s => s.id === prefSubject) || {}).name || prefSubject;
+        const parts = [subjName, prefChapter ? ('Chương ' + prefChapter) : '', prefQuestion].filter(Boolean);
+        wrap.innerHTML = `<div class="ctx-chip"><i class="fa-solid fa-link"></i> Đang báo lỗi từ: ${escapeHtml(parts.join(' · '))}</div>`;
+    } else {
+        wrap.innerHTML = '';
+    }
+}
+
+// ---------------- Upload ảnh minh hoạ ----------------
+const dropZone = document.getElementById('imgDropZone');
+const imgInput = document.getElementById('fbImageInput');
+dropZone.addEventListener('click', () => imgInput.click());
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--brand)'; });
+dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault(); dropZone.style.borderColor = '';
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) handleImageFile(e.dataTransfer.files[0]);
+});
+imgInput.addEventListener('change', () => { if (imgInput.files[0]) handleImageFile(imgInput.files[0]); });
+document.getElementById('imgRemoveBtn').addEventListener('click', () => {
+    uploadedImageUrl = '';
+    document.getElementById('imgPreviewWrap').classList.add('hidden');
+    document.getElementById('imgDropZone').classList.remove('hidden');
+    imgInput.value = '';
+});
+
+async function handleImageFile(file){
+    const msg = document.getElementById('fbMsg');
+    if (!file.type.startsWith('image/')){
+        msg.className = 'msg err'; msg.innerText = 'Vui lòng chọn một tệp ảnh.'; return;
+    }
+    if (file.size > 5 * 1024 * 1024){
+        msg.className = 'msg err'; msg.innerText = 'Ảnh vượt quá 5MB, vui lòng chọn ảnh nhỏ hơn.'; return;
+    }
+    msg.className = 'msg'; msg.innerText = '';
+
+    const previewWrap = document.getElementById('imgPreviewWrap');
+    const previewTag = document.getElementById('imgPreviewTag');
+    const reader = new FileReader();
+    reader.onload = () => { previewTag.src = reader.result; };
+    reader.readAsDataURL(file);
+    previewWrap.classList.remove('hidden');
+    document.getElementById('imgDropZone').classList.add('hidden');
+
+    uploadingImage = true;
+    document.getElementById('imgUploadingBox').classList.remove('hidden');
+
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const path = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}.${ext}`;
+
+    const { error: upErr } = await sb.storage.from(IMG_BUCKET).upload(path, file, { upsert: false });
+    uploadingImage = false;
+    document.getElementById('imgUploadingBox').classList.add('hidden');
+
+    if (upErr){
+        msg.className = 'msg err'; msg.innerText = 'Tải ảnh thất bại: ' + upErr.message;
+        uploadedImageUrl = '';
+        return;
+    }
+    const { data: pub } = sb.storage.from(IMG_BUCKET).getPublicUrl(path);
+    uploadedImageUrl = pub ? pub.publicUrl : '';
+}
+
+// ---------------- Gửi góp ý ----------------
+async function submitFeedback(){
+    const msg = document.getElementById('fbMsg');
+    const btn = document.getElementById('fbSubmitBtn');
+    const message = document.getElementById('fbMessage').value.trim();
+    const typeInput = document.querySelector('input[name="fbType"]:checked');
+
+    if (!typeInput){
+        msg.className = 'msg err'; msg.innerText = 'Chọn loại góp ý trước nhé.'; return;
+    }
+    if (!message){
+        msg.className = 'msg err'; msg.innerText = 'Nhập mô tả chi tiết trước khi gửi.'; return;
+    }
+    if (uploadingImage){
+        msg.className = 'msg err'; msg.innerText = 'Ảnh đang tải lên, vui lòng đợi một chút.'; return;
+    }
+
+    const subjectId = document.getElementById('fbSubject').value;
+    const subjectName = subjectId ? (subjectsCache.find(s => s.id === subjectId) || {}).name || subjectId : null;
+    const chapter = document.getElementById('fbChapter').value || null;
+    const questionRef = document.getElementById('fbQuestionRef').value.trim() || (prefQuestion || null);
+    const email = document.getElementById('fbEmail').value.trim() || null;
+
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
+    msg.className = 'msg'; msg.innerText = '';
+
+    const { data: { session } } = await sb.auth.getSession();
+    const user = session ? session.user : null;
+
+    const { error } = await sb.from('feedback').insert({
+        user_id: user ? user.id : null,
+        email: email || (user ? user.email : null),
+        full_name: (user && user.user_metadata) ? (user.user_metadata.full_name || null) : null,
+        message,
+        page_url: location.href,
+        type: typeInput.value,
+        subject_id: subjectId || null,
+        subject_name: subjectName,
+        chapter,
+        question_ref: questionRef,
+        image_url: uploadedImageUrl || null
+    });
+
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Gửi góp ý';
+
+    if (error){
+        msg.className = 'msg err'; msg.innerText = 'Gửi thất bại: ' + error.message;
+        return;
+    }
+
+    document.getElementById('formCard').classList.add('hidden');
+    document.getElementById('successCard').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (currentUser) loadMineList();
+}
+
+function resetFormForNew(){
+    document.getElementById('fbMessage').value = '';
+    document.getElementById('fbQuestionRef').value = '';
+    document.getElementById('imgRemoveBtn').click();
+    document.getElementById('fbMsg').className = 'msg';
+    document.getElementById('successCard').classList.add('hidden');
+    document.getElementById('formCard').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ---------------- Lịch sử góp ý của người dùng hiện tại ----------------
+function mineStatusLabel(s){ return s === 'resolved' ? 'Đã xử lý' : (s === 'read' ? 'Đã xem' : 'Chưa xem'); }
+function mineTypeIcon(t){
+    return t === 'wrong_question' ? 'fa-triangle-exclamation'
+        : t === 'feature_request' ? 'fa-lightbulb'
+        : t === 'payment_issue' ? 'fa-credit-card'
+        : 'fa-comment-dots';
+}
+async function loadMineList(){
+    const { data, error } = await sb.from('feedback').select('*').order('created_at', { ascending:false }).limit(20);
+    if (error || !data || !data.length) return;
+    document.getElementById('mineWrap').classList.remove('hidden');
+    document.getElementById('mineList').innerHTML = data.map(f => `
+        <div class="mine-item">
+            <span class="mine-ico"><i class="fa-solid ${mineTypeIcon(f.type)}"></i></span>
+            <span class="mine-body">
+                <span class="mine-top">
+                    <span class="mine-msg">${escapeHtml((f.message || '').slice(0,80))}${(f.message||'').length>80?'…':''}</span>
+                    <span class="mine-status ${f.status}">${mineStatusLabel(f.status)}</span>
+                </span>
+                <span class="mine-meta">${[f.subject_name, f.chapter ? ('Chương '+f.chapter) : '', fmtDate(f.created_at)].filter(Boolean).join(' · ')}</span>
+            </span>
+        </div>`).join('');
+}
+
+(async function init(){
+    await loadSubjects();
+    renderCtxChip();
+    if (prefType) selectType(prefType); else selectType('other');
+    if (prefQuestion) document.getElementById('fbQuestionRef').value = prefQuestion;
+
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && session.user){
+        currentUser = session.user;
+        document.getElementById('fbEmail').value = currentUser.email || '';
+        loadMineList();
+    }
+})();
+</script>
+
+</body>
+</html>

@@ -46,7 +46,14 @@
         .layout{display:flex;max-width:1200px;margin:10px auto 40px;padding:0 20px;gap:25px}
         .q-col{flex:1;display:flex;flex-direction:column;gap:20px;min-width:0}
         .q-card{background:#fff;border-radius:12px;padding:25px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
-        .q-num{font-weight:700;color:var(--blue);margin-bottom:4px;font-size:.95rem}
+        .q-num-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
+        .q-num{font-weight:700;color:var(--blue);font-size:.95rem}
+        .q-report-btn{
+            display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;
+            color:#6b7280;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;
+            padding:5px 11px;cursor:pointer;text-decoration:none;flex-shrink:0;transition:.15s;
+        }
+        .q-report-btn:hover{color:#ef4444;border-color:#ef4444;background:#fef2f2}
         .q-src{font-size:.72rem;color:#9ca3af;margin-bottom:10px;display:none}
         .opts{display:flex;flex-direction:column;gap:10px;margin-top:15px}
         .opt{display:flex;align-items:center;gap:12px;cursor:pointer}
@@ -336,10 +343,10 @@ function getPool(){
     const v = document.getElementById('sel-src').value;
     let pool = [];
     if (v === 'all'){
-        database.forEach(d => { if (!d.isCalc) pool = pool.concat(d.questions.map(q => ({...q, src: d.name}))); });
+        database.forEach(d => { if (!d.isCalc) pool = pool.concat(d.questions.map(q => ({...q, src: d.name, srcKey: d.key}))); });
     } else {
         const d = database[+v];
-        pool = d.questions.map(q => ({...q, src: d.name}));
+        pool = d.questions.map(q => ({...q, src: d.name, srcKey: d.key}));
     }
     return pool;
 }
@@ -354,7 +361,7 @@ function shuffleOptions(q){
     shuffle(idx);
     const opts = idx.map(i=>q.opts[i]);
     const ci = idx.indexOf(q.ci);
-    return { q: q.q, opts, ci, ex: q.ex, src: q.src };
+    return { q: q.q, opts, ci, ex: q.ex, src: q.src, srcKey: q.srcKey };
 }
 
 function generateExam(){
@@ -382,13 +389,33 @@ function updateTimerDisp(){
     document.getElementById('timer-disp').textContent = m+':'+s;
 }
 
+function stripHtmlExam(html){
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html || '';
+    return (tmp.textContent || tmp.innerText || '').trim();
+}
+function reportLinkForExam(i){
+    const q = exam[i];
+    const excerpt = stripHtmlExam(q.q).slice(0, 100);
+    const params = new URLSearchParams({
+        type: 'wrong_question',
+        subject: subjectId || '',
+        chapter: q.srcKey || '',
+        question: `Câu ${i+1}${excerpt ? ' — ' + excerpt : ''}`
+    });
+    return 'gop-y.html?' + params.toString();
+}
+
 function render(){
     const qc = document.getElementById('q-container'), ng = document.getElementById('nav-grid');
     qc.innerHTML=''; ng.innerHTML='';
     exam.forEach((q,i) => {
         const card = document.createElement('div'); card.className='q-card'; card.id='q-'+i;
         card.innerHTML = `
-            <div class="q-num">Câu ${i+1} / ${exam.length}</div>
+            <div class="q-num-row">
+                <div class="q-num">Câu ${i+1} / ${exam.length}</div>
+                <a class="q-report-btn" href="${reportLinkForExam(i)}" target="_blank" rel="noopener"><i class="fa-solid fa-flag"></i> Báo lỗi câu này</a>
+            </div>
             <div class="q-src"><i class="fa-solid fa-tag"></i> ${escapeHtml(q.src||'')}</div>
             <div style="font-size:1.05rem">${q.q}</div>
             <div class="opts">${q.opts.map((o,oi)=>`

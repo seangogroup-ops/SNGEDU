@@ -397,11 +397,15 @@ function stripHtmlExam(html){
 function reportLinkForExam(i){
     const q = exam[i];
     const excerpt = stripHtmlExam(q.q).slice(0, 100);
+    // Đề thi thử random lại câu hỏi mỗi lần tải trang nên không thể trỏ thẳng tới đúng câu cũ,
+    // origin ở đây trỏ về đúng môn + đúng đề để admin bấm vào là vào lại đúng khu vực đó.
+    const originUrl = `${location.origin}${location.pathname}?subject=${encodeURIComponent(subjectId||'')}&chapter=${encodeURIComponent(q.srcKey||'')}`;
     const params = new URLSearchParams({
         type: 'wrong_question',
         subject: subjectId || '',
         chapter: q.srcKey || '',
-        question: `Câu ${i+1}${excerpt ? ' — ' + excerpt : ''}`
+        question: `Câu ${i+1}${excerpt ? ' — ' + excerpt : ''}`,
+        origin: originUrl
     });
     return 'gop-y.html?' + params.toString();
 }

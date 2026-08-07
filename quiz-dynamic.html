@@ -63,6 +63,11 @@
         .layout { display: flex; max-width: 1200px; margin: 80px auto 40px; padding: 0 20px; gap: 25px; align-items: flex-start; }
         .questions-col { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
         .q-card { background: var(--white); border-radius: 12px; padding: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .q-card.q-highlight { animation: qHighlightPulse 2.2s ease; box-shadow: 0 0 0 3px var(--brand,#4f6bff); }
+        @keyframes qHighlightPulse {
+            0%   { box-shadow: 0 0 0 3px var(--brand,#4f6bff); background: rgba(79,107,255,.10); }
+            100% { box-shadow: 0 0 0 3px var(--brand,#4f6bff); background: var(--white); }
+        }
         .q-title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
         .q-title { font-weight: 700; color: var(--azota-blue); font-size: 1.1rem; }
         .q-report-btn {
@@ -308,6 +313,8 @@
         qContainer.innerHTML = '';
         renderQuestions();
         startTimer();
+        // Nếu URL có #q-i (đến từ link "Trang gốc" trong trang quản trị), tự cuộn tới đúng câu và tô sáng nhẹ để dễ nhận ra.
+        scrollToHashQuestion();
     }
 
     function stripHtml(html){
@@ -316,14 +323,30 @@
         return (tmp.textContent || tmp.innerText || '').trim();
     }
 
+    function scrollToHashQuestion(){
+        const m = /^#q-(\d+)$/.exec(location.hash || '');
+        if (!m) return;
+        const card = document.getElementById('q-' + m[1]);
+        if (!card) return;
+        setTimeout(() => {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.classList.add('q-highlight');
+            setTimeout(() => card.classList.remove('q-highlight'), 2200);
+        }, 150);
+    }
+
     function reportLinkFor(i){
         const q = questions[i];
         const excerpt = stripHtml(q.content).slice(0, 100);
+        // Link về đúng câu hỏi này trên trang làm đề (kèm #q-i), để admin bấm "Trang gốc" trong trang quản trị
+        // là nhảy thẳng tới đúng câu học viên báo lỗi, không phải mở lại trang gửi góp ý.
+        const originUrl = `${location.origin}${location.pathname}?subject=${encodeURIComponent(subjectId||'')}&chapter=${encodeURIComponent(chapter||'')}#q-${i}`;
         const params = new URLSearchParams({
             type: 'wrong_question',
             subject: subjectId || '',
             chapter: chapter || '',
-            question: `${q.label}${excerpt ? ' — ' + excerpt : ''}`
+            question: `${q.label}${excerpt ? ' — ' + excerpt : ''}`,
+            origin: originUrl
         });
         return 'gop-y.html?' + params.toString();
     }

@@ -99,19 +99,19 @@
         padding:26px 26px 28px; box-shadow:var(--shadow); margin-top:24px;
     }
 
-    .type-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+    .type-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
     @media (max-width:520px){ .type-grid{ grid-template-columns:1fr; } }
     .type-opt{
-        display:flex; align-items:flex-start; gap:10px; padding:13px 14px; border-radius:14px;
+        display:flex; align-items:center; gap:9px; padding:11px 12px; border-radius:12px;
         border:1.5px solid var(--line); cursor:pointer; background:var(--bg);
         transition:border-color .15s ease, background .15s ease;
     }
     .type-opt:hover{ border-color:var(--brand2); }
     .type-opt.active{ border-color:var(--brand); background:var(--brand-bg); }
     .type-opt input{ display:none; }
-    .type-opt .t-ico{ font-size:1rem; color:var(--brand); margin-top:1px; flex-shrink:0; }
-    .type-opt .t-txt{ font-size:.85rem; font-weight:700; color:var(--ink); line-height:1.4; }
-    .type-opt .t-desc{ font-size:.76rem; color:var(--ink-mute); font-weight:500; margin-top:2px; }
+    .type-opt .t-ico{ font-size:.9rem; color:var(--brand); flex-shrink:0; width:18px; text-align:center; }
+    .type-opt .t-txt{ font-size:.84rem; font-weight:700; color:var(--ink); line-height:1.3; }
+    #typeGridWrap.hidden{ display:none; }
 
     label{ display:block; font-size:.8rem; font-weight:700; color:var(--ink-soft); margin:20px 0 7px; }
     label .opt{ font-weight:500; color:var(--ink-mute); text-transform:none; }
@@ -223,32 +223,34 @@
     <div class="card" id="formCard">
         <div id="ctxChipWrap"></div>
 
-        <label style="margin-top:0;">Bạn muốn góp ý về điều gì?</label>
-        <div class="type-grid" id="typeGrid">
-            <label class="type-opt" data-type="wrong_question">
-                <input type="radio" name="fbType" value="wrong_question">
-                <span class="t-ico"><i class="fa-solid fa-triangle-exclamation"></i></span>
-                <span><span class="t-txt">Câu hỏi / đáp án sai</span><span class="t-desc">Sai đáp án, sai giải thích, đề lỗi...</span></span>
-            </label>
-            <label class="type-opt" data-type="feature_request">
-                <input type="radio" name="fbType" value="feature_request">
-                <span class="t-ico"><i class="fa-solid fa-lightbulb"></i></span>
-                <span><span class="t-txt">Góp ý tính năng</span><span class="t-desc">Đề xuất thêm/sửa tính năng</span></span>
-            </label>
-            <label class="type-opt" data-type="payment_issue">
-                <input type="radio" name="fbType" value="payment_issue">
-                <span class="t-ico"><i class="fa-solid fa-credit-card"></i></span>
-                <span><span class="t-txt">Vấn đề thanh toán</span><span class="t-desc">Nạp tiền, mua gói, hoá đơn...</span></span>
-            </label>
-            <label class="type-opt" data-type="other">
-                <input type="radio" name="fbType" value="other">
-                <span class="t-ico"><i class="fa-solid fa-comment-dots"></i></span>
-                <span><span class="t-txt">Khác</span><span class="t-desc">Vấn đề chưa có ở trên</span></span>
-            </label>
+        <div id="typeGridWrap">
+            <label style="margin-top:0;">Bạn muốn góp ý về điều gì?</label>
+            <div class="type-grid" id="typeGrid">
+                <label class="type-opt" data-type="wrong_question">
+                    <input type="radio" name="fbType" value="wrong_question">
+                    <span class="t-ico"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                    <span class="t-txt">Câu hỏi / đáp án sai</span>
+                </label>
+                <label class="type-opt" data-type="feature_request">
+                    <input type="radio" name="fbType" value="feature_request">
+                    <span class="t-ico"><i class="fa-solid fa-lightbulb"></i></span>
+                    <span class="t-txt">Góp ý tính năng</span>
+                </label>
+                <label class="type-opt" data-type="payment_issue">
+                    <input type="radio" name="fbType" value="payment_issue">
+                    <span class="t-ico"><i class="fa-solid fa-credit-card"></i></span>
+                    <span class="t-txt">Vấn đề thanh toán</span>
+                </label>
+                <label class="type-opt" data-type="other">
+                    <input type="radio" name="fbType" value="other">
+                    <span class="t-ico"><i class="fa-solid fa-comment-dots"></i></span>
+                    <span class="t-txt">Khác</span>
+                </label>
+            </div>
         </div>
 
         <div id="subjectFieldsWrap">
-            <div class="row2">
+            <div class="row2" id="subjectChapterRow">
                 <div>
                     <label>Môn học <span class="opt">(nếu liên quan)</span></label>
                     <select id="fbSubject">
@@ -263,8 +265,10 @@
                 </div>
             </div>
 
-            <label>Câu hỏi liên quan <span class="opt">(vd: Câu 12, hoặc trích một phần câu hỏi)</span></label>
-            <input type="text" id="fbQuestionRef" placeholder="VD: Câu 12 — đáp án đúng phải là B chứ không phải A">
+            <div id="questionRefRow">
+                <label>Câu hỏi liên quan <span class="opt">(vd: Câu 12, hoặc trích một phần câu hỏi)</span></label>
+                <input type="text" id="fbQuestionRef" placeholder="VD: Câu 12 — đáp án đúng phải là B chứ không phải A">
+            </div>
         </div>
 
         <label>Mô tả chi tiết <span class="opt">(bắt buộc)</span></label>
@@ -548,10 +552,23 @@ async function loadMineList(){
         </div>`).join('');
 }
 
+// Đến từ nút "Báo lỗi câu này" trong lúc làm đề: đã biết chắc đây là góp ý "câu hỏi/đáp án sai",
+// nên ẩn hẳn phần chọn loại góp ý + chọn môn/chương cho gọn, đỡ rối — chỉ cần mô tả lỗi là gửi được.
+const isQuickReport = !!(prefQuestion || prefSubject);
+
 (async function init(){
     await loadSubjects();
     renderCtxChip();
-    if (prefType) selectType(prefType); else selectType('other');
+
+    if (isQuickReport){
+        document.getElementById('typeGridWrap').classList.add('hidden');
+        document.getElementById('subjectChapterRow').classList.add('hidden');
+        selectType(prefType || 'wrong_question');
+    } else if (prefType){
+        selectType(prefType);
+    } else {
+        selectType('other');
+    }
     if (prefQuestion) document.getElementById('fbQuestionRef').value = prefQuestion;
 
     const { data: { session } } = await sb.auth.getSession();

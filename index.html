@@ -345,6 +345,49 @@
 
     /* ----- sub-tab "Tổng quan" / "Lịch sử giao dịch" trong trang Tài khoản ----- */
     .acct-subtabs{ display:inline-flex; gap:4px; padding:4px; background:var(--card); border:1px solid var(--line); border-radius:14px; margin-bottom:24px; }
+
+    /* ---- Thẻ hồ sơ + số dư ví ở đầu tab Tài khoản ---- */
+    .acct-profile-card{
+        display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+        background:linear-gradient(120deg, var(--brand-bg), var(--card) 65%);
+        border:1px solid var(--line); border-radius:20px; padding:22px 24px; margin-bottom:16px;
+    }
+    .acct-profile-avatar{
+        width:64px; height:64px; border-radius:50%; flex-shrink:0; position:relative;
+        background:linear-gradient(135deg, var(--brand), #7c5cfc);
+        display:flex; align-items:center; justify-content:center;
+        color:#fff; font-weight:800; font-size:1.5rem;
+        box-shadow:0 0 0 3px var(--card), 0 0 0 4px rgba(79,107,255,.25);
+    }
+    .acct-profile-avatar.is-pro{ box-shadow:0 0 0 3px var(--card), 0 0 0 6px #f5a524, 0 0 18px -2px rgba(245,165,36,.75); }
+    .acct-profile-avatar .pro-badge{ width:22px; height:22px; font-size:.68rem; }
+    .acct-profile-main{ flex:1; min-width:160px; }
+    .acct-profile-name{ font-weight:800; font-size:1.18rem; color:var(--ink); line-height:1.3; word-break:break-word; }
+    .acct-profile-email{ font-size:.85rem; color:var(--ink-mute); margin-top:2px; word-break:break-word; }
+
+    .acct-stats-row{ display:flex; gap:14px; margin-bottom:28px; flex-wrap:wrap; }
+    .acct-stat-card{
+        display:flex; align-items:center; gap:14px; flex:1; min-width:240px;
+        background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px 18px;
+    }
+    .acct-stat-ico{
+        width:44px; height:44px; border-radius:14px; background:var(--green-bg); color:var(--green);
+        display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;
+    }
+    .acct-stat-text{ flex:1; min-width:0; }
+    .acct-stat-label{ font-size:.78rem; color:var(--ink-mute); font-weight:600; }
+    .acct-stat-value{ font-size:1.2rem; font-weight:800; color:var(--ink); margin-top:1px; }
+    .acct-stat-btn{
+        flex-shrink:0; border:none; border-radius:12px; padding:9px 14px; font-weight:700; font-size:.82rem;
+        background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff; cursor:pointer;
+        display:flex; align-items:center; gap:6px; white-space:nowrap;
+    }
+    .acct-stat-btn:hover{ filter:brightness(1.05); }
+    @media (max-width:480px){
+        .acct-profile-card{ padding:18px; gap:14px; }
+        .acct-profile-avatar{ width:52px; height:52px; font-size:1.2rem; }
+        .acct-stat-btn span{ display:none; }
+    }
     .acct-subtab{
         border:none; background:transparent; padding:9px 18px; border-radius:10px;
         font-family:inherit; font-weight:700; font-size:.86rem; color:var(--ink-mute); cursor:pointer;
@@ -1230,6 +1273,15 @@
 .pro-confirm-ok{ flex:1; background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff; }
 .pro-confirm-ok:hover{ filter:brightness(1.05); }
 .pro-confirm-ok:disabled{ opacity:.65; cursor:not-allowed; }
+.pay-note{
+    margin:2px 24px 0; padding:9px 12px; border-radius:10px; background:var(--bg);
+    color:var(--ink-mute); font-size:.76rem; line-height:1.5; text-align:center;
+    display:flex; align-items:center; justify-content:center; gap:6px; min-height:16px;
+}
+.pay-note:empty{ display:none; }
+.pay-note b{ color:var(--ink); }
+.pay-note.wallet{ background:var(--green-bg); color:var(--green); }
+.pay-note.wallet b{ color:var(--green); }
 
 /* ============ MODAL: Nạp tiền vào ví — khối chọn số tiền nhanh + ô nhập tuỳ chỉnh ============ */
 .naptien-amounts{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:16px 0 14px; }
@@ -1530,17 +1582,26 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         </div>
 
         <div class="acct-subpanel active" id="acctSubOverview">
-            <div class="sec-head"><h2>Thông tin tài khoản</h2></div>
-            <div style="background:var(--card); border:1px solid var(--line); border-radius:20px; padding:22px 24px; margin-bottom:28px;">
-                <div class="acc-info-row"><span class="label">Email</span><span class="value" id="acctPageEmail">—</span></div>
-                <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="acctPageName">—</span></div>
-                <div class="acc-info-row"><span class="label">Gói hiện tại</span><span class="value"><span class="acc-plan-badge" id="acctPagePlanBadge">Miễn phí</span></span></div>
-                <div class="acc-info-row" id="acctPageBalanceRow" style="display:none">
-                    <span class="label">Số dư</span>
-                    <span class="value" style="display:flex; align-items:center; gap:10px;">
-                        <span id="acctPageBalanceValue">—</span>
-                        <button type="button" class="acc-upgrade-btn" style="padding:6px 14px; font-size:13px;" onclick="openTopupModal()"><i class="fa-solid fa-wallet"></i> Nạp tiền</button>
-                    </span>
+            <div class="acct-profile-card" id="acctProfileCard">
+                <div class="acct-profile-avatar" id="acctPageAvatar">
+                    <span class="avt-content" id="acctPageAvatarInitial">K</span>
+                    <span class="pro-badge"><i class="fa-solid fa-crown"></i></span>
+                </div>
+                <div class="acct-profile-main">
+                    <div class="acct-profile-name" id="acctPageName">—</div>
+                    <div class="acct-profile-email" id="acctPageEmail">—</div>
+                </div>
+                <span class="acc-plan-badge" id="acctPagePlanBadge">Miễn phí</span>
+            </div>
+
+            <div class="acct-stats-row">
+                <div class="acct-stat-card" id="acctPageBalanceRow" style="display:none">
+                    <div class="acct-stat-ico"><i class="fa-solid fa-wallet"></i></div>
+                    <div class="acct-stat-text">
+                        <div class="acct-stat-label">Số dư ví</div>
+                        <div class="acct-stat-value" id="acctPageBalanceValue">—</div>
+                    </div>
+                    <button type="button" class="acct-stat-btn" onclick="openTopupModal()"><i class="fa-solid fa-plus"></i><span> Nạp tiền</span></button>
                 </div>
             </div>
 
@@ -1718,14 +1779,10 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             </div>
             <div class="pro-confirm-features" id="proConfirmFeatures"></div>
         </div>
+        <div class="pay-note" id="proConfirmPayNote"></div>
         <div class="pro-confirm-actions">
             <button type="button" class="pro-confirm-cancel" onclick="closeProConfirm()">Hủy</button>
-            <button type="button" class="pro-confirm-ok" id="proConfirmOkBtn" onclick="confirmProUpgrade()"><i class="fa-solid fa-lock"></i> Xác nhận thanh toán</button>
-        </div>
-        <div class="pro-confirm-balance-pay" id="proConfirmBalancePayWrap" style="display:none; text-align:center; margin-top:10px;">
-            <button type="button" class="pro-confirm-cancel" id="proConfirmBalanceBtn" style="width:100%;" onclick="confirmProUpgrade(true)">
-                <i class="fa-solid fa-wallet"></i> Thanh toán bằng số dư ví (<span id="proConfirmBalanceText">—</span>)
-            </button>
+            <button type="button" class="pro-confirm-ok" id="proConfirmOkBtn" onclick="confirmProUpgrade()" data-use-balance="0"><i class="fa-solid fa-lock"></i> Xác nhận thanh toán</button>
         </div>
     </div>
 </div>
@@ -1739,10 +1796,8 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             <h3 id="prodDetailTitle">—</h3>
             <div class="prod-detail-price" id="prodDetailPrice"></div>
             <div class="prod-detail-desc" id="prodDetailDesc"></div>
-            <a class="prod-detail-cta" id="prodDetailCta" href="#" target="_blank" rel="noopener">Xem chi tiết</a>
-            <button type="button" class="prod-detail-cta" id="prodDetailBalanceBtn" style="display:none; background:transparent; border:1.5px solid var(--line); color:var(--text);" onclick="muaSanPhamBangSoDu()">
-                <i class="fa-solid fa-wallet"></i> Thanh toán bằng số dư (<span id="prodDetailBalanceText">—</span>)
-            </button>
+            <a class="prod-detail-cta" id="prodDetailCta" href="#" target="_blank" rel="noopener" data-use-balance="0">Xem chi tiết</a>
+            <div class="pay-note" id="prodDetailPayNote"></div>
         </div>
     </div>
 </div>
@@ -1765,14 +1820,10 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <div class="price" id="docConfirmPrice">—</div>
             </div>
         </div>
+        <div class="pay-note" id="docConfirmPayNote"></div>
         <div class="pro-confirm-actions">
             <button type="button" class="pro-confirm-cancel" onclick="closeDocConfirm()">Hủy</button>
-            <button type="button" class="pro-confirm-ok" id="docConfirmOkBtn" onclick="confirmDocPurchase()"><i class="fa-solid fa-lock"></i> Xác nhận thanh toán</button>
-        </div>
-        <div class="pro-confirm-balance-pay" id="docConfirmBalancePayWrap" style="display:none; text-align:center; margin-top:10px;">
-            <button type="button" class="pro-confirm-cancel" id="docConfirmBalanceBtn" style="width:100%;" onclick="confirmDocPurchase(true)">
-                <i class="fa-solid fa-wallet"></i> Thanh toán bằng số dư ví (<span id="docConfirmBalanceText">—</span>)
-            </button>
+            <button type="button" class="pro-confirm-ok" id="docConfirmOkBtn" onclick="confirmDocPurchase()" data-use-balance="0"><i class="fa-solid fa-lock"></i> Xác nhận thanh toán</button>
         </div>
     </div>
 </div>
@@ -2738,70 +2789,79 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         document.getElementById('docConfirmMeta').textContent = item.size || 'Tài liệu trả phí';
         document.getElementById('docConfirmPrice').textContent = Number(item.price || 0).toLocaleString('vi-VN') + 'đ';
         document.getElementById('docConfirmOverlay').classList.remove('hidden');
-        capNhatOptionSoDu('docConfirmBalancePayWrap', 'docConfirmBalanceText', Number(item.price || 0));
+        capNhatNutThanhToan('docConfirmOkBtn', 'docConfirmPayNote', Number(item.price || 0));
     }
 
     function closeDocConfirm(){
         document.getElementById('docConfirmOverlay').classList.add('hidden');
         const okBtn = document.getElementById('docConfirmOkBtn');
-        if (okBtn){ okBtn.disabled = false; okBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Xác nhận thanh toán'; }
-        resetNutSoDu('docConfirmBalanceBtn', 'docConfirmBalanceText');
+        if (okBtn){ okBtn.disabled = false; okBtn.dataset.useBalance = '0'; okBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Xác nhận thanh toán'; }
+        const noteEl = document.getElementById('docConfirmPayNote');
+        if (noteEl){ noteEl.className = 'pay-note'; noteEl.textContent = ''; }
     }
 
-    async function confirmDocPurchase(useBalance){
+    async function confirmDocPurchase(){
         if (!docConfirmSelectedId) return;
-        if (useBalance){
+        const okBtn = document.getElementById('docConfirmOkBtn');
+        if (okBtn && okBtn.dataset.useBalance === '1'){
             await xuLyThanhToanBangSoDu({
                 orderPayload: { order_type: 'document', document_id: docConfirmSelectedId },
-                balanceBtnId: 'docConfirmBalanceBtn',
+                balanceBtnId: 'docConfirmOkBtn',
                 onSuccess: () => { closeDocConfirm(); renderDocContent(); }
             });
             return;
         }
-        const okBtn = document.getElementById('docConfirmOkBtn');
         if (okBtn){ okBtn.disabled = true; okBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chuyển tới cổng thanh toán...'; }
         thanhToanTaiLieu(docConfirmSelectedId); // hàm có sẵn trong frontend/sepay-checkout.js
     }
 
-    // ---------------- Thanh toán bằng số dư ví: hạ tầng dùng chung cho tài liệu / gói Pro / sản phẩm ----------------
-    // Hiện/ẩn nút "Thanh toán bằng số dư ví", tô mờ + khoá nút nếu số dư không đủ.
-    async function capNhatOptionSoDu(wrapId, textId, price){
-        const wrap = document.getElementById(wrapId);
-        const textEl = document.getElementById(textId);
-        if (!wrap || !textEl) return;
+    // ---------------- Thanh toán bằng ví / chuyển khoản: 1 nút duy nhất, tự chọn phương thức ----------------
+    // Có đủ số dư ví -> nút trả thẳng bằng ví. Không đủ (hoặc chưa đăng nhập số dư) -> nút chuyển sang cổng chuyển khoản.
+    async function xacDinhPhuongThucThanhToan(price){
         const balance = await laySoDuViHienTai();
-        textEl.textContent = 'còn ' + balance.toLocaleString('vi-VN') + 'đ';
-        const enough = balance >= price;
-        wrap.style.display = (wrap.tagName === 'BUTTON') ? 'inline-flex' : 'block';
-        const btn = (wrap.tagName === 'BUTTON') ? wrap : wrap.querySelector('button');
-        if (btn){
-            btn.disabled = !enough;
-            btn.style.opacity = enough ? '1' : '0.55';
-            btn.style.cursor = enough ? 'pointer' : 'not-allowed';
-            btn.title = enough ? '' : 'Số dư không đủ, vui lòng nạp thêm tiền vào ví';
-        }
+        return { enough: price > 0 && balance >= price, balance };
     }
 
-    function resetNutSoDu(btnId){
+    // Cập nhật 1 nút "Xác nhận thanh toán" (modal gói Pro / tài liệu) theo phương thức phù hợp + dòng ghi chú bên dưới.
+    async function capNhatNutThanhToan(btnId, noteId, price, labelKhoa){
         const btn = document.getElementById(btnId);
+        const noteEl = document.getElementById(noteId);
         if (!btn) return;
+        btn.disabled = true;
+        btn.dataset.useBalance = '0';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang kiểm tra ví...';
+        if (noteEl){ noteEl.className = 'pay-note'; noteEl.textContent = ''; }
+
+        const { enough, balance } = await xacDinhPhuongThucThanhToan(price);
         btn.disabled = false;
-        const icon = btn.querySelector('i');
-        if (icon) icon.className = 'fa-solid fa-wallet';
+        btn.dataset.useBalance = enough ? '1' : '0';
+        if (enough){
+            btn.innerHTML = '<i class="fa-solid fa-wallet"></i> Thanh toán bằng ví';
+            if (noteEl){ noteEl.className = 'pay-note wallet'; noteEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> Số dư ví: <b>' + balance.toLocaleString('vi-VN') + 'đ</b> — đủ để trả ngay, không cần chuyển khoản.'; }
+        } else {
+            btn.innerHTML = '<i class="fa-solid fa-building-columns"></i> ' + (labelKhoa || 'Thanh toán chuyển khoản');
+            if (noteEl){
+                noteEl.className = 'pay-note';
+                noteEl.innerHTML = balance > 0
+                    ? ('Ví còn <b>' + balance.toLocaleString('vi-VN') + 'đ</b>, chưa đủ — sẽ thanh toán qua chuyển khoản ngân hàng.')
+                    : 'Thanh toán an toàn qua chuyển khoản ngân hàng.';
+            }
+        }
     }
 
     // Gọi thanh toán bằng số dư, tự khoá nút trong lúc xử lý, báo lỗi/refresh nếu cần.
     async function xuLyThanhToanBangSoDu({ orderPayload, balanceBtnId, onSuccess }){
         const btn = document.getElementById(balanceBtnId);
         const originalHtml = btn ? btn.innerHTML : '';
-        if (btn){ btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...'; }
+        if (btn){ btn.disabled = true; btn.style.pointerEvents = 'none'; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...'; }
 
         const result = await thanhToanBangSoDu(orderPayload); // hàm có sẵn trong frontend/sepay-checkout.js
         if (!result.ok){
             alert(result.error || 'Có lỗi xảy ra khi thanh toán bằng số dư.');
-            if (btn){ btn.disabled = false; btn.innerHTML = originalHtml; }
+            if (btn){ btn.disabled = false; btn.style.pointerEvents = ''; btn.innerHTML = originalHtml; }
             return;
         }
+        if (btn){ btn.style.pointerEvents = ''; }
         if (currentSession) loadAndRenderBalance(currentSession.user.id, 'accBalanceRow', 'accBalanceValue');
         if (typeof onSuccess === 'function') onSuccess();
     }
@@ -2970,9 +3030,10 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 cta.innerHTML = '<span><i class="fa-solid fa-circle-check"></i> Đã sở hữu</span>';
             }
         } else if (price > 0){
-            // Sản phẩm trả phí, chưa mua -> bấm để chuyển sang cổng thanh toán SePay.
+            // Sản phẩm trả phí, chưa mua -> bấm để mua (tự chọn ví hoặc chuyển khoản, xem cập nhật bên dưới).
             cta.href = '#';
             cta.classList.remove('disabled');
+            cta.dataset.useBalance = '0';
             cta.style.background = 'var(--amber-bg)'; cta.style.color = 'var(--amber)';
             cta.innerHTML = `<span>Mua ngay · ${priceLabel}</span><i class="fa-solid fa-cart-shopping"></i>`;
             cta.onclick = (evt) => { evt.preventDefault(); purchaseProductFromModal(productId); };
@@ -2988,15 +3049,20 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             cta.innerHTML = '<span>Sắp ra mắt</span>';
         }
 
-        // Nút "Thanh toán bằng số dư ví" — chỉ hiện khi sản phẩm trả phí và chưa mua.
+        // Ghi chú phương thức thanh toán (ví hay chuyển khoản) — chỉ hiện khi sản phẩm trả phí và chưa mua.
         prodDetailSelectedId = productId;
-        const balanceBtn = document.getElementById('prodDetailBalanceBtn');
-        if (balanceBtn){
-            if (!owned && price > 0 && currentSession){
-                capNhatOptionSoDu('prodDetailBalanceBtn', 'prodDetailBalanceText', price);
-            } else {
-                balanceBtn.style.display = 'none';
-            }
+        const noteEl = document.getElementById('prodDetailPayNote');
+        if (noteEl){ noteEl.className = 'pay-note'; noteEl.textContent = ''; }
+        if (!owned && price > 0 && currentSession){
+            xacDinhPhuongThucThanhToan(price).then(({ enough, balance }) => {
+                cta.dataset.useBalance = enough ? '1' : '0';
+                if (enough){
+                    cta.innerHTML = `<span><i class="fa-solid fa-wallet"></i> Thanh toán bằng ví · ${priceLabel}</span>`;
+                    if (noteEl){ noteEl.className = 'pay-note wallet'; noteEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> Số dư ví: <b>' + balance.toLocaleString('vi-VN') + 'đ</b>'; }
+                } else if (noteEl && balance > 0){
+                    noteEl.innerHTML = 'Ví còn <b>' + balance.toLocaleString('vi-VN') + 'đ</b>, chưa đủ — thanh toán qua chuyển khoản.';
+                }
+            });
         }
 
         document.getElementById('prodDetailOverlay').classList.remove('hidden');
@@ -3004,10 +3070,14 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     let prodDetailSelectedId = null;
 
-    // ---- Mua sản phẩm trả phí: chuyển sang cổng thanh toán SePay ----
+    // ---- Mua sản phẩm trả phí: tự chọn ví (nếu đủ số dư) hoặc chuyển sang cổng thanh toán SePay ----
     function purchaseProductFromModal(id){
         if (!currentSession){ location.href = loginUrl('product'); return; }
         const cta = document.getElementById('prodDetailCta');
+        if (cta && cta.dataset.useBalance === '1'){
+            muaSanPhamBangSoDu();
+            return;
+        }
         if (cta){
             cta.classList.add('disabled');
             cta.innerHTML = '<span><i class="fa-solid fa-spinner fa-spin"></i> Đang chuyển tới cổng thanh toán...</span>';
@@ -3021,7 +3091,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         if (!currentSession){ location.href = loginUrl('product'); return; }
         await xuLyThanhToanBangSoDu({
             orderPayload: { order_type: 'product', product_id: prodDetailSelectedId },
-            balanceBtnId: 'prodDetailBalanceBtn',
+            balanceBtnId: 'prodDetailCta',
             onSuccess: () => { closeProductDetail(); renderProductContent(); }
         });
     }
@@ -3029,8 +3099,8 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     function closeProductDetail(){
         document.getElementById('prodDetailOverlay').classList.add('hidden');
         prodDetailSelectedId = null;
-        const balanceBtn = document.getElementById('prodDetailBalanceBtn');
-        if (balanceBtn) balanceBtn.style.display = 'none';
+        const noteEl = document.getElementById('prodDetailPayNote');
+        if (noteEl){ noteEl.className = 'pay-note'; noteEl.textContent = ''; }
     }
 
     async function renderProductContent(){
@@ -3446,7 +3516,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             </div>`).join('');
 
         document.getElementById('proConfirmOverlay').classList.remove('hidden');
-        capNhatOptionSoDu('proConfirmBalancePayWrap', 'proConfirmBalanceText', Number(pkg.price || 0));
+        capNhatNutThanhToan('proConfirmOkBtn', 'proConfirmPayNote', Number(pkg.price || 0));
     }
 
     // Mở popup xác nhận trực tiếp từ thẻ gói trong tab "Tài khoản" (proGrid) —
@@ -3461,21 +3531,22 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     function closeProConfirm(){
         document.getElementById('proConfirmOverlay').classList.add('hidden');
         const okBtn = document.getElementById('proConfirmOkBtn');
-        if (okBtn){ okBtn.disabled = false; okBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Xác nhận thanh toán'; }
-        resetNutSoDu('proConfirmBalanceBtn');
+        if (okBtn){ okBtn.disabled = false; okBtn.dataset.useBalance = '0'; okBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Xác nhận thanh toán'; }
+        const noteEl = document.getElementById('proConfirmPayNote');
+        if (noteEl){ noteEl.className = 'pay-note'; noteEl.textContent = ''; }
     }
 
-    async function confirmProUpgrade(useBalance){
+    async function confirmProUpgrade(){
         if (!proUpgradeSelectedId) return;
-        if (useBalance){
+        const okBtn = document.getElementById('proConfirmOkBtn');
+        if (okBtn && okBtn.dataset.useBalance === '1'){
             await xuLyThanhToanBangSoDu({
                 orderPayload: { order_type: 'subscription', plan_id: proUpgradeSelectedId },
-                balanceBtnId: 'proConfirmBalanceBtn',
+                balanceBtnId: 'proConfirmOkBtn',
                 onSuccess: () => { closeProConfirm(); location.reload(); }
             });
             return;
         }
-        const okBtn = document.getElementById('proConfirmOkBtn');
         if (okBtn){ okBtn.disabled = true; okBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chuyển tới cổng thanh toán...'; }
         thanhToanGoiThanhVien(proUpgradeSelectedId); // hàm có sẵn trong frontend/sepay-checkout.js
     }
@@ -3521,11 +3592,15 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const emailEl = document.getElementById('acctPageEmail');
         const nameEl = document.getElementById('acctPageName');
         const badgeEl = document.getElementById('acctPagePlanBadge');
+        const avatarEl = document.getElementById('acctPageAvatar');
+        const avatarInitialEl = document.getElementById('acctPageAvatarInitial');
         if (!emailEl) return;
 
         if (!currentSession){
             emailEl.textContent = '—'; nameEl.textContent = '—';
             badgeEl.textContent = 'Miễn phí'; badgeEl.className = 'acc-plan-badge';
+            if (avatarEl) avatarEl.classList.remove('is-pro');
+            if (avatarInitialEl) avatarInitialEl.innerHTML = '<i class="fa-solid fa-user"></i>';
             return;
         }
         const user = currentSession.user;
@@ -3533,10 +3608,12 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const displayName = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || email.split('@')[0];
         emailEl.textContent = email || '—';
         nameEl.textContent = displayName || '—';
+        if (avatarInitialEl) avatarInitialEl.textContent = (email.trim()[0] || 'U').toUpperCase();
 
         const meta = user.user_metadata || {};
         const premiumUntil = meta.premium_until ? new Date(meta.premium_until) : null;
         const isPremiumActive = meta.plan === 'premium' && (!premiumUntil || premiumUntil > new Date());
+        if (avatarEl) avatarEl.classList.toggle('is-pro', isPremiumActive);
         if (isPremiumActive){
             badgeEl.textContent = premiumUntil ? `Premium — hết hạn ${premiumUntil.toLocaleDateString('vi-VN')}` : 'Premium — Đang hoạt động';
             badgeEl.className = 'acc-plan-badge premium';

@@ -9,16 +9,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap');
 
 :root{
-    --navy:#292213;
-    --navy-2:#3f341f;
-    --navy-text:#c2b59c;
-    --bg:#faf8f3;
+    --navy:#12162a;
+    --navy-2:#1e2340;
+    --navy-text:#9aa1c4;
+    --bg:#f3f4fa;
     --white:#ffffff;
-    --border:#f0ece5;
-    --text:#2f2819;
-    --gray:#857d6e;
-    --accent:#f2c05c;
-    --accent-dark:#dfab43;
+    --border:#e4e6f1;
+    --text:#181c30;
+    --gray:#6d7286;
+    --accent:#4f6bff;
+    --accent-dark:#3c56e6;
     --green:#21983f;
     --green-bg:#eff9f1;
     --red:#dc3e26;
@@ -30,8 +30,8 @@
     /* thêm — không được JS tham chiếu, an toàn để tinh chỉnh riêng */
     --radius-sm:10px;
     --radius-lg:16px;
-    --accent-soft:#fdf6e9;
-    --accent-glow:rgba(184,134,44,.22);
+    --accent-soft:#e7eaff;
+    --accent-glow:rgba(79,107,255,.22);
     --shadow-xs:0 1px 2px rgba(38,30,14,.05);
     --shadow-sm:0 2px 8px rgba(38,30,14,.06);
     --shadow-md:0 10px 28px rgba(38,30,14,.10);
@@ -39,7 +39,7 @@
     --font-display:'Be Vietnam Pro',-apple-system,"Segoe UI",sans-serif;
     --font-body:'Be Vietnam Pro',-apple-system,"Segoe UI",sans-serif;
     --font-serif:'Fraunces',Georgia,serif;
-    --ledger-line:rgba(41,34,19,.055);
+    --ledger-line:rgba(24,28,48,.03);
     --safe-top:env(safe-area-inset-top,0px);
     --safe-bottom:env(safe-area-inset-bottom,0px);
 }
@@ -88,8 +88,8 @@ label{font-weight:700;font-size:.72rem;color:var(--gray);display:block;margin:12
     min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;
     position:relative;overflow:hidden;
     background:
-        radial-gradient(circle at 14% 10%, rgba(184,134,44,.38), transparent 42%),
-        radial-gradient(circle at 88% 86%, rgba(200,149,46,.24), transparent 45%),
+        radial-gradient(circle at 14% 10%, rgba(79,107,255,.38), transparent 42%),
+        radial-gradient(circle at 88% 86%, rgba(139,124,246,.24), transparent 45%),
         var(--navy);
     padding:24px;
 }
@@ -109,7 +109,7 @@ label{font-weight:700;font-size:.72rem;color:var(--gray);display:block;margin:12
 .login-brand .dot{
     width:56px;height:56px;border-radius:50%;flex:0 0 auto;margin-bottom:14px;
     display:flex;align-items:center;justify-content:center;
-    background:linear-gradient(150deg,var(--accent),#c8952e);
+    background:linear-gradient(150deg,var(--accent),#8b7cf6);
     box-shadow:0 10px 24px var(--accent-glow), inset 0 0 0 3px rgba(255,255,255,.35);
     position:relative;
 }
@@ -167,7 +167,7 @@ aside{
 .brand span.dot{
     width:34px;height:34px;border-radius:50%;flex:0 0 auto;
     display:flex;align-items:center;justify-content:center;
-    background:linear-gradient(150deg,var(--accent),#c8952e);
+    background:linear-gradient(150deg,var(--accent),#8b7cf6);
     box-shadow:0 4px 14px var(--accent-glow), inset 0 0 0 2px rgba(255,255,255,.3);
 }
 .brand span.dot svg{width:16px;height:16px;display:block;}
@@ -260,10 +260,10 @@ aside{
 .fmgr-pin-group .side-list{gap:4px;}
 .side-add{
     display:inline-flex;align-items:center;justify-content:center;gap:5px;
-    background:rgba(184,134,44,.14);border:1px solid rgba(184,134,44,.3);color:#fbeccd;
+    background:rgba(79,107,255,.14);border:1px solid rgba(79,107,255,.3);color:#fbeccd;
     padding:7px 13px;font-size:.78rem;font-weight:700;border-radius:99px;font-family:var(--font-display);
 }
-.side-add:hover{border-color:var(--accent);color:#ffffff;background:rgba(184,134,44,.28);}
+.side-add:hover{border-color:var(--accent);color:#ffffff;background:rgba(79,107,255,.28);}
 .mini-form{display:none;flex-direction:column;gap:7px;margin-top:9px;padding:12px;background:var(--navy-2);border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,.05);}
 .mini-form.show{display:flex;}
 .mini-form input,.mini-form select{background:#312817;border-color:#615336;color:#ffffff;font-size:.82rem;padding:8px 10px;}
@@ -280,10 +280,10 @@ aside{
     border:none;padding:0;
 }
 .icon-x{background:rgba(220,38,38,.16);color:#e8aca3;}
-.icon-edit{background:rgba(184,134,44,.18);color:#fae5bc;}
+.icon-edit{background:rgba(79,107,255,.18);color:#fae5bc;}
 .icon-x svg,.icon-edit svg{width:12px;height:12px;display:block;}
 .icon-x:hover{background:rgba(220,38,38,.35);color:#ffbdb3;}
-.icon-edit:hover{background:rgba(184,134,44,.4);color:#fdf6e8;}
+.icon-edit:hover{background:rgba(79,107,255,.4);color:#fdf6e8;}
 .side-item.active .icon-x,.side-item.active .icon-edit{background:rgba(255,255,255,.2);color:#ffffff;}
 .side-item.active .icon-x:hover,.side-item.active .icon-edit:hover{background:rgba(255,255,255,.35);}
 .side-item{cursor:pointer;}
@@ -2094,12 +2094,12 @@ textarea{resize:vertical;}
                     <div style="margin-top:14px;padding:15px 17px;border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);">
                         <div class="hint" style="text-transform:uppercase;font-size:.7rem;font-weight:700;letter-spacing:.05em;margin-bottom:8px;">Xem trước</div>
                         <div style="background:#fff;border-radius:18px;padding:26px 20px 20px;text-align:center;box-shadow:0 14px 36px -14px rgba(20,22,45,.28);position:relative;overflow:hidden;max-width:320px;margin:0 auto;">
-                            <div style="position:absolute;top:0;left:18px;right:18px;height:4px;border-radius:0 0 6px 6px;background:linear-gradient(90deg,var(--accent),#c8952e);"></div>
-                            <div style="width:52px;height:52px;border-radius:50%;margin:4px auto 12px;background:linear-gradient(135deg,var(--accent),#c8952e);color:#fff;font-size:1.2rem;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -6px rgba(184,134,44,.5);"><i class="fa-solid fa-bullhorn"></i></div>
+                            <div style="position:absolute;top:0;left:18px;right:18px;height:4px;border-radius:0 0 6px 6px;background:linear-gradient(90deg,var(--accent),#8b7cf6);"></div>
+                            <div style="width:52px;height:52px;border-radius:50%;margin:4px auto 12px;background:linear-gradient(135deg,var(--accent),#8b7cf6);color:#fff;font-size:1.2rem;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -6px rgba(79,107,255,.5);"><i class="fa-solid fa-bullhorn"></i></div>
                             <div style="font-weight:800;color:var(--text);font-size:.98rem;margin-bottom:7px;" id="setAnnouncePreviewTitle">Thông báo</div>
                             <div style="color:var(--gray);font-size:.83rem;line-height:1.55;white-space:pre-line;margin-bottom:16px;" id="setAnnouncePreviewMsg">Hệ thống sẽ bảo trì từ 23h đến 1h sáng mai...</div>
                             <div style="display:flex;flex-direction:column;gap:8px;">
-                                <span style="background:linear-gradient(135deg,var(--accent),#c8952e);color:#fff;border-radius:11px;padding:10px 14px;font-size:.8rem;font-weight:700;box-shadow:0 8px 18px -6px rgba(184,134,44,.45);">Đóng</span>
+                                <span style="background:linear-gradient(135deg,var(--accent),#8b7cf6);color:#fff;border-radius:11px;padding:10px 14px;font-size:.8rem;font-weight:700;box-shadow:0 8px 18px -6px rgba(79,107,255,.45);">Đóng</span>
                                 <span style="background:transparent;color:var(--gray);border:1px solid var(--border);border-radius:11px;padding:10px 14px;font-size:.8rem;font-weight:700;" id="setAnnouncePreviewHideBtn">Ẩn trong 2 giờ</span>
                             </div>
                         </div>

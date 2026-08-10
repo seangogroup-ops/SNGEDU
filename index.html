@@ -30,6 +30,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="frontend/usage-limits.js"></script>
 <script src="frontend/sepay-checkout.js" defer></script>
+<script src="frontend/track-visit.js"></script>
 <style>
     :root{
         --bg:        #e4e7f0;
@@ -4383,6 +4384,9 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const [t, sub] = TAB_TITLES[key] || [key, ''];
         topbarTitle.innerHTML = t + '<span>' + sub + '</span>';
         window.scrollTo({top:0, behavior:'smooth'});
+
+        // Ghi nhận lượt truy cập mục này (Thống kê > Lượt truy cập trong trang admin)
+        if (window.sngTrackVisit) window.sngTrackVisit(key, t);
 
         if(!opts.fromPopState){
             const url = key === 'home' ? location.pathname : location.pathname + '#' + key;

@@ -1367,8 +1367,12 @@ textarea{resize:vertical;}
 
         <div class="side-section">
             <div class="side-list" id="settingsNavList">
-                <div class="side-item settings-item active" id="navStats" onclick="showStatsPanel()" style="margin-bottom:16px;background:rgba(255,255,255,.05);">
+                <div class="side-item settings-item active" id="navStats" onclick="showStatsPanel()" style="margin-bottom:10px;background:rgba(255,255,255,.05);">
                     <span class="set-ico">📊</span><span class="name">Thống kê</span>
+                </div>
+
+                <div class="side-item settings-item" id="navVisits" onclick="showVisitsPanel()" style="margin-bottom:16px;">
+                    <span class="set-ico">👣</span><span class="name">Lượt truy cập</span>
                 </div>
 
                 <div class="side-item settings-item" data-setkey="site_theme" onclick="openSettingsPanel('site_theme')" style="margin-bottom:10px;">
@@ -1555,6 +1559,61 @@ textarea{resize:vertical;}
                 <button class="side-add" onclick="loadStatsData()">🔄 Làm mới</button>
             </div>
             <div class="stats-order-list" id="statsRecentList">
+                <div class="empty-state" style="padding:20px;">Đang tải...</div>
+            </div>
+        </div>
+
+        <div id="visitsPanel" class="hidden">
+            <div class="subj-mgr-head stats-head-row">
+                <div>
+                    <h2>👣 Lượt truy cập</h2>
+                    <p class="hint">Số lượt vào web &amp; mục nào được xem nhiều nhất (trang chủ, trắc nghiệm, tài liệu, công cụ, sản phẩm, hỗ trợ, đăng nhập...). Đếm theo lượt ghé trình duyệt, không đại diện 100% cho khách thật (có thể lẫn bot).</p>
+                </div>
+                <button class="btn-stats-reset" onclick="openResetVisitsModal()">🗑️ Xoá dữ liệu truy cập</button>
+            </div>
+
+            <div class="acct-stats">
+                <div class="acct-stat-card total">
+                    <span class="ico">👣</span>
+                    <div><div class="num" id="visitTotalCount">0</div><div class="lbl">Tổng lượt truy cập</div></div>
+                </div>
+                <div class="acct-stat-card active">
+                    <span class="ico">🙋</span>
+                    <div><div class="num" id="visitUniqueCount">0</div><div class="lbl">Khách duy nhất (ước tính)</div></div>
+                </div>
+                <div class="acct-stat-card today">
+                    <span class="ico">📅</span>
+                    <div><div class="num" id="visitTodayCount">0</div><div class="lbl">Lượt truy cập hôm nay</div></div>
+                </div>
+                <div class="acct-stat-card month">
+                    <span class="ico">🗓️</span>
+                    <div><div class="num" id="visitMonthCount">0</div><div class="lbl">Lượt truy cập tháng này</div></div>
+                </div>
+            </div>
+
+            <div class="tabs stats-view-tabs" id="visitsViewTabs">
+                <button type="button" class="tab active" data-view="overview" onclick="switchVisitsView('overview')">Tổng quan</button>
+                <button type="button" class="tab" data-view="day" onclick="switchVisitsView('day')">Theo ngày</button>
+                <button type="button" class="tab" data-view="month" onclick="switchVisitsView('month')">Theo tháng</button>
+                <button type="button" class="tab" data-view="year" onclick="switchVisitsView('year')">Theo năm</button>
+            </div>
+            <div class="stats-range-bar" id="visitsRangeBar"></div>
+
+            <div class="stats-chart-card">
+                <div class="stats-chart-head">
+                    <h4 id="visitsChartTitle">Lượt truy cập 14 ngày gần đây</h4>
+                    <div class="stats-chart-total" id="visitsChartTotal">0</div>
+                </div>
+                <div class="stats-chart-box" id="visitsChartBox">
+                    <div class="empty-state" style="padding:20px;">Đang tải...</div>
+                </div>
+            </div>
+
+            <div class="subj-mgr-col-head" style="margin-bottom:10px;">
+                <h4 id="visitsListTitle">Truy cập theo mục</h4>
+                <button class="side-add" onclick="loadVisitsData()">🔄 Làm mới</button>
+            </div>
+            <div class="stats-order-list" id="visitsByPageList">
                 <div class="empty-state" style="padding:20px;">Đang tải...</div>
             </div>
         </div>
@@ -2574,6 +2633,23 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
     </div>
 </div>
 
+<!-- ================= XOÁ DỮ LIỆU LƯỢT TRUY CẬP (nhập mật khẩu xác nhận) ================= -->
+<div id="resetVisitsOverlay" class="hidden">
+    <div class="confirm-box">
+        <div class="confirm-icon">🗑️</div>
+        <h4>Xoá dữ liệu lượt truy cập</h4>
+        <p>Thao tác này sẽ xoá vĩnh viễn toàn bộ lịch sử lượt truy cập website và đưa số liệu (tổng lượt, khách duy nhất...) về 0.</p>
+        <p class="rs-note">✅ Tài khoản khách hàng, gói Pro, đơn hàng và tài liệu <b>KHÔNG</b> bị ảnh hưởng — chỉ số liệu lượt truy cập bị xoá.</p>
+        <label style="display:block;text-align:left;font-size:.8rem;font-weight:700;color:var(--gray);margin-top:4px;">Nhập mật khẩu xác nhận</label>
+        <input id="resetVisitsPwd" type="password" placeholder="••••••••" autocomplete="off">
+        <p id="resetVisitsErr"></p>
+        <div class="confirm-actions">
+            <button class="btn-confirm-cancel" onclick="closeResetVisitsModal()">Hủy</button>
+            <button class="btn-confirm-danger" id="resetVisitsConfirmBtn" onclick="submitResetVisits()">Xoá toàn bộ</button>
+        </div>
+    </div>
+</div>
+
 <!-- ================= MERGE (TỔNG HỢP) MODAL ================= -->
 <div id="mergeOverlay" class="hidden">
     <div class="merge-box">
@@ -2820,6 +2896,7 @@ function restoreLastAdminPanel(){
         if (last === 'featured')          return showFeaturedManager();
         if (last === 'subjectMgr')        return showSubjectManager();
         if (last === 'stats')             return showStatsPanel();
+        if (last === 'visits')            return showVisitsPanel();
     }
     showStatsPanel(); // mặc định: lần đăng nhập đầu tiên / chưa từng chọn màn nào -> luôn vào Thống kê trước
 }
@@ -2828,7 +2905,7 @@ function restoreLastAdminPanel(){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['statsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel', 'paymentSettingsPanel'];
+const ADMIN_PANEL_IDS = ['statsPanel', 'visitsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel', 'paymentSettingsPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -3117,6 +3194,276 @@ function renderStatsOrderList(list){
             <span class="stats-order-amount">+${fmtMoney(o.amount)}</span>
         </div>`;
     }).join('');
+}
+
+// ============================================================
+// ---------- LƯỢT TRUY CẬP (bảng page_views) ----------
+// Đọc trực tiếp bảng page_views (yêu cầu RLS cho phép profiles.role='admin'
+// SELECT/DELETE toàn bộ bảng này — xem migration 0006_page_views.sql).
+// ============================================================
+const PAGE_KEY_META = {
+    home:              { icon: '🏠', label: 'Trang chủ' },
+    quiz:              { icon: '📝', label: 'Trắc nghiệm' },
+    doc:               { icon: '📁', label: 'Tài liệu' },
+    tool:              { icon: '🧰', label: 'Công cụ' },
+    product:           { icon: '🛍️', label: 'Sản phẩm' },
+    account:           { icon: '👤', label: 'Tài khoản' },
+    history:           { icon: '🧾', label: 'Lịch sử mua hàng' },
+    support:           { icon: '🆘', label: 'Hỗ trợ' },
+    'mon-hoc':         { icon: '📚', label: 'Chọn chương/đề' },
+    'quiz-exam':       { icon: '🧪', label: 'Đề thi thử' },
+    'quiz-tinhtoan':   { icon: '🧮', label: 'Luyện tính toán' },
+    'quiz-dynamic':    { icon: '✍️', label: 'Thi trắc nghiệm' },
+    'gop-y':           { icon: '💬', label: 'Gửi góp ý' },
+    login:             { icon: '🔑', label: 'Đăng nhập / Đăng ký' },
+    'payment-success': { icon: '✅', label: 'Thanh toán thành công' },
+    'payment-error':   { icon: '⚠️', label: 'Thanh toán lỗi' },
+    'payment-cancel':  { icon: '🚫', label: 'Đã huỷ thanh toán' },
+};
+const VISITS_RESET_PASSWORD = STATS_RESET_PASSWORD; // dùng chung mật khẩu xác nhận với reset giao dịch
+
+let visitsCache = [];
+let visitsView = 'overview';          // 'overview' | 'day' | 'month' | 'year'
+let visitsDayDate = new Date();
+let visitsMonthDate = new Date();
+let visitsYear = new Date().getFullYear();
+
+function showVisitsPanel(){
+    rememberAdminPanel('visits');
+    showAdminPanel('visitsPanel', 'navVisits');
+    loadVisitsData();
+}
+
+async function loadVisitsData(){
+    const listEl = document.getElementById('visitsByPageList');
+    const chartEl = document.getElementById('visitsChartBox');
+    listEl.innerHTML = `<div class="empty-state" style="padding:20px;">Đang tải...</div>`;
+    if (chartEl) chartEl.innerHTML = `<div class="empty-state" style="padding:20px;">Đang tải...</div>`;
+    const { data, error } = await sb
+        .from('page_views')
+        .select('id, page_key, visitor_id, created_at')
+        .order('created_at', { ascending: false })
+        .limit(20000);
+    if (error){
+        listEl.innerHTML = `<div class="empty-state" style="padding:20px;color:var(--red);">Không tải được dữ liệu truy cập: ${escapeHtml(error.message)}</div>`;
+        if (chartEl) chartEl.innerHTML = '';
+        return;
+    }
+    visitsCache = data || [];
+    renderVisitsSummary(visitsCache);
+    renderVisitsView();
+}
+
+// ----- 4 thẻ tổng quan (không đổi theo tab đang xem) -----
+function renderVisitsSummary(views){
+    const now = new Date();
+    const isSameDay = (d, ref) => d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth() && d.getDate() === ref.getDate();
+    const isSameMonth = (d, ref) => d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
+    const todayViews = views.filter(v => isSameDay(new Date(v.created_at), now));
+    const monthViews = views.filter(v => isSameMonth(new Date(v.created_at), now));
+    const uniqueVisitors = new Set(views.map(v => v.visitor_id).filter(Boolean));
+
+    document.getElementById('visitTotalCount').innerText = views.length.toLocaleString('vi-VN');
+    document.getElementById('visitUniqueCount').innerText = uniqueVisitors.size.toLocaleString('vi-VN');
+    document.getElementById('visitTodayCount').innerText = todayViews.length.toLocaleString('vi-VN');
+    document.getElementById('visitMonthCount').innerText = monthViews.length.toLocaleString('vi-VN');
+}
+
+// ----- Chuyển tab Tổng quan / Theo ngày / Theo tháng / Theo năm -----
+function switchVisitsView(view){
+    visitsView = view;
+    document.querySelectorAll('#visitsViewTabs .tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+    renderVisitsView();
+}
+
+function renderVisitsView(){
+    document.getElementById('visitsRangeBar').innerHTML = renderVisitsRangeBarHtml();
+    if (visitsView === 'day') renderVisitsDayView(visitsCache);
+    else if (visitsView === 'month') renderVisitsMonthView(visitsCache);
+    else if (visitsView === 'year') renderVisitsYearView(visitsCache);
+    else renderVisitsOverviewView(visitsCache);
+}
+
+function renderVisitsRangeBarHtml(){
+    if (visitsView === 'day'){
+        return `<div class="stats-range-nav">
+            <button type="button" class="srn-btn" onclick="visitsShiftDay(-1)">‹</button>
+            <input type="date" id="visitsDayInput" value="${ymd(visitsDayDate)}" onchange="visitsDayInputChanged()">
+            <button type="button" class="srn-btn" onclick="visitsShiftDay(1)">›</button>
+            <button type="button" class="srn-today" onclick="visitsGotoToday()">Hôm nay</button>
+        </div>`;
+    }
+    if (visitsView === 'month'){
+        const v = visitsMonthDate.getFullYear() + '-' + String(visitsMonthDate.getMonth() + 1).padStart(2, '0');
+        return `<div class="stats-range-nav">
+            <button type="button" class="srn-btn" onclick="visitsShiftMonth(-1)">‹</button>
+            <input type="month" id="visitsMonthInput" value="${v}" onchange="visitsMonthInputChanged()">
+            <button type="button" class="srn-btn" onclick="visitsShiftMonth(1)">›</button>
+            <button type="button" class="srn-today" onclick="visitsGotoThisMonth()">Tháng này</button>
+        </div>`;
+    }
+    if (visitsView === 'year'){
+        return `<div class="stats-range-nav">
+            <button type="button" class="srn-btn" onclick="visitsShiftYear(-1)">‹</button>
+            <input type="number" id="visitsYearInput" value="${visitsYear}" onchange="visitsYearInputChanged()" style="width:96px;text-align:center;">
+            <button type="button" class="srn-btn" onclick="visitsShiftYear(1)">›</button>
+            <button type="button" class="srn-today" onclick="visitsGotoThisYear()">Năm nay</button>
+        </div>`;
+    }
+    return '';
+}
+
+function visitsShiftDay(delta){ visitsDayDate = new Date(visitsDayDate.getFullYear(), visitsDayDate.getMonth(), visitsDayDate.getDate() + delta); renderVisitsView(); }
+function visitsDayInputChanged(){ const v = document.getElementById('visitsDayInput').value; if (v) visitsDayDate = new Date(v + 'T00:00:00'); renderVisitsView(); }
+function visitsGotoToday(){ visitsDayDate = new Date(); renderVisitsView(); }
+
+function visitsShiftMonth(delta){ visitsMonthDate = new Date(visitsMonthDate.getFullYear(), visitsMonthDate.getMonth() + delta, 1); renderVisitsView(); }
+function visitsMonthInputChanged(){
+    const v = document.getElementById('visitsMonthInput').value;
+    if (v){ const [y, m] = v.split('-').map(Number); visitsMonthDate = new Date(y, m - 1, 1); }
+    renderVisitsView();
+}
+function visitsGotoThisMonth(){ const n = new Date(); visitsMonthDate = new Date(n.getFullYear(), n.getMonth(), 1); renderVisitsView(); }
+
+function visitsShiftYear(delta){ visitsYear += delta; renderVisitsView(); }
+function visitsYearInputChanged(){ const v = Number(document.getElementById('visitsYearInput').value); if (v) visitsYear = v; renderVisitsView(); }
+function visitsGotoThisYear(){ visitsYear = new Date().getFullYear(); renderVisitsView(); }
+
+// Click vào cột biểu đồ để đi sâu hơn: năm -> tháng, tháng/tổng quan -> ngày
+function jumpToVisitsDay(dateKey){ visitsDayDate = new Date(dateKey + 'T00:00:00'); switchVisitsView('day'); }
+function jumpToVisitsMonth(monthKey){ const [y, m] = monthKey.split('-').map(Number); visitsMonthDate = new Date(y, m - 1, 1); switchVisitsView('month'); }
+
+// ----- Tổng quan: lượt truy cập 14 ngày gần đây -----
+function renderVisitsOverviewView(views){
+    document.getElementById('visitsListTitle').innerText = 'Truy cập theo mục';
+    document.getElementById('visitsChartTitle').innerText = 'Lượt truy cập 14 ngày gần đây';
+    const now = new Date();
+    const days = [];
+    for (let i = 13; i >= 0; i--){
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const key = ymd(d);
+        const dayViews = views.filter(v => ymd(new Date(v.created_at)) === key);
+        days.push({ key, label: d.getDate() + '/' + (d.getMonth() + 1), value: dayViews.length, tooltip: `${d.toLocaleDateString('vi-VN')}: ${dayViews.length} lượt` });
+    }
+    const total = days.reduce((s, d) => s + d.value, 0);
+    document.getElementById('visitsChartTotal').innerText = total.toLocaleString('vi-VN');
+    renderStatsBarChart('visitsChartBox', days, { onBarClick: 'jumpToVisitsDay' });
+    renderVisitsByPageList(views);
+}
+
+// ----- Theo ngày: lượt truy cập theo từng giờ trong ngày đã chọn -----
+function renderVisitsDayView(views){
+    const d = visitsDayDate;
+    const key = ymd(d);
+    document.getElementById('visitsListTitle').innerText = 'Truy cập theo mục — ngày ' + d.toLocaleDateString('vi-VN');
+    document.getElementById('visitsChartTitle').innerText = 'Lượt truy cập theo giờ — ' + d.toLocaleDateString('vi-VN');
+    const dayViews = views.filter(v => ymd(new Date(v.created_at)) === key);
+    const hours = [];
+    for (let h = 0; h < 24; h++){
+        const hourViews = dayViews.filter(v => new Date(v.created_at).getHours() === h);
+        hours.push({ key: String(h), label: h + 'h', value: hourViews.length, tooltip: `${h}h: ${hourViews.length} lượt` });
+    }
+    document.getElementById('visitsChartTotal').innerText = dayViews.length.toLocaleString('vi-VN') + ' lượt';
+    renderStatsBarChart('visitsChartBox', hours, {});
+    renderVisitsByPageList(dayViews);
+}
+
+// ----- Theo tháng: lượt truy cập theo từng ngày trong tháng đã chọn -----
+function renderVisitsMonthView(views){
+    const y = visitsMonthDate.getFullYear(), m = visitsMonthDate.getMonth();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    document.getElementById('visitsListTitle').innerText = 'Truy cập theo mục — tháng ' + (m + 1) + '/' + y;
+    document.getElementById('visitsChartTitle').innerText = 'Lượt truy cập theo ngày — tháng ' + (m + 1) + '/' + y;
+    const monthViews = views.filter(v => { const dd = new Date(v.created_at); return dd.getFullYear() === y && dd.getMonth() === m; });
+    const days = [];
+    for (let day = 1; day <= daysInMonth; day++){
+        const dayViews = monthViews.filter(v => new Date(v.created_at).getDate() === day);
+        const key = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        days.push({ key, label: String(day), value: dayViews.length, tooltip: `${day}/${m + 1}/${y}: ${dayViews.length} lượt` });
+    }
+    document.getElementById('visitsChartTotal').innerText = monthViews.length.toLocaleString('vi-VN') + ' lượt';
+    renderStatsBarChart('visitsChartBox', days, { onBarClick: 'jumpToVisitsDay' });
+    renderVisitsByPageList(monthViews);
+}
+
+// ----- Theo năm: lượt truy cập theo từng tháng trong năm đã chọn -----
+function renderVisitsYearView(views){
+    const y = visitsYear;
+    document.getElementById('visitsListTitle').innerText = 'Truy cập theo mục — năm ' + y;
+    document.getElementById('visitsChartTitle').innerText = 'Lượt truy cập theo tháng — năm ' + y;
+    const yearViews = views.filter(v => new Date(v.created_at).getFullYear() === y);
+    const months = [];
+    for (let m = 0; m < 12; m++){
+        const mViews = yearViews.filter(v => new Date(v.created_at).getMonth() === m);
+        const key = y + '-' + String(m + 1).padStart(2, '0');
+        months.push({ key, label: 'T' + (m + 1), value: mViews.length, tooltip: `Tháng ${m + 1}/${y}: ${mViews.length} lượt` });
+    }
+    document.getElementById('visitsChartTotal').innerText = yearViews.length.toLocaleString('vi-VN') + ' lượt';
+    renderStatsBarChart('visitsChartBox', months, { onBarClick: 'jumpToVisitsMonth' });
+    renderVisitsByPageList(yearViews);
+}
+
+// ----- Bảng "Truy cập theo mục": gộp theo page_key, sắp xếp giảm dần, kèm % trên tổng -----
+function renderVisitsByPageList(views){
+    const listEl = document.getElementById('visitsByPageList');
+    if (!views.length){
+        listEl.innerHTML = `<div class="empty-state" style="padding:30px 14px;text-align:center;">Không có lượt truy cập nào trong khoảng thời gian này.</div>`;
+        return;
+    }
+    const counts = {};
+    views.forEach(v => {
+        const key = v.page_key || 'unknown';
+        counts[key] = (counts[key] || 0) + 1;
+    });
+    const total = views.length;
+    const rows = Object.keys(counts)
+        .map(key => ({ key, count: counts[key] }))
+        .sort((a, b) => b.count - a.count);
+    listEl.innerHTML = rows.map(r => {
+        const meta = PAGE_KEY_META[r.key] || { icon: '📄', label: r.key };
+        const pct = total ? Math.round((r.count / total) * 100) : 0;
+        return `
+        <div class="stats-order-row">
+            <span class="stats-order-ico">${meta.icon}</span>
+            <span class="stats-order-info">
+                <span class="soi-title">${escapeHtml(meta.label)}</span>
+                <span class="soi-meta">${escapeHtml(r.key)} · ${pct}% tổng lượt truy cập</span>
+            </span>
+            <span class="stats-order-amount">${r.count.toLocaleString('vi-VN')} lượt</span>
+        </div>`;
+    }).join('');
+}
+
+// ----- Xoá toàn bộ dữ liệu lượt truy cập (chỉ xoá bảng page_views, không đụng gì khác) -----
+function openResetVisitsModal(){
+    document.getElementById('resetVisitsPwd').value = '';
+    document.getElementById('resetVisitsErr').innerText = '';
+    document.getElementById('resetVisitsOverlay').classList.remove('hidden');
+    setTimeout(() => document.getElementById('resetVisitsPwd').focus(), 50);
+}
+function closeResetVisitsModal(){
+    document.getElementById('resetVisitsOverlay').classList.add('hidden');
+}
+async function submitResetVisits(){
+    const pwdEl = document.getElementById('resetVisitsPwd');
+    const errEl = document.getElementById('resetVisitsErr');
+    const pwd = pwdEl.value;
+    if (!pwd){ errEl.innerText = 'Vui lòng nhập mật khẩu xác nhận.'; return; }
+    if (pwd !== VISITS_RESET_PASSWORD){ errEl.innerText = 'Sai mật khẩu xác nhận.'; pwdEl.value = ''; pwdEl.focus(); return; }
+    errEl.innerText = '';
+    const btn = document.getElementById('resetVisitsConfirmBtn');
+    btn.disabled = true;
+    btn.innerText = 'Đang xoá...';
+    const { error } = await sb.from('page_views').delete().not('id', 'is', null);
+    btn.disabled = false;
+    btn.innerText = 'Xoá toàn bộ';
+    if (error){
+        errEl.innerText = 'Lỗi khi xoá: ' + error.message;
+        return;
+    }
+    closeResetVisitsModal();
+    showMsg('Đã xoá toàn bộ dữ liệu lượt truy cập.', 'ok');
+    loadVisitsData();
 }
 
 // ----- Reset tất cả giao dịch (chỉ xoá số liệu sepay_orders, không đụng tài khoản / Pro / tài liệu) -----

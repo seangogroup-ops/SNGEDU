@@ -3383,7 +3383,11 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             if (isNaN(endAt.getTime()) || endAt.getTime() <= Date.now()){ banner.classList.add('hidden'); return; }
 
             const dismissKey = 'promoBannerDismiss_' + payload.end_at;
-            if (localStorage.getItem(dismissKey) === '1'){ banner.classList.add('hidden'); return; }
+            const isDismissed = () => {
+                try{ return localStorage.getItem(dismissKey) === '1' || sessionStorage.getItem(dismissKey) === '1'; }
+                catch(e){ return false; }
+            };
+            if (isDismissed()){ banner.classList.add('hidden'); return; }
 
             document.getElementById('promoBannerMsg').innerText = payload.message || '';
 
@@ -3424,7 +3428,8 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 e.stopPropagation();
                 banner.classList.add('hidden');
                 if (promoCountdownTimer){ clearInterval(promoCountdownTimer); promoCountdownTimer = null; }
-                localStorage.setItem(dismissKey, '1');
+                try{ localStorage.setItem(dismissKey, '1'); }catch(e){}
+                try{ sessionStorage.setItem(dismissKey, '1'); }catch(e){}
             };
         }catch(e){
             // Banner chỉ là nội dung marketing phụ trợ — lỗi mạng/chưa cấu hình thì âm thầm ẩn đi, không chặn trang.

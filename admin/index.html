@@ -1568,7 +1568,7 @@ textarea{resize:vertical;}
             <div class="subj-mgr-head stats-head-row">
                 <div>
                     <h2>👣 Lượt truy cập</h2>
-                    <p class="hint">Số lượt vào web &amp; mục nào được xem nhiều nhất (trang chủ, trắc nghiệm, tài liệu, công cụ, sản phẩm, hỗ trợ, đăng nhập...). Đếm theo lượt ghé trình duyệt, không đại diện 100% cho khách thật (có thể lẫn bot).</p>
+                    <p class="hint">Số lượt vào web &amp; mục nào được xem nhiều nhất (trang chủ, trắc nghiệm, tài liệu, công cụ, sản phẩm, hỗ trợ, đăng nhập...). "Lượt truy cập" đếm theo <b>thiết bị (IP)</b> — mỗi thiết bị chỉ tính 1 lượt duy nhất dù quay lại nhiều lần, không đại diện 100% cho khách thật (có thể lẫn bot / nhiều người dùng chung 1 mạng).</p>
                 </div>
                 <button class="btn-stats-reset" onclick="openResetVisitsModal()">🗑️ Xoá dữ liệu truy cập</button>
             </div>
@@ -1579,8 +1579,8 @@ textarea{resize:vertical;}
                     <div><div class="num" id="visitTotalCount">0</div><div class="lbl">Tổng lượt truy cập</div></div>
                 </div>
                 <div class="acct-stat-card active">
-                    <span class="ico">🙋</span>
-                    <div><div class="num" id="visitUniqueCount">0</div><div class="lbl">Khách duy nhất (ước tính)</div></div>
+                    <span class="ico">📄</span>
+                    <div><div class="num" id="visitUniqueCount">0</div><div class="lbl">Tổng lượt xem trang</div></div>
                 </div>
                 <div class="acct-stat-card today">
                     <span class="ico">📅</span>
@@ -3242,7 +3242,7 @@ async function loadVisitsData(){
     if (chartEl) chartEl.innerHTML = `<div class="empty-state" style="padding:20px;">Đang tải...</div>`;
     const { data, error } = await sb
         .from('page_views')
-        .select('id, page_key, visitor_id, created_at')
+        .select('id, page_key, visitor_id, ip, created_at')
         .order('created_at', { ascending: false })
         .limit(20000);
     if (error){
@@ -3255,6 +3255,22 @@ async function loadVisitsData(){
     renderVisitsView();
 }
 
+// ----- Nhận diện "thiết bị": ưu tiên IP thật (ip); nếu dòng cũ/không lấy được
+// IP (trước khi chạy migration 0007, hoặc lỗi header) thì dùng visitor_id
+// (localStorage) làm dự phòng, để không bị đếm thiếu. -----
+function deviceKeyOf(v){
+    if (v.ip) return 'ip:' + v.ip;
+    if (v.visitor_id) return 'vid:' + v.visitor_id;
+    return null;
+}
+// Đếm số THIẾT BỊ khác nhau trong tập lượt xem — mỗi thiết bị chỉ tính 1 lượt
+// truy cập duy nhất, dù họ xem lại/quay lại nhiều lần.
+function countUniqueDevices(views){
+    const set = new Set();
+    views.forEach(v => { const k = deviceKeyOf(v); if (k) set.add(k); });
+    return set.size;
+}
+
 // ----- 4 thẻ tổng quan (không đổi theo tab đang xem) -----
 function renderVisitsSummary(views){
     const now = new Date();
@@ -3262,12 +3278,14 @@ function renderVisitsSummary(views){
     const isSameMonth = (d, ref) => d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
     const todayViews = views.filter(v => isSameDay(new Date(v.created_at), now));
     const monthViews = views.filter(v => isSameMonth(new Date(v.created_at), now));
-    const uniqueVisitors = new Set(views.map(v => v.visitor_id).filter(Boolean));
 
-    document.getElementById('visitTotalCount').innerText = views.length.toLocaleString('vi-VN');
-    document.getElementById('visitUniqueCount').innerText = uniqueVisitors.size.toLocaleString('vi-VN');
-    document.getElementById('visitTodayCount').innerText = todayViews.length.toLocaleString('vi-VN');
-    document.getElementById('visitMonthCount').innerText = monthViews.length.toLocaleString('vi-VN');
+    // "Tổng lượt truy cập": số thiết bị (IP) khác nhau đã từng ghé, tính suốt lịch sử.
+    document.getElementById('visitTotalCount').innerText = countUniqueDevices(views).toLocaleString('vi-VN');
+    // "Tổng lượt xem trang": số dòng thô (mỗi lần load 1 trang), để tham khảo mức độ hoạt động.
+    document.getElementById('visitUniqueCount').innerText = views.length.toLocaleString('vi-VN');
+    // "Hôm nay" / "Tháng này": số thiết bị khác nhau ghé trong khoảng đó (không cộng dồn từ tổng).
+    document.getElementById('visitTodayCount').innerText = countUniqueDevices(todayViews).toLocaleString('vi-VN');
+    document.getElementById('visitMonthCount').innerText = countUniqueDevices(monthViews).toLocaleString('vi-VN');
 }
 
 // ----- Chuyển tab Tổng quan / Theo ngày / Theo tháng / Theo năm -----
@@ -3344,7 +3362,8 @@ function renderVisitsOverviewView(views){
         const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
         const key = ymd(d);
         const dayViews = views.filter(v => ymd(new Date(v.created_at)) === key);
-        days.push({ key, label: d.getDate() + '/' + (d.getMonth() + 1), value: dayViews.length, tooltip: `${d.toLocaleDateString('vi-VN')}: ${dayViews.length} lượt` });
+        const uniq = countUniqueDevices(dayViews);
+        days.push({ key, label: d.getDate() + '/' + (d.getMonth() + 1), value: uniq, tooltip: `${d.toLocaleDateString('vi-VN')}: ${uniq} lượt (thiết bị)` });
     }
     const total = days.reduce((s, d) => s + d.value, 0);
     document.getElementById('visitsChartTotal').innerText = total.toLocaleString('vi-VN');
@@ -3362,9 +3381,10 @@ function renderVisitsDayView(views){
     const hours = [];
     for (let h = 0; h < 24; h++){
         const hourViews = dayViews.filter(v => new Date(v.created_at).getHours() === h);
-        hours.push({ key: String(h), label: h + 'h', value: hourViews.length, tooltip: `${h}h: ${hourViews.length} lượt` });
+        const uniq = countUniqueDevices(hourViews);
+        hours.push({ key: String(h), label: h + 'h', value: uniq, tooltip: `${h}h: ${uniq} lượt (thiết bị)` });
     }
-    document.getElementById('visitsChartTotal').innerText = dayViews.length.toLocaleString('vi-VN') + ' lượt';
+    document.getElementById('visitsChartTotal').innerText = countUniqueDevices(dayViews).toLocaleString('vi-VN') + ' lượt';
     renderStatsBarChart('visitsChartBox', hours, {});
     renderVisitsByPageList(dayViews);
 }
@@ -3380,9 +3400,10 @@ function renderVisitsMonthView(views){
     for (let day = 1; day <= daysInMonth; day++){
         const dayViews = monthViews.filter(v => new Date(v.created_at).getDate() === day);
         const key = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
-        days.push({ key, label: String(day), value: dayViews.length, tooltip: `${day}/${m + 1}/${y}: ${dayViews.length} lượt` });
+        const uniq = countUniqueDevices(dayViews);
+        days.push({ key, label: String(day), value: uniq, tooltip: `${day}/${m + 1}/${y}: ${uniq} lượt (thiết bị)` });
     }
-    document.getElementById('visitsChartTotal').innerText = monthViews.length.toLocaleString('vi-VN') + ' lượt';
+    document.getElementById('visitsChartTotal').innerText = countUniqueDevices(monthViews).toLocaleString('vi-VN') + ' lượt';
     renderStatsBarChart('visitsChartBox', days, { onBarClick: 'jumpToVisitsDay' });
     renderVisitsByPageList(monthViews);
 }
@@ -3397,9 +3418,10 @@ function renderVisitsYearView(views){
     for (let m = 0; m < 12; m++){
         const mViews = yearViews.filter(v => new Date(v.created_at).getMonth() === m);
         const key = y + '-' + String(m + 1).padStart(2, '0');
-        months.push({ key, label: 'T' + (m + 1), value: mViews.length, tooltip: `Tháng ${m + 1}/${y}: ${mViews.length} lượt` });
+        const uniq = countUniqueDevices(mViews);
+        months.push({ key, label: 'T' + (m + 1), value: uniq, tooltip: `Tháng ${m + 1}/${y}: ${uniq} lượt (thiết bị)` });
     }
-    document.getElementById('visitsChartTotal').innerText = yearViews.length.toLocaleString('vi-VN') + ' lượt';
+    document.getElementById('visitsChartTotal').innerText = countUniqueDevices(yearViews).toLocaleString('vi-VN') + ' lượt';
     renderStatsBarChart('visitsChartBox', months, { onBarClick: 'jumpToVisitsMonth' });
     renderVisitsByPageList(yearViews);
 }
@@ -3428,7 +3450,7 @@ function renderVisitsByPageList(views){
             <span class="stats-order-ico">${meta.icon}</span>
             <span class="stats-order-info">
                 <span class="soi-title">${escapeHtml(meta.label)}</span>
-                <span class="soi-meta">${escapeHtml(r.key)} · ${pct}% tổng lượt truy cập</span>
+                <span class="soi-meta">${escapeHtml(r.key)} · ${pct}% tổng lượt xem trang</span>
             </span>
             <span class="stats-order-amount">${r.count.toLocaleString('vi-VN')} lượt</span>
         </div>`;

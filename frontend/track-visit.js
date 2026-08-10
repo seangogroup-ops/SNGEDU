@@ -38,28 +38,80 @@
         } catch (e) { return ''; }
     }
 
+    // Loại thiết bị + trình duyệt: đoán nhanh từ user agent, đủ dùng để thống kê,
+    // không cần thư viện ngoài.
+    function detectDevice(ua) {
+        ua = ua || '';
+        if (/iPad|Tablet(?!.*Mobile)|Nexus 7|Nexus 10|SM-T/i.test(ua)) return 'Tablet';
+        if (/Mobi|Android(?=.*Mobile)|iPhone|iPod|Windows Phone/i.test(ua)) return 'Mobile';
+        return 'Desktop';
+    }
+    function detectBrowser(ua) {
+        ua = ua || '';
+        if (/EdgA|Edg\//i.test(ua)) return 'Edge';
+        if (/OPR\/|Opera/i.test(ua)) return 'Opera';
+        if (/CriOS|Chrome\//i.test(ua) && !/Chromium/i.test(ua)) return 'Chrome';
+        if (/FxiOS|Firefox\//i.test(ua)) return 'Firefox';
+        if (/Safari\//i.test(ua) && /Version\//i.test(ua)) return 'Safari';
+        if (/SamsungBrowser/i.test(ua)) return 'Samsung Internet';
+        return 'Khác';
+    }
+
+    // Quốc gia/thành phố: tra cứu 1 lần/phiên qua dịch vụ geo-IP miễn phí (ipwho.is),
+    // lưu cache vào sessionStorage để không gọi lại ở mỗi lượt xem trang.
+    // Nếu lỗi/không có mạng thì bỏ qua âm thầm, không chặn việc ghi nhận lượt truy cập.
+    function getGeoCached() {
+        try {
+            var raw = sessionStorage.getItem('sng_geo');
+            if (raw) return JSON.parse(raw);
+        } catch (e) { /* ignore */ }
+        return null;
+    }
+    function fetchGeoThenSend(sendFn) {
+        var cached = getGeoCached();
+        if (cached) { sendFn(cached); return; }
+        try {
+            fetch('https://ipwho.is/?fields=success,country,city')
+                .then(function (r) { return r.json(); })
+                .then(function (g) {
+                    var geo = (g && g.success) ? { country: g.country || '', city: g.city || '' } : { country: '', city: '' };
+                    try { sessionStorage.setItem('sng_geo', JSON.stringify(geo)); } catch (e) { /* ignore */ }
+                    sendFn(geo);
+                })
+                .catch(function () { sendFn({ country: '', city: '' }); });
+        } catch (e) { sendFn({ country: '', city: '' }); }
+    }
+
     window.sngTrackVisit = function (pageKey, pageLabel) {
         try {
-            var payload = {
-                path: location.pathname + (location.hash || ''),
-                page_key: pageKey || 'unknown',
-                page_label: pageLabel || '',
-                referrer: document.referrer || '',
-                visitor_id: getVisitorId(),
-                session_id: getSessionId(),
-                user_agent: (navigator && navigator.userAgent) || ''
-            };
-            fetch(SUPABASE_URL + '/rest/v1/page_views', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify(payload),
-                keepalive: true
-            }).catch(function () { /* im lặng bỏ qua, không ảnh hưởng trải nghiệm người dùng */ });
+            var ua = (navigator && navigator.userAgent) || '';
+            fetchGeoThenSend(function (geo) {
+                var payload = {
+                    path: location.pathname + (location.hash || ''),
+                    page_key: pageKey || 'unknown',
+                    page_label: pageLabel || '',
+                    referrer: document.referrer || '',
+                    visitor_id: getVisitorId(),
+                    session_id: getSessionId(),
+                    user_agent: ua,
+                    language: (navigator && (navigator.language || (navigator.languages && navigator.languages[0]))) || '',
+                    device_type: detectDevice(ua),
+                    browser: detectBrowser(ua),
+                    country: geo.country || '',
+                    city: geo.city || ''
+                };
+                fetch(SUPABASE_URL + '/rest/v1/page_views', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(payload),
+                    keepalive: true
+                }).catch(function () { /* im lặng bỏ qua, không ảnh hưởng trải nghiệm người dùng */ });
+            });
         } catch (e) { /* không để lỗi ghi nhận làm hỏng trang */ }
     };
 

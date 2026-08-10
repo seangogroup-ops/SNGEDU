@@ -1371,6 +1371,10 @@ textarea{resize:vertical;}
                     <span class="set-ico">📊</span><span class="name">Thống kê</span>
                 </div>
 
+                <div class="side-item settings-item" data-setkey="site_theme" onclick="openSettingsPanel('site_theme')" style="margin-bottom:10px;">
+                    <span class="set-ico">🎨</span><span class="name">Giao diện</span>
+                </div>
+
                 <div class="side-group" data-group="home">
                     <div class="side-group-head" onclick="toggleSideGroup('home')">
                         <span class="sg-ico">🏠</span><span class="sg-label">Trang chủ</span>
@@ -1774,7 +1778,7 @@ textarea{resize:vertical;}
                         <button class="acct-chip" data-f="unread" onclick="setNotifyFilter('unread')">Chưa đọc</button>
                         <button class="acct-chip" data-f="read" onclick="setNotifyFilter('read')">Đã đọc</button>
                     </div>
-                    <button class="side-add" onclick="openNotifyComposeModal()">+ Gửi thông báo</button>
+                    <button class="side-add" title="Gửi thông báo" aria-label="Gửi thông báo" onclick="openNotifyComposeModal()" style="width:36px;height:36px;padding:0;border-radius:50%;font-size:1.15rem;line-height:1;flex:0 0 auto;">+</button>
                     <button class="side-add" onclick="loadNotifyList()">↻ Tải lại</button>
                 </div>
                 <p class="hint" id="notifyCount" style="margin:0 0 12px;"></p>
@@ -2058,6 +2062,52 @@ textarea{resize:vertical;}
             <div class="settings-form-card">
                 <h3 id="setFormTitle">Cài đặt</h3>
                 <p class="hint" id="setFormHint">Nội dung này hiển thị ở trang chủ.</p>
+
+                <div id="setFieldsTheme" class="hidden">
+                    <div class="hint" style="margin:0 0 14px;background:var(--green-bg);color:#0f6b3a;padding:10px 12px;border-radius:var(--radius-sm);">
+                        🎨 Áp dụng cho TOÀN BỘ trang chủ &amp; các trang con: khối giới thiệu, menu bên trái, nút bấm, thẻ môn học/tài liệu... Người dùng cần tải lại trang để thấy màu mới.
+                    </div>
+                    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                        <div style="flex:1; min-width:150px;">
+                            <label>Màu thương hiệu chính</label>
+                            <input type="color" id="setThemeBrand" value="#4f6bff" style="height:44px; cursor:pointer;" oninput="updateThemePreview()">
+                        </div>
+                        <div style="flex:1; min-width:150px;">
+                            <label>Màu phụ (pha gradient cùng màu chính)</label>
+                            <input type="color" id="setThemeBrand2" value="#8b5cf6" style="height:44px; cursor:pointer;" oninput="updateThemePreview()">
+                        </div>
+                        <div style="flex:1; min-width:150px;">
+                            <label>Màu điểm nhấn (glow trang trí ở khối hero)</label>
+                            <input type="color" id="setThemeAccent2" value="#ff7ab8" style="height:44px; cursor:pointer;" oninput="updateThemePreview()">
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:12px;">
+                        <div style="flex:1; min-width:150px;">
+                            <label>Màu "thành công" (miễn phí, hoàn thành...)</label>
+                            <input type="color" id="setThemeGreen" value="#17b26a" style="height:44px; cursor:pointer;" oninput="updateThemePreview()">
+                        </div>
+                        <div style="flex:1; min-width:150px;">
+                            <label>Màu "cảnh báo / Pro" (giá tiền, huy hiệu Pro...)</label>
+                            <input type="color" id="setThemeAmber" value="#f5a524" style="height:44px; cursor:pointer;" oninput="updateThemePreview()">
+                        </div>
+                        <div style="flex:1; min-width:150px;">
+                            <label>Độ bo góc khối hero (px)</label>
+                            <input type="number" id="setThemeRadius" min="0" max="40" value="24" oninput="updateThemePreview()">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:16px;padding:15px 17px;border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);">
+                        <div class="hint" style="text-transform:uppercase;font-size:.7rem;font-weight:700;letter-spacing:.05em;margin-bottom:10px;">Xem trước</div>
+                        <div id="setThemePreviewHero" style="padding:22px 24px; overflow:hidden; position:relative;">
+                            <span id="setThemePreviewEyebrow" style="display:inline-flex; align-items:center; gap:6px; font-size:.7rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#fff; padding:5px 12px 5px 8px; border-radius:999px; margin-bottom:10px;">● SNG EDU</span>
+                            <div id="setThemePreviewTitle" style="font-size:1.3rem; font-weight:800; margin-bottom:12px;">Mở kho tài liệu, bắt đầu ôn tập ngay hôm nay</div>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <span id="setThemePreviewBtn" style="color:#fff; font-weight:700; font-size:.82rem; padding:9px 16px; border-radius:10px;">Truy cập nhanh</span>
+                                <span id="setThemePreviewPill" style="color:#fff; font-weight:700; font-size:.82rem; padding:9px 16px; border-radius:10px;">Gói Pro</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="setFieldsHero" class="hidden">
                     <label>Tiêu đề tab trình duyệt (thẻ &lt;title&gt;)</label>
@@ -6318,7 +6368,7 @@ function renderNotifyList(){
     });
     document.getElementById('notifyCount').innerText = list.length + ' / ' + notifyCache.length + ' thông báo';
     if (!list.length){
-        box.innerHTML = `<div class="empty-state" style="padding:36px 14px;text-align:center;">Chưa có thông báo nào khớp. Bấm "+ Gửi thông báo" để gửi cho 1 thành viên.</div>`;
+        box.innerHTML = `<div class="empty-state" style="padding:36px 14px;text-align:center;">Chưa có thông báo nào khớp. Bấm nút "+" để gửi cho 1 thành viên.</div>`;
         return;
     }
     box.innerHTML = list.map(n => `
@@ -7022,6 +7072,7 @@ let bannerSize = 'md';
 let bannerEffect = 'subtle';
 
 const SETTINGS_META = {
+    site_theme: { title: 'Giao diện', hint: 'Bộ màu thương hiệu &amp; gradient dùng cho TOÀN BỘ trang (khối hero, menu, nút bấm, thẻ...). Đổi ở đây sẽ áp dụng ngay cho mọi người dùng sau khi họ tải lại trang.' },
     home_hero: { title: 'Trang chủ', hint: 'Khối giới thiệu (hero) ở đầu trang chủ, và các thẻ Truy cập nhanh bên dưới nó.' },
     home_texts: { title: 'Chữ trang chủ', hint: 'Tuỳ chỉnh tiêu đề của từng khu vực trên trang chủ và các tab. Mô tả/nội dung từng thẻ vẫn quản lý riêng ở các mục Tài liệu, Trắc nghiệm, Công cụ, Sản phẩm...' },
     site_footer: { title: 'Chân trang', hint: 'Dòng chữ bản quyền / chân trang, dùng chung và đồng bộ trên mọi trang.' },
@@ -7050,20 +7101,22 @@ async function openSettingsPanel(key){
     document.getElementById('setFormTitle').innerText = meta.title;
     document.getElementById('setFormHint').innerText = meta.hint;
 
+    const isTheme = key === 'site_theme';
     const isHero = key === 'home_hero';
     const isTexts = key === 'home_texts';
     const isFooter = key === 'site_footer';
     const isBanner = key === 'report_banner';
     const isPromo = key === 'promo_banner';
     const isAnnounce = key === 'announcement_popup';
+    document.getElementById('setFieldsTheme').classList.toggle('hidden', !isTheme);
     document.getElementById('setFieldsHero').classList.toggle('hidden', !isHero);
     document.getElementById('setFieldsTexts').classList.toggle('hidden', !isTexts);
     document.getElementById('setFieldsFooter').classList.toggle('hidden', !isFooter);
     document.getElementById('setFieldsBanner').classList.toggle('hidden', !isBanner);
     document.getElementById('setFieldsPromo').classList.toggle('hidden', !isPromo);
     document.getElementById('setFieldsAnnounce').classList.toggle('hidden', !isAnnounce);
-    document.getElementById('setFieldsCard').classList.toggle('hidden', isHero || isTexts || isFooter || isBanner || isPromo || isAnnounce);
-    document.getElementById('quickLinksSection').classList.toggle('hidden', isTexts || isFooter || isBanner || isPromo || isAnnounce);
+    document.getElementById('setFieldsCard').classList.toggle('hidden', isTheme || isHero || isTexts || isFooter || isBanner || isPromo || isAnnounce);
+    document.getElementById('quickLinksSection').classList.toggle('hidden', isTheme || isTexts || isFooter || isBanner || isPromo || isAnnounce);
 
     const { data, error } = await sb.from('site_settings').select('*').eq('key', key).single();
     if (error && error.code !== 'PGRST116'){
@@ -7071,7 +7124,15 @@ async function openSettingsPanel(key){
     }
     currentSetPayload = (data && data.payload) ? data.payload : {};
 
-    if (isHero){
+    if (isTheme){
+        document.getElementById('setThemeBrand').value = currentSetPayload.brand || '#4f6bff';
+        document.getElementById('setThemeBrand2').value = currentSetPayload.brand2 || '#8b5cf6';
+        document.getElementById('setThemeAccent2').value = currentSetPayload.accent2 || '#ff7ab8';
+        document.getElementById('setThemeGreen').value = currentSetPayload.green || '#17b26a';
+        document.getElementById('setThemeAmber').value = currentSetPayload.amber || '#f5a524';
+        document.getElementById('setThemeRadius').value = currentSetPayload.radius || 24;
+        updateThemePreview();
+    } else if (isHero){
         document.getElementById('setHeroPageTitle').value = currentSetPayload.pageTitle || '';
         document.getElementById('setHeroEyebrow').value = currentSetPayload.eyebrow || '';
         document.getElementById('setHeroTitle').value = currentSetPayload.title || '';
@@ -7320,10 +7381,44 @@ function updatePromoPreview(){
     }
 }
 
+function updateThemePreview(){
+    const brand = document.getElementById('setThemeBrand').value;
+    const brand2 = document.getElementById('setThemeBrand2').value;
+    const accent2 = document.getElementById('setThemeAccent2').value;
+    const green = document.getElementById('setThemeGreen').value;
+    const amber = document.getElementById('setThemeAmber').value;
+    const radius = Number(document.getElementById('setThemeRadius').value) || 24;
+    const grad = `linear-gradient(135deg, ${brand}, ${brand2})`;
+
+    const hero = document.getElementById('setThemePreviewHero');
+    hero.style.background = `linear-gradient(120deg, ${brand}22 0%, ${brand2}1f 55%, ${green}1f 100%)`;
+    hero.style.borderRadius = radius + 'px';
+
+    document.getElementById('setThemePreviewEyebrow').style.background = grad;
+    document.getElementById('setThemePreviewTitle').style.background = `linear-gradient(100deg, var(--text) 45%, ${brand} 100%)`;
+    document.getElementById('setThemePreviewTitle').style.webkitBackgroundClip = 'text';
+    document.getElementById('setThemePreviewTitle').style.backgroundClip = 'text';
+    document.getElementById('setThemePreviewTitle').style.color = 'transparent';
+    document.getElementById('setThemePreviewBtn').style.background = grad;
+    document.getElementById('setThemePreviewPill').style.background = amber;
+
+    // dùng luôn accent2/green cho 1 đốm glow nhỏ để admin hình dung, không bắt buộc phải thấy rõ trong preview thu nhỏ này
+    hero.style.boxShadow = `inset 0 0 40px -10px ${accent2}55`;
+}
+
 async function saveSiteSetting(){
     if (!currentSetKey) return;
     let payload;
-    if (currentSetKey === 'home_hero'){
+    if (currentSetKey === 'site_theme'){
+        payload = {
+            brand: document.getElementById('setThemeBrand').value,
+            brand2: document.getElementById('setThemeBrand2').value,
+            accent2: document.getElementById('setThemeAccent2').value,
+            green: document.getElementById('setThemeGreen').value,
+            amber: document.getElementById('setThemeAmber').value,
+            radius: Number(document.getElementById('setThemeRadius').value) || 24,
+        };
+    } else if (currentSetKey === 'home_hero'){
         payload = {
             pageTitle: document.getElementById('setHeroPageTitle').value.trim(),
             eyebrow: document.getElementById('setHeroEyebrow').value.trim(),

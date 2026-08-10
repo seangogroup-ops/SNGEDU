@@ -44,8 +44,15 @@
         --amber-bg:  #fbedd6;
         --brand:     #4f6bff;
         --brand-bg:  #e7eaff;
+        /* ---- Bộ màu Gradient (đổi được ở trang Admin > Giao diện > site_settings key "site_theme") ---- */
+        --brand2:    #8b5cf6;   /* màu phụ để pha gradient cùng --brand */
+        --accent2:   #ff7ab8;   /* điểm nhấn thứ 3, dùng cho glow/blob trang trí */
+        --radius-lg: 24px;      /* độ bo góc của khối hero / thẻ lớn — đổi được từ admin */
+        --grad-brand: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%);
+        --grad-hero:  linear-gradient(120deg, color-mix(in srgb, var(--brand) 16%, #eef1ff) 0%, color-mix(in srgb, var(--brand2) 14%, #f7f4ff) 55%, color-mix(in srgb, var(--green) 12%, #eefaf3) 100%);
         --shadow:    0 1px 2px rgba(20,22,40,.06), 0 8px 24px -12px rgba(20,22,40,.12);
         --shadow-hov:0 4px 10px rgba(20,22,40,.08), 0 20px 40px -16px rgba(20,22,40,.2);
+        --shadow-glow: 0 10px 30px -10px color-mix(in srgb, var(--brand) 45%, transparent);
     }
     html[data-theme="dark"]{
         --bg:        #14151c;
@@ -60,8 +67,12 @@
         --amber-bg:  #3a2e12;
         --brand:     #7b93ff;
         --brand-bg:  #232a4d;
+        --brand2:    #a78bfa;
+        --accent2:   #ff8fc7;
+        --grad-hero:  linear-gradient(120deg, color-mix(in srgb, var(--brand) 26%, #1d2140) 0%, color-mix(in srgb, var(--brand2) 22%, #201c38) 55%, color-mix(in srgb, var(--green) 20%, #142a22) 100%);
         --shadow:    0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
         --shadow-hov:0 4px 10px rgba(0,0,0,.25), 0 20px 40px -16px rgba(0,0,0,.6);
+        --shadow-glow: 0 10px 34px -8px color-mix(in srgb, var(--brand) 55%, transparent);
     }
     html{ transition: background .25s ease; }
     body, .sidebar, .topbar, .card, .stat, .quick-tile, .empty-state, .hero-card{
@@ -92,7 +103,7 @@
     .side-logo{ display:flex; align-items:center; gap:10px; padding:22px 20px 18px; }
     .side-logo .mark{
         width:34px; height:34px; border-radius:10px; flex-shrink:0;
-        background:linear-gradient(135deg, var(--brand), #7b8fff);
+        background:linear-gradient(135deg, var(--brand), var(--brand2));
         display:flex; align-items:center; justify-content:center;
         color:#fff; font-weight:800; font-size:.95rem;
     }
@@ -108,7 +119,11 @@
     }
     .side-link i{ width:18px; text-align:center; font-size:.95rem; flex-shrink:0; }
     .side-link:hover{ background:#f2f3f8; color:var(--ink); }
-    .side-link.active{ background:var(--brand-bg); color:var(--brand); }
+    .side-link.active{
+        background:var(--grad-brand); color:#fff;
+        box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--brand) 55%, transparent);
+    }
+    html[data-theme="dark"] .side-link:hover{ background:rgba(255,255,255,.06); }
 
     /* ---- nút thu gọn / mở rộng sidebar ---- */
     .side-collapse-wrap{ padding:10px 12px 4px; margin-top:auto; }
@@ -147,7 +162,7 @@
     .sidebar.collapsed .side-collapse-btn i{ transform:rotate(180deg); }
     .side-avatar{
         width:36px; height:36px; border-radius:50%;
-        background:linear-gradient(135deg, var(--brand), #7c5cfc);
+        background:linear-gradient(135deg, var(--brand), var(--brand2));
         display:flex; align-items:center; justify-content:center;
         color:#fff; font-weight:800; font-size:.85rem; flex-shrink:0;
         box-shadow:0 0 0 2px var(--card), 0 0 0 3px rgba(79,107,255,.35);
@@ -188,7 +203,7 @@
     .topbar-right{ display:flex; align-items:center; gap:14px; }
     .topbar .avatar-btn{
         width:38px; height:38px; border-radius:50%;
-        background:linear-gradient(135deg, var(--brand), #7c5cfc);
+        background:linear-gradient(135deg, var(--brand), var(--brand2));
         display:flex; align-items:center; justify-content:center;
         color:#fff; font-weight:800; font-size:.88rem; cursor:pointer; flex-shrink:0;
         border:2px solid var(--card); box-shadow:0 0 0 1px var(--line);
@@ -272,7 +287,7 @@
     }
     .acc-modal-avatar{
         width:52px; height:52px; border-radius:50%; flex-shrink:0;
-        background:linear-gradient(135deg, var(--brand), #7c5cfc);
+        background:linear-gradient(135deg, var(--brand), var(--brand2));
         display:flex; align-items:center; justify-content:center;
         color:#fff; font-weight:800; font-size:1.2rem;
         position:relative;
@@ -348,7 +363,7 @@
     .acc-upgrade-btn{
         width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
         margin-top:12px; border:none; border-radius:12px; padding:12px;
-        background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff;
+        background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff;
         font-family:inherit; font-weight:800; font-size:.86rem; cursor:pointer;
         box-shadow:0 6px 16px -6px rgba(108,92,246,.55);
         transition:transform .15s ease, box-shadow .15s ease;
@@ -425,7 +440,7 @@
     .acctpw-save-btn{
         display:inline-flex; align-items:center; gap:8px;
         padding:12px 22px; border-radius:12px; border:none;
-        background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff;
+        background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff;
         font-family:inherit; font-weight:700; font-size:.86rem; cursor:pointer;
         transition:filter .15s ease;
     }
@@ -524,32 +539,38 @@
         margin-bottom:34px;
     }
     .hero-card{
-        background: linear-gradient(120deg, #eef1ff 0%, #f7f4ff 55%, #eefaf3 100%);
+        background: var(--grad-hero);
         border:1px solid var(--line);
-        border-radius:24px; padding:38px 40px;
+        border-radius:var(--radius-lg); padding:38px 40px;
         display:flex; align-items:center; gap:32px;
         position:relative; overflow:hidden;
+        box-shadow: var(--shadow-glow);
     }
     .hero-card::before{
-        content:''; position:absolute; top:-60px; right:-60px; width:220px; height:220px; border-radius:50%;
-        background:radial-gradient(circle, rgba(79,107,255,.14) 0%, rgba(79,107,255,0) 70%);
+        content:''; position:absolute; top:-70px; right:-60px; width:260px; height:260px; border-radius:50%;
+        background:radial-gradient(circle, color-mix(in srgb, var(--brand) 20%, transparent) 0%, transparent 70%);
+        pointer-events:none;
     }
-    html[data-theme="dark"] .hero-card{
-        background: linear-gradient(120deg, #1d2140 0%, #201c38 55%, #142a22 100%);
-    }
-    html[data-theme="dark"] .hero-card::before{
-        background:radial-gradient(circle, rgba(123,147,255,.18) 0%, rgba(123,147,255,0) 70%);
+    .hero-card::after{
+        content:''; position:absolute; bottom:-90px; left:8%; width:220px; height:220px; border-radius:50%;
+        background:radial-gradient(circle, color-mix(in srgb, var(--accent2) 22%, transparent) 0%, transparent 70%);
+        pointer-events:none;
     }
     .hero-text{ flex:1; min-width:0; position:relative; z-index:1; }
     .hero-illustration{ flex-shrink:0; width:172px; height:172px; filter:drop-shadow(0 14px 22px rgba(30,25,60,.14)); position:relative; z-index:1; }
     .hero-eyebrow{
         display:inline-flex; align-items:center; gap:7px;
         font-size:.74rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
-        color:var(--brand); margin-bottom:14px;
-        background:rgba(79,107,255,.09); padding:6px 14px 6px 10px; border-radius:999px;
+        color:#fff; margin-bottom:14px;
+        background:var(--grad-brand); padding:6px 14px 6px 10px; border-radius:999px;
+        box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--brand) 60%, transparent);
     }
-    .hero-eyebrow::before{ content:''; width:6px; height:6px; border-radius:50%; background:var(--brand); flex-shrink:0; }
-    .hero-card h1{ font-size:2rem; font-weight:800; line-height:1.24; margin-bottom:12px; max-width:460px; letter-spacing:-.01em; }
+    .hero-eyebrow::before{ content:''; width:6px; height:6px; border-radius:50%; background:#fff; flex-shrink:0; }
+    .hero-card h1{
+        font-size:2rem; font-weight:800; line-height:1.24; margin-bottom:12px; max-width:460px; letter-spacing:-.01em;
+        background:linear-gradient(100deg, var(--ink) 45%, var(--brand) 100%);
+        -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
     .hero-card p{ color:var(--ink-soft); font-size:.94rem; line-height:1.65; max-width:430px; margin-bottom:20px; }
     .hero-text{ transition: opacity .25s ease; }
 
@@ -594,9 +615,15 @@
         background:var(--card); border:1px solid var(--line); border-radius:16px;
         padding:16px; display:flex; align-items:center; gap:12px;
         cursor:pointer; box-shadow:var(--shadow);
-        transition:transform .2s ease, box-shadow .2s ease;
+        transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+        position:relative; overflow:hidden;
     }
-    .quick-tile:hover{ transform:translateY(-3px); box-shadow:var(--shadow-hov); }
+    .quick-tile::before{
+        content:''; position:absolute; inset:0 0 auto 0; height:3px;
+        background:var(--grad-brand); opacity:0; transition:opacity .2s ease;
+    }
+    .quick-tile:hover{ transform:translateY(-3px); box-shadow:var(--shadow-glow); border-color:transparent; }
+    .quick-tile:hover::before{ opacity:1; }
     .q-icon{
         width:40px; height:40px; border-radius:11px; flex-shrink:0;
         display:flex; align-items:center; justify-content:center; font-size:1.05rem;
@@ -620,11 +647,11 @@
     .empty-sub{ color:var(--ink-mute); font-size:.88rem; max-width:340px; }
     .empty-cta{
         margin-top:14px; border:none; cursor:pointer;
-        background:var(--brand); color:#fff; font-family:inherit; font-weight:600; font-size:.86rem;
+        background:var(--grad-brand); color:#fff; font-family:inherit; font-weight:600; font-size:.86rem;
         padding:11px 20px; border-radius:12px; display:inline-flex; align-items:center; gap:8px;
-        transition:filter .2s ease;
+        transition:filter .2s ease, transform .2s ease; box-shadow:0 8px 18px -8px color-mix(in srgb, var(--brand) 60%, transparent);
     }
-    .empty-cta:hover{ filter:brightness(1.08); }
+    .empty-cta:hover{ filter:brightness(1.08); transform:translateY(-1px); }
 
     /* ---------------- filter pills ---------------- */
     .pill-row{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px; }
@@ -634,10 +661,11 @@
         padding:10px 20px; border-radius:999px; cursor:pointer;
         transition:background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
     }
-    .filter-pill:hover{ border-color:var(--green); color:var(--green); }
+    .filter-pill:hover{ border-color:var(--brand); color:var(--brand); }
     .filter-pill.active{
-        background:linear-gradient(135deg, var(--green), #12925a);
+        background:var(--grad-brand);
         border-color:transparent; color:#fff;
+        box-shadow:0 6px 16px -8px color-mix(in srgb, var(--brand) 60%, transparent);
     }
 
     /* ---------------- document categories ---------------- */
@@ -861,7 +889,7 @@
         transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
         cursor:pointer; position:relative;
     }
-    .card:hover, .card:focus-visible{ transform:translateY(-4px); box-shadow:var(--shadow-hov); border-color:#dfe2ee; }
+    .card:hover, .card:focus-visible{ transform:translateY(-4px); box-shadow:var(--shadow-glow); border-color:color-mix(in srgb, var(--brand) 35%, var(--line)); }
     .card.locked{ opacity:.88; }
     .card.pro-highlight{ border-color:var(--amber); box-shadow:0 0 0 2px var(--amber-bg); }
     .pro-ribbon{
@@ -904,14 +932,14 @@
 
     /* subject accents */
     .c-pldc .icon-chip{ background:var(--brand-bg); color:var(--brand); }
-    .c-th   .icon-chip{ background:#f1ecff; color:#7c5cfc; }
+    .c-th   .icon-chip{ background:#f1ecff; color:var(--brand2); }
     .c-ktct .icon-chip{ background:var(--green-bg); color:var(--green); }
     .c-cnxh .icon-chip{ background:#ffece8; color:#e4572e; }
     .c-lsd  .icon-chip{ background:var(--amber-bg); color:var(--amber); }
     .c-tthcm .icon-chip{ background:#fde8e8; color:#d92d20; }
 
     .card:hover .card-arrow{ background:var(--brand); color:#fff; }
-    .c-th:hover .card-arrow{ background:#7c5cfc; }
+    .c-th:hover .card-arrow{ background:var(--brand2); }
     .c-ktct:hover .card-arrow{ background:var(--green); }
 
     /* ---------------- gói pro (bảng giá trong tab Tài khoản) ---------------- */
@@ -996,7 +1024,7 @@
     .site-toast.success .site-toast-icon{ background:var(--green-bg); color:var(--green); }
     .site-toast.error .site-toast-icon{ background:#fdeeee; color:#e5484d; }
     html[data-theme="dark"] .site-toast.error .site-toast-icon{ background:#3a2020; color:#ff7875; }
-    .site-toast.pro .site-toast-icon{ background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff; }
+    .site-toast.pro .site-toast-icon{ background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff; }
     .site-toast-body{ min-width:0; }
     .site-toast-title{ font-weight:800; font-size:.9rem; margin-bottom:2px; }
     .site-toast-msg{ font-size:.82rem; color:var(--ink-mute); line-height:1.5; }
@@ -1197,7 +1225,7 @@
 .pro-upg-feat-row .feat-desc{ color:var(--ink-mute); font-size:.85rem; margin-top:2px; line-height:1.5; }
 .pro-upg-cta{
     width:100%; margin-top:22px; padding:16px; border:none; border-radius:14px;
-    background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff; font-weight:800;
+    background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff; font-weight:800;
     font-size:1.02rem; cursor:pointer;
 }
 .pro-upg-cta:hover{ filter:brightness(1.05); }
@@ -1224,7 +1252,7 @@
 .pro-confirm-close:hover{ background:rgba(255,255,255,.3); }
 .pro-confirm-head{
     text-align:center; padding:30px 26px 22px; flex-shrink:0;
-    background:linear-gradient(155deg, var(--brand), #7c5cfc);
+    background:linear-gradient(155deg, var(--brand), var(--brand2));
 }
 .pro-confirm-head .icon{
     width:52px; height:52px; border-radius:50%; margin:0 auto 14px;
@@ -1258,7 +1286,7 @@
 }
 .pro-confirm-cancel{ flex:0 0 96px; background:var(--bg); color:var(--ink); border:1px solid var(--line) !important; }
 .pro-confirm-cancel:hover{ background:var(--line); }
-.pro-confirm-ok{ flex:1; background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff; }
+.pro-confirm-ok{ flex:1; background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff; }
 .pro-confirm-ok:hover{ filter:brightness(1.05); }
 .pro-confirm-ok:disabled{ opacity:.65; cursor:not-allowed; }
 
@@ -1349,7 +1377,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             </div>
         </nav>
         <div class="side-foot">
-            <button type="button" id="sideProBtn" onclick="openProUpgradeModal(); closeMobileMenu();" title="Nâng cấp Pro" style="display:none; width:100%; margin-bottom:12px; border:none; border-radius:99px; padding:11px; background:linear-gradient(135deg, var(--brand), #7c5cfc); color:#fff; font-weight:800; font-size:.86rem; cursor:pointer; align-items:center; justify-content:center; gap:8px;">
+            <button type="button" id="sideProBtn" onclick="openProUpgradeModal(); closeMobileMenu();" title="Nâng cấp Pro" style="display:none; width:100%; margin-bottom:12px; border:none; border-radius:99px; padding:11px; background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff; font-weight:800; font-size:.86rem; cursor:pointer; align-items:center; justify-content:center; gap:8px;">
                 <i class="fa-solid fa-crown"></i> <span class="lbl">Nâng cấp Pro</span>
             </button>
             <div class="side-user">
@@ -1415,7 +1443,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                     <div class="avatar-group">
                         <div class="avatar-stack">
                             <div class="mini-avt" style="background:#4f6bff">H</div>
-                            <div class="mini-avt" style="background:#7c5cfc">L</div>
+                            <div class="mini-avt" style="background:var(--brand2)">L</div>
                             <div class="mini-avt" style="background:#17b26a">M</div>
                             <div class="mini-avt" style="background:#f5a524">T</div>
                         </div>
@@ -1425,7 +1453,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <svg class="hero-illustration" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <ellipse cx="100" cy="176" rx="72" ry="10" fill="#1f2433" opacity=".06"/>
                     <rect x="34" y="128" width="132" height="20" rx="6" fill="#4f6bff" transform="rotate(-2 100 138)"/>
-                    <rect x="46" y="106" width="112" height="20" rx="6" fill="#7c5cfc" transform="rotate(1.5 100 116)"/>
+                    <rect x="46" y="106" width="112" height="20" rx="6" fill="var(--brand2)" transform="rotate(1.5 100 116)"/>
                     <rect x="40" y="84"  width="118" height="20" rx="6" fill="#17b26a" transform="rotate(-1.5 100 94)"/>
                     <g transform="translate(100 55)">
                         <polygon points="0,-16 40,0 0,16 -40,0" fill="#1f2433"/>
@@ -2414,7 +2442,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     // Môn có mã không nằm trong danh sách này vẫn hiện bình thường, chỉ lấy icon/màu xoay vòng ở PALETTE bên dưới.
     const ICON_BY_ID = {
         PLDC:  { icon:'fa-scale-balanced', color:'#0068ff',      bg:'#e8f3ff' },
-        TH:    { icon:'fa-brain',          color:'#7c5cfc',      bg:'#f1ecff' },
+        TH:    { icon:'fa-brain',          color:'var(--brand2)',      bg:'#f1ecff' },
         KTCT:  { icon:'fa-coins',          color:'var(--green)', bg:'var(--green-bg)' },
         CNXH:  { icon:'fa-people-group',   color:'#e4572e',      bg:'#fdece3' },
         LSD:   { icon:'fa-landmark',       color:'#946b1f',      bg:'#fbf1de' },
@@ -2612,6 +2640,24 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         }
     }
     loadHeroSettings();
+
+    // ---------------- GIAO DIỆN (màu thương hiệu / gradient) — đọc từ Supabase site_settings 'site_theme' ----------------
+    // Cho phép admin đổi bộ màu gradient của toàn site mà không cần sửa code, quản lý ở trang admin > Giao diện.
+    async function loadThemeSettings(){
+        try{
+            const { data, error } = await sb.from('site_settings').select('*').eq('key', 'site_theme').single();
+            if (error || !data || !data.payload) return; // chưa cấu hình -> giữ bộ màu mặc định trong CSS
+            const t = data.payload;
+            const root = document.documentElement.style;
+            if (t.brand)   root.setProperty('--brand', t.brand);
+            if (t.brand2)  root.setProperty('--brand2', t.brand2);
+            if (t.accent2) root.setProperty('--accent2', t.accent2);
+            if (t.green)   root.setProperty('--green', t.green);
+            if (t.amber)   root.setProperty('--amber', t.amber);
+            if (t.radius)  root.setProperty('--radius-lg', t.radius + 'px');
+        }catch(e){ /* mạng lỗi -> im lặng giữ mặc định, không chặn trang tải */ }
+    }
+    loadThemeSettings();
 
     // ---------------- CHỮ TRANG CHỦ (tiêu đề các khu vực) — đọc từ Supabase site_settings 'home_texts' ----------------
     // Lưu ý: fetchSiteSettingPayload được khai báo bằng "function" (hoisted) ở dưới trong file này,
@@ -3272,7 +3318,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     const SUPPORT_ICON_COLOR_MAP = {
         indigo: { bg:'var(--brand-bg)', fg:'var(--brand)' },
-        purple: { bg:'#f1ecff',         fg:'#7c5cfc' },
+        purple: { bg:'#f1ecff',         fg:'var(--brand2)' },
         green:  { bg:'var(--green-bg)', fg:'var(--green)' },
         amber:  { bg:'var(--amber-bg)', fg:'var(--amber)' },
         blue:   { bg:'#e8f3ff',         fg:'#0068ff' },
@@ -4170,7 +4216,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     // ---------------- TRUY CẬP NHANH — hoàn toàn động, quản lý (thêm/sửa/xóa/đổi tên/sắp xếp) ở trang admin ----------------
     const QL_COLOR_MAP = {
         indigo: { bg:'var(--brand-bg)', fg:'var(--brand)' },
-        purple: { bg:'#f1ecff',         fg:'#7c5cfc' },
+        purple: { bg:'#f1ecff',         fg:'var(--brand2)' },
         green:  { bg:'var(--green-bg)', fg:'var(--green)' },
         amber:  { bg:'var(--amber-bg)', fg:'var(--amber)' },
         blue:   { bg:'#e8f3ff',         fg:'#0068ff' },

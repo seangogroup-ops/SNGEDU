@@ -1093,7 +1093,7 @@ textarea{resize:vertical;}
 }
 
 /* ---------- MODAL: đổi tên / đặt mật khẩu tài khoản khách ---------- */
-#adc9b4tFormOverlay{
+#acctFormOverlay{
     position:fixed;inset:0;background:rgba(12,14,30,.6);backdrop-filter:blur(3px);
     display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;
 }
@@ -1121,9 +1121,23 @@ textarea{resize:vertical;}
 .btn-acct-cancel:hover{background:#f3eee5;}
 .btn-acct-save{background:var(--accent);color:#ffffff;}
 .btn-acct-save:hover{background:var(--accent-dark);}
-#adc9b4tFormMsg{min-height:1.1em;font-size:.8rem;font-weight:600;margin-top:8px;}
-#adc9b4tFormMsg.err{color:var(--red);}
-#adc9b4tFormMsg.ok{color:var(--green);}
+#acctFormMsg{min-height:1.1em;font-size:.8rem;font-weight:600;margin-top:8px;}
+#acctFormMsg.err{color:var(--red);}
+#acctFormMsg.ok{color:var(--green);}
+
+/* ---------- Danh sách chọn người nhận (modal "Gửi thông báo riêng") ---------- */
+#notifyRecipientOptions{
+    max-height:190px;overflow:auto;border:1px solid var(--border);border-radius:var(--radius-sm);
+    margin-top:6px;background:var(--bg);
+}
+.notify-recipient-opt{
+    padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.85rem;
+    color:var(--text);transition:background .12s ease;
+}
+.notify-recipient-opt:last-child{border-bottom:none;}
+.notify-recipient-opt:hover{background:var(--accent-soft);}
+.notify-recipient-opt.picked{background:var(--accent-soft);font-weight:700;color:var(--accent-dark);}
+.notify-recipient-opt .hint-inline{color:var(--gray);font-weight:400;}
 
 /* ---------- TRANG CHI TIẾT TÀI KHOẢN (thay cho popup) ---------- */
 .acct-detail-back{
@@ -6338,7 +6352,7 @@ function renderNotifyComposeForm(){
             : `
             <label style="margin-top:0;">Người nhận</label>
             <input id="notifyRecipientSearch" placeholder="Tìm theo email hoặc tên..." oninput="renderNotifyRecipientOptions()">
-            <div id="notifyRecipientOptions" style="max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:6px;"></div>
+            <div id="notifyRecipientOptions"></div>
             `}
         <label style="margin-top:10px;">Tiêu đề</label>
         <input id="notifyTitleInput" placeholder="VD: Nhắc gia hạn gói Pro">
@@ -6360,7 +6374,7 @@ function renderNotifyRecipientOptions(){
         .slice(0, 30);
     if (!list.length){ wrap.innerHTML = `<div class="hint" style="padding:8px;">Không tìm thấy tài khoản nào.</div>`; return; }
     wrap.innerHTML = list.map(u => `
-        <div class="notify-recipient-opt${notifyPickedUserId === u.id ? ' picked' : ''}" onclick="pickNotifyRecipient('${u.id}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--line);${notifyPickedUserId === u.id ? 'background:rgba(79,107,255,.08);font-weight:600;' : ''}">
+        <div class="notify-recipient-opt${notifyPickedUserId === u.id ? ' picked' : ''}" onclick="pickNotifyRecipient('${u.id}')">
             ${escapeHtml(u.full_name || '(chưa đặt tên)')} <span class="hint-inline">· ${escapeHtml(u.email || '')}</span>
         </div>`).join('');
 }

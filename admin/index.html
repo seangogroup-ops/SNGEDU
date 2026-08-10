@@ -273,6 +273,20 @@ aside{
 .btn-mini-save{background:var(--accent);color:#ffffff;}
 .btn-mini-save:hover{background:var(--accent-dark);}
 .btn-mini-cancel{background:#57492d;color:#e2d9c8;}
+
+/* ---------- Thanh nút "Lưu thay đổi" standalone (settings-form-card, payment settings...) ----------
+   .mini-form .mini-actions ở trên chỉ áp dụng khi .mini-actions nằm TRONG .mini-form (sidebar thêm/sửa nhanh).
+   Khi .mini-actions được dùng độc lập trong các panel cài đặt (không có .mini-form bao ngoài), nó không
+   nhận được padding/font-size/gap nào cả -> nút "Lưu thay đổi" render trần trụi, méo, xấu.
+   Rule dưới đây bọc trường hợp đó, không đụng tới các mini-form nhỏ ở sidebar. */
+.mini-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.mini-actions .btn-mini-save,
+.mini-actions .btn-mini-cancel{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:12px 22px;font-size:.88rem;border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-xs);
+}
+.mini-actions .btn-mini-save:hover{box-shadow:var(--shadow-sm);transform:translateY(-1px);}
 .side-item-row{display:block;}
 .icon-x,.icon-edit{
     width:26px;height:26px;border-radius:50%;
@@ -1949,7 +1963,7 @@ textarea{resize:vertical;}
                             <input type="checkbox" id="payTopupEnabled" style="width:auto;" checked>
                             <span>Cho phép nạp thêm tiền vào ví</span>
                         </label>
-                        <p class="hint" style="margin-top:6px;">Nạp tiền luôn đi qua cổng SePay (không có cách nạp nào khác) — nên nếu tắt cổng SePay ở trên, việc nạp tiền cũng tự động bị khoá dù mục này có đang bật.</p>
+                        <p class="hint" style="margin-top:6px;">Mục này độc lập với cổng SePay ở trên — tắt riêng mục này chỉ ẩn/khoá việc nạp tiền, không ảnh hưởng tới thanh toán khoá học, gói Pro, tài liệu, sản phẩm...</p>
                     </div>
 
                     <div class="mini-actions" style="margin-top:16px;">

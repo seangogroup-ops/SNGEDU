@@ -606,6 +606,26 @@
     .avatar-group .ag-text{ font-size:.78rem; color:var(--ink-soft); font-weight:500; }
     .avatar-group .ag-text b{ color:var(--ink); font-weight:700; }
 
+    /* ---- hiệu ứng cho khối "đang ôn tập", đổi được ở admin > Giao diện ---- */
+    @keyframes agPulse{ 0%,100%{ box-shadow:var(--shadow), 0 0 0 0 color-mix(in srgb, var(--brand) 35%, transparent); } 50%{ box-shadow:var(--shadow), 0 0 0 6px color-mix(in srgb, var(--brand) 0%, transparent); } }
+    @keyframes agFloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-4px); } }
+    .avatar-group[data-effect="pulse"]{ animation:agPulse 2.2s ease-in-out infinite; }
+    .avatar-group[data-effect="float"]{ animation:agFloat 2.6s ease-in-out infinite; }
+    .avatar-group[data-effect="pulse"] .avatar-stack .mini-avt:first-child,
+    .avatar-group[data-effect="float"] .avatar-stack .mini-avt:first-child{ transition:transform .2s ease; }
+
+    /* ---- huy hiệu thay thế (kiểu "badge" đơn giản: icon + chữ), bật ở admin > Giao diện ---- */
+    .hero-badge-alt{
+        display:inline-flex; align-items:center; gap:9px;
+        background:var(--grad-brand); color:#fff; border-radius:999px;
+        padding:9px 18px 9px 14px; box-shadow:0 8px 18px -8px color-mix(in srgb, var(--brand) 60%, transparent);
+        font-size:.82rem; font-weight:700;
+    }
+    .hero-badge-alt.hidden{ display:none; }
+    .hero-badge-alt i{ font-size:.9rem; }
+    .hero-badge-alt[data-effect="pulse"]{ animation:agPulse 2.2s ease-in-out infinite; }
+    .hero-badge-alt[data-effect="float"]{ animation:agFloat 2.6s ease-in-out infinite; }
+
     .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .stat{
         background:var(--card); border:1px solid var(--line); border-radius:var(--radius-card);
@@ -1462,14 +1482,18 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <div class="hero-text" id="heroText" style="opacity:0;">
                     <div class="hero-eyebrow" id="heroEyebrow">SNG EDU - Không gian tri thức cộng đồng</div>
                     <h1 id="heroTitle">Mở kho tài liệu, bắt đầu ôn tập ngay hôm nay</h1>
-                    <div class="avatar-group">
-                        <div class="avatar-stack">
+                    <div class="avatar-group" id="avatarGroup" data-effect="none">
+                        <div class="avatar-stack" id="avatarStack">
                             <div class="mini-avt" style="background:#4f6bff">H</div>
                             <div class="mini-avt" style="background:var(--brand2)">L</div>
                             <div class="mini-avt" style="background:#17b26a">M</div>
                             <div class="mini-avt" style="background:#f5a524">T</div>
                         </div>
-                        <div class="ag-text"><b>1.240 bạn</b> đang ôn tập tuần này</div>
+                        <div class="ag-text" id="avatarText"><b id="avatarCount">1.240 bạn</b> <span id="avatarSuffix">đang ôn tập tuần này</span></div>
+                    </div>
+                    <div class="hero-badge-alt hidden" id="heroBadgeAlt" data-effect="none">
+                        <i class="fa-solid fa-star" id="heroBadgeIcon"></i>
+                        <span id="heroBadgeText">4.9/5 từ 320 đánh giá</span>
                     </div>
                 </div>
                 <svg class="hero-illustration" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2684,7 +2708,30 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             if (heroCard && t.heroStyle) heroCard.setAttribute('data-hero-style', t.heroStyle);
             document.body.setAttribute('data-hover-style', t.hoverStyle || 'lift');
             document.body.setAttribute('data-show-illustration', t.showIllustration === false ? '0' : '1');
-            document.body.setAttribute('data-show-avatars', t.showAvatars === false ? '0' : '1');
+
+            // ---- khối "đang ôn tập" (avatar nhóm / huy hiệu / ẩn) ----
+            const sp = t.socialProof || {};
+            const spType = sp.type || 'avatars';
+            const avatarGroup = document.getElementById('avatarGroup');
+            const badgeAlt = document.getElementById('heroBadgeAlt');
+            if (avatarGroup) avatarGroup.classList.toggle('hidden', spType !== 'avatars');
+            if (avatarGroup) avatarGroup.style.display = spType === 'avatars' ? '' : 'none';
+            if (badgeAlt) badgeAlt.classList.toggle('hidden', spType !== 'badge');
+            if (spType === 'avatars' && avatarGroup){
+                avatarGroup.setAttribute('data-effect', sp.effect || 'none');
+                if (sp.count) document.getElementById('avatarCount').textContent = sp.count;
+                if (sp.suffix) document.getElementById('avatarSuffix').textContent = sp.suffix;
+                const avts = document.querySelectorAll('#avatarStack .mini-avt');
+                (sp.avatars || []).slice(0,4).forEach((a, i) => {
+                    if (!avts[i]) return;
+                    if (a.letter) avts[i].textContent = a.letter;
+                    if (a.color)  avts[i].style.background = a.color;
+                });
+            } else if (spType === 'badge' && badgeAlt){
+                badgeAlt.setAttribute('data-effect', sp.effect || 'none');
+                if (sp.badgeIcon) document.getElementById('heroBadgeIcon').className = sp.badgeIcon;
+                if (sp.badgeText) document.getElementById('heroBadgeText').textContent = sp.badgeText;
+            }
         }catch(e){ /* mạng lỗi -> im lặng giữ mặc định, không chặn trang tải */ }
     }
     loadThemeSettings();

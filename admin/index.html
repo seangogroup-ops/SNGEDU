@@ -2123,10 +2123,49 @@ textarea{resize:vertical;}
                         <label style="display:flex; align-items:center; gap:8px; font-weight:600;">
                             <input type="checkbox" id="setThemeShowIllustration" style="width:auto;" checked> Hiện hình minh hoạ SVG trong khối hero
                         </label>
-                        <label style="display:flex; align-items:center; gap:8px; font-weight:600;">
-                            <input type="checkbox" id="setThemeShowAvatars" style="width:auto;" checked> Hiện dòng "X bạn đang ôn tập tuần này"
-                        </label>
                     </div>
+
+                    <div class="hint" style="margin:20px 0 10px; text-transform:uppercase; font-size:.7rem; font-weight:800; letter-spacing:.05em;">Khối "đang ôn tập" (dưới tiêu đề hero)</div>
+                    <label>Kiểu hiển thị</label>
+                    <select id="setThemeSPType" onchange="onThemeSPTypeChange()">
+                        <option value="avatars">Avatar nhóm + số người (mặc định)</option>
+                        <option value="badge">Huy hiệu đơn giản (icon + chữ)</option>
+                        <option value="none">Ẩn hẳn</option>
+                    </select>
+
+                    <div id="setThemeSPAvatars">
+                        <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:10px;">
+                            <div style="flex:1; min-width:170px;">
+                                <label>Số/chữ đậm (vd: 1.240 bạn)</label>
+                                <input id="setThemeSPCount" placeholder="1.240 bạn" oninput="updateThemePreview()">
+                            </div>
+                            <div style="flex:1; min-width:170px;">
+                                <label>Chữ theo sau</label>
+                                <input id="setThemeSPSuffix" placeholder="đang ôn tập tuần này" oninput="updateThemePreview()">
+                            </div>
+                        </div>
+                        <label style="margin-top:10px;">4 avatar tròn (chữ cái + màu)</label>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <div style="display:flex; align-items:center; gap:6px;"><input id="setThemeAvt1Letter" maxlength="1" value="H" style="width:44px; text-align:center;"><input type="color" id="setThemeAvt1Color" value="#4f6bff" style="width:40px; height:38px; padding:2px; cursor:pointer;"></div>
+                            <div style="display:flex; align-items:center; gap:6px;"><input id="setThemeAvt2Letter" maxlength="1" value="L" style="width:44px; text-align:center;"><input type="color" id="setThemeAvt2Color" value="#8b5cf6" style="width:40px; height:38px; padding:2px; cursor:pointer;"></div>
+                            <div style="display:flex; align-items:center; gap:6px;"><input id="setThemeAvt3Letter" maxlength="1" value="M" style="width:44px; text-align:center;"><input type="color" id="setThemeAvt3Color" value="#17b26a" style="width:40px; height:38px; padding:2px; cursor:pointer;"></div>
+                            <div style="display:flex; align-items:center; gap:6px;"><input id="setThemeAvt4Letter" maxlength="1" value="T" style="width:44px; text-align:center;"><input type="color" id="setThemeAvt4Color" value="#f5a524" style="width:40px; height:38px; padding:2px; cursor:pointer;"></div>
+                        </div>
+                    </div>
+
+                    <div id="setThemeSPBadge" class="hidden" style="margin-top:10px;">
+                        <label>Icon (mã lớp Font Awesome)</label>
+                        <input id="setThemeSPBadgeIcon" placeholder="fa-solid fa-star">
+                        <label>Nội dung huy hiệu</label>
+                        <input id="setThemeSPBadgeText" placeholder="4.9/5 từ 320 đánh giá">
+                    </div>
+
+                    <label style="margin-top:12px;">Hiệu ứng chuyển động của khối này</label>
+                    <select id="setThemeSPEffect" onchange="updateThemePreview()">
+                        <option value="none">Không hiệu ứng (mặc định)</option>
+                        <option value="pulse">Nhấp nháy nhẹ (pulse)</option>
+                        <option value="float">Nhấp nhô lên xuống (float)</option>
+                    </select>
 
                     <div style="margin-top:16px;padding:15px 17px;border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);">
                         <div class="hint" style="text-transform:uppercase;font-size:.7rem;font-weight:700;letter-spacing:.05em;margin-bottom:10px;">Xem trước</div>
@@ -7167,7 +7206,21 @@ async function openSettingsPanel(key){
         document.getElementById('setThemeHoverStyle').value = currentSetPayload.hoverStyle || 'lift';
         document.getElementById('setThemeCardRadius').value = currentSetPayload.cardRadius || 16;
         document.getElementById('setThemeShowIllustration').checked = currentSetPayload.showIllustration !== false;
-        document.getElementById('setThemeShowAvatars').checked = currentSetPayload.showAvatars !== false;
+
+        const sp = currentSetPayload.socialProof || {};
+        document.getElementById('setThemeSPType').value = sp.type || 'avatars';
+        document.getElementById('setThemeSPCount').value = sp.count || '1.240 bạn';
+        document.getElementById('setThemeSPSuffix').value = sp.suffix || 'đang ôn tập tuần này';
+        document.getElementById('setThemeSPEffect').value = sp.effect || 'none';
+        document.getElementById('setThemeSPBadgeIcon').value = sp.badgeIcon || 'fa-solid fa-star';
+        document.getElementById('setThemeSPBadgeText').value = sp.badgeText || '4.9/5 từ 320 đánh giá';
+        const defaultAvts = [{letter:'H',color:'#4f6bff'},{letter:'L',color:'#8b5cf6'},{letter:'M',color:'#17b26a'},{letter:'T',color:'#f5a524'}];
+        const avts = (sp.avatars && sp.avatars.length === 4) ? sp.avatars : defaultAvts;
+        avts.forEach((a, i) => {
+            document.getElementById(`setThemeAvt${i+1}Letter`).value = a.letter || defaultAvts[i].letter;
+            document.getElementById(`setThemeAvt${i+1}Color`).value = a.color || defaultAvts[i].color;
+        });
+        onThemeSPTypeChange();
         updateThemePreview();
     } else if (isHero){
         document.getElementById('setHeroPageTitle').value = currentSetPayload.pageTitle || '';
@@ -7455,6 +7508,13 @@ function updateThemePreview(){
     document.getElementById('setThemePreviewPill').style.background = amber;
 }
 
+function onThemeSPTypeChange(){
+    const type = document.getElementById('setThemeSPType').value;
+    document.getElementById('setThemeSPAvatars').classList.toggle('hidden', type !== 'avatars');
+    document.getElementById('setThemeSPBadge').classList.toggle('hidden', type !== 'badge');
+    updateThemePreview();
+}
+
 async function saveSiteSetting(){
     if (!currentSetKey) return;
     let payload;
@@ -7470,7 +7530,18 @@ async function saveSiteSetting(){
             hoverStyle: document.getElementById('setThemeHoverStyle').value,
             cardRadius: Number(document.getElementById('setThemeCardRadius').value) || 16,
             showIllustration: document.getElementById('setThemeShowIllustration').checked,
-            showAvatars: document.getElementById('setThemeShowAvatars').checked,
+            socialProof: {
+                type: document.getElementById('setThemeSPType').value,
+                count: document.getElementById('setThemeSPCount').value.trim(),
+                suffix: document.getElementById('setThemeSPSuffix').value.trim(),
+                effect: document.getElementById('setThemeSPEffect').value,
+                badgeIcon: document.getElementById('setThemeSPBadgeIcon').value.trim(),
+                badgeText: document.getElementById('setThemeSPBadgeText').value.trim(),
+                avatars: [1,2,3,4].map(i => ({
+                    letter: document.getElementById(`setThemeAvt${i}Letter`).value.trim() || '?',
+                    color: document.getElementById(`setThemeAvt${i}Color`).value,
+                })),
+            },
         };
     } else if (currentSetKey === 'home_hero'){
         payload = {

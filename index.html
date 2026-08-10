@@ -223,6 +223,37 @@
         padding:8px 14px; border-radius:999px;
     }
 
+    /* ---------------- chuông thông báo riêng (user_notifications) ---------------- */
+    .notify-bell{
+        position:relative; width:38px; height:38px; border-radius:50%;
+        border:1px solid var(--line); background:var(--card); cursor:pointer;
+        display:flex; align-items:center; justify-content:center;
+        color:var(--ink-soft); font-size:.92rem;
+        transition:background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .notify-bell:hover{ background:var(--brand-bg); color:var(--brand); }
+    .notify-bell .notify-dot{
+        position:absolute; top:-2px; right:-2px; min-width:16px; height:16px; padding:0 3px;
+        border-radius:999px; background:#e5484d; color:#fff; font-size:.62rem; font-weight:800;
+        display:flex; align-items:center; justify-content:center; border:2px solid var(--card);
+    }
+    .notify-bell .notify-dot.hidden{ display:none; }
+    .notify-dropdown{
+        position:absolute; top:calc(100% + 10px); right:0; width:340px; max-width:88vw;
+        background:var(--card); border:1px solid var(--line); border-radius:14px;
+        box-shadow:0 12px 32px -8px rgba(0,0,0,.22); z-index:60; overflow:hidden;
+    }
+    .notify-dropdown.hidden{ display:none; }
+    .notify-dropdown-head{ padding:12px 16px; font-weight:700; border-bottom:1px solid var(--line); font-size:.9rem; }
+    .notify-dropdown-list{ max-height:360px; overflow:auto; }
+    .notify-item{ padding:12px 16px; border-bottom:1px solid var(--line); }
+    .notify-item:last-child{ border-bottom:none; }
+    .notify-item.unread{ background:var(--brand-bg); }
+    .notify-item-title{ font-weight:700; font-size:.86rem; margin-bottom:2px; }
+    .notify-item-msg{ font-size:.82rem; color:var(--ink-soft); white-space:pre-wrap; }
+    .notify-item-time{ font-size:.72rem; color:var(--ink-mute); margin-top:6px; }
+    .notify-dropdown-empty{ padding:26px 16px; text-align:center; color:var(--ink-mute); font-size:.86rem; }
+
     /* ---------------- account modal (thông tin / lịch sử / đăng xuất) ---------------- */
     .acc-overlay{
         position:fixed; inset:0; background:rgba(10,11,18,.5); backdrop-filter:blur(2px);
@@ -1342,6 +1373,14 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             </div>
             <div class="topbar-right">
                 <div class="pill"><i class="fa-solid fa-fire"></i> Chuỗi ôn tập</div>
+                <div class="notify-bell hidden" id="notifyBell" aria-label="Thông báo">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="notify-dot hidden" id="notifyDot">0</span>
+                    <div class="notify-dropdown hidden" id="notifyDropdown" onclick="event.stopPropagation()">
+                        <div class="notify-dropdown-head">Thông báo của bạn</div>
+                        <div class="notify-dropdown-list" id="notifyDropdownList"></div>
+                    </div>
+                </div>
                 <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
                     <i class="fa-solid fa-moon"></i>
                     <i class="fa-solid fa-sun"></i>
@@ -2022,6 +2061,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             if (sideProBtn){
                 sideProBtn.style.display = 'flex';
             }
+            loadUserNotifications();
         } else {
             sideName.textContent = 'Khách';
             sideSub.textContent = 'Nhấn để đăng nhập';
@@ -2033,7 +2073,65 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 if (c) c.innerHTML = '<i class="fa-solid fa-user"></i>';
             });
             if (sideProBtn) sideProBtn.style.display = 'flex';
+            const bellEl = document.getElementById('notifyBell');
+            if (bellEl) bellEl.classList.add('hidden');
         }
+    }
+
+    // ---------------- Chuông thông báo riêng (bảng user_notifications) ----------------
+    // Khác với "Thông báo nổi" (popup cho mọi người), đây là thông báo admin gửi riêng
+    // cho đúng tài khoản đang đăng nhập — nhờ RLS chỉ trả về đúng thông báo của họ.
+    let userNotifications = [];
+    const notifyBellEl = document.getElementById('notifyBell');
+    const notifyDotEl = document.getElementById('notifyDot');
+    const notifyDropdownEl = document.getElementById('notifyDropdown');
+    const notifyDropdownListEl = document.getElementById('notifyDropdownList');
+
+    async function loadUserNotifications(){
+        if (!currentSession || !notifyBellEl) return;
+        notifyBellEl.classList.remove('hidden');
+        const { data, error } = await sb.from('user_notifications')
+            .select('*').eq('user_id', currentSession.user.id)
+            .order('created_at', { ascending:false }).limit(30);
+        if (error) return;
+        userNotifications = data || [];
+        renderNotifyDropdown();
+    }
+    function renderNotifyDropdown(){
+        const unread = userNotifications.filter(n => !n.is_read).length;
+        if (notifyDotEl){
+            notifyDotEl.classList.toggle('hidden', unread === 0);
+            notifyDotEl.textContent = unread > 9 ? '9+' : String(unread);
+        }
+        if (!notifyDropdownListEl) return;
+        if (!userNotifications.length){
+            notifyDropdownListEl.innerHTML = `<div class="notify-dropdown-empty">Chưa có thông báo nào.</div>`;
+            return;
+        }
+        notifyDropdownListEl.innerHTML = userNotifications.map(n => `
+            <div class="notify-item ${n.is_read ? '' : 'unread'}">
+                <div class="notify-item-title">${(n.title || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</div>
+                <div class="notify-item-msg">${(n.message || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</div>
+                <div class="notify-item-time">${new Date(n.created_at).toLocaleString('vi-VN')}</div>
+            </div>`).join('');
+    }
+    async function toggleNotifyDropdown(){
+        if (!notifyDropdownEl) return;
+        const wasHidden = notifyDropdownEl.classList.contains('hidden');
+        notifyDropdownEl.classList.toggle('hidden');
+        if (wasHidden){
+            const unreadIds = userNotifications.filter(n => !n.is_read).map(n => n.id);
+            if (unreadIds.length){
+                // Đánh dấu đã đọc ngay khi mở chuông (giống Facebook/Gmail).
+                userNotifications.forEach(n => { if (!n.is_read){ n.is_read = true; } });
+                renderNotifyDropdown();
+                await sb.from('user_notifications').update({ is_read:true, read_at: new Date().toISOString() }).in('id', unreadIds);
+            }
+        }
+    }
+    if (notifyBellEl){
+        notifyBellEl.addEventListener('click', (e) => { e.stopPropagation(); toggleNotifyDropdown(); });
+        document.addEventListener('click', () => { if (notifyDropdownEl) notifyDropdownEl.classList.add('hidden'); });
     }
 
     function handleAccountClick(){

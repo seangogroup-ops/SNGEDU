@@ -1154,6 +1154,7 @@ textarea{resize:vertical;}
 .acct-action-card.pro .aac-ico{background:#fff3d6;color:#9a6300;}
 .acct-action-card.balance .aac-ico{background:var(--green-bg);color:var(--green);}
 .acct-action-card.pwd .aac-ico{background:var(--accent-soft);color:var(--accent);}
+.acct-action-card.notify .aac-ico{background:var(--accent-soft);color:var(--accent);}
 .acct-action-card.rename .aac-ico{background:var(--bg);color:var(--gray);}
 .acct-action-card.lock .aac-ico{background:var(--amber-bg);color:var(--amber);}
 .acct-action-card.danger .aac-ico{background:var(--red-bg);color:var(--red);}
@@ -1414,6 +1415,9 @@ textarea{resize:vertical;}
                         <div class="side-item settings-item" id="navFeedback" onclick="showFeedbackManager()">
                             <span class="set-ico">💬</span><span class="name">Góp ý học viên</span>
                             <span id="fbNavBadge" class="fb-nav-badge hidden">0</span>
+                        </div>
+                        <div class="side-item settings-item" id="navNotify" onclick="showNotifyManager()">
+                            <span class="set-ico">🔔</span><span class="name">Thông báo thành viên</span>
                         </div>
                         <div class="side-item settings-item" id="navUsageLimits" onclick="showUsageLimitsPanel()">
                             <span class="set-ico">⏳</span><span class="name">Giới hạn Free</span>
@@ -1701,6 +1705,51 @@ textarea{resize:vertical;}
             </div>
 
             <div id="fbDetailView" class="hidden"></div>
+        </div>
+
+        <!-- ================= THÔNG BÁO THÀNH VIÊN (bảng user_notifications) =================
+             Khác với "Thông báo nổi" (hiện popup cho TẤT CẢ mọi người), tab này gửi 1 thông báo
+             riêng tới ĐÚNG 1 thành viên do admin chọn — thành viên đó sẽ thấy trong chuông 🔔
+             ở trang chủ (chỉ họ thấy, không ai khác thấy). -->
+        <div id="notifyPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>🔔 Thông báo thành viên</h2>
+                <p class="hint">Gửi một thông báo riêng tới đúng 1 thành viên (khác với "Thông báo nổi" — hiện cho tất cả mọi người). Thành viên sẽ thấy thông báo này trong chuông 🔔 ở góc trang chủ của riêng họ.</p>
+            </div>
+
+            <div id="notifyListView">
+                <div class="acct-stats">
+                    <div class="acct-stat-card total">
+                        <span class="ico">🔔</span>
+                        <div><div class="num" id="notifyStatTotal">0</div><div class="lbl">Tổng đã gửi</div></div>
+                    </div>
+                    <div class="acct-stat-card banned">
+                        <span class="ico">🔴</span>
+                        <div><div class="num" id="notifyStatUnread">0</div><div class="lbl">Chưa đọc</div></div>
+                    </div>
+                    <div class="acct-stat-card active">
+                        <span class="ico">✅</span>
+                        <div><div class="num" id="notifyStatRead">0</div><div class="lbl">Đã đọc</div></div>
+                    </div>
+                </div>
+
+                <div class="acct-toolbar">
+                    <div class="acct-search-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input id="notifySearch" placeholder="Tìm theo email người nhận hoặc nội dung..." oninput="renderNotifyList()">
+                    </div>
+                    <div class="acct-filter-chips" id="notifyFilterChips">
+                        <button class="acct-chip active" data-f="all" onclick="setNotifyFilter('all')">Tất cả</button>
+                        <button class="acct-chip" data-f="unread" onclick="setNotifyFilter('unread')">Chưa đọc</button>
+                        <button class="acct-chip" data-f="read" onclick="setNotifyFilter('read')">Đã đọc</button>
+                    </div>
+                    <button class="side-add" onclick="openNotifyComposeModal()">+ Gửi thông báo</button>
+                    <button class="side-add" onclick="loadNotifyList()">↻ Tải lại</button>
+                </div>
+                <p class="hint" id="notifyCount" style="margin:0 0 12px;"></p>
+
+                <div id="notifyListWrap" class="acct-list"></div>
+            </div>
         </div>
 
         <div id="contentManagerPanel" class="hidden">
@@ -2565,6 +2614,7 @@ function restoreLastAdminPanel(){
         if (last === 'sepayPkg')          return showSepayPackages();
         if (last === 'accounts')          return showAccountsManager();
         if (last === 'feedback')          return showFeedbackManager();
+        if (last === 'notify')            return showNotifyManager();
         if (last === 'usageLimits')       return showUsageLimitsPanel();
         if (last === 'generalSettings')   return showGeneralSettings();
         if (last === 'featured')          return showFeaturedManager();
@@ -2578,7 +2628,7 @@ function restoreLastAdminPanel(){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['statsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel'];
+const ADMIN_PANEL_IDS = ['statsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -6029,6 +6079,11 @@ function openAccountDetail(userId){
                 <span class="aac-title">Cộng / trừ số dư</span>
                 <span class="aac-desc">Điều chỉnh số dư tài khoản này, có lưu lại lịch sử và lý do.</span>
             </div>
+            <div class="acct-action-card notify" onclick="openNotifyComposeModal('${u.id}')">
+                <span class="aac-ico">🔔</span>
+                <span class="aac-title">Gửi thông báo riêng</span>
+                <span class="aac-desc">Gửi 1 thông báo chỉ riêng tài khoản này thấy (khác với thông báo nổi cho mọi người).</span>
+            </div>
             <div class="acct-action-card pwd" onclick="openPasswordModal('${u.id}')">
                 <span class="aac-ico">🔑</span>
                 <span class="aac-title">Đặt lại mật khẩu</span>
@@ -6075,6 +6130,173 @@ function closeAllAcctMenus(){
     document.querySelectorAll('[id^="acctmenu-"]').forEach(el => el.classList.add('hidden'));
 }
 document.addEventListener('click', () => closeAllAcctMenus());
+
+// ================= THÔNG BÁO THÀNH VIÊN (bảng user_notifications) =================
+// Gửi 1 thông báo riêng tới ĐÚNG 1 thành viên do admin chọn — khác với "Thông báo nổi"
+// (site_settings, hiện popup cho TẤT CẢ mọi người). Thành viên chỉ thấy thông báo của
+// chính họ nhờ RLS "user_notifications_select_own" (xem migration 0005).
+let notifyCache = [];
+let notifyFilter = 'all';
+
+async function showNotifyManager(){
+    rememberAdminPanel('notify');
+    showAdminPanel('notifyPanel', 'navNotify');
+    document.getElementById('notifySearch').value = '';
+    setNotifyFilter('all');
+    await loadNotifyList();
+}
+
+// email/tên hiển thị của người nhận không nằm trong bảng user_notifications (chỉ có user_id),
+// nên cần accountsCache (đã tải qua edge function "list") để tra ngược email/tên. Nếu accountsCache
+// chưa có (vào thẳng tab này mà chưa từng mở "Tài khoản"), tải tạm trước.
+async function ensureAccountsCacheLoaded(){
+    if (!accountsCache || !accountsCache.length){
+        const result = await callAdminUsersFn({ action:'list' });
+        if (!result.error) accountsCache = result.users || [];
+    }
+    return accountsCache;
+}
+
+async function loadNotifyList(){
+    const box = document.getElementById('notifyListWrap');
+    box.innerHTML = `<div class="empty-state" style="padding:20px;">Đang tải...</div>`;
+    await ensureAccountsCacheLoaded();
+    const { data, error } = await sb.from('user_notifications').select('*').order('created_at', { ascending:false });
+    if (error){
+        box.innerHTML = `<div class="empty-state" style="padding:20px;color:var(--red);">${escapeHtml(error.message)}</div>`;
+        document.getElementById('notifyCount').innerText = '';
+        return;
+    }
+    notifyCache = data || [];
+    const unread = notifyCache.filter(n => !n.is_read).length;
+    document.getElementById('notifyStatTotal').innerText = notifyCache.length;
+    document.getElementById('notifyStatUnread').innerText = unread;
+    document.getElementById('notifyStatRead').innerText = notifyCache.length - unread;
+    renderNotifyList();
+}
+
+function setNotifyFilter(f){
+    notifyFilter = f;
+    document.querySelectorAll('#notifyFilterChips .acct-chip').forEach(el => el.classList.toggle('active', el.dataset.f === f));
+    renderNotifyList();
+}
+
+function notifyRecipientLabel(userId){
+    const u = (accountsCache || []).find(x => x.id === userId);
+    if (!u) return '(tài khoản đã xoá)';
+    return u.full_name ? `${u.full_name} · ${u.email}` : (u.email || userId);
+}
+
+function renderNotifyList(){
+    const q = (document.getElementById('notifySearch').value || '').trim().toLowerCase();
+    const box = document.getElementById('notifyListWrap');
+    const list = notifyCache.filter(n => {
+        if (notifyFilter === 'unread' && n.is_read) return false;
+        if (notifyFilter === 'read' && !n.is_read) return false;
+        if (!q) return true;
+        const label = notifyRecipientLabel(n.user_id).toLowerCase();
+        return label.includes(q) || (n.title || '').toLowerCase().includes(q) || (n.message || '').toLowerCase().includes(q);
+    });
+    document.getElementById('notifyCount').innerText = list.length + ' / ' + notifyCache.length + ' thông báo';
+    if (!list.length){
+        box.innerHTML = `<div class="empty-state" style="padding:36px 14px;text-align:center;">Chưa có thông báo nào khớp. Bấm "+ Gửi thông báo" để gửi cho 1 thành viên.</div>`;
+        return;
+    }
+    box.innerHTML = list.map(n => `
+        <div class="acct-row ${n.is_read ? '' : 'banned'}" data-id="${n.id}">
+            <span class="acct-avatar">🔔</span>
+            <span class="acct-info">
+                <span class="acct-name">${escapeHtml(n.title || '(không có tiêu đề)')}<span class="acct-badge ${n.is_read ? 'active' : 'banned'}">${n.is_read ? 'Đã đọc' : 'Chưa đọc'}</span></span>
+                <span class="acct-meta">${escapeHtml(notifyRecipientLabel(n.user_id))}<span class="dot-sep">·</span>${escapeHtml((n.message || '').slice(0, 80))}${(n.message || '').length > 80 ? '…' : ''}<span class="dot-sep">·</span>${fmtDate(n.created_at)}</span>
+            </span>
+            <span class="acct-row-actions">
+                <button class="icon-edit" title="Xoá thông báo" onclick="event.stopPropagation(); deleteNotify('${n.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg></button>
+            </span>
+        </div>`).join('');
+}
+
+function deleteNotify(id){
+    showConfirm(
+        'Xoá thông báo?',
+        'Xoá thông báo này? Nếu thành viên chưa đọc, họ sẽ không còn thấy thông báo này nữa. Không thể hoàn tác.',
+        async () => {
+            const { error } = await sb.from('user_notifications').delete().eq('id', id);
+            if (error){ showMsg('Lỗi xoá: ' + error.message, 'err'); return; }
+            showMsg('Đã xoá thông báo.', 'ok');
+            loadNotifyList();
+        }
+    );
+}
+
+// ---------- MODAL: soạn & gửi thông báo riêng cho 1 thành viên ----------
+// Nếu gọi với userId có sẵn (từ trang chi tiết 1 tài khoản) -> chọn sẵn người nhận đó.
+// Nếu gọi không có tham số (từ tab "Thông báo thành viên") -> cho tìm/chọn người nhận.
+let notifyPickedUserId = null;
+async function openNotifyComposeModal(userId){
+    await ensureAccountsCacheLoaded();
+    notifyPickedUserId = userId || null;
+    renderNotifyComposeForm();
+    document.getElementById('acctFormOverlay').classList.remove('hidden');
+}
+function renderNotifyComposeForm(){
+    const picked = notifyPickedUserId ? (accountsCache || []).find(x => x.id === notifyPickedUserId) : null;
+    document.getElementById('acctFormBox').innerHTML = `
+        <h4>🔔 Gửi thông báo riêng</h4>
+        ${picked
+            ? `<p class="acct-form-target">Gửi tới <b>${escapeHtml(picked.full_name || picked.email || '')}</b> (${escapeHtml(picked.email || '')})</p>`
+            : `
+            <label style="margin-top:0;">Người nhận</label>
+            <input id="notifyRecipientSearch" placeholder="Tìm theo email hoặc tên..." oninput="renderNotifyRecipientOptions()">
+            <div id="notifyRecipientOptions" style="max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:6px;"></div>
+            `}
+        <label style="margin-top:10px;">Tiêu đề</label>
+        <input id="notifyTitleInput" placeholder="VD: Nhắc gia hạn gói Pro">
+        <label style="margin-top:10px;">Nội dung</label>
+        <textarea id="notifyMessageInput" rows="4" placeholder="Nội dung thông báo gửi riêng cho thành viên này..."></textarea>
+        <div id="acctFormMsg"></div>
+        <div class="acct-form-actions">
+            <button class="btn-acct-cancel" onclick="closeAcctFormModal()">Hủy</button>
+            <button class="btn-acct-save" onclick="submitNotify()">Gửi thông báo</button>
+        </div>`;
+    if (!picked) renderNotifyRecipientOptions();
+}
+function renderNotifyRecipientOptions(){
+    const wrap = document.getElementById('notifyRecipientOptions');
+    if (!wrap) return;
+    const q = (document.getElementById('notifyRecipientSearch').value || '').trim().toLowerCase();
+    const list = (accountsCache || [])
+        .filter(u => !q || (u.email || '').toLowerCase().includes(q) || (u.full_name || '').toLowerCase().includes(q))
+        .slice(0, 30);
+    if (!list.length){ wrap.innerHTML = `<div class="hint" style="padding:8px;">Không tìm thấy tài khoản nào.</div>`; return; }
+    wrap.innerHTML = list.map(u => `
+        <div class="notify-recipient-opt${notifyPickedUserId === u.id ? ' picked' : ''}" onclick="pickNotifyRecipient('${u.id}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--line);${notifyPickedUserId === u.id ? 'background:rgba(79,107,255,.08);font-weight:600;' : ''}">
+            ${escapeHtml(u.full_name || '(chưa đặt tên)')} <span class="hint-inline">· ${escapeHtml(u.email || '')}</span>
+        </div>`).join('');
+}
+function pickNotifyRecipient(userId){
+    notifyPickedUserId = userId;
+    renderNotifyComposeForm();
+}
+async function submitNotify(){
+    const msg = document.getElementById('acctFormMsg');
+    const title = document.getElementById('notifyTitleInput').value.trim();
+    const message = document.getElementById('notifyMessageInput').value.trim();
+    if (!notifyPickedUserId){ msg.className='err'; msg.innerText = 'Chọn 1 người nhận trước.'; return; }
+    if (!title || !message){ msg.className='err'; msg.innerText = 'Nhập đủ tiêu đề và nội dung.'; return; }
+
+    const { data: { user } } = await sb.auth.getUser();
+    const { error } = await sb.from('user_notifications').insert({
+        user_id: notifyPickedUserId,
+        title,
+        message,
+        created_by: user ? user.id : null
+    });
+    if (error){ msg.className='err'; msg.innerText = 'Lỗi gửi: ' + error.message; return; }
+    closeAcctFormModal();
+    showMsg('Đã gửi thông báo.', 'ok');
+    notifyPickedUserId = null;
+    if (!document.getElementById('notifyPanel').classList.contains('hidden')) loadNotifyList();
+}
 
 // ================= GÓP Ý HỌC VIÊN (bảng feedback) =================
 let feedbackCache = [];
@@ -6487,6 +6709,7 @@ async function submitAccountPassword(userId){
 }
 function closeAcctFormModal(){
     document.getElementById('acctFormOverlay').classList.add('hidden');
+    notifyPickedUserId = null;
 }
 function toggleBanAccount(userId, banned){
     showConfirm(

@@ -1578,7 +1578,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                     <span class="label">Số dư</span>
                     <span class="value" style="display:flex; align-items:center; gap:10px;">
                         <span id="acctPageBalanceValue">—</span>
-                        <button type="button" class="acc-upgrade-btn" style="padding:6px 14px; font-size:13px;" onclick="openTopupModal()"><i class="fa-solid fa-wallet"></i> Nạp tiền</button>
+                        <button type="button" class="acc-upgrade-btn" id="acctPageTopupBtn" style="padding:6px 14px; font-size:13px;" onclick="openTopupModal()"><i class="fa-solid fa-wallet"></i> Nạp tiền</button>
                     </span>
                 </div>
             </div>
@@ -1874,7 +1874,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                     <span class="label">Số dư</span>
                     <span class="value" style="display:flex; align-items:center; gap:10px;">
                         <span id="accBalanceValue">—</span>
-                        <button type="button" class="acc-upgrade-btn" style="padding:6px 14px; font-size:13px;" onclick="closeAccountModal(); openTopupModal();"><i class="fa-solid fa-wallet"></i> Nạp tiền</button>
+                        <button type="button" class="acc-upgrade-btn" id="accTopupBtn" style="padding:6px 14px; font-size:13px;" onclick="closeAccountModal(); openTopupModal();"><i class="fa-solid fa-wallet"></i> Nạp tiền</button>
                     </span>
                 </div>
                 <button class="acc-upgrade-btn" id="accUpgradeBtn" type="button" style="display:none" onclick="closeAccountModal(); openProUpgradeModal();">
@@ -2872,6 +2872,16 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             const { data } = await sb.from('site_settings').select('payload').eq('key', 'payment_settings').maybeSingle();
             if (data && data.payload) paymentSettings = Object.assign({}, paymentSettings, data.payload);
         }catch(e){ /* mạng lỗi thì cứ dùng mặc định (mọi thứ đang bật) */ }
+        apDungHienThiNutNapTien();
+    }
+    // Ẩn/hiện nút "Nạp tiền" (cả ở trang Tài khoản lẫn trong modal tài khoản) theo wallet_topup_enabled.
+    // Độc lập với sepay_enabled — tắt/bật mục này KHÔNG ảnh hưởng tới cổng SePay/chuyển khoản của các giao dịch khác.
+    function apDungHienThiNutNapTien(){
+        const show = paymentSettings.wallet_topup_enabled !== false;
+        ['acctPageTopupBtn', 'accTopupBtn'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.style.display = show ? '' : 'none';
+        });
     }
     // Khoá/mở nút "Xác nhận thanh toán" (cổng SePay) của 1 modal theo cấu hình admin.
     function apDungCauHinhSepayLenNut(okBtnId, defaultHtml){
@@ -2944,8 +2954,9 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const balance = await laySoDuViHienTai();
         document.getElementById('napTienCurrentBalance').textContent = balance.toLocaleString('vi-VN') + 'đ';
         document.getElementById('napTienOverlay').classList.remove('hidden');
-        // Nạp tiền luôn đi qua cổng SePay -> tắt khi sepay_enabled=false HOẶC khi admin tắt riêng wallet_topup_enabled.
-        const topupAllowed = paymentSettings.sepay_enabled && paymentSettings.wallet_topup_enabled;
+        // Nạp tiền: chỉ phụ thuộc wallet_topup_enabled — độc lập với sepay_enabled (cổng SePay/CK cho
+        // các giao dịch khác như mua khoá học, gói Pro... vẫn hoạt động bình thường dù mục này bật/tắt).
+        const topupAllowed = paymentSettings.wallet_topup_enabled !== false;
         const okBtn = document.getElementById('napTienOkBtn');
         if (okBtn){
             okBtn.disabled = !topupAllowed;
@@ -3701,6 +3712,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             const balance = Number(data && data.balance) || 0;
             valueEl.textContent = balance.toLocaleString('vi-VN') + 'đ';
             row.style.display = '';
+            apDungHienThiNutNapTien();
         }catch(e){
             row.style.display = 'none';
         }

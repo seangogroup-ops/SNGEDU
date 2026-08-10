@@ -5275,7 +5275,25 @@ function deleteSepayPackage(id){
         `Xóa "${name}"? Thẻ này sẽ biến mất khỏi trang chủ ngay và không thể hoàn tác. Nếu đã từng có khách mua gói này, hệ thống có thể chặn xóa để giữ lịch sử đơn hàng — khi đó hãy dùng "Sửa" và tắt "Đang hoạt động" thay vì xóa.`,
         async () => {
             const { error } = await sb.from('pro_packages').delete().eq('id', id);
-            if (error){ showMsg('Lỗi xóa: ' + error.message, 'err'); return; }
+            if (error){
+                // Lỗi khóa ngoại (23503): gói này đã có đơn hàng liên kết (sepay_orders),
+                // không thể xóa hẳn vì sẽ làm mất lịch sử đơn hàng. Đề nghị ẩn gói thay vì xóa.
+                if (error.code === '23503' || /foreign key constraint/i.test(error.message || '')){
+                    showConfirm(
+                        'Không thể xóa — đã có khách mua gói này',
+                        `Gói "${name}" đã gắn với ít nhất một đơn hàng nên không thể xóa (sẽ làm mất lịch sử đơn hàng). Bạn có muốn ẩn gói này khỏi trang chủ ngay bây giờ thay vì xóa không? (Có thể bật lại sau trong "Sửa".)`,
+                        async () => {
+                            const { error: updErr } = await sb.from('pro_packages').update({ active: false }).eq('id', id);
+                            if (updErr){ showMsg('Lỗi ẩn gói: ' + updErr.message, 'err'); return; }
+                            showMsg('Đã ẩn gói "' + name + '" khỏi trang chủ (không xóa để giữ lịch sử đơn hàng).', 'ok');
+                            loadSepayPackagesList();
+                        }
+                    );
+                    return;
+                }
+                showMsg('Lỗi xóa: ' + error.message, 'err');
+                return;
+            }
             showMsg('Đã xóa gói "' + name + '".', 'ok');
             loadSepayPackagesList();
         }

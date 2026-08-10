@@ -42,6 +42,30 @@ Deno.serve(async (req) => {
     const useBalance = body.use_balance === true;
     const payment_method = useBalance ? "BALANCE" : (body.payment_method ?? "BANK_TRANSFER");
 
+    // -------- Cấu hình bật/tắt cổng thanh toán do admin quản lý (site_settings key 'payment_settings') --------
+    // Đây là chốt chặn THẬT SỰ (phía server) — dù người dùng có cố gọi thẳng API này bỏ qua giao diện,
+    // vẫn không thanh toán được khi admin đã tắt. Giao diện chỉ ẩn/khoá nút cho gọn, không phải lớp bảo mật chính.
+    const { data: paymentSettingsRow } = await db
+      .from("site_settings")
+      .select("payload")
+      .eq("key", "payment_settings")
+      .maybeSingle();
+    const paymentSettings = paymentSettingsRow?.payload ?? {};
+    const sepayEnabled = paymentSettings.sepay_enabled !== false; // mặc định bật nếu chưa cấu hình
+    const balancePaymentEnabled = paymentSettings.balance_payment_enabled !== false;
+    const walletTopupEnabled = paymentSettings.wallet_topup_enabled !== false;
+    const disabledMessage = paymentSettings.sepay_disabled_message || "Cổng thanh toán đang tạm ngưng, vui lòng quay lại sau.";
+
+    if (useBalance && !balancePaymentEnabled) {
+      throw new Error("Thanh toán bằng số dư ví đang tạm ngưng. Vui lòng thử phương thức khác.");
+    }
+    if (!useBalance && order_type === "wallet_topup" && (!sepayEnabled || !walletTopupEnabled)) {
+      throw new Error(disabledMessage);
+    }
+    if (!useBalance && order_type !== "wallet_topup" && !sepayEnabled) {
+      throw new Error(disabledMessage);
+    }
+
     let amount: number;
     let description: string;
 

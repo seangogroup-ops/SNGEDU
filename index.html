@@ -2836,6 +2836,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         document.getElementById('docConfirmMeta').textContent = item.size || 'Tài liệu trả phí';
         document.getElementById('docConfirmPrice').textContent = Number(item.price || 0).toLocaleString('vi-VN') + 'đ';
         document.getElementById('docConfirmOverlay').classList.remove('hidden');
+        apDungCauHinhSepayLenNut('docConfirmOkBtn', '<i class="fa-solid fa-lock"></i> Xác nhận thanh toán');
         capNhatOptionSoDu('docConfirmBalancePayWrap', 'docConfirmBalanceText', Number(item.price || 0));
     }
 
@@ -2861,12 +2862,40 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         thanhToanTaiLieu(docConfirmSelectedId); // hàm có sẵn trong frontend/sepay-checkout.js
     }
 
+    // ---------------- Cấu hình bật/tắt cổng thanh toán (admin quản lý ở site_settings key 'payment_settings') ----------------
+    // sepay_enabled: bật/tắt cổng SePay (chuyển khoản/thẻ) — áp dụng cho mọi nút "Xác nhận thanh toán".
+    // balance_payment_enabled: bật/tắt tuỳ chọn "Thanh toán bằng số dư ví".
+    // wallet_topup_enabled: bật/tắt việc nạp thêm tiền vào ví (nạp tiền vẫn luôn cần qua SePay).
+    let paymentSettings = { sepay_enabled: true, sepay_disabled_message: '', balance_payment_enabled: true, wallet_topup_enabled: true };
+    async function loadPaymentSettings(){
+        try{
+            const { data } = await sb.from('site_settings').select('payload').eq('key', 'payment_settings').maybeSingle();
+            if (data && data.payload) paymentSettings = Object.assign({}, paymentSettings, data.payload);
+        }catch(e){ /* mạng lỗi thì cứ dùng mặc định (mọi thứ đang bật) */ }
+    }
+    // Khoá/mở nút "Xác nhận thanh toán" (cổng SePay) của 1 modal theo cấu hình admin.
+    function apDungCauHinhSepayLenNut(okBtnId, defaultHtml){
+        const btn = document.getElementById(okBtnId);
+        if (!btn) return;
+        if (!paymentSettings.sepay_enabled){
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + (paymentSettings.sepay_disabled_message || 'Cổng thanh toán đang tạm ngưng, vui lòng quay lại sau');
+            btn.style.opacity = '.6'; btn.style.cursor = 'not-allowed';
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = defaultHtml;
+            btn.style.opacity = ''; btn.style.cursor = '';
+        }
+    }
+
     // ---------------- Thanh toán bằng số dư ví: hạ tầng dùng chung cho tài liệu / gói Pro / sản phẩm ----------------
     // Hiện/ẩn nút "Thanh toán bằng số dư ví", tô mờ + khoá nút nếu số dư không đủ.
     async function capNhatOptionSoDu(wrapId, textId, price){
         const wrap = document.getElementById(wrapId);
         const textEl = document.getElementById(textId);
         if (!wrap || !textEl) return;
+        // Admin đã tắt "Thanh toán bằng số dư ví" -> ẩn hẳn, không cần kiểm tra số dư.
+        if (!paymentSettings.balance_payment_enabled){ wrap.style.display = 'none'; return; }
         const balance = await laySoDuViHienTai();
         textEl.textContent = 'còn ' + balance.toLocaleString('vi-VN') + 'đ';
         const enough = balance >= price;
@@ -2915,6 +2944,19 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const balance = await laySoDuViHienTai();
         document.getElementById('napTienCurrentBalance').textContent = balance.toLocaleString('vi-VN') + 'đ';
         document.getElementById('napTienOverlay').classList.remove('hidden');
+        // Nạp tiền luôn đi qua cổng SePay -> tắt khi sepay_enabled=false HOẶC khi admin tắt riêng wallet_topup_enabled.
+        const topupAllowed = paymentSettings.sepay_enabled && paymentSettings.wallet_topup_enabled;
+        const okBtn = document.getElementById('napTienOkBtn');
+        if (okBtn){
+            okBtn.disabled = !topupAllowed;
+            okBtn.innerHTML = topupAllowed
+                ? '<i class="fa-solid fa-arrow-right"></i> Tiếp tục thanh toán'
+                : '<i class="fa-solid fa-circle-exclamation"></i> ' + (paymentSettings.sepay_disabled_message || 'Nạp tiền đang tạm ngưng, vui lòng quay lại sau');
+            okBtn.style.opacity = topupAllowed ? '' : '.6';
+            okBtn.style.cursor = topupAllowed ? '' : 'not-allowed';
+        }
+        document.querySelectorAll('#napTienQuickAmounts .naptien-amt-btn').forEach(btn => btn.disabled = !topupAllowed);
+        if (input) input.disabled = !topupAllowed;
     }
 
     function closeTopupModal(){
@@ -3544,6 +3586,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             </div>`).join('');
 
         document.getElementById('proConfirmOverlay').classList.remove('hidden');
+        apDungCauHinhSepayLenNut('proConfirmOkBtn', '<i class="fa-solid fa-lock"></i> Xác nhận thanh toán');
         capNhatOptionSoDu('proConfirmBalancePayWrap', 'proConfirmBalanceText', Number(pkg.price || 0));
     }
 
@@ -4287,6 +4330,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const { data: { session } } = await sb.auth.getSession();
         currentSession = session;
         updateAccountUI();
+        loadPaymentSettings();
 
         // ---------------- Vừa bị chặn vì hết lượt làm trắc nghiệm miễn phí (?openPro=1) -> tự mở bảng nâng cấp Pro ----------------
         const initParams = new URLSearchParams(location.search);

@@ -1409,6 +1409,9 @@ textarea{resize:vertical;}
                         <div class="side-item settings-item" id="navSepayPkg" onclick="showSepayPackages()">
                             <span class="set-ico">👑</span><span class="name">Gói Pro</span>
                         </div>
+                        <div class="side-item settings-item" id="navPaymentSettings" onclick="showPaymentSettingsPanel()">
+                            <span class="set-ico">💳</span><span class="name">Cấu hình thanh toán</span>
+                        </div>
                         <div class="side-item settings-item" id="navAccounts" onclick="showAccountsManager()">
                             <span class="set-ico">👤</span><span class="name">Tài khoản</span>
                         </div>
@@ -1892,6 +1895,53 @@ textarea{resize:vertical;}
                         <button class="btn-mini-save" onclick="saveUsageLimits()">💾 Lưu thay đổi</button>
                     </div>
                     <div id="ulSaveMsg" class="hint" style="margin-top:10px;min-height:1.2em;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= CẤU HÌNH THANH TOÁN (site_settings key 'payment_settings') =================
+             Bật/tắt cổng SePay và tuỳ chọn "Thanh toán bằng số dư ví" trên toàn bộ trang, không cần sửa code.
+             Merchant ID / Secret Key thật của SePay KHÔNG cấu hình ở đây (lý do bảo mật — xem ghi chú trong khung). -->
+        <div id="paymentSettingsPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>💳 Cấu hình thanh toán</h2>
+                <p class="hint">Bật/tắt cổng thanh toán và các phương thức thanh toán trên toàn bộ trang. Tắt tạm thời khi bảo trì, khi cổng SePay gặp sự cố, hoặc khi muốn tạm dừng nhận thanh toán vì lý do nào đó — không cần sửa code, có hiệu lực ngay.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col" style="max-width:520px;">
+                    <div class="settings-form-card">
+                        <h3>🏦 Cổng thanh toán SePay (chuyển khoản / thẻ)</h3>
+                        <p class="hint">Áp dụng cho MỌI nút "Xác nhận thanh toán" trên trang (gói Pro, tài liệu, sản phẩm, khoá học, nạp tiền vào ví). Khi tắt, nút sẽ bị khoá và hiện thông báo bạn cấu hình bên dưới — chặn cả ở phía máy chủ, không thể lách qua giao diện.</p>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="paySepayEnabled" style="width:auto;" checked>
+                            <span>Đang bật cổng thanh toán SePay</span>
+                        </label>
+                        <label style="margin-top:12px;">Thông báo hiện khi tắt</label>
+                        <textarea id="paySepayDisabledMsg" rows="2" placeholder="VD: Cổng thanh toán đang bảo trì, vui lòng quay lại sau ít phút."></textarea>
+                        <div class="acct-form-note" style="margin-top:12px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            <span>Merchant ID / Secret Key thật của SePay không cấu hình ở đây vì lý do bảo mật (không được để lộ ra trình duyệt). Chúng được đặt riêng trong <b>Supabase → Edge Functions → Secrets</b> với tên <code>SEPAY_MERCHANT_ID</code>, <code>SEPAY_SECRET_KEY</code>, <code>SEPAY_ENV</code>. Mục này chỉ bật/tắt việc CHO PHÉP dùng cổng, không đổi được thông tin merchant.</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
+                        <h3>👛 Thanh toán bằng số dư ví</h3>
+                        <p class="hint">Tuỳ chọn "Thanh toán bằng số dư ví" hiện cạnh nút SePay ở các popup xác nhận mua. Tắt để buộc mọi giao dịch phải đi qua cổng SePay.</p>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="payBalanceEnabled" style="width:auto;" checked>
+                            <span>Cho phép thanh toán bằng số dư ví</span>
+                        </label>
+                        <label style="margin-top:14px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="payTopupEnabled" style="width:auto;" checked>
+                            <span>Cho phép nạp thêm tiền vào ví</span>
+                        </label>
+                        <p class="hint" style="margin-top:6px;">Nạp tiền luôn đi qua cổng SePay (không có cách nạp nào khác) — nên nếu tắt cổng SePay ở trên, việc nạp tiền cũng tự động bị khoá dù mục này có đang bật.</p>
+                    </div>
+
+                    <div class="mini-actions" style="margin-top:16px;">
+                        <button class="btn-mini-save" onclick="savePaymentSettings()">💾 Lưu thay đổi</button>
+                    </div>
+                    <div id="paySaveMsg" class="hint" style="margin-top:10px;min-height:1.2em;"></div>
                 </div>
             </div>
         </div>
@@ -2615,6 +2665,7 @@ function restoreLastAdminPanel(){
         if (last === 'accounts')          return showAccountsManager();
         if (last === 'feedback')          return showFeedbackManager();
         if (last === 'notify')            return showNotifyManager();
+        if (last === 'paymentSettings')   return showPaymentSettingsPanel();
         if (last === 'usageLimits')       return showUsageLimitsPanel();
         if (last === 'generalSettings')   return showGeneralSettings();
         if (last === 'featured')          return showFeaturedManager();
@@ -2628,7 +2679,7 @@ function restoreLastAdminPanel(){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['statsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel'];
+const ADMIN_PANEL_IDS = ['statsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel', 'paymentSettingsPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -2986,6 +3037,46 @@ async function saveUsageLimits(){
         msgEl.style.color = 'var(--green)';
         msgEl.innerText = '✔ Đã lưu. Giới hạn mới áp dụng ngay từ lượt tiếp theo của người dùng.';
         setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4000);
+    }
+}
+
+// ---------- CẤU HÌNH THANH TOÁN (site_settings key 'payment_settings') ----------
+function showPaymentSettingsPanel(){
+    rememberAdminPanel('paymentSettings');
+    showAdminPanel('paymentSettingsPanel', 'navPaymentSettings');
+    loadPaymentSettingsAdmin();
+}
+async function loadPaymentSettingsAdmin(){
+    const msgEl = document.getElementById('paySaveMsg');
+    msgEl.innerText = '';
+    const { data, error } = await sb.from('site_settings').select('*').eq('key', 'payment_settings').single();
+    if (error && error.code !== 'PGRST116'){
+        msgEl.style.color = '#e5484d';
+        msgEl.innerText = 'Lỗi tải cấu hình: ' + error.message;
+    }
+    const p = (data && data.payload) ? data.payload : {};
+    document.getElementById('paySepayEnabled').checked = p.sepay_enabled !== false;
+    document.getElementById('paySepayDisabledMsg').value = p.sepay_disabled_message || '';
+    document.getElementById('payBalanceEnabled').checked = p.balance_payment_enabled !== false;
+    document.getElementById('payTopupEnabled').checked = p.wallet_topup_enabled !== false;
+}
+async function savePaymentSettings(){
+    const msgEl = document.getElementById('paySaveMsg');
+    const payload = {
+        sepay_enabled: document.getElementById('paySepayEnabled').checked,
+        sepay_disabled_message: document.getElementById('paySepayDisabledMsg').value.trim(),
+        balance_payment_enabled: document.getElementById('payBalanceEnabled').checked,
+        wallet_topup_enabled: document.getElementById('payTopupEnabled').checked,
+    };
+    const { error } = await sb.from('site_settings')
+        .upsert({ key: 'payment_settings', payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error){
+        msgEl.style.color = 'var(--red)';
+        msgEl.innerText = 'Lỗi: ' + error.message;
+    } else {
+        msgEl.style.color = 'var(--green)';
+        msgEl.innerText = '✔ Đã lưu. Áp dụng ngay cho khách hàng ở lượt mở popup thanh toán tiếp theo.';
+        setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4500);
     }
 }
 

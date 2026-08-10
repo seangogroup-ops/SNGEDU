@@ -1778,7 +1778,7 @@ textarea{resize:vertical;}
                         <button class="acct-chip" data-f="unread" onclick="setNotifyFilter('unread')">Chưa đọc</button>
                         <button class="acct-chip" data-f="read" onclick="setNotifyFilter('read')">Đã đọc</button>
                     </div>
-                    <button class="side-add" title="Gửi thông báo" aria-label="Gửi thông báo" onclick="openNotifyComposeModal()" style="width:36px;height:36px;padding:0;border-radius:50%;font-size:1.15rem;line-height:1;flex:0 0 auto;">+</button>
+                    <button class="side-add" title="Gửi thông báo" aria-label="Gửi thông báo" onclick="openNotifyComposeModal()" style="width:36px;height:36px;padding:0;border-radius:50%;font-size:1.3rem;line-height:1;flex:0 0 auto;color:#1d3fd6;font-weight:900;">+</button>
                     <button class="side-add" onclick="loadNotifyList()">↻ Tải lại</button>
                 </div>
                 <p class="hint" id="notifyCount" style="margin:0 0 12px;"></p>
@@ -2094,6 +2094,38 @@ textarea{resize:vertical;}
                             <label>Độ bo góc khối hero (px)</label>
                             <input type="number" id="setThemeRadius" min="0" max="40" value="24" oninput="updateThemePreview()">
                         </div>
+                    </div>
+
+                    <div class="hint" style="margin:20px 0 10px; text-transform:uppercase; font-size:.7rem; font-weight:800; letter-spacing:.05em;">Tuỳ chỉnh chi tiết trang chủ</div>
+                    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                        <div style="flex:1; min-width:190px;">
+                            <label>Kiểu khối giới thiệu (hero)</label>
+                            <select id="setThemeHeroStyle" onchange="updateThemePreview()">
+                                <option value="gradient">Gradient nổi bật (mặc định)</option>
+                                <option value="minimal">Tối giản, nền phẳng</option>
+                                <option value="dots">Có hoạ tiết chấm bi</option>
+                            </select>
+                        </div>
+                        <div style="flex:1; min-width:190px;">
+                            <label>Hiệu ứng khi rê chuột vào thẻ</label>
+                            <select id="setThemeHoverStyle" onchange="updateThemePreview()">
+                                <option value="lift">Nâng lên (mặc định)</option>
+                                <option value="scale">Phóng to nhẹ</option>
+                                <option value="none">Không hiệu ứng</option>
+                            </select>
+                        </div>
+                        <div style="flex:1; min-width:190px;">
+                            <label>Bo góc thẻ môn học / tài liệu / thẻ nhanh (px)</label>
+                            <input type="number" id="setThemeCardRadius" min="0" max="32" value="16" oninput="updateThemePreview()">
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:14px;">
+                        <label style="display:flex; align-items:center; gap:8px; font-weight:600;">
+                            <input type="checkbox" id="setThemeShowIllustration" style="width:auto;" checked> Hiện hình minh hoạ SVG trong khối hero
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; font-weight:600;">
+                            <input type="checkbox" id="setThemeShowAvatars" style="width:auto;" checked> Hiện dòng "X bạn đang ôn tập tuần này"
+                        </label>
                     </div>
 
                     <div style="margin-top:16px;padding:15px 17px;border:1px dashed var(--border);border-radius:var(--radius);background:var(--bg);">
@@ -7131,6 +7163,11 @@ async function openSettingsPanel(key){
         document.getElementById('setThemeGreen').value = currentSetPayload.green || '#17b26a';
         document.getElementById('setThemeAmber').value = currentSetPayload.amber || '#f5a524';
         document.getElementById('setThemeRadius').value = currentSetPayload.radius || 24;
+        document.getElementById('setThemeHeroStyle').value = currentSetPayload.heroStyle || 'gradient';
+        document.getElementById('setThemeHoverStyle').value = currentSetPayload.hoverStyle || 'lift';
+        document.getElementById('setThemeCardRadius').value = currentSetPayload.cardRadius || 16;
+        document.getElementById('setThemeShowIllustration').checked = currentSetPayload.showIllustration !== false;
+        document.getElementById('setThemeShowAvatars').checked = currentSetPayload.showAvatars !== false;
         updateThemePreview();
     } else if (isHero){
         document.getElementById('setHeroPageTitle').value = currentSetPayload.pageTitle || '';
@@ -7388,22 +7425,34 @@ function updateThemePreview(){
     const green = document.getElementById('setThemeGreen').value;
     const amber = document.getElementById('setThemeAmber').value;
     const radius = Number(document.getElementById('setThemeRadius').value) || 24;
+    const heroStyle = document.getElementById('setThemeHeroStyle').value;
     const grad = `linear-gradient(135deg, ${brand}, ${brand2})`;
 
     const hero = document.getElementById('setThemePreviewHero');
-    hero.style.background = `linear-gradient(120deg, ${brand}22 0%, ${brand2}1f 55%, ${green}1f 100%)`;
     hero.style.borderRadius = radius + 'px';
+    if (heroStyle === 'minimal'){
+        hero.style.background = 'var(--card)';
+        hero.style.backgroundImage = 'none';
+        hero.style.boxShadow = 'none';
+    } else if (heroStyle === 'dots'){
+        hero.style.background = `linear-gradient(120deg, ${brand}22 0%, ${brand2}1f 55%, ${green}1f 100%)`;
+        hero.style.backgroundImage = `radial-gradient(${brand}55 1.2px, transparent 1.2px)`;
+        hero.style.backgroundSize = '14px 14px';
+        hero.style.boxShadow = `inset 0 0 40px -10px ${accent2}55`;
+    } else {
+        hero.style.background = `linear-gradient(120deg, ${brand}22 0%, ${brand2}1f 55%, ${green}1f 100%)`;
+        hero.style.backgroundImage = 'none';
+        hero.style.boxShadow = `inset 0 0 40px -10px ${accent2}55`;
+    }
 
-    document.getElementById('setThemePreviewEyebrow').style.background = grad;
-    document.getElementById('setThemePreviewTitle').style.background = `linear-gradient(100deg, var(--text) 45%, ${brand} 100%)`;
-    document.getElementById('setThemePreviewTitle').style.webkitBackgroundClip = 'text';
-    document.getElementById('setThemePreviewTitle').style.backgroundClip = 'text';
-    document.getElementById('setThemePreviewTitle').style.color = 'transparent';
+    document.getElementById('setThemePreviewEyebrow').style.background = heroStyle === 'minimal' ? `${brand}22` : grad;
+    document.getElementById('setThemePreviewEyebrow').style.color = heroStyle === 'minimal' ? brand : '#fff';
+    document.getElementById('setThemePreviewTitle').style.background = heroStyle === 'minimal' ? 'none' : `linear-gradient(100deg, var(--text) 45%, ${brand} 100%)`;
+    document.getElementById('setThemePreviewTitle').style.webkitBackgroundClip = heroStyle === 'minimal' ? 'initial' : 'text';
+    document.getElementById('setThemePreviewTitle').style.backgroundClip = heroStyle === 'minimal' ? 'initial' : 'text';
+    document.getElementById('setThemePreviewTitle').style.color = heroStyle === 'minimal' ? 'var(--text)' : 'transparent';
     document.getElementById('setThemePreviewBtn').style.background = grad;
     document.getElementById('setThemePreviewPill').style.background = amber;
-
-    // dùng luôn accent2/green cho 1 đốm glow nhỏ để admin hình dung, không bắt buộc phải thấy rõ trong preview thu nhỏ này
-    hero.style.boxShadow = `inset 0 0 40px -10px ${accent2}55`;
 }
 
 async function saveSiteSetting(){
@@ -7417,6 +7466,11 @@ async function saveSiteSetting(){
             green: document.getElementById('setThemeGreen').value,
             amber: document.getElementById('setThemeAmber').value,
             radius: Number(document.getElementById('setThemeRadius').value) || 24,
+            heroStyle: document.getElementById('setThemeHeroStyle').value,
+            hoverStyle: document.getElementById('setThemeHoverStyle').value,
+            cardRadius: Number(document.getElementById('setThemeCardRadius').value) || 16,
+            showIllustration: document.getElementById('setThemeShowIllustration').checked,
+            showAvatars: document.getElementById('setThemeShowAvatars').checked,
         };
     } else if (currentSetKey === 'home_hero'){
         payload = {

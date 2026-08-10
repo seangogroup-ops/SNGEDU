@@ -48,6 +48,7 @@
         --brand2:    #8b5cf6;   /* màu phụ để pha gradient cùng --brand */
         --accent2:   #ff7ab8;   /* điểm nhấn thứ 3, dùng cho glow/blob trang trí */
         --radius-lg: 24px;      /* độ bo góc của khối hero / thẻ lớn — đổi được từ admin */
+        --radius-card: 16px;    /* độ bo góc của thẻ môn học/tài liệu/quick-tile — đổi được từ admin */
         --grad-brand: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%);
         --grad-hero:  linear-gradient(120deg, color-mix(in srgb, var(--brand) 16%, #eef1ff) 0%, color-mix(in srgb, var(--brand2) 14%, #f7f4ff) 55%, color-mix(in srgb, var(--green) 12%, #eefaf3) 100%);
         --shadow:    0 1px 2px rgba(20,22,40,.06), 0 8px 24px -12px rgba(20,22,40,.12);
@@ -556,6 +557,22 @@
         background:radial-gradient(circle, color-mix(in srgb, var(--accent2) 22%, transparent) 0%, transparent 70%);
         pointer-events:none;
     }
+    /* ---- kiểu khối hero, đổi được ở admin > Giao diện ---- */
+    .hero-card[data-hero-style="minimal"]{ background:var(--card); box-shadow:var(--shadow); }
+    .hero-card[data-hero-style="minimal"]::before,
+    .hero-card[data-hero-style="minimal"]::after{ display:none; }
+    .hero-card[data-hero-style="minimal"] .hero-eyebrow{ background:var(--brand-bg); color:var(--brand); box-shadow:none; }
+    .hero-card[data-hero-style="minimal"] .hero-eyebrow::before{ background:var(--brand); }
+    .hero-card[data-hero-style="minimal"] h1{ background:none; -webkit-background-clip:initial; background-clip:initial; color:var(--ink); }
+    .hero-card[data-hero-style="dots"]{
+        background-image: var(--grad-hero), radial-gradient(color-mix(in srgb, var(--brand) 45%, transparent) 1.4px, transparent 1.4px);
+        background-size: auto, 18px 18px;
+        background-position: 0 0, 0 0;
+    }
+    .hero-card[data-hero-style="dots"]::before,
+    .hero-card[data-hero-style="dots"]::after{ display:none; }
+    body[data-show-illustration="0"] .hero-illustration{ display:none; }
+    body[data-show-avatars="0"] .avatar-group{ display:none; }
     .hero-text{ flex:1; min-width:0; position:relative; z-index:1; }
     .hero-illustration{ flex-shrink:0; width:172px; height:172px; filter:drop-shadow(0 14px 22px rgba(30,25,60,.14)); position:relative; z-index:1; }
     .hero-eyebrow{
@@ -591,7 +608,7 @@
 
     .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .stat{
-        background:var(--card); border:1px solid var(--line); border-radius:16px;
+        background:var(--card); border:1px solid var(--line); border-radius:var(--radius-card);
         padding:18px; display:flex; flex-direction:column; justify-content:center; align-items:center;
         box-shadow: var(--shadow);
     }
@@ -612,7 +629,7 @@
         .quick-grid[data-count="4"]{ grid-template-columns:repeat(4, 1fr); }
     }
     .quick-tile{
-        background:var(--card); border:1px solid var(--line); border-radius:16px;
+        background:var(--card); border:1px solid var(--line); border-radius:var(--radius-card);
         padding:16px; display:flex; align-items:center; gap:12px;
         cursor:pointer; box-shadow:var(--shadow);
         transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
@@ -882,7 +899,7 @@
         .grid-hscroll .card{ flex:0 0 66vw; width:66vw; }
     }
     .card{
-        background:var(--card); border:1px solid var(--line); border-radius:16px;
+        background:var(--card); border:1px solid var(--line); border-radius:var(--radius-card);
         padding:16px; text-decoration:none; color:var(--ink);
         display:flex; flex-direction:column; gap:11px;
         box-shadow: var(--shadow);
@@ -890,6 +907,11 @@
         cursor:pointer; position:relative;
     }
     .card:hover, .card:focus-visible{ transform:translateY(-4px); box-shadow:var(--shadow-glow); border-color:color-mix(in srgb, var(--brand) 35%, var(--line)); }
+    /* ---- kiểu hiệu ứng hover cho thẻ, đổi được ở admin > Giao diện ---- */
+    body[data-hover-style="scale"] .card:hover, body[data-hover-style="scale"] .card:focus-visible{ transform:scale(1.035); }
+    body[data-hover-style="scale"] .quick-tile:hover{ transform:scale(1.035); }
+    body[data-hover-style="none"] .card:hover, body[data-hover-style="none"] .card:focus-visible{ transform:none; }
+    body[data-hover-style="none"] .quick-tile:hover{ transform:none; }
     .card.locked{ opacity:.88; }
     .card.pro-highlight{ border-color:var(--amber); box-shadow:0 0 0 2px var(--amber-bg); }
     .pro-ribbon{
@@ -1436,7 +1458,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         </div>
 
         <div class="hero">
-            <div class="hero-card">
+            <div class="hero-card" id="heroCard" data-hero-style="gradient">
                 <div class="hero-text" id="heroText" style="opacity:0;">
                     <div class="hero-eyebrow" id="heroEyebrow">SNG EDU - Không gian tri thức cộng đồng</div>
                     <h1 id="heroTitle">Mở kho tài liệu, bắt đầu ôn tập ngay hôm nay</h1>
@@ -2654,7 +2676,15 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             if (t.accent2) root.setProperty('--accent2', t.accent2);
             if (t.green)   root.setProperty('--green', t.green);
             if (t.amber)   root.setProperty('--amber', t.amber);
-            if (t.radius)  root.setProperty('--radius-lg', t.radius + 'px');
+            if (t.radius)     root.setProperty('--radius-lg', t.radius + 'px');
+            if (t.cardRadius) root.setProperty('--radius-card', t.cardRadius + 'px');
+
+            // ---- các tuỳ chỉnh chi tiết cho riêng trang chủ ----
+            const heroCard = document.getElementById('heroCard');
+            if (heroCard && t.heroStyle) heroCard.setAttribute('data-hero-style', t.heroStyle);
+            document.body.setAttribute('data-hover-style', t.hoverStyle || 'lift');
+            document.body.setAttribute('data-show-illustration', t.showIllustration === false ? '0' : '1');
+            document.body.setAttribute('data-show-avatars', t.showAvatars === false ? '0' : '1');
         }catch(e){ /* mạng lỗi -> im lặng giữ mặc định, không chặn trang tải */ }
     }
     loadThemeSettings();

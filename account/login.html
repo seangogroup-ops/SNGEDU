@@ -404,7 +404,9 @@ const EDGE_BASE = `${SUPABASE_URL}/functions/v1`;
 // ---- Text "kiểm tra thư rác" — lấy động từ site_settings (key 'email_settings'), quản lý ở Admin > Cấu hình email ----
 const DEFAULT_FORGOT_SPAM_HINT_TEXT = 'Không thấy email? Kiểm tra thêm mục Thư rác / Spam — mã có thể bị lọc vào đó. Nếu thấy, hãy đánh dấu "Không phải thư rác" để lần sau nhận email vào hộp thư chính.';
 const DEFAULT_REGISTER_SPAM_HINT_TEXT = 'Không thấy email xác nhận? Kiểm tra thêm mục Thư rác / Spam nhé.';
+const DEFAULT_REGISTER_SUCCESS_TEXT = 'Tạo tài khoản thành công! Kiểm tra email để xác nhận trước khi đăng nhập.';
 let REGISTER_SPAM_HINT_TEXT = DEFAULT_REGISTER_SPAM_HINT_TEXT;
+let REGISTER_SUCCESS_TEXT = DEFAULT_REGISTER_SUCCESS_TEXT;
 
 async function loadEmailHintTexts(){
     try{
@@ -412,6 +414,7 @@ async function loadEmailHintTexts(){
         const p = (data && data.payload) ? data.payload : {};
         const forgotText = (p.forgot_spam_hint_text || DEFAULT_FORGOT_SPAM_HINT_TEXT);
         REGISTER_SPAM_HINT_TEXT = (p.register_spam_hint_text || DEFAULT_REGISTER_SPAM_HINT_TEXT);
+        REGISTER_SUCCESS_TEXT = (p.register_success_text || DEFAULT_REGISTER_SUCCESS_TEXT);
         const forgotEl = document.getElementById('forgotSpamHintText');
         if (forgotEl) forgotEl.textContent = forgotText;
     }catch(e){ /* lỗi tải cấu hình -> giữ nguyên text mặc định, không chặn trang */ }
@@ -613,7 +616,7 @@ async function doRegister(){
         location.href = nextUrl;
     } else {
         btn.disabled = false; btn.textContent = 'Đăng ký';
-        showMsg('registerMsg', '<i class="fa-solid fa-circle-check"></i> Tạo tài khoản thành công! Kiểm tra email để xác nhận trước khi đăng nhập.', 'ok');
+        showMsg('registerMsg', `<i class="fa-solid fa-circle-check"></i> ${REGISTER_SUCCESS_TEXT}`, 'ok');
         document.getElementById('registerMsg').insertAdjacentHTML('afterend', `<div class="spam-hint"><i class="fa-solid fa-triangle-exclamation"></i><span>${REGISTER_SPAM_HINT_TEXT}</span></div>`);
     }
 }

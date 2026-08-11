@@ -561,11 +561,11 @@ body{
     <a class="back-btn" id="backBtn" href="index.html" title="Quay lại">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </a>
-    <div class="logo-badge">
+    <a class="logo-badge" href="index.html" title="Về trang chủ" style="cursor:pointer;">
       <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-    </div>
+    </a>
     <div>
       <div class="hdr-title" id="hdrTitle">Bài tập tính toán</div>
       <div class="hdr-sub" id="hdrSub">Đang tải…</div>
@@ -656,7 +656,10 @@ let sngUsageLogged = false;  // tránh ghi log 2 lần nếu finishQuiz bị g�
             <h2 style="margin:14px 0 8px;">Đã hết lượt làm trắc nghiệm hôm nay</h2>
             <p style="color:#6b7280;margin-bottom:18px;">Tài khoản miễn phí được làm tối đa ${usageCheck.limit} lượt/ngày. Nâng cấp Pro để làm bài không giới hạn.</p>
             <p style="color:#9ca3af;font-size:.85rem;margin-bottom:14px;">Đang chuyển đến bảng nâng cấp Pro sau <span id="proRedirectCountdown">5</span>s...</p>
-            <a href="index.html?openPro=1" style="display:inline-block;padding:10px 22px;background:#3258db;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Nâng cấp Pro ngay</a>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                <a href="index.html?openPro=1" style="display:inline-block;padding:10px 22px;background:#3258db;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Nâng cấp Pro ngay</a>
+                <a href="index.html" style="display:inline-block;padding:10px 22px;background:#e5e7eb;color:#374151;border-radius:8px;text-decoration:none;font-weight:600;">Về trang chủ</a>
+            </div>
         </div>`;
         let proRedirectSecondsLeft = 5;
         const proRedirectTimer = setInterval(()=>{

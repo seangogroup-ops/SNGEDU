@@ -73,6 +73,24 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
 label{font-weight:700;font-size:.72rem;color:var(--gray);display:block;margin:12px 0 5px;letter-spacing:.05em;text-transform:uppercase;}
 .hidden{display:none !important;}
 
+/* ---------- RICH TEXT MINI EDITOR (đậm/nghiêng/gạch chân/màu chữ cho vài ô nhắn admin) ---------- */
+.richtext-toolbar{display:flex;align-items:center;gap:4px;margin-bottom:6px;}
+.richtext-toolbar button{
+    width:30px;height:30px;border-radius:6px;background:var(--white);border:1px solid var(--border);
+    color:var(--text);font-size:.85rem;display:flex;align-items:center;justify-content:center;
+}
+.richtext-toolbar button:hover{background:var(--accent-glow);}
+.richtext-toolbar input[type="color"]{
+    width:30px;height:30px;padding:2px;border:1px solid var(--border);border-radius:6px;background:var(--white);cursor:pointer;
+}
+.richtext-input{
+    width:100%;min-height:56px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);
+    font-size:.92rem;font-family:var(--font-body);background:var(--white);color:var(--text);
+    transition:border-color 0.2s,box-shadow 0.2s;line-height:1.5;
+}
+.richtext-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+.richtext-input:empty:before{content:attr(data-placeholder);color:var(--gray);}
+
 /* ---------- AUTH LOADING (che màn hình lúc đang kiểm tra phiên đăng nhập, tránh chớp form login) ---------- */
 #authLoading{
     min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;
@@ -1429,6 +1447,9 @@ textarea{resize:vertical;}
                         <div class="side-item settings-item" data-setkey="announcement_popup" onclick="openSettingsPanel('announcement_popup')">
                             <span class="set-ico">📢</span><span class="name">Thông báo nổi</span>
                         </div>
+                        <div class="side-item settings-item" id="navEmailSettings" onclick="showEmailSettingsPanel()">
+                            <span class="set-ico">✉️</span><span class="name">Cấu hình email</span>
+                        </div>
                         <div class="side-item settings-item" id="navGeneralSettings" onclick="showGeneralSettings()">
                             <span class="set-ico">⚙️</span><span class="name">Cài đặt chung</span>
                         </div>
@@ -1470,9 +1491,6 @@ textarea{resize:vertical;}
                         </div>
                         <div class="side-item settings-item" id="navPaymentSettings" onclick="showPaymentSettingsPanel()">
                             <span class="set-ico">💳</span><span class="name">Cấu hình thanh toán</span>
-                        </div>
-                        <div class="side-item settings-item" id="navEmailSettings" onclick="showEmailSettingsPanel()">
-                            <span class="set-ico">✉️</span><span class="name">Cấu hình email</span>
                         </div>
                         <div class="side-item settings-item" id="navAccounts" onclick="showAccountsManager()">
                             <span class="set-ico">👤</span><span class="name">Tài khoản</span>
@@ -2128,16 +2146,35 @@ textarea{resize:vertical;}
 
                     <div class="settings-form-card" style="margin-top:16px;">
                         <h3>📭 Dòng nhắc "Kiểm tra thư rác / Spam"</h3>
-                        <p class="hint">Nội dung hiển thị cho học viên khi cần chờ nhận email. Để trống sẽ dùng câu mặc định.</p>
-                        <label>Sau khi đăng ký thành công (chờ email xác nhận tài khoản)</label>
-                        <textarea id="emlRegisterSpamHint" rows="2" placeholder="Không thấy email xác nhận? Kiểm tra thêm mục Thư rác / Spam nhé."></textarea>
+                        <p class="hint">Nội dung hiển thị cho học viên khi cần chờ nhận email. Để trống sẽ dùng câu mặc định. Có thể tô đậm/nghiêng/gạch chân/đổi màu chữ bằng thanh công cụ bên dưới.</p>
+
+                        <label>Thông báo khi đăng ký thành công (khung xanh)</label>
+                        <div class="richtext-toolbar">
+                            <button type="button" onmousedown="event.preventDefault()" onclick="rtCmd('emlRegisterSuccessMsg','bold')" title="Đậm"><b>B</b></button>
+                            <button type="button" onmousedown="event.preventDefault()" onclick="rtCmd('emlRegisterSuccessMsg','italic')" title="Nghiêng"><i>I</i></button>
+                            <button type="button" onmousedown="event.preventDefault()" onclick="rtCmd('emlRegisterSuccessMsg','underline')" title="Gạch chân"><u>U</u></button>
+                            <input type="color" title="Màu chữ" onmousedown="rtRemember('emlRegisterSuccessMsg')" onchange="rtColor('emlRegisterSuccessMsg', this.value)">
+                            <button type="button" onmousedown="event.preventDefault()" onclick="rtClear('emlRegisterSuccessMsg')" title="Xoá định dạng">⨯</button>
+                        </div>
+                        <div id="emlRegisterSuccessMsg" class="richtext-input" contenteditable="true" data-placeholder="Tạo tài khoản thành công! Kiểm tra email để xác nhận trước khi đăng nhập."></div>
+
+                        <label style="margin-top:12px;">Sau khi đăng ký thành công (chờ email xác nhận tài khoản)</label>
+                        <div class="richtext-toolbar">
+                            <button type="button" onmousedown="event.preventDefault()" onclick="rtCmd('emlRegisterSpamHint','bold')" title="Đậm"><b>B</b></button>
+                            <button type="button" onmousedown="event.preventDefault()" onclick="rtCmd('emlRegisterSpamHint','italic')" title="Nghiêng"><i>I</i></button>
+                            <button type="button" onmousedown="event.preventDefault()" onclick="rtCmd('emlRegisterSpamHint','underline')" title="Gạch chân"><u>U</u></button>
+                            <input type="color" title="Màu chữ" onmousedown="rtRemember('emlRegisterSpamHint')" onchange="rtColor('emlRegisterSpamHint', this.value)">
+                            <button type="button" onmousedown="event.preventDefault()" onclick="rtClear('emlRegisterSpamHint')" title="Xoá định dạng">⨯</button>
+                        </div>
+                        <div id="emlRegisterSpamHint" class="richtext-input" contenteditable="true" data-placeholder="Không thấy email xác nhận? Kiểm tra thêm mục Thư rác / Spam nhé."></div>
+
                         <label style="margin-top:12px;">Ở bước nhập mã "Quên mật khẩu"</label>
                         <textarea id="emlForgotSpamHint" rows="2" placeholder="Không thấy email? Kiểm tra thêm mục Thư rác / Spam — mã có thể bị lọc vào đó..."></textarea>
                     </div>
 
                     <div class="acct-form-note" style="margin-top:16px;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                        <span>Email <b>xác nhận tài khoản khi đăng ký</b> (link xác nhận gửi ngay khi tạo tài khoản) do <b>Supabase Auth</b> tự gửi, không thuộc 3 mục ở trên và không cấu hình được ở đây. Bật/tắt/tuỳ chỉnh mẫu email đó ở Supabase Dashboard → Authentication → Emails.</span>
+                        <span><b>Bật/tắt bắt buộc xác nhận email trước khi đăng nhập</b> không cấu hình được ở web này vì đây là quy tắc do <b>Supabase Auth</b> áp dụng thẳng ở máy chủ (không thể lách qua giao diện). Vào <b>Supabase Dashboard → Authentication → Sign In / Providers → Email → mục "Confirm email"</b> để bật (bắt buộc xác nhận) hoặc tắt (đăng ký xong vào học luôn). Nội dung email xác nhận thật gửi vào hộp thư (khác với 2 khung thông báo trên web ở trên) cũng chỉnh ở Supabase Dashboard → Authentication → Emails, không cấu hình được ở đây.</span>
                     </div>
 
                     <div class="mini-actions" style="margin-top:16px;">
@@ -3784,6 +3821,39 @@ async function savePaymentSettings(){
     }
 }
 
+// ---------- MINI RICH-TEXT TOOLBAR (đậm/nghiêng/gạch chân/màu chữ cho vài ô nhắn admin) ----------
+let _rtLastRange = null;
+function _rtFocus(id){
+    const el = document.getElementById(id);
+    el.focus();
+    if (_rtLastRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(_rtLastRange);
+    }
+    return el;
+}
+function rtRemember(id){
+    // Lưu lại vùng bôi đen trước khi bấm vào ô chọn màu (input[type=color] làm mất focus/selection)
+    const el = document.getElementById(id);
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0 && el.contains(sel.anchorNode)) {
+        _rtLastRange = sel.getRangeAt(0).cloneRange();
+    }
+}
+function rtCmd(id, cmd){
+    _rtFocus(id);
+    document.execCommand(cmd, false, null);
+}
+function rtColor(id, color){
+    _rtFocus(id);
+    document.execCommand('foreColor', false, color);
+    _rtLastRange = null;
+}
+function rtClear(id){
+    const el = document.getElementById(id);
+    el.innerText = el.innerText; // bỏ hết định dạng, giữ nguyên chữ
+}
 // ---------- CẤU HÌNH EMAIL (site_settings key 'email_settings') ----------
 function showEmailSettingsPanel(){
     rememberAdminPanel('emailSettings');
@@ -3802,7 +3872,8 @@ async function loadEmailSettings(){
     document.getElementById('emlWelcomeEnabled').checked = p.welcome_email_enabled !== false;
     document.getElementById('emlResetCodeEnabled').checked = p.reset_code_email_enabled !== false;
     document.getElementById('emlPasswordChangedEnabled').checked = p.password_changed_email_enabled !== false;
-    document.getElementById('emlRegisterSpamHint').value = p.register_spam_hint_text || '';
+    document.getElementById('emlRegisterSuccessMsg').innerHTML = p.register_success_text || '';
+    document.getElementById('emlRegisterSpamHint').innerHTML = p.register_spam_hint_text || '';
     document.getElementById('emlForgotSpamHint').value = p.forgot_spam_hint_text || '';
 }
 async function saveEmailSettings(){
@@ -3811,7 +3882,8 @@ async function saveEmailSettings(){
         welcome_email_enabled: document.getElementById('emlWelcomeEnabled').checked,
         reset_code_email_enabled: document.getElementById('emlResetCodeEnabled').checked,
         password_changed_email_enabled: document.getElementById('emlPasswordChangedEnabled').checked,
-        register_spam_hint_text: document.getElementById('emlRegisterSpamHint').value.trim(),
+        register_success_text: document.getElementById('emlRegisterSuccessMsg').innerHTML.trim(),
+        register_spam_hint_text: document.getElementById('emlRegisterSpamHint').innerHTML.trim(),
         forgot_spam_hint_text: document.getElementById('emlForgotSpamHint').value.trim(),
     };
     const { error } = await sb.from('site_settings')

@@ -53,6 +53,8 @@
             display: flex; align-items: center; justify-content: space-between; gap: 10px;
         }
         .header-left { display: flex; align-items: center; gap: 8px; color: var(--text-gray); font-size: 0.95rem; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
+        .header-home-link { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; color: var(--text-gray); flex-shrink: 0; text-decoration: none; transition: background 0.2s, color 0.2s; }
+        .header-home-link:hover { background: var(--report-btn-bg, #eef1f6); color: var(--azota-blue); }
         .header-title { font-weight: 700; font-size: 1rem; color: var(--text-main); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
         .header-right { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
         .timer { font-weight: 700; color: var(--azota-blue); font-size: 1.1rem; white-space: nowrap; }
@@ -226,6 +228,9 @@
 
 <header>
     <div class="header-inner">
+    <a class="header-home-link" href="index.html" title="Về trang chủ" onclick="return confirmLeaveQuiz(event)">
+        <i class="fa-solid fa-house"></i>
+    </a>
     <div class="header-left" onclick="location.reload()">
         <i class="fa-solid fa-rotate-right"></i> <span>Làm lại bài</span>
     </div>
@@ -303,7 +308,10 @@
                 <h2 style="margin:14px 0 8px;">Đã hết lượt làm trắc nghiệm hôm nay</h2>
                 <p style="color:#6b7280;margin-bottom:18px;">Tài khoản miễn phí được làm tối đa ${usageCheck.limit} lượt/ngày. Nâng cấp Pro để làm bài không giới hạn.</p>
                 <p style="color:#9ca3af;font-size:.85rem;margin-bottom:14px;">Đang chuyển đến bảng nâng cấp Pro sau <span id="proRedirectCountdown">5</span>s...</p>
+                <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
                 <a href="index.html?openPro=1" style="display:inline-block;padding:10px 22px;background:#3258db;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Nâng cấp Pro ngay</a>
+                <a href="index.html" style="display:inline-block;padding:10px 22px;background:#e5e7eb;color:#374151;border-radius:8px;text-decoration:none;font-weight:600;">Về trang chủ</a>
+            </div>
             </div>`;
             let proRedirectSecondsLeft = 5;
             const proRedirectTimer = setInterval(()=>{
@@ -495,6 +503,14 @@
         const total = questions.length;
         document.getElementById('nav-count').textContent = `${answeredCount}/${total}`;
         document.getElementById('nav-progress-fill').style.width = (total > 0 ? (answeredCount / total * 100) : 0) + '%';
+    }
+
+    // Cảnh báo trước khi rời trang giữa chừng bài làm (tránh bấm nhầm nút Về trang chủ mất tiến độ).
+    function confirmLeaveQuiz(e) {
+        if (isSubmitted || answeredCount === 0) return true;
+        const ok = confirm('Bạn đang làm dở bài, thoát ra sẽ mất tiến độ hiện tại. Vẫn muốn về trang chủ?');
+        if (!ok) e.preventDefault();
+        return ok;
     }
 
     function submitExam() {

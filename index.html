@@ -1143,6 +1143,13 @@
         .topbar .pill{ padding:8px 10px; }
         .topbar .pill .pill-label{ display:none; }
 
+        /* Chuông thông báo: neo theo màn hình thay vì theo quả chuông, tránh tràn ra ngoài lề trái
+           khi quả chuông không nằm sát mép phải màn hình. */
+        .notify-dropdown{
+            position:fixed; top:64px; left:12px; right:12px;
+            width:auto; max-width:none;
+        }
+
         .quick-grid{ grid-template-columns:repeat(2, 1fr); gap:10px; }
         .quick-tile{
             flex-direction:column; align-items:flex-start; gap:10px;
@@ -2019,7 +2026,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                     <i class="fa-solid fa-crown"></i> Nâng cấp Pro
                 </button>
                 <button class="acc-changepw-btn" type="button" onclick="closeAccountModal(); goTab('account');">
-                    <i class="fa-solid fa-gear"></i> Đổi mật khẩu &amp; quản lý gói Pro
+                    <i class="fa-solid fa-gear"></i> Quản lý tài khoản
                 </button>
                 <button class="acc-admin-btn" id="accAdminBtn" type="button" style="display:none" onclick="goToAdminPanel()">
                     <i class="fa-solid fa-shield-halved"></i> Trang Quản trị

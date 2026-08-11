@@ -4,16 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">Bài tập tính toán · SNG EDU</title>
-<script>
-    try{
-        var savedTheme = localStorage.getItem('sng-theme');
-        if(savedTheme === 'dark' || savedTheme === 'light'){
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        }else{
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
-    }catch(e){}
-</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -41,26 +31,6 @@
   --radius:14px;
   --radius-sm:8px;
 }
-html[data-theme="dark"]{
-  --ink:#eef0f6;
-  --ink2:#b7bbcf;
-  --ink3:#82869c;
-  --paper:#14151c;
-  --white:#1c1e28;
-  --primary:#7b93ff;
-  --primary-soft:#232a4d;
-  --primary-mid:#8fa3ff;
-  --green:#2ed392;
-  --green-soft:#163a2c;
-  --red:#ff6b6b;
-  --red-soft:#3a2020;
-  --amber:#ffbd4a;
-  --amber-soft:#3a2e12;
-  --border:#2c2f3c;
-  --shadow-sm:0 1px 3px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.2);
-  --shadow-md:0 4px 16px rgba(0,0,0,.4),0 1px 4px rgba(0,0,0,.25);
-  --shadow-lg:0 12px 40px rgba(0,0,0,.5),0 4px 12px rgba(0,0,0,.3);
-}
 html{ transition:background .25s ease; }
 body, .hdr, .bottom-nav{ transition:background .25s ease, border-color .25s ease, color .25s ease; }
 
@@ -78,12 +48,14 @@ body{
   background:rgba(247,248,252,.92);
   backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
-  padding:0 20px;
+  padding:0;
   height:60px;
-  display:flex;align-items:center;justify-content:space-between;
-  gap:12px;
+  display:flex;align-items:center;justify-content:center;
 }
-html[data-theme="dark"] .hdr{ background:rgba(20,21,28,.92); }
+.hdr-inner{
+  width:100%;max-width:900px;margin:0 auto;padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
 .hdr-left{display:flex;align-items:center;gap:10px}
 .logo-badge{
   width:34px;height:34px;border-radius:10px;
@@ -94,19 +66,6 @@ html[data-theme="dark"] .hdr{ background:rgba(20,21,28,.92); }
 .logo-badge svg{color:#fff}
 .hdr-title{font-size:15px;font-weight:700;color:var(--ink);line-height:1.2}
 .hdr-sub{font-size:11px;font-weight:500;color:var(--ink3);letter-spacing:.3px;margin-top:1px}
-
-.theme-toggle{
-  width:36px;height:36px;border-radius:50%;flex-shrink:0;
-  border:1.5px solid var(--border);background:var(--white);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  color:var(--ink3);font-size:.85rem;
-  transition:background .2s ease,color .2s ease,border-color .2s ease,transform .12s ease;
-}
-@media (hover:hover){ .theme-toggle:hover{ background:var(--primary-soft); color:var(--primary); } }
-.theme-toggle:active{ transform:scale(.9); }
-.theme-toggle .icon-sun{ display:none; }
-html[data-theme="dark"] .theme-toggle .icon-sun{ display:inline; }
-html[data-theme="dark"] .theme-toggle .icon-moon{ display:none; }
 
 .timer-pill{
   display:flex;align-items:center;gap:7px;
@@ -284,7 +243,6 @@ html[data-theme="dark"] .theme-toggle .icon-moon{ display:none; }
   gap:12px;
   z-index:150;
 }
-html[data-theme="dark"] .bottom-nav{ background:rgba(20,21,28,.95); }
 .nav-info{
   text-align:center;flex:1;
   font-size:13px;color:var(--ink3);font-weight:500;
@@ -597,6 +555,7 @@ html[data-theme="dark"] .bottom-nav{ background:rgba(20,21,28,.95); }
 
 <!-- HEADER -->
 <header class="hdr">
+  <div class="hdr-inner">
   <div class="hdr-left">
     <a class="back-btn" id="backBtn" href="index.html" title="Quay lại">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -622,10 +581,7 @@ html[data-theme="dark"] .bottom-nav{ background:rgba(20,21,28,.95); }
         <span>Nộp bài</span>
       </button>
     </div>
-    <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
-      <svg class="icon-moon" width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <svg class="icon-sun" width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    </button>
+  </div>
   </div>
 </header>
 
@@ -679,18 +635,6 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let sngUsageChecked = false; // đã kiểm tra & (nếu hợp lệ) sẵn sàng ghi log lượt làm bài này
 let sngUsageLogged = false;  // tránh ghi log 2 lần nếu finishQuiz bị gọi nhiều lần
-
-// ---------------- Đổi giao diện sáng/tối ----------------
-(function(){
-    const btn = document.getElementById('themeToggle');
-    if (!btn) return;
-    btn.addEventListener('click', function(){
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const next = isDark ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        try { localStorage.setItem('sng-theme', next); } catch (e) {}
-    });
-})();
 
 // ---------------- Bắt buộc đăng nhập mới xem được trang này ----------------
 // Lớp phủ #authGateOverlay che toàn trang ngay từ đầu, chỉ gỡ ra sau khi xác nhận có phiên đăng nhập.

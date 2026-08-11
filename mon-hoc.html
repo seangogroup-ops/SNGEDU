@@ -56,10 +56,10 @@
         --shadow:    0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
         --shadow-hov:0 4px 10px rgba(0,0,0,.25), 0 20px 40px -16px rgba(0,0,0,.6);
     }
-    html{ transition: background .25s ease; }
+    html{ transition: background 0.38s ease; }
     *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
     body, header, .chapter-card, .hero-card, .report-banner, .state-card{
-        transition: background .25s ease, border-color .25s ease, color .25s ease, box-shadow .25s ease;
+        transition: background 0.38s ease, border-color 0.38s ease, color 0.38s ease, box-shadow 0.38s ease;
     }
     body{
         background: var(--bg);
@@ -101,7 +101,7 @@
         border:1px solid var(--line); background:var(--card); cursor:pointer;
         display:flex; align-items:center; justify-content:center;
         color:var(--ink-soft); font-size:.9rem; flex-shrink:0;
-        transition:background .2s ease, color .2s ease, border-color .2s ease, transform .12s ease;
+        transition:background 0.31s ease, color 0.31s ease, border-color 0.31s ease, transform 0.2s ease;
     }
     @media (hover:hover){ .theme-toggle:hover{ background:var(--brand-bg); color:var(--brand); } }
     .theme-toggle:active{ transform:scale(.9); }
@@ -157,7 +157,7 @@
         padding:18px 20px; text-decoration:none; color:var(--ink);
         display:flex; flex-direction:column; gap:14px;
         box-shadow:var(--shadow);
-        transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+        transition:transform 0.34s ease, box-shadow 0.34s ease, border-color 0.34s ease;
         cursor:pointer; position:relative;
         -webkit-tap-highlight-color:transparent;
     }
@@ -177,7 +177,7 @@
         display:flex; align-items:center; justify-content:center;
         background:#f2f3f8; color:var(--ink-mute); font-size:.7rem;
         opacity:0; transform:translateX(-4px);
-        transition:opacity .2s ease, transform .2s ease, background .2s ease, color .2s ease;
+        transition:opacity 0.31s ease, transform 0.31s ease, background 0.31s ease, color 0.31s ease;
     }
     html[data-theme="dark"] .card-arrow{ background:#262a38; }
     @media (hover:hover){

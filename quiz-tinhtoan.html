@@ -30,8 +30,8 @@
   --radius:14px;
   --radius-sm:8px;
 }
-html{ transition:background .25s ease; }
-body, .hdr, .bottom-nav{ transition:background .25s ease, border-color .25s ease, color .25s ease; }
+html{ transition:background 0.38s ease; }
+body, .hdr, .bottom-nav{ transition:background 0.38s ease, border-color 0.38s ease, color 0.38s ease; }
 
 body{
   font-family:'Inter',sans-serif;
@@ -73,7 +73,7 @@ body{
   font-family:'JetBrains Mono',monospace;
   font-size:15px;font-weight:700;color:var(--ink);
   box-shadow:var(--shadow-sm);
-  transition:border-color .2s,color .2s;
+  transition:border-color 0.31s,color 0.31s;
 }
 .timer-pill.urgent{border-color:var(--red);color:var(--red)}
 .timer-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.4s ease infinite}
@@ -87,13 +87,13 @@ body{
   padding:8px 18px;font-size:13px;font-weight:700;
   cursor:pointer;font-family:inherit;
   box-shadow:0 2px 8px rgba(59,91,219,.35);
-  transition:all .15s;white-space:nowrap;
+  transition:all 0.24s;white-space:nowrap;
 }
 .submit-btn:hover{background:#2f4ac9;transform:translateY(-1px);box-shadow:0 4px 14px rgba(59,91,219,.4)}
 
 /* ── PROGRESS STRIP ──────────────────────── */
 .prog-strip{height:3px;background:var(--border);display:flex;gap:1px}
-.prog-seg{height:3px;transition:background .3s;flex:1}
+.prog-seg{height:3px;transition:background 0.45s;flex:1}
 
 /* ── NAV TABS SCROLLER ──────────────────── */
 .nav-rail{
@@ -114,7 +114,7 @@ body{
   font-size:12px;font-weight:700;
   cursor:pointer;
   color:var(--ink3);
-  transition:all .15s;
+  transition:all 0.24s;
   border:2px solid transparent;
   margin:6px 0;
 }
@@ -168,7 +168,7 @@ body{
   border:2px solid var(--border);
   background:var(--paper);
   cursor:pointer;
-  transition:all .14s;
+  transition:all 0.23s;
   -webkit-tap-highlight-color:transparent;
   user-select:none;
 }
@@ -189,7 +189,7 @@ body{
   font-size:12px;font-weight:700;
   color:var(--ink3);
   flex-shrink:0;
-  transition:all .14s;
+  transition:all 0.23s;
   background:var(--white);
 }
 .opt-txt{font-size:15px;color:var(--ink);line-height:1.5;font-weight:500}
@@ -253,7 +253,7 @@ body{
 .btn-round{
   width:46px;height:46px;border-radius:50%;
   border:none;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .15s;flex-shrink:0;
+  cursor:pointer;transition:all 0.24s;flex-shrink:0;
 }
 .btn-prev{background:var(--white);border:1.5px solid var(--border);color:var(--ink2)}
 .btn-prev:hover{background:var(--paper);border-color:var(--ink3)}
@@ -278,7 +278,7 @@ body{
   cursor:pointer;
   box-shadow:0 6px 24px rgba(230,119,0,.5),0 2px 8px rgba(230,119,0,.3);
   font-family:inherit;
-  transition:all .2s;
+  transition:all 0.31s;
   z-index:140;
   letter-spacing:.2px;
   animation:fab-bounce 2.5s ease-in-out infinite;
@@ -328,7 +328,7 @@ body{
   width:100%;padding:15px;border-radius:var(--radius);
   font-size:15px;font-weight:700;cursor:pointer;
   border:none;font-family:inherit;
-  transition:all .15s;
+  transition:all 0.24s;
 }
 .btn-primary-full{background:var(--primary);color:#fff;box-shadow:0 4px 14px rgba(59,91,219,.35)}
 .btn-primary-full:hover{background:#2f4ac9}
@@ -367,7 +367,7 @@ body{
   border:2px solid var(--border);
   background:var(--paper);
   color:var(--ink3);
-  transition:all .12s;
+  transition:all 0.2s;
 }
 .drawer-dot:hover{border-color:var(--primary-mid);color:var(--primary)}
 .drawer-dot.cur{background:var(--primary);border-color:var(--primary);color:#fff}
@@ -380,7 +380,7 @@ body{
   background:var(--paper);color:var(--ink2);
   font-size:14px;font-weight:600;
   cursor:pointer;margin-top:16px;font-family:inherit;
-  transition:all .12s;
+  transition:all 0.2s;
 }
 .drawer-close:hover{background:var(--border)}
 
@@ -406,7 +406,7 @@ body{
   background:var(--paper);color:var(--ink2);
   border:1.5px solid var(--border);
   font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
-  transition:all .12s;
+  transition:all 0.2s;
 }
 .confirm-cancel:hover{background:var(--border)}
 .confirm-ok{
@@ -415,7 +415,7 @@ body{
   border:none;font-size:14px;font-weight:700;
   cursor:pointer;font-family:inherit;
   box-shadow:0 4px 12px rgba(59,91,219,.35);
-  transition:all .12s;
+  transition:all 0.2s;
 }
 .confirm-ok:hover{background:#2f4ac9}
 
@@ -470,7 +470,7 @@ body{
   width:38px;height:38px;border-radius:10px;flex-shrink:0;
   background:var(--white);border:1.5px solid var(--border);color:var(--ink2);
   display:flex;align-items:center;justify-content:center;cursor:pointer;
-  transition:all .14s;text-decoration:none;
+  transition:all 0.23s;text-decoration:none;
 }
 .back-btn:hover{background:var(--paper);border-color:var(--ink3)}
 

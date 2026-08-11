@@ -278,6 +278,33 @@
         display:none; align-items:center; justify-content:center; z-index:200; padding:16px;
     }
     .acc-overlay.show{ display:flex; }
+
+    /* ---------------- hộp thoại lưu ý trước khi vào Trang Quản trị ---------------- */
+    .admin-notice-overlay{
+        position:fixed; inset:0; background:rgba(10,11,18,.5); backdrop-filter:blur(2px);
+        display:none; align-items:center; justify-content:center; z-index:300; padding:16px;
+    }
+    .admin-notice-overlay.show{ display:flex; }
+    .admin-notice-box{
+        width:100%; max-width:360px; background:var(--card); border:1px solid var(--line);
+        border-radius:18px; padding:24px; text-align:center;
+    }
+    .admin-notice-icon{
+        width:52px; height:52px; border-radius:50%; margin:0 auto 14px; background:#fff4dd; color:#a3620a;
+        display:flex; align-items:center; justify-content:center; font-size:1.3rem;
+    }
+    html[data-theme="dark"] .admin-notice-icon{ background:#3a2e12; color:#ffbd4a; }
+    .admin-notice-box h3{ font-size:1.02rem; font-weight:800; margin-bottom:8px; }
+    .admin-notice-box p{ font-size:.86rem; color:var(--ink-mute); line-height:1.55; margin-bottom:20px; }
+    .admin-notice-actions{ display:flex; gap:10px; }
+    .admin-notice-actions button{
+        flex:1; border:none; border-radius:12px; padding:11px; font-family:inherit;
+        font-weight:700; font-size:.86rem; cursor:pointer; transition:background .15s ease, color .15s ease;
+    }
+    .admin-notice-cancel{ background:var(--brand-bg); color:var(--ink-soft); }
+    .admin-notice-cancel:hover{ background:var(--line); }
+    .admin-notice-go{ background:linear-gradient(135deg,#f5a524,#ffbd4a); color:#5a3c05; }
+    .admin-notice-go:hover{ filter:brightness(1.05); }
     .acc-modal{
         width:100%; max-width:380px; background:var(--card); border:1px solid var(--line);
         border-radius:20px; box-shadow:var(--shadow-hov); overflow:hidden;
@@ -391,6 +418,17 @@
         margin-top:14px; transition:background .15s ease, color .15s ease;
     }
     .acc-changepw-btn:hover{ background:var(--brand); color:#fff; }
+
+    /* ----- nút "Trang Quản trị" — chỉ hiện với tài khoản có quyền admin ----- */
+    .acc-admin-btn{
+        width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+        background:#fff4dd; color:#a3620a; border:none; border-radius:12px;
+        padding:11px; font-family:inherit; font-weight:700; font-size:.84rem; cursor:pointer;
+        margin-top:10px; transition:background .15s ease, color .15s ease;
+    }
+    .acc-admin-btn:hover{ background:#f5a524; color:#fff; }
+    html[data-theme="dark"] .acc-admin-btn{ background:#3a2e12; color:#ffbd4a; }
+    html[data-theme="dark"] .acc-admin-btn:hover{ background:#f5a524; color:#1c1e28; }
 
     /* ----- sub-tab "Tổng quan" / "Lịch sử giao dịch" trong trang Tài khoản ----- */
     .acct-subtabs{ display:inline-flex; gap:4px; padding:4px; background:var(--card); border:1px solid var(--line); border-radius:14px; margin-bottom:24px; }
@@ -2011,6 +2049,9 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <button class="acc-changepw-btn" type="button" onclick="closeAccountModal(); goTab('account');">
                     <i class="fa-solid fa-gear"></i> Đổi mật khẩu &amp; quản lý gói Pro
                 </button>
+                <button class="acc-admin-btn" id="accAdminBtn" type="button" style="display:none" onclick="openAdminNotice()">
+                    <i class="fa-solid fa-shield-halved"></i> Trang Quản trị
+                </button>
             </div>
             <div class="acc-panel" id="accPanel-history">
                 <div class="acc-loading" id="accHistoryLoading">Đang tải lịch sử...</div>
@@ -2025,6 +2066,18 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             <button class="acc-logout-btn" id="accLogoutBtn" type="button">
                 <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
             </button>
+        </div>
+    </div>
+</div>
+
+<div class="admin-notice-overlay" id="adminNoticeOverlay">
+    <div class="admin-notice-box">
+        <div class="admin-notice-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <h3>Trang Quản trị</h3>
+        <p>Lưu ý: khu vực này chỉ áp dụng cho tài khoản có quyền quản trị viên (admin). Nếu tài khoản của bạn không còn quyền admin, hệ thống sẽ từ chối truy cập.</p>
+        <div class="admin-notice-actions">
+            <button type="button" class="admin-notice-cancel" onclick="closeAdminNotice()">Huỷ</button>
+            <button type="button" class="admin-notice-go" onclick="goToAdminPanel()">Tiếp tục</button>
         </div>
     </div>
 </div>
@@ -2316,6 +2369,8 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         if (upgradeBtn) upgradeBtn.style.display = isPremiumActive ? 'none' : 'flex';
         // ----- Số dư: số dư tiền (VNĐ) của tài khoản, lấy từ bảng profiles -----
         loadAndRenderBalance(user.id, 'accBalanceRow', 'accBalanceValue');
+        // ----- Nút "Trang Quản trị": chỉ hiện khi profiles.role = 'admin' -----
+        checkAndShowAdminButton(user.id);
 
         switchAccTab('info');
         accOverlay.classList.add('show');
@@ -2324,6 +2379,34 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     function closeAccountModal(){
         if (accOverlay) accOverlay.classList.remove('show');
+    }
+
+    // ----- Kiểm tra quyền admin (profiles.role = 'admin') để hiện/ẩn nút "Trang Quản trị" -----
+    async function checkAndShowAdminButton(userId){
+        const btn = document.getElementById('accAdminBtn');
+        if (!btn) return;
+        btn.style.display = 'none';
+        try{
+            const { data: profile, error } = await sb.from('profiles').select('role').eq('id', userId).maybeSingle();
+            if (!error && profile && profile.role === 'admin'){
+                btn.style.display = 'flex';
+            }
+        }catch(e){ /* im lặng bỏ qua, nút vẫn ẩn */ }
+    }
+
+    // ----- Hộp thoại lưu ý trước khi vào Trang Quản trị -----
+    function openAdminNotice(){
+        closeAccountModal();
+        const el = document.getElementById('adminNoticeOverlay');
+        if (el) el.classList.add('show');
+    }
+    function closeAdminNotice(){
+        const el = document.getElementById('adminNoticeOverlay');
+        if (el) el.classList.remove('show');
+    }
+    function goToAdminPanel(){
+        window.open('admin/index.html', '_blank');
+        closeAdminNotice();
     }
 
     function switchAccTab(tab){
@@ -2429,6 +2512,8 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     });
     if (accClose) accClose.addEventListener('click', closeAccountModal);
     if (accOverlay) accOverlay.addEventListener('click', e=>{ if (e.target === accOverlay) closeAccountModal(); });
+    const adminNoticeOverlayEl = document.getElementById('adminNoticeOverlay');
+    if (adminNoticeOverlayEl) adminNoticeOverlayEl.addEventListener('click', e=>{ if (e.target === adminNoticeOverlayEl) closeAdminNotice(); });
     document.addEventListener('keydown', e=>{ if (e.key === 'Escape') closeAccountModal(); });
     if (accLogoutBtn) accLogoutBtn.addEventListener('click', async ()=>{
         accLogoutBtn.disabled = true;

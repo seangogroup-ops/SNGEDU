@@ -1,0 +1,36 @@
+{
+  "name": "SNG EDU — Không gian tri thức cộng đồng",
+  "short_name": "SNG EDU",
+  "description": "Ôn tập, trắc nghiệm, đề thi thử và tài liệu học tập cho học sinh — SNG EDU.",
+  "id": "/index.html",
+  "start_url": "/index.html?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#14151c",
+  "theme_color": "#4f6bff",
+  "orientation": "portrait-primary",
+  "lang": "vi",
+  "dir": "ltr",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Chọn môn học",
+      "short_name": "Môn học",
+      "url": "/mon-hoc.html",
+      "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Gửi góp ý",
+      "short_name": "Góp ý",
+      "url": "/gop-y.html",
+      "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

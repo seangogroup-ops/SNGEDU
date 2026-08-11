@@ -2,37 +2,41 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://sngedu.site/</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://sngedu.site/mon-hoc.html</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://sngedu.site/quiz-exam.html</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://sngedu.site/quiz-dynamic.html</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://sngedu.site/quiz-tinhtoan.html</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://sngedu.site/gop-y.html</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
-  <url>
-    <loc>https://sngedu.site/account/login.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
+  <!-- Lưu ý: đã bỏ /account/login.html khỏi sitemap vì robots.txt đang
+       "Disallow: /account/" — đưa 1 URL bị chặn crawl vào sitemap là
+       tín hiệu mâu thuẫn, Google Search Console sẽ báo lỗi "Submitted URL blocked by robots.txt". -->
 </urlset>

@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">Bài tập tính toán · SNG EDU</title>
+<script>
+    try{
+        var savedTheme = localStorage.getItem('sng-theme');
+        if(savedTheme === 'dark' || savedTheme === 'light'){
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }else{
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    }catch(e){}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -31,6 +41,28 @@
   --radius:14px;
   --radius-sm:8px;
 }
+html[data-theme="dark"]{
+  --ink:#eef0f6;
+  --ink2:#b7bbcf;
+  --ink3:#82869c;
+  --paper:#14151c;
+  --white:#1c1e28;
+  --primary:#7b93ff;
+  --primary-soft:#232a4d;
+  --primary-mid:#8fa3ff;
+  --green:#2ed392;
+  --green-soft:#163a2c;
+  --red:#ff6b6b;
+  --red-soft:#3a2020;
+  --amber:#ffbd4a;
+  --amber-soft:#3a2e12;
+  --border:#2c2f3c;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.3),0 1px 2px rgba(0,0,0,.2);
+  --shadow-md:0 4px 16px rgba(0,0,0,.4),0 1px 4px rgba(0,0,0,.25);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.5),0 4px 12px rgba(0,0,0,.3);
+}
+html{ transition:background .25s ease; }
+body, .hdr, .bottom-nav{ transition:background .25s ease, border-color .25s ease, color .25s ease; }
 
 body{
   font-family:'Inter',sans-serif;
@@ -51,6 +83,7 @@ body{
   display:flex;align-items:center;justify-content:space-between;
   gap:12px;
 }
+html[data-theme="dark"] .hdr{ background:rgba(20,21,28,.92); }
 .hdr-left{display:flex;align-items:center;gap:10px}
 .logo-badge{
   width:34px;height:34px;border-radius:10px;
@@ -61,6 +94,19 @@ body{
 .logo-badge svg{color:#fff}
 .hdr-title{font-size:15px;font-weight:700;color:var(--ink);line-height:1.2}
 .hdr-sub{font-size:11px;font-weight:500;color:var(--ink3);letter-spacing:.3px;margin-top:1px}
+
+.theme-toggle{
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;
+  border:1.5px solid var(--border);background:var(--white);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink3);font-size:.85rem;
+  transition:background .2s ease,color .2s ease,border-color .2s ease,transform .12s ease;
+}
+@media (hover:hover){ .theme-toggle:hover{ background:var(--primary-soft); color:var(--primary); } }
+.theme-toggle:active{ transform:scale(.9); }
+.theme-toggle .icon-sun{ display:none; }
+html[data-theme="dark"] .theme-toggle .icon-sun{ display:inline; }
+html[data-theme="dark"] .theme-toggle .icon-moon{ display:none; }
 
 .timer-pill{
   display:flex;align-items:center;gap:7px;
@@ -238,6 +284,7 @@ body{
   gap:12px;
   z-index:150;
 }
+html[data-theme="dark"] .bottom-nav{ background:rgba(20,21,28,.95); }
 .nav-info{
   text-align:center;flex:1;
   font-size:13px;color:var(--ink3);font-weight:500;
@@ -511,6 +558,34 @@ body{
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14151c" media="(prefers-color-scheme: dark)">
+<script src="frontend/pwa-register.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Quiz",
+  "name": "Bài tập tính toán - SNG EDU",
+  "description": "Luyện tập tính toán trực tuyến trên SNG EDU, chấm điểm và giải thích đáp án tự động.",
+  "url": "https://sngedu.site/quiz-tinhtoan.html",
+  "provider": { "@type": "Organization", "name": "SNG EDU", "url": "https://sngedu.site/" },
+  "inLanguage": "vi-VN",
+  "educationalUse": "bài tập tính toán",
+  "isAccessibleForFree": "True"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Trang chủ", "item": "https://sngedu.site/" },
+    { "@type": "ListItem", "position": 2, "name": "Chọn chương/đề", "item": "https://sngedu.site/mon-hoc.html" },
+    { "@type": "ListItem", "position": 3, "name": "Bài tập tính toán", "item": "https://sngedu.site/quiz-tinhtoan.html" }
+  ]
+}
+</script>
 <!-- ===== Hết block SEO ===== -->
 </head>
 <body data-page="quiz-tinhtoan" data-page-label="Luyện tính toán">
@@ -536,14 +611,20 @@ body{
       <div class="hdr-sub" id="hdrSub">Đang tải…</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px" id="hdrActions">
-    <div class="timer-pill" id="timer-pill">
-      <span class="timer-dot" id="timer-dot"></span>
-      <span id="timer-txt">60:00</span>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="display:flex;align-items:center;gap:10px" id="hdrActions">
+      <div class="timer-pill" id="timer-pill">
+        <span class="timer-dot" id="timer-dot"></span>
+        <span id="timer-txt">60:00</span>
+      </div>
+      <button class="submit-btn" onclick="openConfirm()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Nộp bài</span>
+      </button>
     </div>
-    <button class="submit-btn" onclick="openConfirm()">
-      <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span>Nộp bài</span>
+    <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
+      <svg class="icon-moon" width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg class="icon-sun" width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
   </div>
 </header>
@@ -598,6 +679,18 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let sngUsageChecked = false; // đã kiểm tra & (nếu hợp lệ) sẵn sàng ghi log lượt làm bài này
 let sngUsageLogged = false;  // tránh ghi log 2 lần nếu finishQuiz bị gọi nhiều lần
+
+// ---------------- Đổi giao diện sáng/tối ----------------
+(function(){
+    const btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    btn.addEventListener('click', function(){
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const next = isDark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('sng-theme', next); } catch (e) {}
+    });
+})();
 
 // ---------------- Bắt buộc đăng nhập mới xem được trang này ----------------
 // Lớp phủ #authGateOverlay che toàn trang ngay từ đầu, chỉ gỡ ra sau khi xác nhận có phiên đăng nhập.

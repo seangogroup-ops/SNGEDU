@@ -1417,6 +1417,30 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14151c" media="(prefers-color-scheme: dark)">
+<script src="frontend/pwa-register.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "SNG EDU",
+  "url": "https://sngedu.site/",
+  "logo": "https://sngedu.site/assets/icon-512.png",
+  "description": "SNG EDU — nền tảng học tập miễn phí: tài liệu, trắc nghiệm, đề thi thử và luyện tính toán."
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "SNG EDU",
+  "url": "https://sngedu.site/",
+  "inLanguage": "vi-VN",
+  "description": "SNG EDU — nền tảng học tập miễn phí: tài liệu, trắc nghiệm, đề thi thử và luyện tính toán. Học và ôn tập mọi lúc, mọi nơi."
+}
+</script>
 <!-- ===== Hết block SEO ===== -->
 </head>
 <body>
@@ -1475,6 +1499,9 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                         <div class="notify-dropdown-list" id="notifyDropdownList"></div>
                     </div>
                 </div>
+                <button class="theme-toggle" id="pwaInstallBtn" aria-label="Cài đặt ứng dụng SNG EDU" type="button" style="display:none;" title="Cài đặt ứng dụng">
+                    <i class="fa-solid fa-download"></i>
+                </button>
                 <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
                     <i class="fa-solid fa-moon"></i>
                     <i class="fa-solid fa-sun"></i>
@@ -3470,6 +3497,30 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 ? faq.map(supportFaqItemHtml).join('')
                 : `<div class="empty-state small"><div class="empty-title">Chưa có câu hỏi thường gặp nào</div></div>`;
         }
+        injectFaqStructuredData(faq);
+    }
+
+    // SEO: sinh JSON-LD FAQPage đúng theo nội dung FAQ admin đang cấu hình (site_settings.support_content),
+    // để luôn khớp 100% với những gì hiển thị trên trang — không cần đồng bộ tay khi admin sửa FAQ.
+    function injectFaqStructuredData(faq){
+        const old = document.getElementById('faqStructuredData');
+        if (old) old.remove();
+        const items = faq.filter(f => f && f.title && f.desc);
+        if (!items.length) return;
+        const data = {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": items.map(f => ({
+                "@type": "Question",
+                "name": String(f.title),
+                "acceptedAnswer": { "@type": "Answer", "text": String(f.desc) }
+            }))
+        };
+        const script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.id = 'faqStructuredData';
+        script.textContent = JSON.stringify(data);
+        document.head.appendChild(script);
     }
 
     // ---------------- GÓI PRO — đọc thẳng từ bảng pro_packages (1 nguồn duy nhất) ----------------

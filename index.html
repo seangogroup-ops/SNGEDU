@@ -2535,6 +2535,11 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             acctPwMsg.textContent = '✔ Đổi mật khẩu thành công!';
             acctPwMsg.classList.add('ok');
             acctPwOld.value = ''; acctPwNew.value = ''; acctPwConfirm.value = '';
+            // Gửi email cảnh báo bảo mật — không chặn UI nếu gửi lỗi.
+            fetch(`${SUPABASE_URL}/functions/v1/send-password-changed-email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSession.access_token}` },
+            }).catch(()=>{});
         }
     });
 

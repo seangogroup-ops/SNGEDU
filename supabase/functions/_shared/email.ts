@@ -70,7 +70,19 @@ export function welcomeEmailHtml(name: string) {
   return wrapEmailShell(body, "Email này được gửi tự động khi tài khoản SNG EDU của bạn được tạo thành công.");
 }
 
-export async function sendEmail(to: string, subject: string, html: string) {
+// Email cảnh báo khi mật khẩu vừa được đổi thành công (từ trang Tài khoản).
+export function passwordChangedEmailHtml(name: string, whenText: string) {
+  const safeName = escapeHtml(name || "bạn");
+  const body = `
+    <p style="margin:0 0 14px;">Chào <b>${safeName}</b>,</p>
+    <p style="margin:0 0 14px;">Mật khẩu tài khoản SNG EDU của bạn vừa được đổi thành công lúc <b>${escapeHtml(whenText)}</b>.</p>
+    <p style="margin:0 0 8px;">Nếu chính bạn vừa đổi, bạn không cần làm gì thêm.</p>
+    <p style="margin:0;color:#e5484d;font-weight:600;">Nếu KHÔNG phải bạn, hãy đổi lại mật khẩu ngay và liên hệ hỗ trợ SNG EDU để được kiểm tra tài khoản.</p>
+  `;
+  return wrapEmailShell(body, "Email cảnh báo bảo mật tự động — gửi mỗi khi mật khẩu tài khoản SNG EDU thay đổi.");
+}
+
+
   if (!RESEND_API_KEY) {
     throw new Error(
       "Chưa cấu hình RESEND_API_KEY trên server. Vào Supabase > Project Settings > Edge Functions > Secrets để thêm RESEND_API_KEY và EMAIL_FROM."

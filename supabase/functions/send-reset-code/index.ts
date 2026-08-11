@@ -5,7 +5,7 @@
 // ============================================================
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders, generateSixDigitCode, hashCode, otpEmailHtml, sendEmail } from "../_shared/email.ts";
+import { corsHeaders, generateSixDigitCode, hashCode, isEmailKindEnabled, otpEmailHtml, sendEmail } from "../_shared/email.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -34,6 +34,16 @@ Deno.serve(async (req) => {
     const cleanEmail = String(email).trim().toLowerCase();
 
     const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    // Admin có thể tắt tính năng "Quên mật khẩu qua email" ở Admin > Kinh doanh > Cấu hình email.
+    // Báo lỗi rõ ràng (không dùng genericOk) vì đây là tính năng bị tắt cho TẤT CẢ mọi người,
+    // không phải thông tin riêng theo từng email nên không có rủi ro lộ dữ liệu tài khoản.
+    if (!(await isEmailKindEnabled(db, "reset_code_email"))) {
+      return new Response(
+        JSON.stringify({ error: "Tính năng đặt lại mật khẩu qua email đang tạm khoá. Vui lòng liên hệ hỗ trợ SNG EDU." }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // ---- Chống spam: chặn gửi lại quá nhanh cho cùng 1 email ----
     const { data: recent } = await db

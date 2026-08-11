@@ -6,7 +6,7 @@
 // ============================================================
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders, sendEmail, welcomeEmailHtml } from "../_shared/email.ts";
+import { corsHeaders, isEmailKindEnabled, sendEmail, welcomeEmailHtml } from "../_shared/email.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -27,6 +27,13 @@ Deno.serve(async (req) => {
     const user = userData.user;
 
     const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    // Admin có thể tắt email chào mừng ở Admin > Kinh doanh > Cấu hình email.
+    if (!(await isEmailKindEnabled(db, "welcome_email"))) {
+      return new Response(JSON.stringify({ success: true, skipped: true, reason: "disabled_by_admin" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { data: profile } = await db
       .from("profiles")

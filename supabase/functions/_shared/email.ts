@@ -18,6 +18,28 @@ export function escapeHtml(s: string) {
     .replace(/>/g, "&gt;");
 }
 
+// Gửi email qua Resend API. (Lưu ý: hàm này bị thiếu dòng khai báo trong bản gốc
+// khiến file không biên dịch được — đã sửa lại chuẩn cú pháp TypeScript.)
+export async function sendEmail(to: string, subject: string, html: string) {
+  if (!RESEND_API_KEY) {
+    throw new Error(
+      "Chưa cấu hình RESEND_API_KEY trên server. Vào Supabase > Project Settings > Edge Functions > Secrets để thêm RESEND_API_KEY và EMAIL_FROM."
+    );
+  }
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html }),
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error("Gửi email thất bại: " + errText);
+  }
+}
+
 // Khung email chung — logo + khối nội dung (truyền HTML đã dựng sẵn vào bodyHtml).
 export function wrapEmailShell(bodyHtml: string, footerText: string) {
   return `
@@ -82,26 +104,6 @@ export function passwordChangedEmailHtml(name: string, whenText: string) {
   return wrapEmailShell(body, "Email cảnh báo bảo mật tự động — gửi mỗi khi mật khẩu tài khoản SNG EDU thay đổi.");
 }
 
-
-  if (!RESEND_API_KEY) {
-    throw new Error(
-      "Chưa cấu hình RESEND_API_KEY trên server. Vào Supabase > Project Settings > Edge Functions > Secrets để thêm RESEND_API_KEY và EMAIL_FROM."
-    );
-  }
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html }),
-  });
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error("Gửi email thất bại: " + errText);
-  }
-}
-
 // Hash mã OTP bằng SHA-256 (không lưu mã gốc trong DB).
 export async function hashCode(code: string) {
   const data = new TextEncoder().encode(code);
@@ -111,6 +113,28 @@ export async function hashCode(code: string) {
 
 export function generateSixDigitCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// ------------------------------------------------------------
+// Đọc cấu hình bật/tắt từng loại email tự động, lưu ở bảng
+// site_settings (key = "email_settings", giống các cấu hình khác
+// admin đã có sẵn: usage_limits, payment_settings...).
+// Quản lý bật/tắt ở Admin > Kinh doanh > Cấu hình email.
+// Nếu chưa từng lưu (chưa có dòng trong DB) thì mặc định TẤT CẢ đều BẬT.
+// ------------------------------------------------------------
+export type EmailKind = "welcome_email" | "reset_code_email" | "password_changed_email";
+
+export async function isEmailKindEnabled(db: any, kind: EmailKind): Promise<boolean> {
+  try {
+    const { data } = await db.from("site_settings").select("payload").eq("key", "email_settings").maybeSingle();
+    const payload = data?.payload || {};
+    const flagKey = `${kind}_enabled`;
+    // Không có key trong payload (chưa lưu lần nào) -> coi như đang bật.
+    return payload[flagKey] !== false;
+  } catch (_e) {
+    // Lỗi đọc cấu hình (vd bảng chưa tồn tại) -> không chặn luồng gửi email, coi như đang bật.
+    return true;
+  }
 }
 
 export const corsHeaders = {

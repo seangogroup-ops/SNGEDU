@@ -1471,6 +1471,9 @@ textarea{resize:vertical;}
                         <div class="side-item settings-item" id="navPaymentSettings" onclick="showPaymentSettingsPanel()">
                             <span class="set-ico">💳</span><span class="name">Cấu hình thanh toán</span>
                         </div>
+                        <div class="side-item settings-item" id="navEmailSettings" onclick="showEmailSettingsPanel()">
+                            <span class="set-ico">✉️</span><span class="name">Cấu hình email</span>
+                        </div>
                         <div class="side-item settings-item" id="navAccounts" onclick="showAccountsManager()">
                             <span class="set-ico">👤</span><span class="name">Tài khoản</span>
                         </div>
@@ -2082,6 +2085,65 @@ textarea{resize:vertical;}
                         <button class="btn-mini-save" onclick="savePaymentSettings()">💾 Lưu thay đổi</button>
                     </div>
                     <div id="paySaveMsg" class="hint" style="margin-top:10px;min-height:1.2em;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= CẤU HÌNH EMAIL (site_settings key 'email_settings') =================
+             Bật/tắt từng loại email tự động gửi cho học viên (chào mừng, mã quên mật khẩu,
+             cảnh báo đổi mật khẩu) — không cần sửa code, có hiệu lực ngay ở lần gửi tiếp theo. -->
+        <div id="emailSettingsPanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>✉️ Cấu hình email</h2>
+                <p class="hint">Bật/tắt các email hệ thống tự động gửi cho học viên. Việc bật/tắt được chặn ở phía máy chủ (Edge Function), không thể lách qua giao diện. Cần đã cấu hình <code>RESEND_API_KEY</code> và <code>EMAIL_FROM</code> trong Supabase → Edge Functions → Secrets thì email mới gửi được, dù các mục dưới đây có bật hay không.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col" style="max-width:520px;">
+                    <div class="settings-form-card">
+                        <h3>🎉 Email chào mừng khi đăng ký</h3>
+                        <p class="hint">Gửi ngay sau khi học viên đăng ký/đăng nhập lần đầu thành công. Mỗi tài khoản chỉ nhận đúng 1 lần.</p>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="emlWelcomeEnabled" style="width:auto;" checked>
+                            <span>Đang bật email chào mừng</span>
+                        </label>
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
+                        <h3>🔑 Mã xác nhận "Quên mật khẩu"</h3>
+                        <p class="hint">Gửi mã OTP 6 số khi học viên bấm "Quên mật khẩu" ở trang đăng nhập. <b>Lưu ý:</b> tắt mục này đồng nghĩa học viên sẽ KHÔNG thể tự đặt lại mật khẩu qua email nữa (trang sẽ báo lỗi rõ cho học viên) — chỉ tắt khi thật sự cần thiết (vd đang gặp sự cố với Resend).</p>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="emlResetCodeEnabled" style="width:auto;" checked>
+                            <span>Đang bật gửi mã quên mật khẩu qua email</span>
+                        </label>
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
+                        <h3>🛡️ Cảnh báo đổi mật khẩu thành công</h3>
+                        <p class="hint">Gửi cho học viên ngay sau khi họ tự đổi mật khẩu ở trang Tài khoản, để cảnh báo nếu không phải chính họ thực hiện.</p>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="emlPasswordChangedEnabled" style="width:auto;" checked>
+                            <span>Đang bật email cảnh báo đổi mật khẩu</span>
+                        </label>
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
+                        <h3>📭 Dòng nhắc "Kiểm tra thư rác / Spam"</h3>
+                        <p class="hint">Nội dung hiển thị cho học viên khi cần chờ nhận email. Để trống sẽ dùng câu mặc định.</p>
+                        <label>Sau khi đăng ký thành công (chờ email xác nhận tài khoản)</label>
+                        <textarea id="emlRegisterSpamHint" rows="2" placeholder="Không thấy email xác nhận? Kiểm tra thêm mục Thư rác / Spam nhé."></textarea>
+                        <label style="margin-top:12px;">Ở bước nhập mã "Quên mật khẩu"</label>
+                        <textarea id="emlForgotSpamHint" rows="2" placeholder="Không thấy email? Kiểm tra thêm mục Thư rác / Spam — mã có thể bị lọc vào đó..."></textarea>
+                    </div>
+
+                    <div class="acct-form-note" style="margin-top:16px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <span>Email <b>xác nhận tài khoản khi đăng ký</b> (link xác nhận gửi ngay khi tạo tài khoản) do <b>Supabase Auth</b> tự gửi, không thuộc 3 mục ở trên và không cấu hình được ở đây. Bật/tắt/tuỳ chỉnh mẫu email đó ở Supabase Dashboard → Authentication → Emails.</span>
+                    </div>
+
+                    <div class="mini-actions" style="margin-top:16px;">
+                        <button class="btn-mini-save" onclick="saveEmailSettings()">💾 Lưu thay đổi</button>
+                    </div>
+                    <div id="emlSaveMsg" class="hint" style="margin-top:10px;min-height:1.2em;"></div>
                 </div>
             </div>
         </div>
@@ -2941,6 +3003,7 @@ function restoreLastAdminPanel(){
         if (last === 'feedback')          return showFeedbackManager();
         if (last === 'notify')            return showNotifyManager();
         if (last === 'paymentSettings')   return showPaymentSettingsPanel();
+        if (last === 'emailSettings')     return showEmailSettingsPanel();
         if (last === 'usageLimits')       return showUsageLimitsPanel();
         if (last === 'generalSettings')   return showGeneralSettings();
         if (last === 'featured')          return showFeaturedManager();
@@ -2955,7 +3018,7 @@ function restoreLastAdminPanel(){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['statsPanel', 'visitsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel', 'paymentSettingsPanel'];
+const ADMIN_PANEL_IDS = ['statsPanel', 'visitsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel', 'paymentSettingsPanel', 'emailSettingsPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -3717,6 +3780,48 @@ async function savePaymentSettings(){
     } else {
         msgEl.style.color = 'var(--green)';
         msgEl.innerText = '✔ Đã lưu. Áp dụng ngay cho khách hàng ở lượt mở popup thanh toán tiếp theo.';
+        setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4500);
+    }
+}
+
+// ---------- CẤU HÌNH EMAIL (site_settings key 'email_settings') ----------
+function showEmailSettingsPanel(){
+    rememberAdminPanel('emailSettings');
+    showAdminPanel('emailSettingsPanel', 'navEmailSettings');
+    loadEmailSettings();
+}
+async function loadEmailSettings(){
+    const msgEl = document.getElementById('emlSaveMsg');
+    msgEl.innerText = '';
+    const { data, error } = await sb.from('site_settings').select('*').eq('key', 'email_settings').single();
+    if (error && error.code !== 'PGRST116'){
+        msgEl.style.color = '#e5484d';
+        msgEl.innerText = 'Lỗi tải cấu hình: ' + error.message;
+    }
+    const p = (data && data.payload) ? data.payload : {};
+    document.getElementById('emlWelcomeEnabled').checked = p.welcome_email_enabled !== false;
+    document.getElementById('emlResetCodeEnabled').checked = p.reset_code_email_enabled !== false;
+    document.getElementById('emlPasswordChangedEnabled').checked = p.password_changed_email_enabled !== false;
+    document.getElementById('emlRegisterSpamHint').value = p.register_spam_hint_text || '';
+    document.getElementById('emlForgotSpamHint').value = p.forgot_spam_hint_text || '';
+}
+async function saveEmailSettings(){
+    const msgEl = document.getElementById('emlSaveMsg');
+    const payload = {
+        welcome_email_enabled: document.getElementById('emlWelcomeEnabled').checked,
+        reset_code_email_enabled: document.getElementById('emlResetCodeEnabled').checked,
+        password_changed_email_enabled: document.getElementById('emlPasswordChangedEnabled').checked,
+        register_spam_hint_text: document.getElementById('emlRegisterSpamHint').value.trim(),
+        forgot_spam_hint_text: document.getElementById('emlForgotSpamHint').value.trim(),
+    };
+    const { error } = await sb.from('site_settings')
+        .upsert({ key: 'email_settings', payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error){
+        msgEl.style.color = 'var(--red)';
+        msgEl.innerText = 'Lỗi: ' + error.message;
+    } else {
+        msgEl.style.color = 'var(--green)';
+        msgEl.innerText = '✔ Đã lưu. Áp dụng ngay từ email tiếp theo được gửi.';
         setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4500);
     }
 }

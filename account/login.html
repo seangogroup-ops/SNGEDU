@@ -358,7 +358,7 @@
                 <!-- Bước 2: nhập mã + mật khẩu mới -->
                 <div id="forgotStep2" class="hidden">
                     <p class="sub">Mã xác nhận đã được gửi tới <b id="forgotEmailShown" style="color:var(--ink);">—</b>. Nhập mã và mật khẩu mới bên dưới.</p>
-                    <div class="spam-hint"><i class="fa-solid fa-triangle-exclamation"></i><span>Không thấy email? Kiểm tra thêm mục <b>Thư rác / Spam</b> — mã có thể bị lọc vào đó. Nếu thấy, hãy đánh dấu "Không phải thư rác" để lần sau nhận email vào hộp thư chính.</span></div>
+                    <div class="spam-hint" id="forgotSpamHint"><i class="fa-solid fa-triangle-exclamation"></i><span id="forgotSpamHintText">Không thấy email? Kiểm tra thêm mục Thư rác / Spam — mã có thể bị lọc vào đó. Nếu thấy, hãy đánh dấu "Không phải thư rác" để lần sau nhận email vào hộp thư chính.</span></div>
 
                     <label>Mã xác nhận (6 số)</label>
                     <input id="resetCode" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" style="letter-spacing:6px; font-weight:700; text-align:center;">
@@ -400,6 +400,22 @@ const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const EDGE_BASE = `${SUPABASE_URL}/functions/v1`;
+
+// ---- Text "kiểm tra thư rác" — lấy động từ site_settings (key 'email_settings'), quản lý ở Admin > Cấu hình email ----
+const DEFAULT_FORGOT_SPAM_HINT_TEXT = 'Không thấy email? Kiểm tra thêm mục Thư rác / Spam — mã có thể bị lọc vào đó. Nếu thấy, hãy đánh dấu "Không phải thư rác" để lần sau nhận email vào hộp thư chính.';
+const DEFAULT_REGISTER_SPAM_HINT_TEXT = 'Không thấy email xác nhận? Kiểm tra thêm mục Thư rác / Spam nhé.';
+let REGISTER_SPAM_HINT_TEXT = DEFAULT_REGISTER_SPAM_HINT_TEXT;
+
+async function loadEmailHintTexts(){
+    try{
+        const { data } = await sb.from('site_settings').select('payload').eq('key', 'email_settings').maybeSingle();
+        const p = (data && data.payload) ? data.payload : {};
+        const forgotText = (p.forgot_spam_hint_text || DEFAULT_FORGOT_SPAM_HINT_TEXT);
+        REGISTER_SPAM_HINT_TEXT = (p.register_spam_hint_text || DEFAULT_REGISTER_SPAM_HINT_TEXT);
+        const forgotEl = document.getElementById('forgotSpamHintText');
+        if (forgotEl) forgotEl.textContent = forgotText;
+    }catch(e){ /* lỗi tải cấu hình -> giữ nguyên text mặc định, không chặn trang */ }
+}
 
 // Nếu URL có ?next=... thì sau khi đăng nhập/đăng ký xong sẽ quay lại đúng trang đó
 const params = new URLSearchParams(location.search);
@@ -598,7 +614,7 @@ async function doRegister(){
     } else {
         btn.disabled = false; btn.textContent = 'Đăng ký';
         showMsg('registerMsg', '<i class="fa-solid fa-circle-check"></i> Tạo tài khoản thành công! Kiểm tra email để xác nhận trước khi đăng nhập.', 'ok');
-        document.getElementById('registerMsg').insertAdjacentHTML('afterend', '<div class="spam-hint"><i class="fa-solid fa-triangle-exclamation"></i><span>Không thấy email xác nhận? Kiểm tra thêm mục <b>Thư rác / Spam</b> nhé.</span></div>');
+        document.getElementById('registerMsg').insertAdjacentHTML('afterend', `<div class="spam-hint"><i class="fa-solid fa-triangle-exclamation"></i><span>${REGISTER_SPAM_HINT_TEXT}</span></div>`);
     }
 }
 
@@ -608,6 +624,7 @@ async function doLogout(){
 }
 
 (async function init(){
+    loadEmailHintTexts();
     const { data: { session } } = await sb.auth.getSession();
     if (session){
         document.getElementById('loggedInEmail').textContent = session.user.email || '';

@@ -482,7 +482,7 @@ async function doSendResetCode(isResend){
     try{
         const res = await fetch(`${EDGE_BASE}/send-reset-code`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
             body: JSON.stringify({ email }),
         });
         const data = await res.json();
@@ -520,7 +520,7 @@ async function doVerifyResetCode(){
     try{
         const res = await fetch(`${EDGE_BASE}/verify-reset-code`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
             body: JSON.stringify({ email, code, new_password: password }),
         });
         const data = await res.json();

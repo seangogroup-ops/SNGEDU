@@ -185,6 +185,8 @@
     .msg{ margin-top:14px; font-size:.83rem; padding:10px 12px; border-radius:10px; display:none; align-items:center; gap:8px; font-weight:600; }
     .msg.err{ display:flex; background:var(--red-bg); color:var(--red); }
     .msg.ok{ display:flex; background:var(--green-bg); color:var(--green); }
+    .spam-hint{ margin-top:12px; font-size:.8rem; line-height:1.5; padding:10px 12px; border-radius:10px; background:rgba(255,176,32,.12); border:1px solid rgba(255,176,32,.35); color:var(--ink-soft); display:flex; gap:8px; align-items:flex-start; }
+    .spam-hint i{ color:#ffb020; margin-top:2px; }
 
     .logged-icon{
         width:52px; height:52px; border-radius:50%; background:var(--green-bg); color:var(--green);
@@ -356,6 +358,7 @@
                 <!-- Bước 2: nhập mã + mật khẩu mới -->
                 <div id="forgotStep2" class="hidden">
                     <p class="sub">Mã xác nhận đã được gửi tới <b id="forgotEmailShown" style="color:var(--ink);">—</b>. Nhập mã và mật khẩu mới bên dưới.</p>
+                    <div class="spam-hint"><i class="fa-solid fa-triangle-exclamation"></i><span>Không thấy email? Kiểm tra thêm mục <b>Thư rác / Spam</b> — mã có thể bị lọc vào đó. Nếu thấy, hãy đánh dấu "Không phải thư rác" để lần sau nhận email vào hộp thư chính.</span></div>
 
                     <label>Mã xác nhận (6 số)</label>
                     <input id="resetCode" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" style="letter-spacing:6px; font-weight:700; text-align:center;">
@@ -595,6 +598,7 @@ async function doRegister(){
     } else {
         btn.disabled = false; btn.textContent = 'Đăng ký';
         showMsg('registerMsg', '<i class="fa-solid fa-circle-check"></i> Tạo tài khoản thành công! Kiểm tra email để xác nhận trước khi đăng nhập.', 'ok');
+        document.getElementById('registerMsg').insertAdjacentHTML('afterend', '<div class="spam-hint"><i class="fa-solid fa-triangle-exclamation"></i><span>Không thấy email xác nhận? Kiểm tra thêm mục <b>Thư rác / Spam</b> nhé.</span></div>');
     }
 }
 

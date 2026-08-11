@@ -299,6 +299,7 @@
                     <input id="loginPassword" type="password" placeholder="Nhập mật khẩu" autocomplete="current-password">
                     <button type="button" class="pw-toggle" onclick="togglePw('loginPassword', this)"><i class="fa-solid fa-eye"></i></button>
                 </div>
+                <div class="switch-row" style="text-align:right; margin-top:-8px;"><a onclick="showView('forgot')">Quên mật khẩu?</a></div>
 
                 <button class="btn-primary" id="loginBtn" onclick="doLogin()">Đăng nhập</button>
                 <div class="msg" id="loginMsg"></div>
@@ -335,6 +336,49 @@
                 <div class="switch-row">Đã có tài khoản? <a onclick="showView('login')">Đăng nhập</a></div>
             </div>
 
+            <!-- QUÊN MẬT KHẨU -->
+            <div id="forgotView" class="hidden">
+                <h1>Quên mật khẩu</h1>
+
+                <!-- Bước 1: nhập email để nhận mã -->
+                <div id="forgotStep1">
+                    <p class="sub">Nhập email đã đăng ký, mình sẽ gửi mã xác nhận 6 số vào email đó.</p>
+
+                    <label>Email</label>
+                    <input id="forgotEmail" type="email" placeholder="ban@email.com" autocomplete="email">
+
+                    <button class="btn-primary" id="sendCodeBtn" onclick="doSendResetCode()">Gửi mã xác nhận</button>
+                    <div class="msg" id="forgotStep1Msg"></div>
+
+                    <div class="switch-row">Nhớ ra mật khẩu rồi? <a onclick="showView('login')">Đăng nhập</a></div>
+                </div>
+
+                <!-- Bước 2: nhập mã + mật khẩu mới -->
+                <div id="forgotStep2" class="hidden">
+                    <p class="sub">Mã xác nhận đã được gửi tới <b id="forgotEmailShown" style="color:var(--ink);">—</b>. Nhập mã và mật khẩu mới bên dưới.</p>
+
+                    <label>Mã xác nhận (6 số)</label>
+                    <input id="resetCode" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" style="letter-spacing:6px; font-weight:700; text-align:center;">
+
+                    <label>Mật khẩu mới</label>
+                    <div class="pw-wrap">
+                        <input id="resetPassword" type="password" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
+                        <button type="button" class="pw-toggle" onclick="togglePw('resetPassword', this)"><i class="fa-solid fa-eye"></i></button>
+                    </div>
+
+                    <label>Nhập lại mật khẩu mới</label>
+                    <div class="pw-wrap">
+                        <input id="resetPassword2" type="password" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password">
+                        <button type="button" class="pw-toggle" onclick="togglePw('resetPassword2', this)"><i class="fa-solid fa-eye"></i></button>
+                    </div>
+
+                    <button class="btn-primary" id="verifyCodeBtn" onclick="doVerifyResetCode()">Đặt lại mật khẩu</button>
+                    <div class="msg" id="forgotStep2Msg"></div>
+
+                    <div class="switch-row"><a id="resendCodeLink" onclick="doSendResetCode(true)">Gửi lại mã</a> · <a onclick="showView('login')">Huỷ, quay lại đăng nhập</a></div>
+                </div>
+            </div>
+
             <!-- ĐÃ ĐĂNG NHẬP -->
             <div id="loggedInView" class="hidden">
                 <div class="logged-icon"><i class="fa-solid fa-check"></i></div>
@@ -352,6 +396,7 @@
 const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const EDGE_BASE = `${SUPABASE_URL}/functions/v1`;
 
 // Nếu URL có ?next=... thì sau khi đăng nhập/đăng ký xong sẽ quay lại đúng trang đó
 const params = new URLSearchParams(location.search);
@@ -368,7 +413,15 @@ themeBtn.addEventListener('click', ()=>{
 function showView(name){
     document.getElementById('loginView').classList.toggle('hidden', name !== 'login');
     document.getElementById('registerView').classList.toggle('hidden', name !== 'register');
+    document.getElementById('forgotView').classList.toggle('hidden', name !== 'forgot');
     document.getElementById('loggedInView').classList.toggle('hidden', name !== 'loggedIn');
+    if (name === 'forgot'){
+        // Mỗi lần vào lại màn "Quên mật khẩu" thì quay về bước 1 (nhập email).
+        document.getElementById('forgotStep1').classList.remove('hidden');
+        document.getElementById('forgotStep2').classList.add('hidden');
+        document.getElementById('forgotStep1Msg').textContent = '';
+        document.getElementById('forgotStep2Msg').textContent = '';
+    }
 }
 
 function togglePw(id, btn){
@@ -382,6 +435,107 @@ function showMsg(id, html, type){
     const el = document.getElementById(id);
     el.innerHTML = html;
     el.className = 'msg ' + type;
+}
+
+// Gọi 1 lần sau khi đăng nhập/đăng ký thành công. Function phía server
+// tự đảm bảo chỉ gửi được đúng 1 lần cho mỗi user nên gọi lại vô hại.
+async function maybeSendWelcomeEmail(){
+    try{
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) return;
+        await fetch(`${EDGE_BASE}/send-welcome-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        });
+    }catch(e){ /* không chặn luồng đăng nhập nếu gửi mail lỗi */ }
+}
+
+let resendCooldownTimer = null;
+function startResendCooldown(seconds){
+    const link = document.getElementById('resendCodeLink');
+    let left = seconds;
+    clearInterval(resendCooldownTimer);
+    const tick = () => {
+        if (left <= 0){
+            clearInterval(resendCooldownTimer);
+            link.textContent = 'Gửi lại mã';
+            link.style.pointerEvents = 'auto';
+            link.style.opacity = '1';
+        } else {
+            link.textContent = `Gửi lại mã (${left}s)`;
+            link.style.pointerEvents = 'none';
+            link.style.opacity = '.55';
+            left--;
+        }
+    };
+    tick();
+    resendCooldownTimer = setInterval(tick, 1000);
+}
+
+async function doSendResetCode(isResend){
+    const email = (isResend ? document.getElementById('forgotEmailShown').textContent : document.getElementById('forgotEmail').value.trim());
+    if (!email || !email.includes('@')) return showMsg('forgotStep1Msg', 'Nhập email hợp lệ.', 'err');
+
+    const btn = document.getElementById('sendCodeBtn');
+    if (!isResend){ btn.disabled = true; btn.textContent = 'Đang gửi...'; }
+
+    try{
+        const res = await fetch(`${EDGE_BASE}/send-reset-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gửi mã thất bại.');
+
+        if (isResend){
+            showMsg('forgotStep2Msg', '<i class="fa-solid fa-circle-check"></i> Đã gửi lại mã mới.', 'ok');
+            startResendCooldown(60);
+        } else {
+            document.getElementById('forgotEmailShown').textContent = email;
+            document.getElementById('forgotStep1').classList.add('hidden');
+            document.getElementById('forgotStep2').classList.remove('hidden');
+            startResendCooldown(60);
+        }
+    }catch(e){
+        showMsg(isResend ? 'forgotStep2Msg' : 'forgotStep1Msg', e.message, 'err');
+    }finally{
+        btn.disabled = false; btn.textContent = 'Gửi mã xác nhận';
+    }
+}
+
+async function doVerifyResetCode(){
+    const email = document.getElementById('forgotEmailShown').textContent;
+    const code = document.getElementById('resetCode').value.trim();
+    const password = document.getElementById('resetPassword').value;
+    const password2 = document.getElementById('resetPassword2').value;
+
+    if (!code || code.length !== 6) return showMsg('forgotStep2Msg', 'Nhập đủ 6 số của mã xác nhận.', 'err');
+    if (!password || password.length < 6) return showMsg('forgotStep2Msg', 'Mật khẩu mới tối thiểu 6 ký tự.', 'err');
+    if (password !== password2) return showMsg('forgotStep2Msg', 'Mật khẩu nhập lại không khớp.', 'err');
+
+    const btn = document.getElementById('verifyCodeBtn');
+    btn.disabled = true; btn.textContent = 'Đang xử lý...';
+
+    try{
+        const res = await fetch(`${EDGE_BASE}/verify-reset-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, code, new_password: password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Xác nhận thất bại.');
+
+        showMsg('forgotStep2Msg', '<i class="fa-solid fa-circle-check"></i> Đổi mật khẩu thành công! Đang chuyển sang đăng nhập...', 'ok');
+        setTimeout(() => {
+            showView('login');
+            document.getElementById('loginEmail').value = email;
+        }, 1500);
+    }catch(e){
+        showMsg('forgotStep2Msg', e.message, 'err');
+    }finally{
+        btn.disabled = false; btn.textContent = 'Đặt lại mật khẩu';
+    }
 }
 
 async function doLogin(){
@@ -400,6 +554,7 @@ async function doLogin(){
         return;
     }
     showMsg('loginMsg', '<i class="fa-solid fa-circle-check"></i> Đăng nhập thành công.', 'ok');
+    maybeSendWelcomeEmail();
     location.href = nextUrl;
 }
 
@@ -435,6 +590,7 @@ async function doRegister(){
 
     if (data.session){
         showMsg('registerMsg', '<i class="fa-solid fa-circle-check"></i> Tạo tài khoản thành công.', 'ok');
+        maybeSendWelcomeEmail();
         location.href = nextUrl;
     } else {
         btn.disabled = false; btn.textContent = 'Đăng ký';

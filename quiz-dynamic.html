@@ -4,16 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Thi Trắc Nghiệm - SNG EDU</title>
-    <script>
-        try{
-            var savedTheme = localStorage.getItem('sng-theme');
-            if(savedTheme === 'dark' || savedTheme === 'light'){
-                document.documentElement.setAttribute('data-theme', savedTheme);
-            }else{
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        }catch(e){}
-    </script>
 
     <!-- Hỗ trợ công thức Toán học (KaTeX) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
@@ -51,61 +41,26 @@
             --scrollbar-thumb: #cbd5e1;
             --modal-bg: #ffffff;
         }
-        html[data-theme="dark"] {
-            --bg-body: #14151c;
-            --white: #1c1e28;
-            --text-main: #eef0f6;
-            --text-gray: #a2a7ba;
-            --border-color: #2c2f3c;
-            --azota-blue: #7b93ff;
-            --selected-bg: #232a4d;
-            --selected-border: #7b93ff;
-            --correct-color: #2ed392;
-            --wrong-color: #ff6b6b;
-            --explanation-bg: #1c1e28;
-            --report-btn-bg: #232430;
-            --correct-soft: #163a2c;
-            --wrong-soft: #3a2020;
-            --opt-border: #3a3d4d;
-            --card-border: #2c2f3c;
-            --nav-btn-bg: #232430;
-            --nav-btn-border: #2c2f3c;
-            --nav-btn-color: #a2a7ba;
-            --nav-legend-border: #2c2f3c;
-            --scrollbar-thumb: #3a3d4d;
-            --modal-bg: #1c1e28;
-        }
-        html{ transition: background-color .25s ease; }
-        header, .q-card, .nav-card, .modal-content{ transition: background-color .25s ease, border-color .25s ease, color .25s ease; }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-body); color: var(--text-main); line-height: 1.6; }
 
         header {
-            background-color: var(--white); height: 60px; display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: fixed; top: 0; width: 100%; z-index: 1000;
-            gap: 10px;
+            background-color: var(--white); height: 60px; display: flex; align-items: center; justify-content: center;
+            padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: fixed; top: 0; width: 100%; z-index: 1000;
+        }
+        .header-inner {
+            width: 100%; max-width: 900px; margin: 0 auto; padding: 0 20px;
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
         }
         .header-left { display: flex; align-items: center; gap: 8px; color: var(--text-gray); font-size: 0.95rem; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
         .header-title { font-weight: 700; font-size: 1rem; color: var(--text-main); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
         .header-right { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
         .timer { font-weight: 700; color: var(--azota-blue); font-size: 1.1rem; white-space: nowrap; }
         .btn-submit { background-color: var(--azota-blue); color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-        .theme-toggle{
-            width:36px; height:36px; border-radius:50%; flex-shrink:0;
-            border:1px solid var(--border-color); background:var(--white); cursor:pointer;
-            display:flex; align-items:center; justify-content:center;
-            color: var(--text-gray); font-size:.85rem;
-            transition: background .2s ease, color .2s ease, border-color .2s ease, transform .12s ease;
-        }
-        .theme-toggle:hover{ color: var(--azota-blue); border-color: var(--azota-blue); }
-        .theme-toggle:active{ transform: scale(.9); }
-        .theme-toggle .fa-sun{ display:none; }
-        html[data-theme="dark"] .theme-toggle .fa-sun{ display:inline; }
-        html[data-theme="dark"] .theme-toggle .fa-moon{ display:none; }
 
         @media (max-width: 640px) {
-            header { padding: 0 10px; gap: 6px; }
+            .header-inner { padding: 0 10px; gap: 6px; }
             .header-left span { display: none; }
             .header-title { font-size: 0.85rem; }
             .header-right { gap: 10px; }
@@ -121,7 +76,7 @@
 
         .layout { display: flex; max-width: 1200px; margin: 80px auto 40px; padding: 0 20px; gap: 25px; align-items: flex-start; }
         .questions-col { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
-        .q-card { background: var(--white); border-radius: 12px; padding: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .q-card { background: var(--white); border-radius: 12px; padding: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--card-border); }
         .q-card.q-highlight { animation: qHighlightPulse 2.2s ease; box-shadow: 0 0 0 3px var(--brand,#4f6bff); }
         @keyframes qHighlightPulse {
             0%   { box-shadow: 0 0 0 3px var(--brand,#4f6bff); background: rgba(79,107,255,.10); }
@@ -142,11 +97,11 @@
         .option-item { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .option-item input { display: none; }
         .opt-letter {
-            width: 36px; height: 36px; border: 1px solid var(--opt-border); border-radius: 50%;
+            width: 36px; height: 36px; border: 1.5px solid var(--opt-border); border-radius: 50%;
             display: flex; align-items: center; justify-content: center; font-weight: 500; flex-shrink: 0;
         }
         .opt-text {
-            border: 1px solid var(--opt-border); padding: 12px 15px; border-radius: 10px; flex: 1; transition: 0.2s;
+            border: 1.5px solid var(--opt-border); padding: 12px 15px; border-radius: 10px; flex: 1; transition: 0.2s;
         }
 
         .option-item input:checked ~ .opt-letter { background: var(--azota-blue); color: white; border-color: var(--azota-blue); }
@@ -269,6 +224,7 @@
 </div>
 
 <header>
+    <div class="header-inner">
     <div class="header-left" onclick="location.reload()">
         <i class="fa-solid fa-rotate-right"></i> <span>Làm lại bài</span>
     </div>
@@ -276,10 +232,7 @@
     <div class="header-right">
         <div class="timer"><i class="fa-regular fa-clock"></i> <span id="timer-display">60:00</span></div>
         <button class="btn-submit" onclick="submitExam()"><i class="fa-solid fa-paper-plane"></i> <span class="btn-text">Nộp bài</span></button>
-        <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
-            <i class="fa-solid fa-moon"></i>
-            <i class="fa-solid fa-sun"></i>
-        </button>
+    </div>
     </div>
 </header>
 
@@ -326,18 +279,6 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // ---------------- Đổi giao diện sáng/tối ----------------
-    (function(){
-        const btn = document.getElementById('themeToggle');
-        if (!btn) return;
-        btn.addEventListener('click', function(){
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const next = isDark ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            try { localStorage.setItem('sng-theme', next); } catch (e) {}
-        });
-    })();
 
     // ---------------- Bắt buộc đăng nhập mới xem được trang này ----------------
     // Lớp phủ #authGateOverlay che toàn trang ngay từ đầu (xem HTML phía trên <body>),

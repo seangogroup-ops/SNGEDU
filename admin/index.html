@@ -5536,6 +5536,7 @@ registerContentList('product_items', 'product_content', 'items', {
     label:'Sản phẩm', icon:'fa-solid fa-bag-shopping', color:'indigo', defaultIcon:'fa-solid fa-bag-shopping',
     priceField:true, variantsField:true,
     descTextarea:true, descLabel:'Mô tả (hiện rút gọn ở thẻ, đầy đủ ở trang chi tiết)',
+    extraField:{ key:'category', label:'Danh mục sản phẩm', placeholder:'VD: Khoá ôn thi, Gói tài liệu, Tài khoản Premium...', suggest:true, hint:'Sản phẩm cùng danh mục sẽ được gom vào chung 1 khối riêng ở tab "Sản phẩm" trên trang chủ. Để trống nếu muốn xếp vào nhóm "Khác".' },
     imageField:true, visibilityField:true,
     imageRatioHint:'Khung hiển thị ở thẻ trang chủ dùng tỉ lệ <b>ngang 2:1</b> (giống khối Tài liệu), khung ở trang chi tiết hiển thị nguyên ảnh không crop — nên dùng ảnh <b>ngang, tỉ lệ ~2:1</b> (VD 1000×500px, 1200×600px), đặt chủ thể chính (sản phẩm, logo) ở giữa để không bị cắt mất 2 bên khi hiện ở thẻ trang chủ.',
     linkLabel:'Đường dẫn tải xuống / truy cập sản phẩm (chỉ lộ ra cho khách sau khi thanh toán thành công qua SePay)', linkPlaceholder:'https://...'
@@ -5610,7 +5611,9 @@ function contentBlockHtml(subKey){
                         : `<input id="cmDesc_${subKey}" placeholder="${escapeHtml(meta.descLabel || 'Mô tả ngắn (không bắt buộc)')}" oninput="updateContentPreview('${subKey}')">`}
                     ${meta.extraField ? `
                     <label>${escapeHtml(meta.extraField.label)}</label>
-                    <input id="cmExtra_${subKey}" placeholder="${escapeHtml(meta.extraField.placeholder)}">` : ''}
+                    <input id="cmExtra_${subKey}" placeholder="${escapeHtml(meta.extraField.placeholder)}" ${meta.extraField.suggest ? `list="cmExtraList_${subKey}"` : ''}>
+                    ${meta.extraField.suggest ? `<datalist id="cmExtraList_${subKey}"></datalist>` : ''}
+                    ${meta.extraField.hint ? `<div class="hint" style="margin-top:4px;">${meta.extraField.hint}</div>` : ''}` : ''}
                     ${meta.priceField && !meta.docTypeField ? `
                     <div class="cm-section"><i class="fa-solid fa-tags"></i> Giá</div>
                     ${meta.variantsField ? `
@@ -5842,9 +5845,26 @@ async function toggleContentItemHidden(subKey, id){
 function renderContentList(subKey){
     const cfg = contentLists[subKey];
     const box = document.getElementById('cmList_' + subKey);
+    refreshExtraFieldSuggestions(subKey);
     if (!box) return;
     if (!cfg.items.length){ box.innerHTML = `<div class="empty-state" style="padding:14px 4px;">Chưa có ${cfg.meta.label.toLowerCase()} nào. Bấm "+ Thêm" để tạo mục đầu tiên.</div>`; return; }
     box.innerHTML = cfg.items.map(it => contentItemRowHtml(subKey, it)).join('');
+}
+// Gợi ý (datalist) các giá trị đã dùng cho ô "extraField" (VD: danh mục sản phẩm) — giúp gõ lại đúng tên cũ,
+// tránh tạo ra nhiều danh mục trùng ý nhưng khác chính tả (VD: "Khoá học" vs "khoá học").
+function refreshExtraFieldSuggestions(subKey){
+    const cfg = contentLists[subKey];
+    if (!cfg.meta.extraField || !cfg.meta.extraField.suggest) return;
+    const list = document.getElementById('cmExtraList_' + subKey);
+    if (!list) return;
+    const key = cfg.meta.extraField.key;
+    const seen = new Set();
+    const options = [];
+    cfg.items.forEach(it => {
+        const v = (it[key] || '').trim();
+        if (v && !seen.has(v.toLowerCase())){ seen.add(v.toLowerCase()); options.push(v); }
+    });
+    list.innerHTML = options.map(v => `<option value="${escapeHtml(v)}"></option>`).join('');
 }
 
 // ============================================================================

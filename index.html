@@ -1692,6 +1692,9 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             </div>
             <div class="prod-hero-stat"><i class="fa-solid fa-bag-shopping"></i> <span id="productAllCount">Đang tải...</span></div>
         </div>
+
+        <div class="pill-row" id="productCatPills" style="display:none"></div>
+
         <div id="productGrid">
             <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
         </div>
@@ -3417,19 +3420,79 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         if (balanceBtn) balanceBtn.style.display = 'none';
     }
 
+    // Sản phẩm không có danh mục (item.category trống) sẽ được gom chung vào nhóm này.
+    const PRODUCT_OTHER_CAT = 'Khác';
+
     async function renderProductContent(){
         const payload = await fetchSiteSettingPayload('product_content', DEFAULT_PRODUCT_CONTENT);
         // Sản phẩm bị ẩn (item.hidden) không hiện trong danh sách công khai, trừ khi khách đã mua rồi (vẫn cần mở/tải lại được).
         const items = (Array.isArray(payload.items) ? payload.items : []).filter(it => !it.hidden || purchasedProductIds.has(String(it.id)));
         const grid = document.getElementById('productGrid');
+        const pillWrap = document.getElementById('productCatPills');
         const allCount = document.getElementById('productAllCount');
         if (allCount) allCount.textContent = items.length + ' sản phẩm';
+
         if (!items.length){
             grid.innerHTML = `<div class="empty-state"><div class="empty-icon" style="background:var(--amber-bg); color:var(--amber)"><i class="fa-solid fa-bag-shopping"></i></div><div class="empty-title">Chưa có sản phẩm nào</div><div class="empty-sub">Gói tài liệu, khoá ôn thi nâng cao sẽ sớm ra mắt tại đây.</div></div>`;
-        } else {
-            grid.innerHTML = `<div class="prod-grid">${items.map(productItemCardHtml).join('')}</div>`;
+            if (pillWrap){ pillWrap.style.display = 'none'; pillWrap.innerHTML = ''; }
+            loadProductOrderHistory();
+            return;
         }
+
+        // Chia sản phẩm thành nhiều nhóm theo item.category, giữ nguyên thứ tự nhóm xuất hiện lần đầu;
+        // sản phẩm chưa gắn danh mục rơi vào nhóm "Khác" ở cuối cùng.
+        const catOrder = [];
+        const catMap = new Map();
+        items.forEach(it => {
+            const cat = (it.category || '').trim() || PRODUCT_OTHER_CAT;
+            if (!catMap.has(cat)){ catMap.set(cat, []); catOrder.push(cat); }
+            catMap.get(cat).push(it);
+        });
+        if (catOrder.includes(PRODUCT_OTHER_CAT) && catOrder[catOrder.length - 1] !== PRODUCT_OTHER_CAT){
+            catOrder.splice(catOrder.indexOf(PRODUCT_OTHER_CAT), 1);
+            catOrder.push(PRODUCT_OTHER_CAT);
+        }
+
+        // Chỉ hiện chia nhóm khi có từ 2 danh mục trở lên — nếu admin chưa phân loại (tất cả cùng rơi vào
+        // 1 nhóm), giữ giao diện lưới đơn giản như cũ để đỡ rối mắt.
+        if (catOrder.length <= 1){
+            grid.innerHTML = `<div class="prod-grid">${items.map(productItemCardHtml).join('')}</div>`;
+            if (pillWrap){ pillWrap.style.display = 'none'; pillWrap.innerHTML = ''; }
+        } else {
+            grid.innerHTML = catOrder.map(cat => {
+                const catItems = catMap.get(cat);
+                const catIdAttr = escapeHtmlHome(cat);
+                return `
+                <div class="doc-cat" data-productcat="${catIdAttr}">
+                    <div class="doc-cat-head">
+                        <div class="doc-cat-name"><i class="fa-solid ${cat === PRODUCT_OTHER_CAT ? 'fa-shapes' : 'fa-tags'}" style="color:var(--amber)"></i> ${escapeHtmlHome(cat)}</div>
+                        <span class="doc-count">${catItems.length} sản phẩm</span>
+                    </div>
+                    <div class="prod-grid">${catItems.map(productItemCardHtml).join('')}</div>
+                </div>`;
+            }).join('');
+
+            if (pillWrap){
+                pillWrap.style.display = '';
+                pillWrap.innerHTML = `<button class="filter-pill active" data-productfilter="all" type="button">Tất cả</button>`
+                    + catOrder.map(cat => `<button class="filter-pill" data-productfilter="${escapeHtmlHome(cat)}" type="button">${escapeHtmlHome(cat)}</button>`).join('');
+                pillWrap.querySelectorAll('.filter-pill').forEach(btn => {
+                    btn.onclick = () => {
+                        pillWrap.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        applyProductCatFilter(btn.dataset.productfilter);
+                    };
+                });
+            }
+        }
+
         loadProductOrderHistory();
+    }
+
+    function applyProductCatFilter(cat){
+        document.querySelectorAll('#productGrid .doc-cat[data-productcat]').forEach(sec => {
+            sec.style.display = (cat === 'all' || sec.dataset.productcat === cat) ? '' : 'none';
+        });
     }
 
     // ---------------- HỆ THỐNG GHIM NỔI BẬT — mỗi loại ghim rơi đúng vào khối "nổi bật" tương ứng ----------------

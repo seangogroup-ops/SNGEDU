@@ -3299,7 +3299,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             ctaHtml = hasVariants ? '<span>Xem chi tiết</span><i class="fa-solid fa-arrow-right"></i>' : '<span>Mở / Tải xuống</span><i class="fa-solid fa-download"></i>';
         } else if (price > 0){
             tagHtml = '<span class="doc-tag paid"><i class="fa-solid fa-lock"></i> Trả phí</span>';
-            ctaHtml = hasVariants ? `<span>Chọn phiên bản · ${priceLabel}</span><i class="fa-solid fa-arrow-right"></i>` : `<span>Mua ngay · ${priceLabel}</span><i class="fa-solid fa-cart-shopping"></i>`;
+            ctaHtml = `<span>Mua ngay · ${priceLabel}</span><i class="fa-solid fa-cart-shopping"></i>`;
         }
 
         return `

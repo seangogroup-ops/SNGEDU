@@ -1526,6 +1526,9 @@ textarea{resize:vertical;}
                         <div class="side-item settings-item" id="nav_product" onclick="showContentManager('product')">
                             <span class="set-ico">🛍️</span><span class="name">Sản phẩm</span>
                         </div>
+                        <div class="side-item settings-item" id="nav_stock" onclick="showStockManager()">
+                            <span class="set-ico">🔑</span><span class="name">Kho tài khoản</span>
+                        </div>
                         <div class="side-item settings-item" id="nav_support" onclick="showContentManager('support')">
                             <span class="set-ico">🆘</span><span class="name">Hỗ trợ</span>
                         </div>
@@ -2876,27 +2879,40 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
     </div>
 </div>
 
-<!-- ================= KHO TÀI KHOẢN SẢN PHẨM ================= -->
-<div id="stockOverlay" class="hidden">
-    <div class="stock-box">
-        <h4>🔑 Kho tài khoản — <span id="stockProductTitle"></span></h4>
-        <p>Dán mỗi tài khoản 1 dòng, ví dụ: <code>email@gmail.com:matkhau123</code>. Khi khách thanh toán sản phẩm này thành công, hệ thống <b>tự động lấy 1 dòng còn trống</b>, đánh dấu đã bán và hiển thị cho khách ở trang chi tiết sản phẩm — không cần thao tác thủ công.</p>
-        <div id="stockVariantTabs" class="stock-variant-tabs"></div>
-        <textarea id="stockAddTextarea" rows="4" placeholder="email1@gmail.com:matkhau1&#10;email2@gmail.com:matkhau2&#10;..."></textarea>
-        <div class="stock-add-row">
-            <button class="btn-primary" onclick="submitAddStock()">+ Thêm vào kho</button>
+<!-- ================= KHO TÀI KHOẢN SẢN PHẨM (tab lớn riêng) ================= -->
+<div id="stockManagerPanel" class="hidden">
+    <div class="subj-mgr-head">
+        <h2>🔑 Kho tài khoản</h2>
+        <p class="hint">Chọn 1 sản phẩm bên trái, dán mỗi tài khoản 1 dòng, ví dụ: <code>email@gmail.com:matkhau123</code>. Khi khách thanh toán sản phẩm đó thành công, hệ thống <b>tự động lấy 1 dòng còn trống</b>, đánh dấu đã bán và hiển thị cho khách ở trang chi tiết sản phẩm — không cần thao tác thủ công.</p>
+    </div>
+    <div class="subj-mgr-grid">
+        <div class="subj-mgr-col" style="max-width:360px;">
+            <div class="subj-mgr-col-head">
+                <h4><i class="fa-solid fa-bag-shopping"></i> Sản phẩm</h4>
+            </div>
+            <div id="stockProductList" class="side-list subj-mgr-list"></div>
         </div>
-        <div class="stock-stats-row">
-            <span class="stock-stat available">Còn trống: <b id="stockAvailCount">0</b></span>
-            <span class="stock-stat sold">Đã bán: <b id="stockSoldCount">0</b></span>
-        </div>
-        <div class="stock-tabs">
-            <button class="stock-tab selected" data-tab="available" onclick="switchStockTab('available')">Còn trống</button>
-            <button class="stock-tab" data-tab="sold" onclick="switchStockTab('sold')">Đã bán</button>
-        </div>
-        <div class="stock-list" id="stockList"></div>
-        <div class="merge-actions">
-            <button class="btn-merge-cancel" onclick="closeStockModal()">Đóng</button>
+        <div class="subj-mgr-col">
+            <div id="stockEmptyState" class="empty-state" style="padding:24px;">Chọn 1 sản phẩm bên trái để quản lý kho tài khoản.</div>
+            <div id="stockDetailWrap" class="hidden">
+                <div class="subj-mgr-col-head">
+                    <h4 id="stockProductTitle"></h4>
+                </div>
+                <div id="stockVariantTabs" class="stock-variant-tabs"></div>
+                <textarea id="stockAddTextarea" rows="4" placeholder="email1@gmail.com:matkhau1&#10;email2@gmail.com:matkhau2&#10;..."></textarea>
+                <div class="stock-add-row">
+                    <button class="btn-primary" onclick="submitAddStock()">+ Thêm vào kho</button>
+                </div>
+                <div class="stock-stats-row">
+                    <span class="stock-stat available">Còn trống: <b id="stockAvailCount">0</b></span>
+                    <span class="stock-stat sold">Đã bán: <b id="stockSoldCount">0</b></span>
+                </div>
+                <div class="stock-tabs">
+                    <button class="stock-tab selected" data-tab="available" onclick="switchStockTab('available')">Còn trống</button>
+                    <button class="stock-tab" data-tab="sold" onclick="switchStockTab('sold')">Đã bán</button>
+                </div>
+                <div class="stock-list" id="stockList"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -3126,6 +3142,7 @@ function restoreLastAdminPanel(){
         if (last === 'subjectMgr')        return showSubjectManager();
         if (last === 'stats')             return showStatsPanel();
         if (last === 'visits')            return showVisitsPanel();
+        if (last === 'stock')             return showStockManager();
     }
     showStatsPanel(); // mặc định: lần đăng nhập đầu tiên / chưa từng chọn màn nào -> luôn vào Thống kê trước
 }
@@ -3134,7 +3151,7 @@ function restoreLastAdminPanel(){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['statsPanel', 'visitsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel', 'paymentSettingsPanel', 'emailSettingsPanel'];
+const ADMIN_PANEL_IDS = ['statsPanel', 'visitsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel', 'paymentSettingsPanel', 'emailSettingsPanel', 'stockManagerPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -5543,7 +5560,7 @@ registerContentList('pro_items', 'pro_content', 'items', {
 const CONTENT_MANAGER_GROUPS = {
     doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu (miễn phí & trả phí) hiển thị ở tab "Tài liệu" trên trang chủ. Tải file PDF/Word lên trực tiếp, không cần link ngoài. Chọn loại "Trả phí" và bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Tải xuống", trước đó file không lộ link công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn tải được bình thường khi bị ẩn.', subKeys:['doc'] },
     tool:    { title:'Công cụ',   icon:'🧰',  hint:'Quản lý các thẻ công cụ hiển thị ở tab "Công cụ" trên trang chủ.', subKeys:['tool_items'] },
-    product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ. Bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Mở/Tải sản phẩm" và link mới lộ ra, trước đó link không công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn xem/tải được bình thường khi bị ẩn. Sản phẩm có thể chia thành nhiều <b>phiên bản</b> (VD: "1 tháng"/"3 tháng"/"6 tháng"), mỗi phiên bản giá và kho tài khoản riêng — bật ở mục "Giá" trong form. Với sản phẩm dạng bán tài khoản (VD: YouTube Premium), mở menu ⋮ trên mỗi dòng → <b>🔑 Kho tài khoản</b> để nhập sẵn danh sách tài khoản (chọn đúng tab phiên bản nếu có) — khi khách thanh toán thành công, hệ thống tự động lấy 1 tài khoản còn trống và đánh dấu đã bán, khách xem được ngay ở trang chi tiết sản phẩm.', subKeys:['product_items'] },
+    product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ. Bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Mở/Tải sản phẩm" và link mới lộ ra, trước đó link không công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn xem/tải được bình thường khi bị ẩn. Sản phẩm có thể chia thành nhiều <b>phiên bản</b> (VD: "1 tháng"/"3 tháng"/"6 tháng"), mỗi phiên bản giá và kho tài khoản riêng — bật ở mục "Giá" trong form. Với sản phẩm dạng bán tài khoản (VD: YouTube Premium), vào tab <b>🔑 Kho tài khoản</b> ở sidebar bên trái để nhập sẵn danh sách tài khoản (chọn đúng tab phiên bản nếu có) — khi khách thanh toán thành công, hệ thống tự động lấy 1 tài khoản còn trống và đánh dấu đã bán, khách xem được ngay ở trang chi tiết sản phẩm.', subKeys:['product_items'] },
     pro:     { title:'Gói Pro',   icon:'👑',  hint:'Quản lý các gói Pro hiển thị ở tab "Tài khoản & Gói Pro" trên trang chủ. Chọn màu "amber" để đánh dấu gói "Phổ biến nhất". Mục "Gói thanh toán tự động (SePay)" cho phép chọn gói tương ứng trong bảng giá tự động — khi đã chọn, thẻ sẽ hiện nút "Mua ngay" mở thẳng cổng SePay thay vì link ngoài. Nếu để trống, thẻ vẫn hoạt động theo kiểu cũ: trỏ ra Zalo/Momo, sau khi khách chuyển khoản bạn vào mục "Tài khoản" bên dưới để gán Premium thủ công.', subKeys:['pro_items'] },
     support: { title:'Hỗ trợ',    icon:'🆘',  hint:'Quản lý nội dung tab "Hỗ trợ" trên trang chủ: khối giới thiệu đầu trang, các kênh liên hệ (Zalo, Form...) và danh sách câu hỏi thường gặp.', subKeys:['support_contacts','support_faq'], intro:true }
 };
@@ -5806,7 +5823,7 @@ function contentItemRowHtml(subKey, item){
                     <div class="menu-drop hidden" id="cmmenu-${subKey}-${item.id}">
                         <button onclick="event.stopPropagation(); closeAllContentMenus(); editContentItem('${subKey}','${item.id}')">✏️ Sửa</button>
                         <button onclick="event.stopPropagation(); closeAllContentMenus(); deleteContentItem('${subKey}','${item.id}')">🗑️ Xóa</button>
-                        ${subKey === 'product_items' ? `<button onclick="event.stopPropagation(); closeAllContentMenus(); openProductStockModal('${item.id}')">🔑 Kho tài khoản</button>` : ''}
+
                     </div>
                 </span>
             </span>
@@ -5847,7 +5864,33 @@ function stockCurrentVariants(){
     const item = contentLists.product_items && contentLists.product_items.items.find(x => String(x.id) === String(stockCurrentProductId));
     return item && Array.isArray(item.variants) ? item.variants.filter(v => v && v.id) : [];
 }
-function openProductStockModal(productId){
+async function showStockManager(){
+    rememberAdminPanel('stock');
+    showAdminPanel('stockManagerPanel', 'nav_stock');
+    if (!contentLists.product_items.items.length) await loadContentList('product_items');
+    renderStockProductList();
+    if (stockCurrentProductId){
+        const stillExists = contentLists.product_items.items.some(x => String(x.id) === String(stockCurrentProductId));
+        if (stillExists){ selectStockProduct(stockCurrentProductId); return; }
+    }
+    document.getElementById('stockEmptyState').classList.remove('hidden');
+    document.getElementById('stockDetailWrap').classList.add('hidden');
+}
+function renderStockProductList(){
+    const wrap = document.getElementById('stockProductList');
+    const items = contentLists.product_items.items || [];
+    if (!items.length){ wrap.innerHTML = `<div class="empty-state" style="padding:14px;">Chưa có sản phẩm nào. Vào mục "Sản phẩm" để thêm.</div>`; return; }
+    wrap.innerHTML = items.map(item => {
+        const hasVariants = Array.isArray(item.variants) && item.variants.length > 0;
+        const extra = hasVariants ? `${item.variants.length} phiên bản` : (Number(item.price) > 0 ? Number(item.price).toLocaleString('vi-VN') + 'đ' : 'Miễn phí');
+        const active = String(item.id) === String(stockCurrentProductId);
+        return `<div class="side-item${active ? ' active' : ''}" onclick="selectStockProduct('${String(item.id).replace(/'/g,"\\'")}')">
+            <span class="name">${escapeHtml(item.title || '')}</span>
+            <span class="code">${escapeHtml(extra)}</span>
+        </div>`;
+    }).join('');
+}
+function selectStockProduct(productId){
     const item = contentLists.product_items && contentLists.product_items.items.find(x => String(x.id) === String(productId));
     stockCurrentProductId = productId;
     stockCurrentTab = 'available';
@@ -5860,7 +5903,9 @@ function openProductStockModal(productId){
     stockCurrentVariant = variants.length ? String(variants[0].id) : '';
     renderStockVariantTabs();
 
-    document.getElementById('stockOverlay').classList.remove('hidden');
+    document.getElementById('stockEmptyState').classList.add('hidden');
+    document.getElementById('stockDetailWrap').classList.remove('hidden');
+    renderStockProductList();
     loadStockList();
 }
 function renderStockVariantTabs(){
@@ -5879,11 +5924,6 @@ function switchStockVariant(variantId){
     renderStockVariantTabs();
     updateStockCounts();
     renderStockList();
-}
-function closeStockModal(){
-    document.getElementById('stockOverlay').classList.add('hidden');
-    stockCurrentProductId = null;
-    stockEditingId = null;
 }
 function switchStockTab(tab){
     stockCurrentTab = tab;

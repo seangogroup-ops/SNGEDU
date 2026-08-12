@@ -38,6 +38,9 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const { order_type, course_id, plan_id, document_id, product_id } = body;
+    // Biến thể sản phẩm (vd "1 tháng" / "3 tháng"...) — rỗng '' nếu sản phẩm không chia biến thể.
+    const requestedVariantId: string = typeof body.variant_id === "string" ? body.variant_id : "";
+    let productVariantId = ""; // giá trị THẬT SỰ dùng để tạo đơn, do server tự xác định lại (không tin client)
     // use_balance = true  -> trừ thẳng vào số dư ví, không qua cổng SePay
     const useBalance = body.use_balance === true;
     const payment_method = useBalance ? "BALANCE" : (body.payment_method ?? "BANK_TRANSFER");
@@ -99,21 +102,35 @@ Deno.serve(async (req) => {
       if (!product_id) throw new Error("Thiếu product_id");
       const item = await findPaidContentItem(db, "product_content", "items", product_id);
       if (!item) throw new Error("Không tìm thấy sản phẩm");
-      amount = Number(item.price);
-      description = `Mua san pham: ${item.title || ""}`.slice(0, 250);
 
-      // Nếu sản phẩm này có dùng "kho tài khoản" (product_stock, quản lý ở trang admin) thì phải
-      // còn ít nhất 1 tài khoản trống mới cho tạo đơn — tránh thu tiền nhưng không có gì để giao.
-      // Sản phẩm không dùng kho (total = 0) thì coi như không giới hạn số lượng, bỏ qua kiểm tra.
+      // Sản phẩm có biến thể (item.variants là mảng khác rỗng) -> BẮT BUỘC chọn đúng 1 biến thể,
+      // giá lấy theo biến thể đó (server tự tra lại, không tin giá client gửi lên).
+      const variants = Array.isArray(item.variants) ? item.variants : [];
+      if (variants.length > 0) {
+        const variant = variants.find((v: { id: unknown }) => String(v.id) === String(requestedVariantId));
+        if (!variant) throw new Error("Vui lòng chọn 1 phiên bản sản phẩm hợp lệ");
+        productVariantId = String(variant.id);
+        amount = Number(variant.price);
+        description = `Mua san pham: ${item.title || ""} - ${variant.label || ""}`.slice(0, 250);
+      } else {
+        amount = Number(item.price);
+        description = `Mua san pham: ${item.title || ""}`.slice(0, 250);
+      }
+
+      // Nếu sản phẩm (hoặc biến thể) này có dùng "kho tài khoản" (product_stock, quản lý ở trang admin)
+      // thì phải còn ít nhất 1 tài khoản trống mới cho tạo đơn — tránh thu tiền nhưng không có gì để giao.
+      // Không dùng kho (total = 0) thì coi như không giới hạn số lượng, bỏ qua kiểm tra.
       const { count: totalStock } = await db
         .from("product_stock")
         .select("id", { count: "exact", head: true })
-        .eq("product_id", String(product_id));
+        .eq("product_id", String(product_id))
+        .eq("variant", productVariantId);
       if ((totalStock ?? 0) > 0) {
         const { count: availableStock } = await db
           .from("product_stock")
           .select("id", { count: "exact", head: true })
           .eq("product_id", String(product_id))
+          .eq("variant", productVariantId)
           .eq("status", "available");
         if ((availableStock ?? 0) <= 0) {
           throw new Error("Sản phẩm này đã hết hàng, vui lòng quay lại sau.");
@@ -153,6 +170,7 @@ Deno.serve(async (req) => {
         plan_id: order_type === "subscription" ? plan_id : null,
         document_id: order_type === "document" ? document_id : null,
         product_id: order_type === "product" ? product_id : null,
+        variant_id: order_type === "product" ? productVariantId : "",
         amount,
         currency: "VND",
         status: "pending",
@@ -199,6 +217,7 @@ Deno.serve(async (req) => {
         course_id: order_type === "course" ? course_id : null,
         document_id: order_type === "document" ? document_id : null,
         product_id: order_type === "product" ? product_id : null,
+        variant_id: order_type === "product" ? productVariantId : "",
         user_id: user.id,
       });
 

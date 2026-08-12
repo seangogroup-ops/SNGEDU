@@ -14,6 +14,7 @@ export interface OrderRow {
   course_id?: string | null;
   document_id?: string | null;
   product_id?: string | null;
+  variant_id?: string | null; // biến thể sản phẩm đã chọn (vd "1 tháng") — '' nếu sản phẩm không chia biến thể
   user_id: string;
 }
 
@@ -89,23 +90,26 @@ export async function grantEntitlement(db: DbClient, order: OrderRow): Promise<v
   }
 
   if (order.order_type === "product" && order.product_id) {
+    const variantId = order.variant_id || ""; // '' = sản phẩm không chia biến thể (hành vi cũ)
     const { error: prodErr } = await db.from("product_purchases").upsert(
       {
         user_id: order.user_id,
         product_id: order.product_id,
+        variant: variantId,
         order_id: order.id,
       },
-      { onConflict: "user_id,product_id" },
+      { onConflict: "user_id,product_id,variant" },
     );
     if (prodErr) throw prodErr;
 
-    // Nếu sản phẩm này có "kho tài khoản" (admin nhập sẵn ở trang quản trị), tự động lấy
+    // Nếu sản phẩm (biến thể) này có "kho tài khoản" (admin nhập sẵn ở trang quản trị), tự động lấy
     // 1 dòng còn trống, đánh dấu đã bán và lưu lại để khách xem ở trang chi tiết sản phẩm.
     // Không có kho / hết hàng thì bỏ qua, không ảnh hưởng tới việc mua hàng.
     const { data: claimed, error: claimErr } = await db.rpc("claim_product_stock", {
       p_product_id: order.product_id,
       p_user_id: order.user_id,
       p_order_id: order.id,
+      p_variant: variantId,
     });
     if (claimErr) {
       console.error("grantEntitlement: lỗi lấy tài khoản từ kho:", claimErr);
@@ -114,7 +118,8 @@ export async function grantEntitlement(db: DbClient, order: OrderRow): Promise<v
         .from("product_purchases")
         .update({ account_info: claimed })
         .eq("user_id", order.user_id)
-        .eq("product_id", order.product_id);
+        .eq("product_id", order.product_id)
+        .eq("variant", variantId);
       if (updErr) console.error("grantEntitlement: lỗi lưu account_info:", updErr);
     }
     return;

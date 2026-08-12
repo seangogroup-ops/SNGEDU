@@ -805,6 +805,27 @@ textarea{resize:vertical;}
 .stock-row .sr-content{ flex:1; min-width:0; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .stock-row .sr-meta{ font-size:.72rem; color:var(--gray); flex:0 0 auto; white-space:nowrap; }
 .stock-row .sr-del{ flex:0 0 auto; background:none; border:none; color:var(--red,#dc2626); cursor:pointer; font-size:.9rem; padding:4px; }
+.stock-row .sr-edit{ flex:0 0 auto; background:none; border:none; color:var(--gray); cursor:pointer; font-size:.9rem; padding:4px; }
+.stock-row .sr-edit:hover{ color:var(--accent); }
+.stock-row.editing{ flex-wrap:wrap; background:var(--bg); }
+.stock-row .sr-edit-input{
+    flex:1 1 100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.82rem;
+    padding:7px 9px; border-radius:7px; border:1px solid var(--accent); background:var(--white);
+}
+.stock-row .sr-edit-actions{ flex:0 0 auto; display:flex; gap:6px; margin-left:auto; }
+.stock-row .sr-edit-save{ background:var(--accent); color:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:.76rem; font-weight:700; cursor:pointer; }
+.stock-row .sr-edit-cancel{ background:none; border:1px solid var(--border); border-radius:6px; padding:5px 10px; font-size:.76rem; cursor:pointer; color:var(--gray); }
+.stock-variant-tabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+.stock-variant-tab{
+    padding:6px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg);
+    color:var(--gray); font-family:var(--font-display); font-size:.78rem; font-weight:700; cursor:pointer;
+}
+.stock-variant-tab.selected{ background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
+.cm-variants-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:4px; }
+.cm-variant-row{ display:flex; align-items:center; gap:8px; }
+.cm-variant-row input.cm-variant-label{ flex:1 1 auto; min-width:0; }
+.cm-variant-row input.cm-variant-price{ flex:0 0 140px; }
+.cm-variant-row .cm-variant-del{ flex:0 0 auto; background:none; border:none; color:var(--red,#dc2626); cursor:pointer; font-size:.95rem; padding:6px; }
 
 /* ---------- MERGE (TỔNG HỢP) MODAL ---------- */
 #mergeOverlay{
@@ -2860,6 +2881,7 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
     <div class="stock-box">
         <h4>🔑 Kho tài khoản — <span id="stockProductTitle"></span></h4>
         <p>Dán mỗi tài khoản 1 dòng, ví dụ: <code>email@gmail.com:matkhau123</code>. Khi khách thanh toán sản phẩm này thành công, hệ thống <b>tự động lấy 1 dòng còn trống</b>, đánh dấu đã bán và hiển thị cho khách ở trang chi tiết sản phẩm — không cần thao tác thủ công.</p>
+        <div id="stockVariantTabs" class="stock-variant-tabs"></div>
         <textarea id="stockAddTextarea" rows="4" placeholder="email1@gmail.com:matkhau1&#10;email2@gmail.com:matkhau2&#10;..."></textarea>
         <div class="stock-add-row">
             <button class="btn-primary" onclick="submitAddStock()">+ Thêm vào kho</button>
@@ -5495,7 +5517,7 @@ registerContentList('tool_items', 'tool_content', 'items', {
 });
 registerContentList('product_items', 'product_content', 'items', {
     label:'Sản phẩm', icon:'fa-solid fa-bag-shopping', color:'indigo', defaultIcon:'fa-solid fa-bag-shopping',
-    priceField:true,
+    priceField:true, variantsField:true,
     descTextarea:true, descLabel:'Mô tả (hiện rút gọn ở thẻ, đầy đủ ở trang chi tiết)',
     imageField:true, visibilityField:true,
     imageRatioHint:'Khung hiển thị ở thẻ trang chủ dùng tỉ lệ <b>ngang 2:1</b> (giống khối Tài liệu), khung ở trang chi tiết hiển thị nguyên ảnh không crop — nên dùng ảnh <b>ngang, tỉ lệ ~2:1</b> (VD 1000×500px, 1200×600px), đặt chủ thể chính (sản phẩm, logo) ở giữa để không bị cắt mất 2 bên khi hiện ở thẻ trang chủ.',
@@ -5521,7 +5543,7 @@ registerContentList('pro_items', 'pro_content', 'items', {
 const CONTENT_MANAGER_GROUPS = {
     doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu (miễn phí & trả phí) hiển thị ở tab "Tài liệu" trên trang chủ. Tải file PDF/Word lên trực tiếp, không cần link ngoài. Chọn loại "Trả phí" và bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Tải xuống", trước đó file không lộ link công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn tải được bình thường khi bị ẩn.', subKeys:['doc'] },
     tool:    { title:'Công cụ',   icon:'🧰',  hint:'Quản lý các thẻ công cụ hiển thị ở tab "Công cụ" trên trang chủ.', subKeys:['tool_items'] },
-    product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ. Bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Mở/Tải sản phẩm" và link mới lộ ra, trước đó link không công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn xem/tải được bình thường khi bị ẩn. Với sản phẩm dạng bán tài khoản (VD: YouTube Premium), mở menu ⋮ trên mỗi dòng → <b>🔑 Kho tài khoản</b> để nhập sẵn danh sách tài khoản — khi khách thanh toán thành công, hệ thống tự động lấy 1 tài khoản còn trống và đánh dấu đã bán, khách xem được ngay ở trang chi tiết sản phẩm.', subKeys:['product_items'] },
+    product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ. Bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Mở/Tải sản phẩm" và link mới lộ ra, trước đó link không công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn xem/tải được bình thường khi bị ẩn. Sản phẩm có thể chia thành nhiều <b>phiên bản</b> (VD: "1 tháng"/"3 tháng"/"6 tháng"), mỗi phiên bản giá và kho tài khoản riêng — bật ở mục "Giá" trong form. Với sản phẩm dạng bán tài khoản (VD: YouTube Premium), mở menu ⋮ trên mỗi dòng → <b>🔑 Kho tài khoản</b> để nhập sẵn danh sách tài khoản (chọn đúng tab phiên bản nếu có) — khi khách thanh toán thành công, hệ thống tự động lấy 1 tài khoản còn trống và đánh dấu đã bán, khách xem được ngay ở trang chi tiết sản phẩm.', subKeys:['product_items'] },
     pro:     { title:'Gói Pro',   icon:'👑',  hint:'Quản lý các gói Pro hiển thị ở tab "Tài khoản & Gói Pro" trên trang chủ. Chọn màu "amber" để đánh dấu gói "Phổ biến nhất". Mục "Gói thanh toán tự động (SePay)" cho phép chọn gói tương ứng trong bảng giá tự động — khi đã chọn, thẻ sẽ hiện nút "Mua ngay" mở thẳng cổng SePay thay vì link ngoài. Nếu để trống, thẻ vẫn hoạt động theo kiểu cũ: trỏ ra Zalo/Momo, sau khi khách chuyển khoản bạn vào mục "Tài khoản" bên dưới để gán Premium thủ công.', subKeys:['pro_items'] },
     support: { title:'Hỗ trợ',    icon:'🆘',  hint:'Quản lý nội dung tab "Hỗ trợ" trên trang chủ: khối giới thiệu đầu trang, các kênh liên hệ (Zalo, Form...) và danh sách câu hỏi thường gặp.', subKeys:['support_contacts','support_faq'], intro:true }
 };
@@ -5574,9 +5596,24 @@ function contentBlockHtml(subKey){
                     <input id="cmExtra_${subKey}" placeholder="${escapeHtml(meta.extraField.placeholder)}">` : ''}
                     ${meta.priceField && !meta.docTypeField ? `
                     <div class="cm-section"><i class="fa-solid fa-tags"></i> Giá</div>
+                    ${meta.variantsField ? `
+                    <label class="cm-visibility-toggle" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
+                        <input type="checkbox" id="cmVariantToggle_${subKey}" style="width:16px;height:16px;" onchange="onVariantToggleChanged('${subKey}')">
+                        <span>Sản phẩm có nhiều phiên bản (VD: 1 tháng / 3 tháng / 6 tháng — mỗi phiên bản giá và kho tài khoản riêng)</span>
+                    </label>
+                    ` : ''}
+                    <div id="cmPriceWrap_${subKey}">
                     <label>Giá bán (VNĐ)</label>
                     <input id="cmPrice_${subKey}" type="number" min="0" step="1000" placeholder="VD: 20000" oninput="updateContentPreview('${subKey}')">
-                    <div class="hint" id="cmPriceHint_${subKey}" style="margin:2px 0 0;">Bắt buộc &gt; 0. Khách phải thanh toán qua SePay mới tải được file này.</div>` : ''}
+                    <div class="hint" id="cmPriceHint_${subKey}" style="margin:2px 0 0;">Bắt buộc &gt; 0. Khách phải thanh toán qua SePay mới tải được file này.</div>
+                    </div>
+                    ${meta.variantsField ? `
+                    <div id="cmVariantsWrap_${subKey}" class="hidden">
+                        <div id="cmVariantsList_${subKey}" class="cm-variants-list"></div>
+                        <button type="button" class="side-add" style="margin-top:4px;" onclick="addVariantRow('${subKey}')">+ Thêm phiên bản</button>
+                        <div class="hint" style="margin-top:4px;">Mỗi phiên bản là 1 lựa chọn khách thấy ở trang chi tiết (VD: "1 tháng" — 79.000đ). Sau khi lưu, vào "🔑 Kho tài khoản" để nhập kho riêng cho từng phiên bản.</div>
+                    </div>
+                    ` : ''}` : ''}
                     ${meta.statusField ? `
                     <label>Trạng thái</label>
                     <select id="cmStatus_${subKey}">
@@ -5727,13 +5764,19 @@ function contentItemRowHtml(subKey, item){
     const cfg = contentLists[subKey].meta;
     const color = item.color || cfg.color || 'indigo';
     const icon = item.icon || cfg.defaultIcon;
+    const hasVariants = cfg.variantsField && Array.isArray(item.variants) && item.variants.length > 0;
     let extraLabel = '';
     if (cfg.statusField){
         extraLabel = item.status === 'ready' ? ' · Sẵn sàng' : ' · Sắp ra mắt';
     } else if (cfg.extraField && item[cfg.extraField.key]){
         extraLabel = ' · ' + escapeHtml(item[cfg.extraField.key]);
     }
-    if (cfg.priceField && !cfg.docTypeField && item.price){
+    if (hasVariants){
+        const prices = item.variants.map(v => Number(v.price) || 0).filter(p => p > 0);
+        const min = prices.length ? Math.min(...prices) : 0;
+        const max = prices.length ? Math.max(...prices) : 0;
+        extraLabel += ` · ${item.variants.length} phiên bản · ` + (min === max ? min.toLocaleString('vi-VN') + 'đ' : 'từ ' + min.toLocaleString('vi-VN') + 'đ');
+    } else if (cfg.priceField && !cfg.docTypeField && item.price){
         extraLabel += ' · ' + Number(item.price).toLocaleString('vi-VN') + 'đ';
     }
     let typeBadgeHtml = '';
@@ -5790,28 +5833,61 @@ function renderContentList(subKey){
 // ============================================================================
 // KHO TÀI KHOẢN SẢN PHẨM — bảng product_stock, dùng cho sản phẩm dạng "bán tài khoản"
 // (vd: YouTube Premium...). Mỗi dòng là 1 tài khoản, khi khách mua hệ thống tự động
-// lấy 1 dòng "available" -> đánh dấu "sold" (xem RPC claim_product_stock trong migration 0010).
+// lấy 1 dòng "available" -> đánh dấu "sold" (xem RPC claim_product_stock trong migration 0010/0012).
+// Sản phẩm có nhiều phiên bản (item.variants) -> mỗi phiên bản có kho riêng, phân biệt bằng cột "variant".
+// Sản phẩm không chia phiên bản -> variant luôn là chuỗi rỗng ''.
 // ============================================================================
 let stockCurrentProductId = null;
 let stockCurrentTab = 'available';
+let stockCurrentVariant = '';   // '' = không chia phiên bản (hoặc phiên bản đang chọn)
 let stockRowsCache = [];
+let stockEditingId = null;      // id dòng đang được sửa nội dung tại chỗ
 
+function stockCurrentVariants(){
+    const item = contentLists.product_items && contentLists.product_items.items.find(x => String(x.id) === String(stockCurrentProductId));
+    return item && Array.isArray(item.variants) ? item.variants.filter(v => v && v.id) : [];
+}
 function openProductStockModal(productId){
     const item = contentLists.product_items && contentLists.product_items.items.find(x => String(x.id) === String(productId));
     stockCurrentProductId = productId;
     stockCurrentTab = 'available';
+    stockEditingId = null;
     document.getElementById('stockProductTitle').innerText = item ? (item.title || '') : '';
     document.getElementById('stockAddTextarea').value = '';
     document.querySelectorAll('.stock-tab').forEach(el => el.classList.toggle('selected', el.dataset.tab === 'available'));
+
+    const variants = stockCurrentVariants();
+    stockCurrentVariant = variants.length ? String(variants[0].id) : '';
+    renderStockVariantTabs();
+
     document.getElementById('stockOverlay').classList.remove('hidden');
     loadStockList();
+}
+function renderStockVariantTabs(){
+    const wrap = document.getElementById('stockVariantTabs');
+    const variants = stockCurrentVariants();
+    if (!variants.length){ wrap.innerHTML = ''; wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    wrap.innerHTML = variants.map(v => {
+        const vId = String(v.id);
+        return `<button type="button" class="stock-variant-tab${vId === stockCurrentVariant ? ' selected' : ''}" onclick="switchStockVariant('${vId.replace(/'/g,"\\'")}')">${escapeHtml(v.label || vId)}</button>`;
+    }).join('');
+}
+function switchStockVariant(variantId){
+    stockCurrentVariant = variantId;
+    stockEditingId = null;
+    renderStockVariantTabs();
+    updateStockCounts();
+    renderStockList();
 }
 function closeStockModal(){
     document.getElementById('stockOverlay').classList.add('hidden');
     stockCurrentProductId = null;
+    stockEditingId = null;
 }
 function switchStockTab(tab){
     stockCurrentTab = tab;
+    stockEditingId = null;
     document.querySelectorAll('.stock-tab').forEach(el => el.classList.toggle('selected', el.dataset.tab === tab));
     renderStockList();
 }
@@ -5819,7 +5895,7 @@ async function loadStockList(){
     const list = document.getElementById('stockList');
     list.innerHTML = `<div class="empty-state" style="padding:14px;">Đang tải...</div>`;
     const { data, error } = await sb.from('product_stock')
-        .select('id, content, status, assigned_user_id, sold_at, created_at')
+        .select('id, content, status, variant, assigned_user_id, sold_at, created_at')
         .eq('product_id', String(stockCurrentProductId))
         .order('created_at', { ascending: true });
     if (error){
@@ -5835,9 +5911,13 @@ async function loadStockList(){
     updateStockCounts();
     renderStockList();
 }
+function stockRowsForCurrentVariant(){
+    return stockRowsCache.filter(r => (r.variant || '') === stockCurrentVariant);
+}
 function updateStockCounts(){
-    const avail = stockRowsCache.filter(r => r.status === 'available').length;
-    const sold = stockRowsCache.filter(r => r.status === 'sold').length;
+    const rows = stockRowsForCurrentVariant();
+    const avail = rows.filter(r => r.status === 'available').length;
+    const sold = rows.filter(r => r.status === 'sold').length;
     document.getElementById('stockAvailCount').innerText = avail;
     document.getElementById('stockSoldCount').innerText = sold;
 }
@@ -5847,30 +5927,62 @@ function stockUserLabel(userId){
 }
 function renderStockList(){
     const list = document.getElementById('stockList');
-    const rows = stockRowsCache.filter(r => r.status === stockCurrentTab);
+    const rows = stockRowsForCurrentVariant().filter(r => r.status === stockCurrentTab);
     if (!rows.length){
         list.innerHTML = `<div class="empty-state" style="padding:14px;">${stockCurrentTab === 'available' ? 'Kho đang trống, dán tài khoản ở ô trên rồi bấm "Thêm vào kho".' : 'Chưa có tài khoản nào được bán.'}</div>`;
         return;
     }
-    list.innerHTML = rows.map(r => {
-        if (r.status === 'available'){
-            return `<div class="stock-row">
-                <span class="sr-content">${escapeHtml(r.content)}</span>
-                <button class="sr-del" title="Xoá khỏi kho" onclick="deleteStockRow('${r.id}')"><i class="fa-solid fa-trash"></i></button>
-            </div>`;
-        }
-        const soldDate = r.sold_at ? new Date(r.sold_at).toLocaleString('vi-VN') : '';
+    list.innerHTML = rows.map(r => stockRowHtml(r)).join('');
+}
+function stockRowHtml(r){
+    if (String(r.id) === String(stockEditingId)){
+        return `<div class="stock-row editing" data-id="${r.id}">
+            <input class="sr-edit-input" id="srEditInput-${r.id}" value="${escapeHtml(r.content)}" onkeydown="if(event.key==='Enter'){event.preventDefault();saveStockRowEdit('${r.id}');} if(event.key==='Escape'){cancelStockRowEdit();}">
+            <div class="sr-edit-actions">
+                <button class="sr-edit-save" onclick="saveStockRowEdit('${r.id}')">Lưu</button>
+                <button class="sr-edit-cancel" onclick="cancelStockRowEdit()">Hủy</button>
+            </div>
+        </div>`;
+    }
+    if (r.status === 'available'){
         return `<div class="stock-row">
             <span class="sr-content">${escapeHtml(r.content)}</span>
-            <span class="sr-meta">${escapeHtml(stockUserLabel(r.assigned_user_id))}${soldDate ? ' · ' + escapeHtml(soldDate) : ''}</span>
+            <button class="sr-edit" title="Sửa nội dung" onclick="startStockRowEdit('${r.id}')"><i class="fa-solid fa-pen"></i></button>
+            <button class="sr-del" title="Xoá khỏi kho" onclick="deleteStockRow('${r.id}')"><i class="fa-solid fa-trash"></i></button>
         </div>`;
-    }).join('');
+    }
+    const soldDate = r.sold_at ? new Date(r.sold_at).toLocaleString('vi-VN') : '';
+    return `<div class="stock-row">
+        <span class="sr-content">${escapeHtml(r.content)}</span>
+        <span class="sr-meta">${escapeHtml(stockUserLabel(r.assigned_user_id))}${soldDate ? ' · ' + escapeHtml(soldDate) : ''}</span>
+        <button class="sr-edit" title="Sửa nội dung (vd đổi mật khẩu mới) — vẫn giữ nguyên người đã mua" onclick="startStockRowEdit('${r.id}')"><i class="fa-solid fa-pen"></i></button>
+    </div>`;
+}
+function startStockRowEdit(id){
+    stockEditingId = id;
+    renderStockList();
+    const input = document.getElementById('srEditInput-' + id);
+    if (input){ input.focus(); input.select(); }
+}
+function cancelStockRowEdit(){
+    stockEditingId = null;
+    renderStockList();
+}
+async function saveStockRowEdit(id){
+    const input = document.getElementById('srEditInput-' + id);
+    const newContent = input ? input.value.trim() : '';
+    if (!newContent){ showMsg('Nội dung tài khoản không được để trống.', 'err'); return; }
+    const { error } = await sb.from('product_stock').update({ content: newContent }).eq('id', id);
+    if (error){ showMsg('Lỗi lưu: ' + error.message, 'err'); return; }
+    stockEditingId = null;
+    showMsg('Đã cập nhật tài khoản.', 'ok');
+    loadStockList();
 }
 async function submitAddStock(){
     const ta = document.getElementById('stockAddTextarea');
     const lines = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
     if (!lines.length){ showMsg('Chưa nhập tài khoản nào.', 'err'); return; }
-    const rows = lines.map(content => ({ product_id: String(stockCurrentProductId), content }));
+    const rows = lines.map(content => ({ product_id: String(stockCurrentProductId), variant: stockCurrentVariant, content }));
     const { error } = await sb.from('product_stock').insert(rows);
     if (error){ showMsg('Lỗi thêm vào kho: ' + error.message, 'err'); return; }
     showMsg(`Đã thêm ${lines.length} tài khoản vào kho.`, 'ok');
@@ -6455,6 +6567,56 @@ function onContentPlanChanged(subKey){
     }
 }
 
+// ============================================================================
+// BIẾN THỂ SẢN PHẨM — editor "1 tháng / 3 tháng / 6 tháng..." trong form Sản phẩm.
+// Lưu tạm dạng mảng { id, label, price } gắn trên contentLists[subKey]._variantRows,
+// chỉ gộp vào item.variants khi bấm "Lưu" (saveContentItem).
+// ============================================================================
+function onVariantToggleChanged(subKey){
+    const toggleEl = document.getElementById('cmVariantToggle_' + subKey);
+    const on = toggleEl ? toggleEl.checked : false;
+    const priceWrap = document.getElementById('cmPriceWrap_' + subKey);
+    const variantsWrap = document.getElementById('cmVariantsWrap_' + subKey);
+    if (priceWrap) priceWrap.classList.toggle('hidden', on);
+    if (variantsWrap) variantsWrap.classList.toggle('hidden', !on);
+    const cfg = contentLists[subKey];
+    if (on && (!cfg._variantRows || !cfg._variantRows.length)){
+        setVariantRows(subKey, [{ id: 'v' + Date.now().toString(36), label: '', price: '' }]);
+    }
+    renderVariantRows(subKey);
+}
+function setVariantRows(subKey, rows){
+    contentLists[subKey]._variantRows = (rows || []).map(v => ({ id: v.id || ('v' + Date.now().toString(36) + Math.random().toString(36).slice(2,5)), label: v.label || '', price: v.price != null ? v.price : '' }));
+    renderVariantRows(subKey);
+}
+function renderVariantRows(subKey){
+    const box = document.getElementById('cmVariantsList_' + subKey);
+    if (!box) return;
+    const rows = contentLists[subKey]._variantRows || [];
+    box.innerHTML = rows.map(v => `
+        <div class="cm-variant-row" data-vid="${v.id}">
+            <input class="cm-variant-label" placeholder="Tên phiên bản (VD: 1 tháng)" value="${escapeHtml(v.label)}" oninput="updateVariantRowField('${subKey}','${v.id}','label',this.value)">
+            <input class="cm-variant-price" type="number" min="0" step="1000" placeholder="Giá (VNĐ)" value="${escapeHtml(String(v.price))}" oninput="updateVariantRowField('${subKey}','${v.id}','price',this.value)">
+            <button type="button" class="cm-variant-del" title="Xoá phiên bản" onclick="removeVariantRow('${subKey}','${v.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div>`).join('') || `<div class="hint" style="padding:4px 0;">Chưa có phiên bản nào, bấm "+ Thêm phiên bản" bên dưới.</div>`;
+}
+function updateVariantRowField(subKey, vid, field, value){
+    const rows = contentLists[subKey]._variantRows || [];
+    const row = rows.find(v => String(v.id) === String(vid));
+    if (row) row[field] = value;
+}
+function addVariantRow(subKey){
+    const cfg = contentLists[subKey];
+    cfg._variantRows = cfg._variantRows || [];
+    cfg._variantRows.push({ id: 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2,5), label: '', price: '' });
+    renderVariantRows(subKey);
+}
+function removeVariantRow(subKey, vid){
+    const cfg = contentLists[subKey];
+    cfg._variantRows = (cfg._variantRows || []).filter(v => String(v.id) !== String(vid));
+    renderVariantRows(subKey);
+}
+
 function openContentForm(subKey){
     const cfg = contentLists[subKey];
     cfg.editingId = null;
@@ -6474,6 +6636,12 @@ function openContentForm(subKey){
     if (!cfg.meta.hideIconColor) pickContentColor(subKey, cfg.meta.color || 'indigo');
     if (cfg.meta.docTypeField) pickDocType(subKey, 'free');
     const visibleEl = document.getElementById('cmVisible_' + subKey); if (visibleEl) visibleEl.checked = true;
+    if (cfg.meta.variantsField){
+        const toggleEl = document.getElementById('cmVariantToggle_' + subKey);
+        if (toggleEl) toggleEl.checked = false;
+        setVariantRows(subKey, []);
+        onVariantToggleChanged(subKey);
+    }
     updateContentPreview(subKey);
     document.getElementById('cmForm_' + subKey).classList.add('show');
 }
@@ -6511,6 +6679,13 @@ function editContentItem(subKey, id){
     if (cfg.meta.docTypeField) pickDocType(subKey, item.type === 'paid' ? 'paid' : 'free');
     if (cfg.meta.docTypeField && priceEl) priceEl.value = item.price || (item.type === 'paid' ? '' : 0);
     const visibleEl = document.getElementById('cmVisible_' + subKey); if (visibleEl) visibleEl.checked = !item.hidden;
+    if (cfg.meta.variantsField){
+        const hasVariants = Array.isArray(item.variants) && item.variants.length > 0;
+        const toggleEl = document.getElementById('cmVariantToggle_' + subKey);
+        if (toggleEl) toggleEl.checked = hasVariants;
+        setVariantRows(subKey, hasVariants ? item.variants : []);
+        onVariantToggleChanged(subKey);
+    }
     updateContentPreview(subKey);
     document.getElementById('cmForm_' + subKey).classList.add('show');
     document.getElementById('cmTitle_' + subKey).focus();
@@ -6552,7 +6727,27 @@ async function saveContentItem(subKey){
         docType = sel ? sel.dataset.type : 'free';
         item.type = docType;
     }
-    if (cfg.meta.priceField){
+    let usingVariants = false;
+    if (cfg.meta.variantsField){
+        const toggleEl = document.getElementById('cmVariantToggle_' + subKey);
+        usingVariants = toggleEl ? toggleEl.checked : false;
+        if (usingVariants){
+            const rawRows = cfg._variantRows || [];
+            const rows = rawRows.map(v => ({ id: String(v.id), label: (v.label || '').trim(), price: Number(v.price) }));
+            if (!rows.length) return showMsg('Thêm ít nhất 1 phiên bản, hoặc bỏ chọn "Sản phẩm có nhiều phiên bản".', 'err');
+            for (const v of rows){
+                if (!v.label) return showMsg('Nhập tên cho tất cả các phiên bản (VD: "1 tháng").', 'err');
+                if (!v.price || v.price <= 0) return showMsg(`Nhập giá bán hợp lệ (lớn hơn 0) cho phiên bản "${v.label}".`, 'err');
+            }
+            const labelSet = new Set(rows.map(v => v.label.toLowerCase()));
+            if (labelSet.size !== rows.length) return showMsg('Tên phiên bản bị trùng nhau, hãy đặt tên khác nhau cho mỗi phiên bản.', 'err');
+            item.variants = rows;
+            item.price = Math.min(...rows.map(v => v.price));
+        } else {
+            item.variants = [];
+        }
+    }
+    if (cfg.meta.priceField && !usingVariants){
         const priceEl = document.getElementById('cmPrice_' + subKey);
         if (docType === 'free'){
             item.price = 0;

@@ -34,9 +34,10 @@ async function thanhToanTaiLieu(documentId) {
 /**
  * Bắt đầu thanh toán mua 1 sản phẩm trả phí.
  * @param {string} productId - id sản phẩm trong site_settings.product_content.items[]
+ * @param {string} [variantId] - id biến thể đã chọn (vd "1 tháng"), bỏ trống nếu sản phẩm không chia biến thể
  */
-async function thanhToanSanPham(productId) {
-  await batDauThanhToan({ order_type: 'product', product_id: productId });
+async function thanhToanSanPham(productId, variantId) {
+  await batDauThanhToan({ order_type: 'product', product_id: productId, variant_id: variantId || '' });
 }
 
 async function batDauThanhToan(orderPayload) {

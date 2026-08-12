@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     // --- 3. Lấy đơn hàng tương ứng trong DB ---
     const { data: existingOrder, error: findErr } = await db
       .from("sepay_orders")
-      .select("id, status, amount, order_type, plan_id, course_id, document_id, product_id, user_id, sepay_transaction_id")
+      .select("id, status, amount, order_type, plan_id, course_id, document_id, product_id, variant_id, user_id, sepay_transaction_id")
       .eq("invoice_number", invoiceNumber)
       .single();
 
@@ -134,6 +134,7 @@ Deno.serve(async (req) => {
         course_id: existingOrder.course_id,
         document_id: existingOrder.document_id,
         product_id: existingOrder.product_id,
+        variant_id: existingOrder.variant_id,
         user_id: existingOrder.user_id,
       });
     }

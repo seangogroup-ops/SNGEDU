@@ -168,6 +168,19 @@
     .pd-price.free{ color:var(--green); font-size:1.15rem; }
     .pd-price.has-stock{ margin-bottom:6px; }
 
+    .pd-variant-picker{ margin-bottom:14px; }
+    .pd-variant-lbl{ font-size:.8rem; font-weight:700; color:var(--gray, var(--ink-soft)); margin-bottom:8px; }
+    .pd-variant-opts{ display:flex; flex-wrap:wrap; gap:8px; }
+    .pd-variant-opt{
+        padding:9px 16px; border-radius:10px; border:1.5px solid var(--line); background:var(--white, #fff);
+        color:var(--ink); font-family:inherit; font-size:.86rem; font-weight:700; cursor:pointer;
+        transition:.18s; white-space:nowrap;
+    }
+    .pd-variant-opt:hover{ border-color:var(--accent); }
+    .pd-variant-opt.selected{ background:var(--ink); color:#fff; border-color:var(--ink); }
+    .pd-variant-opt.out{ opacity:.45; cursor:not-allowed; text-decoration:line-through; }
+    .pd-variant-opt i{ font-size:.8em; margin-left:2px; }
+
     .pd-stock{ display:flex; align-items:center; gap:7px; font-size:.86rem; font-weight:700; margin-bottom:18px; }
     .pd-stock::before{ content:''; width:8px; height:8px; border-radius:50%; flex-shrink:0; }
     .pd-stock.in{ color:var(--green); }
@@ -292,6 +305,11 @@ let paymentSettings = { sepay_enabled: true, sepay_disabled_message: '', balance
 let currentItem = null;
 let currentIsPaid = false; // chỉ có ý nghĩa khi TYPE === 'doc'
 let currentAccountInfo = ''; // tài khoản kho được giao tự động cho sản phẩm (nếu có)
+// ---- Biến thể sản phẩm (VD: "1 tháng"/"3 tháng"...) — chỉ dùng khi TYPE === 'product' ----
+let currentVariants = [];        // item.variants, [] nếu sản phẩm không chia biến thể
+let currentVariantId = '';       // biến thể đang chọn ('' nếu không chia biến thể)
+let ownedVariantsMap = {};       // { variantId: accountInfo }  (variantId '' = không chia biến thể)
+let variantStockMap = {};        // { variantId: { available, total } }
 
 async function laySoDuViHienTaiSafe(){
     try{ return await laySoDuViHienTai(); }catch(e){ return 0; }
@@ -353,41 +371,89 @@ async function loadProductItem(){
         return;
     }
     currentItem = item;
+    currentVariants = Array.isArray(item.variants) ? item.variants.filter(v => v && v.id) : [];
 
-    let owned = false;
-    currentAccountInfo = '';
+    // ---- Đã sở hữu biến thể nào? (mỗi biến thể mua riêng, có thể sở hữu nhiều biến thể cùng lúc) ----
+    ownedVariantsMap = {};
     if (currentSession){
         try{
-            const { data } = await sb.from('product_purchases').select('product_id, account_info').eq('user_id', currentSession.user.id).eq('product_id', String(ITEM_ID));
-            owned = !!(data && data.length);
-            if (owned) currentAccountInfo = (data[0].account_info || '').trim();
+            const { data } = await sb.from('product_purchases').select('variant, account_info').eq('user_id', currentSession.user.id).eq('product_id', String(ITEM_ID));
+            (data || []).forEach(row => { ownedVariantsMap[row.variant || ''] = (row.account_info || '').trim(); });
         }catch(e){}
     }
 
-    // Sản phẩm dạng "kho tài khoản" (vd: YouTube Premium...) — nếu admin có nhập kho cho sản phẩm này
-    // thì hiện số lượng còn lại; hết hàng thì khoá nút mua. Sản phẩm chỉ dùng link ngoài (không có kho)
-    // thì total_count = 0, coi như không giới hạn số lượng, giữ nguyên hành vi cũ.
-    let usesStock = false, stockAvailable = 0, outOfStock = false;
+    // ---- Kho tài khoản: lấy số lượng còn lại của MỌI biến thể trong 1 lần gọi ----
+    // total_count = 0 ở 1 biến thể (hoặc '' khi không chia biến thể) nghĩa là không dùng kho -> không giới hạn.
+    variantStockMap = {};
     try{
-        const { data: stockData } = await sb.rpc('get_product_stock_info', { p_product_id: String(ITEM_ID) });
-        const info = Array.isArray(stockData) ? stockData[0] : stockData;
-        if (info && Number(info.total_count) > 0){
-            usesStock = true;
-            stockAvailable = Number(info.available_count) || 0;
-            outOfStock = stockAvailable <= 0;
-        }
+        const { data: stockData } = await sb.rpc('get_product_variants_stock_info', { p_product_id: String(ITEM_ID) });
+        (stockData || []).forEach(row => {
+            variantStockMap[row.variant || ''] = { available: Number(row.available_count) || 0, total: Number(row.total_count) || 0 };
+        });
     }catch(e){}
 
     document.title = `${item.title || 'Sản phẩm'} · SNG EDU`;
     document.getElementById('headerTitle').textContent = item.title || 'Chi tiết sản phẩm';
 
+    // Chọn biến thể mặc định: ưu tiên biến thể đã sở hữu, kế đến biến thể đầu tiên còn hàng, cuối cùng là biến thể đầu tiên.
+    if (currentVariants.length){
+        const ownedFirst = currentVariants.find(v => ownedVariantsMap.hasOwnProperty(String(v.id)));
+        const inStockFirst = currentVariants.find(v => {
+            const st = variantStockMap[String(v.id)];
+            return !st || st.total === 0 || st.available > 0;
+        });
+        currentVariantId = String((ownedFirst || inStockFirst || currentVariants[0]).id);
+    } else {
+        currentVariantId = '';
+    }
+
+    renderProductDetail();
+}
+
+function selectVariant(variantId){
+    currentVariantId = String(variantId);
+    renderProductDetail();
+}
+
+function renderProductDetail(){
+    const item = currentItem;
     const style = QL_COLOR_MAP[item.color] || QL_COLOR_MAP.indigo;
-    const price = Number(item.price) || 0;
+
+    const variant = currentVariants.find(v => String(v.id) === String(currentVariantId)) || null;
+    const price = variant ? (Number(variant.price) || 0) : (Number(item.price) || 0);
     const priceLabel = price > 0 ? price.toLocaleString('vi-VN') + 'đ' : '';
+
+    const owned = ownedVariantsMap.hasOwnProperty(currentVariantId);
+    currentAccountInfo = owned ? (ownedVariantsMap[currentVariantId] || '') : '';
+
+    const stockInfo = variantStockMap[currentVariantId];
+    const usesStock = !!(stockInfo && stockInfo.total > 0);
+    const stockAvailable = stockInfo ? stockInfo.available : 0;
+    const outOfStock = usesStock && stockAvailable <= 0;
 
     const mediaHtml = item.image
         ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title || '')}">`
         : `<div class="pd-icon" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtml(item.icon || 'fa-solid fa-bag-shopping')}"></i></div>`;
+
+    // ---- Bộ chọn biến thể (giống ô chọn Size ở các trang bán hàng) ----
+    let variantPickerHtml = '';
+    if (currentVariants.length){
+        variantPickerHtml = `<div class="pd-variant-picker">
+            <div class="pd-variant-lbl">Phiên bản</div>
+            <div class="pd-variant-opts">
+                ${currentVariants.map(v => {
+                    const vId = String(v.id);
+                    const vSt = variantStockMap[vId];
+                    const vOut = vSt && vSt.total > 0 && vSt.available <= 0;
+                    const vOwned = ownedVariantsMap.hasOwnProperty(vId);
+                    const selected = vId === currentVariantId;
+                    return `<button type="button" class="pd-variant-opt${selected ? ' selected' : ''}${vOut ? ' out' : ''}" ${vOut ? 'disabled' : ''} onclick="selectVariant('${vId.replace(/'/g,"\\'")}')">
+                        ${escapeHtml(v.label || '')}${vOwned ? ' <i class="fa-solid fa-circle-check"></i>' : ''}
+                    </button>`;
+                }).join('')}
+            </div>
+        </div>`;
+    }
 
     let priceHtml = '';
     if (owned) priceHtml = `<div class="pd-price owned"><i class="fa-solid fa-circle-check"></i> Đã sở hữu${priceLabel ? ' · ' + priceLabel : ''}</div>`;
@@ -439,7 +505,7 @@ async function loadProductItem(){
 
     renderDetail({
         eyebrow: '<i class="fa-solid fa-bag-shopping"></i> Sản phẩm',
-        mediaHtml, title: item.title, priceHtml, ctaHtml, desc: item.desc, specs
+        mediaHtml, title: item.title, priceHtml: variantPickerHtml + priceHtml, ctaHtml, desc: item.desc, specs
     });
 
     if (!owned && price > 0 && !outOfStock){
@@ -449,7 +515,7 @@ async function loadProductItem(){
             btn.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + (paymentSettings.sepay_disabled_message || 'Cổng thanh toán đang tạm ngưng, vui lòng quay lại sau');
         }
         if (paymentSettings.balance_payment_enabled && currentSession){
-            await capNhatNutSoDu(price);
+            capNhatNutSoDu(price);
         }
     }
 }
@@ -482,7 +548,7 @@ function muaSanPham(){
     if (!currentSession){ location.href = loginUrl(); return; }
     const btn = document.getElementById('pdBuyBtn');
     if (btn){ btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chuyển tới cổng thanh toán...'; }
-    thanhToanSanPham(String(currentItem.id));
+    thanhToanSanPham(String(currentItem.id), currentVariantId);
 }
 
 async function muaSanPhamBangSoDu(){
@@ -490,7 +556,7 @@ async function muaSanPhamBangSoDu(){
     const btn = document.getElementById('pdBalanceBtn');
     const original = btn.innerHTML;
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
-    const result = await thanhToanBangSoDu({ order_type: 'product', product_id: String(currentItem.id) });
+    const result = await thanhToanBangSoDu({ order_type: 'product', product_id: String(currentItem.id), variant_id: currentVariantId });
     if (!result.ok){
         alert(result.error || 'Có lỗi xảy ra khi thanh toán bằng số dư.');
         btn.disabled = false; btn.innerHTML = original;

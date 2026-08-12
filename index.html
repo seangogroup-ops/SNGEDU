@@ -3286,17 +3286,20 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
         const productId = String(item.id);
         const owned = purchasedProductIds.has(productId);
-        const price = Number(item.price) || 0;
-        const priceLabel = price > 0 ? price.toLocaleString('vi-VN') + 'đ' : '';
+        const variants = Array.isArray(item.variants) ? item.variants.filter(v => v && v.id) : [];
+        const hasVariants = variants.length > 0;
+        const variantPrices = hasVariants ? variants.map(v => Number(v.price) || 0).filter(p => p > 0) : [];
+        const price = hasVariants ? (variantPrices.length ? Math.min(...variantPrices) : 0) : (Number(item.price) || 0);
+        const priceLabel = price > 0 ? (hasVariants ? 'Từ ' : '') + price.toLocaleString('vi-VN') + 'đ' : '';
 
         let tagHtml = '';
         let ctaHtml = '<span>Xem chi tiết</span><i class="fa-solid fa-arrow-right"></i>';
         if (owned){
             tagHtml = '<span class="doc-tag owned"><i class="fa-solid fa-circle-check"></i> Đã sở hữu</span>';
-            ctaHtml = '<span>Mở / Tải xuống</span><i class="fa-solid fa-download"></i>';
+            ctaHtml = hasVariants ? '<span>Xem chi tiết</span><i class="fa-solid fa-arrow-right"></i>' : '<span>Mở / Tải xuống</span><i class="fa-solid fa-download"></i>';
         } else if (price > 0){
             tagHtml = '<span class="doc-tag paid"><i class="fa-solid fa-lock"></i> Trả phí</span>';
-            ctaHtml = `<span>Mua ngay · ${priceLabel}</span><i class="fa-solid fa-cart-shopping"></i>`;
+            ctaHtml = hasVariants ? `<span>Chọn phiên bản · ${priceLabel}</span><i class="fa-solid fa-arrow-right"></i>` : `<span>Mua ngay · ${priceLabel}</span><i class="fa-solid fa-cart-shopping"></i>`;
         }
 
         return `
@@ -3305,7 +3308,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 <div class="prod-body">
                     <div class="prod-title">${escapeHtmlHome(item.title || '')}</div>
                     ${item.desc ? `<div class="prod-desc">${escapeHtmlHome(item.desc)}</div>` : ''}
-                    ${item.price ? `<div class="prod-price">${escapeHtmlHome(priceLabel)}</div>` : ''}
+                    ${price ? `<div class="prod-price">${escapeHtmlHome(priceLabel)}</div>` : ''}
                     <div class="prod-cta">${ctaHtml}</div>
                 </div>
             </a>`;

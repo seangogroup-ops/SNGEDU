@@ -799,22 +799,29 @@ textarea{resize:vertical;}
     background:var(--bg); font-size:.82rem; font-weight:700; color:var(--gray); cursor:pointer;
 }
 .stock-tab.selected{ background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
-.stock-list{ max-height:260px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm); padding:6px; display:flex; flex-direction:column; gap:4px; }
-.stock-row{ display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:8px; font-size:.82rem; }
-.stock-row:hover{ background:var(--bg); }
+.stock-list{ max-height:340px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm); padding:6px; display:flex; flex-direction:column; gap:5px; }
+.stock-row{ display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:8px; font-size:.82rem; border:1px solid transparent; }
+.stock-row:hover{ background:var(--bg); border-color:var(--border); }
+.stock-row .sr-idx{ flex:0 0 auto; width:22px; color:var(--gray); font-size:.72rem; text-align:right; }
 .stock-row .sr-content{ flex:1; min-width:0; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.stock-row .sr-meta{ font-size:.72rem; color:var(--gray); flex:0 0 auto; white-space:nowrap; }
-.stock-row .sr-del{ flex:0 0 auto; background:none; border:none; color:var(--red,#dc2626); cursor:pointer; font-size:.9rem; padding:4px; }
-.stock-row .sr-edit{ flex:0 0 auto; background:none; border:none; color:var(--gray); cursor:pointer; font-size:.9rem; padding:4px; }
-.stock-row .sr-edit:hover{ color:var(--accent); }
-.stock-row.editing{ flex-wrap:wrap; background:var(--bg); }
+.stock-row .sr-meta{ font-size:.72rem; color:var(--gray); flex:0 0 auto; white-space:nowrap; max-width:180px; overflow:hidden; text-overflow:ellipsis; }
+.stock-row .sr-actions{ flex:0 0 auto; display:flex; gap:6px; }
+.stock-row .sr-btn{
+    flex:0 0 auto; display:inline-flex; align-items:center; gap:5px; cursor:pointer; font-size:.74rem; font-weight:700;
+    border-radius:6px; padding:6px 9px; border:1px solid var(--border); background:var(--white); white-space:nowrap;
+}
+.stock-row .sr-edit{ color:var(--accent); }
+.stock-row .sr-edit:hover{ background:var(--accent-soft); border-color:var(--accent); }
+.stock-row .sr-del{ color:var(--red,#dc2626); }
+.stock-row .sr-del:hover{ background:rgba(220,38,38,.1); border-color:var(--red,#dc2626); }
+.stock-row.editing{ flex-wrap:wrap; background:var(--bg); border-color:var(--accent); }
 .stock-row .sr-edit-input{
     flex:1 1 100%; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.82rem;
     padding:7px 9px; border-radius:7px; border:1px solid var(--accent); background:var(--white);
 }
 .stock-row .sr-edit-actions{ flex:0 0 auto; display:flex; gap:6px; margin-left:auto; }
-.stock-row .sr-edit-save{ background:var(--accent); color:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:.76rem; font-weight:700; cursor:pointer; }
-.stock-row .sr-edit-cancel{ background:none; border:1px solid var(--border); border-radius:6px; padding:5px 10px; font-size:.76rem; cursor:pointer; color:var(--gray); }
+.stock-row .sr-edit-save{ background:var(--accent); color:#fff; border:none; border-radius:6px; padding:6px 12px; font-size:.76rem; font-weight:700; cursor:pointer; }
+.stock-row .sr-edit-cancel{ background:none; border:1px solid var(--border); border-radius:6px; padding:6px 12px; font-size:.76rem; cursor:pointer; color:var(--gray); }
 .stock-variant-tabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
 .stock-variant-tab{
     padding:6px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg);
@@ -5992,30 +5999,36 @@ function renderStockList(){
         list.innerHTML = `<div class="empty-state" style="padding:14px;">${stockCurrentTab === 'available' ? 'Kho đang trống, dán tài khoản ở ô trên rồi bấm "Thêm vào kho".' : 'Chưa có tài khoản nào được bán.'}</div>`;
         return;
     }
-    list.innerHTML = rows.map(r => stockRowHtml(r)).join('');
+    list.innerHTML = rows.map((r, i) => stockRowHtml(r, i + 1)).join('');
 }
-function stockRowHtml(r){
+function stockRowHtml(r, idx){
     if (String(r.id) === String(stockEditingId)){
         return `<div class="stock-row editing" data-id="${r.id}">
             <input class="sr-edit-input" id="srEditInput-${r.id}" value="${escapeHtml(r.content)}" onkeydown="if(event.key==='Enter'){event.preventDefault();saveStockRowEdit('${r.id}');} if(event.key==='Escape'){cancelStockRowEdit();}">
             <div class="sr-edit-actions">
-                <button class="sr-edit-save" onclick="saveStockRowEdit('${r.id}')">Lưu</button>
+                <button class="sr-edit-save" onclick="saveStockRowEdit('${r.id}')"><i class="fa-solid fa-check"></i> Lưu</button>
                 <button class="sr-edit-cancel" onclick="cancelStockRowEdit()">Hủy</button>
             </div>
         </div>`;
     }
     if (r.status === 'available'){
-        return `<div class="stock-row">
+        return `<div class="stock-row" data-id="${r.id}">
+            <span class="sr-idx">${idx}.</span>
             <span class="sr-content">${escapeHtml(r.content)}</span>
-            <button class="sr-edit" title="Sửa nội dung" onclick="startStockRowEdit('${r.id}')"><i class="fa-solid fa-pen"></i></button>
-            <button class="sr-del" title="Xoá khỏi kho" onclick="deleteStockRow('${r.id}')"><i class="fa-solid fa-trash"></i></button>
+            <div class="sr-actions">
+                <button class="sr-btn sr-edit" title="Sửa nội dung" onclick="startStockRowEdit('${r.id}')"><i class="fa-solid fa-pen"></i> Sửa</button>
+                <button class="sr-btn sr-del" title="Xoá khỏi kho" onclick="deleteStockRow('${r.id}')"><i class="fa-solid fa-trash"></i> Xoá</button>
+            </div>
         </div>`;
     }
     const soldDate = r.sold_at ? new Date(r.sold_at).toLocaleString('vi-VN') : '';
-    return `<div class="stock-row">
+    return `<div class="stock-row" data-id="${r.id}">
+        <span class="sr-idx">${idx}.</span>
         <span class="sr-content">${escapeHtml(r.content)}</span>
         <span class="sr-meta">${escapeHtml(stockUserLabel(r.assigned_user_id))}${soldDate ? ' · ' + escapeHtml(soldDate) : ''}</span>
-        <button class="sr-edit" title="Sửa nội dung (vd đổi mật khẩu mới) — vẫn giữ nguyên người đã mua" onclick="startStockRowEdit('${r.id}')"><i class="fa-solid fa-pen"></i></button>
+        <div class="sr-actions">
+            <button class="sr-btn sr-edit" title="Sửa nội dung (vd đổi mật khẩu mới) — vẫn giữ nguyên người đã mua" onclick="startStockRowEdit('${r.id}')"><i class="fa-solid fa-pen"></i> Sửa</button>
+        </div>
     </div>`;
 }
 function startStockRowEdit(id){
@@ -6049,10 +6062,18 @@ async function submitAddStock(){
     ta.value = '';
     loadStockList();
 }
-async function deleteStockRow(id){
-    const { error } = await sb.from('product_stock').delete().eq('id', id);
-    if (error){ showMsg('Lỗi xoá: ' + error.message, 'err'); return; }
-    loadStockList();
+function deleteStockRow(id){
+    const row = stockRowsCache.find(x => String(x.id) === String(id));
+    showConfirm(
+        'Xoá tài khoản khỏi kho?',
+        row ? `Xoá "${row.content}" khỏi kho? Không thể hoàn tác.` : 'Xoá tài khoản này khỏi kho? Không thể hoàn tác.',
+        async () => {
+            const { error } = await sb.from('product_stock').delete().eq('id', id);
+            if (error){ showMsg('Lỗi xoá: ' + error.message, 'err'); return; }
+            showMsg('Đã xoá tài khoản khỏi kho.', 'ok');
+            loadStockList();
+        }
+    );
 }
 function toggleContentMenu(subKey, id, btn){
     const menu = document.getElementById('cmmenu-' + subKey + '-' + id);

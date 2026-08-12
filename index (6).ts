@@ -1,17 +1,54 @@
+// ============================================================
+// SNGEDU — Gửi email phản hồi/cảm ơn cho góp ý học viên
+// Admin soạn (hoặc dùng mẫu có sẵn) trong trang quản trị -> bấm "Gửi email"
+// -> function này gọi Resend API gửi mail -> tự đánh dấu feedback đã xử lý + đã gửi email.
+//
+// Cần cấu hình 2 secret trong Supabase Project Settings > Edge Functions:
+//   RESEND_API_KEY   : API key lấy từ https://resend.com (miễn phí 100 email/ngày)
+//   EMAIL_FROM        : địa chỉ gửi đi, vd "SNG EDU <hotro@sngedu.site>" (domain phải verify trên Resend)
+// Nếu chưa cấu hình, function sẽ trả lỗi rõ ràng để admin biết cần làm gì.
+// ============================================================
+
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { grantEntitlement } from "../_shared/grant-entitlement.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const SEPAY_SECRET_KEY = Deno.env.get("SEPAY_SECRET_KEY")!;
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? "SNG EDU <onboarding@resend.dev>";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-secret-key",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+function escapeHtml(s: string) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function wrapEmailHtml(bodyText: string) {
+  const paragraphs = escapeHtml(bodyText)
+    .split(/\n{2,}/)
+    .map((p) => `<p style="margin:0 0 14px;">${p.replace(/\n/g, "<br>")}</p>`)
+    .join("");
+  return `
+  <div style="font-family:Segoe UI,Arial,sans-serif;background:#f4f5fb;padding:28px 16px;">
+    <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #eceef7;">
+      <div style="background:linear-gradient(135deg,#5b5cf0,#8b7cf6);padding:22px 26px;">
+        <div style="font-family:Georgia,serif;font-weight:800;font-size:20px;color:#fff;">SNG EDU</div>
+      </div>
+      <div style="padding:26px;font-size:14.5px;line-height:1.7;color:#20223c;">
+        ${paragraphs}
+      </div>
+      <div style="padding:16px 26px;background:#f7f8fc;font-size:12px;color:#8b8fa8;">
+        Email này được gửi tự động từ hệ thống hỗ trợ SNG EDU dựa trên góp ý bạn đã gửi.
+      </div>
+    </div>
+  </div>`;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -19,134 +56,82 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // --- 1. Xác thực webhook bằng Secret Key (KHÔNG dùng Authorization/JWT của user) ---
-    const secretHeader = req.headers.get("X-Secret-Key");
+    // ---- Xác thực: chỉ admin mới được gửi ----
     const authHeader = req.headers.get("Authorization");
-    const authKey = authHeader?.replace(/^Apikey\s+/i, "").trim();
+    if (!authHeader) throw new Error("Thiếu Authorization header (chưa đăng nhập)");
 
-    const isValid =
-      (secretHeader && secretHeader === SEPAY_SECRET_KEY) ||
-      (authKey && authKey === SEPAY_SECRET_KEY);
+    const supabaseAuth = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userData, error: userErr } = await supabaseAuth.auth.getUser();
+    if (userErr || !userData?.user) throw new Error("Không xác thực được người dùng");
+    const user = userData.user;
 
-    if (!isValid) {
-      console.error("sepay-ipn: xác thực thất bại - secret key không khớp hoặc thiếu");
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    const { data: profile } = await db.from("profiles").select("role").eq("id", user.id).single();
+    if (!profile || profile.role !== "admin") throw new Error("Chỉ admin mới được gửi email phản hồi");
+
+    // ---- Đọc dữ liệu góp ý + nội dung email admin đã soạn ----
+    const body = await req.json();
+    const { feedback_id, subject, message } = body;
+    if (!feedback_id) throw new Error("Thiếu feedback_id");
+    if (!subject || !subject.trim()) throw new Error("Thiếu tiêu đề email");
+    if (!message || !message.trim()) throw new Error("Thiếu nội dung email");
+
+    const { data: fb, error: fbErr } = await db.from("feedback").select("*").eq("id", feedback_id).single();
+    if (fbErr || !fb) throw new Error("Không tìm thấy góp ý này");
+    if (!fb.email) throw new Error("Góp ý này không có email người gửi, không thể gửi mail");
+
+    if (!RESEND_API_KEY) {
+      throw new Error(
+        "Chưa cấu hình RESEND_API_KEY trên server. Vào Supabase > Project Settings > Edge Functions > Secrets để thêm RESEND_API_KEY và EMAIL_FROM."
       );
     }
 
-    // --- 2. Đọc payload ---
-    const payload = await req.json();
-    const order = payload.order ?? payload; // phòng trường hợp SePay gửi phẳng không bọc "order"
+    // ---- Gửi qua Resend ----
+    const resendRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: EMAIL_FROM,
+        to: [fb.email],
+        subject: subject,
+        html: wrapEmailHtml(message),
+      }),
+    });
 
-    const invoiceNumber: string | undefined = order.order_invoice_number ?? order.invoice_number;
-    const orderStatus: string | undefined = order.order_status;
-    const orderAmount = Number(order.order_amount ?? 0);
-    const sepayOrderId: string | undefined = order.order_id ?? order.id;
-    const notificationType: string | undefined = payload.notification_type;
-
-    if (!invoiceNumber) {
-      throw new Error("Thiếu order_invoice_number trong payload");
+    if (!resendRes.ok) {
+      const errText = await resendRes.text();
+      throw new Error("Gửi email thất bại: " + errText);
     }
 
-    // --- 3. Lấy đơn hàng tương ứng trong DB ---
-    const { data: existingOrder, error: findErr } = await db
-      .from("sepay_orders")
-      .select("id, status, amount, order_type, plan_id, course_id, document_id, product_id, user_id, sepay_transaction_id")
-      .eq("invoice_number", invoiceNumber)
-      .single();
-
-    if (findErr || !existingOrder) {
-      console.error("sepay-ipn: không tìm thấy đơn hàng", invoiceNumber, findErr);
-      // Vẫn trả 200 để SePay không retry vô ích với đơn không tồn tại phía mình
-      return new Response(JSON.stringify({ received: true, note: "order not found" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // --- 4. Chống xử lý trùng lặp (webhook có thể gửi lại nhiều lần) ---
-    if (existingOrder.status === "paid") {
-      return new Response(JSON.stringify({ received: true, note: "already processed" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // --- 5. Chỉ xử lý khi giao dịch thực sự đã thanh toán ---
-    const paidStatuses = ["CAPTURED", "PAID", "SUCCESS"];
-    const isPaid =
-      notificationType === "ORDER_PAID" ||
-      (orderStatus && paidStatuses.includes(orderStatus.toUpperCase()));
-
-    if (!isPaid) {
-      // Ghi nhận nhưng chưa cập nhật paid (ví dụ trạng thái pending/failed)
-      return new Response(JSON.stringify({ received: true, note: "not a paid event" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // --- 6. Đối chiếu số tiền để chống gian lận ---
-    if (orderAmount && Number(existingOrder.amount) !== orderAmount) {
-      console.error(
-        "sepay-ipn: số tiền không khớp!",
-        "DB:", existingOrder.amount,
-        "SePay gửi:", orderAmount,
-        "invoice:", invoiceNumber,
-      );
-      return new Response(
-        JSON.stringify({ error: "Amount mismatch" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    // --- 7. Cập nhật đơn hàng -> paid ---
-    const { error: updateErr } = await db
-      .from("sepay_orders")
+    // ---- Lưu lại nội dung đã gửi + đánh dấu đã xử lý ----
+    const nowIso = new Date().toISOString();
+    const { error: updErr } = await db
+      .from("feedback")
       .update({
-        status: "paid",
-        paid_at: new Date().toISOString(),
-        sepay_transaction_id: sepayOrderId ?? null,
+        reply_subject: subject,
+        reply_message: message,
+        email_sent: true,
+        email_sent_at: nowIso,
+        replied_by: user.id,
+        status: "resolved",
+        updated_at: nowIso,
       })
-      .eq("id", existingOrder.id);
+      .eq("id", feedback_id);
+    if (updErr) throw new Error("Đã gửi email nhưng lưu trạng thái lỗi: " + updErr.message);
 
-    if (updateErr) throw updateErr;
-
-    // --- 8. Kích hoạt quyền lợi cho user ---
-    if (existingOrder.order_type === "wallet_topup") {
-      // Nạp tiền vào ví: cộng thẳng vào profiles.balance qua hàm atomic,
-      // đồng thời ghi 1 dòng balance_transactions (type='topup') để hiện trong Lịch sử.
-      const { error: rpcErr } = await db.rpc("wallet_adjust_balance", {
-        p_user_id: existingOrder.user_id,
-        p_amount: Number(existingOrder.amount),
-        p_type: "topup",
-        p_note: `Nạp tiền qua SePay - ${invoiceNumber}`,
-        p_order_id: existingOrder.id,
-      });
-      if (rpcErr) throw rpcErr;
-    } else {
-      await grantEntitlement(db, {
-        id: existingOrder.id,
-        order_type: existingOrder.order_type,
-        plan_id: existingOrder.plan_id,
-        course_id: existingOrder.course_id,
-        document_id: existingOrder.document_id,
-        product_id: existingOrder.product_id,
-        user_id: existingOrder.user_id,
-      });
-    }
-
-    return new Response(JSON.stringify({ received: true, processed: true }), {
-      status: 200,
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (err) {
-    console.error("sepay-ipn error:", err);
-    return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : "Lỗi không xác định" }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e.message || String(e) }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

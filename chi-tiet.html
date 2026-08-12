@@ -161,9 +161,19 @@
     .pd-desc{ color:var(--ink-soft); font-size:.94rem; line-height:1.75; margin:18px 0 24px; white-space:pre-line; }
 
     .pd-specs{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:8px; }
-    .pd-spec{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
-    .pd-spec .lbl{ font-size:.76rem; color:var(--ink-mute); margin-bottom:4px; }
-    .pd-spec .val{ font-size:.98rem; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:6px; }
+    .pd-spec{
+        display:flex; align-items:center; gap:12px;
+        background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px;
+        box-shadow:var(--shadow); transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+    @media (hover:hover){ .pd-spec:hover{ transform:translateY(-2px); box-shadow:var(--shadow-hov); border-color:#dfe2ee22; } }
+    .pd-spec .ic{
+        width:40px; height:40px; border-radius:12px; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center; font-size:1.02rem;
+    }
+    .pd-spec .txt{ min-width:0; }
+    .pd-spec .lbl{ font-size:.74rem; color:var(--ink-mute); margin-bottom:3px; }
+    .pd-spec .val{ font-size:.96rem; font-weight:700; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
     footer{ text-align:center; color:var(--ink-mute); font-size:.78rem; padding:30px 0 4px; }
 </style>
@@ -183,7 +193,7 @@
 
 <div class="pd-screen">
     <div id="content"><div class="state-card"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải...</div></div>
-    <footer>SNG © H.N.TấnHải · sngedu.site</footer>
+    <footer id="siteFooter">SNG © H.N.TấnHải · sngedu.site</footer>
 </div>
 
 <script src="frontend/usage-limits.js"></script>
@@ -240,9 +250,26 @@ function showState(html, isError){
     document.getElementById('content').innerHTML = `<div class="state-card${isError ? ' is-error' : ''}">${html}</div>`;
 }
 
+// ---------------- CHÂN TRANG — đọc từ Supabase site_settings, đồng bộ với admin (giống index.html) ----------------
+async function loadFooterSettings(){
+    const el = document.getElementById('siteFooter');
+    try{
+        const { data, error } = await sb.from('site_settings').select('*').eq('key', 'site_footer').single();
+        if (error || !data || !data.payload || !data.payload.text){
+            if (el) el.textContent = ''; // chưa cấu hình ở admin -> để trống, không dùng chữ mặc định
+            return;
+        }
+        if (el) el.textContent = data.payload.text;
+    }catch(e){
+        if (el) el.textContent = '';
+    }
+}
+
 async function loadPage(){
     const { data: { session } } = await sb.auth.getSession();
     currentSession = session;
+
+    loadFooterSettings();
 
     try{
         const { data } = await sb.from('site_settings').select('payload').eq('key', 'payment_settings').maybeSingle();
@@ -318,10 +345,14 @@ async function loadProductItem(){
     }
 
     const specs = [];
-    specs.push({ lbl:'Trạng thái', val: owned ? 'Đã sở hữu' : (price > 0 ? 'Trả phí' : 'Miễn phí / Giới thiệu'), icon: owned ? 'fa-circle-check' : (price > 0 ? 'fa-lock' : 'fa-unlock') });
-    if (priceLabel) specs.push({ lbl:'Giá', val: priceLabel, icon:'fa-tag' });
-    if (item.category) specs.push({ lbl:'Danh mục', val: item.category, icon:'fa-layer-group' });
-    specs.push({ lbl:'Định dạng', val: item.format || 'Kỹ thuật số', icon:'fa-file' });
+    specs.push(owned
+        ? { lbl:'Trạng thái', val:'Đã sở hữu', icon:'fa-circle-check', bg:'var(--green-bg)', fg:'var(--green)' }
+        : price > 0
+            ? { lbl:'Trạng thái', val:'Trả phí', icon:'fa-lock', bg:'var(--amber-bg)', fg:'var(--amber)' }
+            : { lbl:'Trạng thái', val:'Miễn phí / Giới thiệu', icon:'fa-unlock', bg:'var(--green-bg)', fg:'var(--green)' });
+    specs.push({ lbl:'Giá', val: priceLabel || 'Miễn phí', icon:'fa-tag', bg:'var(--brand-bg)', fg:'var(--brand)' });
+    specs.push({ lbl:'Danh mục', val: item.category || 'Chưa phân loại', icon:'fa-layer-group', bg:'#f1ecff', fg:'#8b5cf6' });
+    specs.push({ lbl:'Định dạng', val: item.format || 'Kỹ thuật số', icon:'fa-file', bg:'#e8f3ff', fg:'#0068ff' });
 
     renderDetail({
         eyebrow: '<i class="fa-solid fa-bag-shopping"></i> Sản phẩm',
@@ -426,10 +457,14 @@ async function loadDocItem(){
     }
 
     const specs = [];
-    specs.push({ lbl:'Trạng thái', val: isPaid ? (owned ? 'Đã mua' : 'Trả phí') : 'Miễn phí', icon: isPaid ? (owned ? 'fa-circle-check' : 'fa-lock') : 'fa-unlock' });
-    if (priceLabel) specs.push({ lbl:'Giá', val: priceLabel, icon:'fa-tag' });
-    if (item.size) specs.push({ lbl:'Dung lượng / định dạng', val: item.size, icon:'fa-file-lines' });
-    specs.push({ lbl:'Loại tài liệu', val: isPaid ? 'Tài liệu trả phí' : 'Tài liệu miễn phí', icon:'fa-graduation-cap' });
+    specs.push(isPaid
+        ? (owned
+            ? { lbl:'Trạng thái', val:'Đã mua', icon:'fa-circle-check', bg:'var(--green-bg)', fg:'var(--green)' }
+            : { lbl:'Trạng thái', val:'Trả phí', icon:'fa-lock', bg:'var(--amber-bg)', fg:'var(--amber)' })
+        : { lbl:'Trạng thái', val:'Miễn phí', icon:'fa-unlock', bg:'var(--green-bg)', fg:'var(--green)' });
+    specs.push({ lbl:'Giá', val: priceLabel || 'Miễn phí', icon:'fa-tag', bg:'var(--brand-bg)', fg:'var(--brand)' });
+    specs.push({ lbl:'Dung lượng / định dạng', val: item.size || 'PDF · Chưa cập nhật', icon:'fa-file-lines', bg:'#e8f3ff', fg:'#0068ff' });
+    specs.push({ lbl:'Loại tài liệu', val: isPaid ? 'Tài liệu trả phí' : 'Tài liệu miễn phí', icon:'fa-graduation-cap', bg:'#f1ecff', fg:'#8b5cf6' });
 
     renderDetail({
         eyebrow: '<i class="fa-solid fa-file-lines"></i> Tài liệu',
@@ -500,7 +535,11 @@ function renderDetail({ eyebrow, mediaHtml, title, priceHtml, ctaHtml, desc, spe
                 ${ctaHtml}
                 ${desc ? `<div class="pd-desc">${escapeHtml(desc)}</div>` : ''}
                 <div class="pd-specs">
-                    ${specs.map(s => `<div class="pd-spec"><div class="lbl">${escapeHtml(s.lbl)}</div><div class="val"><i class="fa-solid ${s.icon}"></i> ${escapeHtml(s.val)}</div></div>`).join('')}
+                    ${specs.map(s => `
+                        <div class="pd-spec">
+                            <div class="ic" style="background:${s.bg || 'var(--brand-bg)'}; color:${s.fg || 'var(--brand)'}"><i class="fa-solid ${s.icon}"></i></div>
+                            <div class="txt"><div class="lbl">${escapeHtml(s.lbl)}</div><div class="val">${escapeHtml(s.val)}</div></div>
+                        </div>`).join('')}
                 </div>
             </div>
         </div>`;

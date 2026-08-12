@@ -419,7 +419,7 @@
         <span class="arrow">👉</span>
     </button>
 
-    <footer>SNG © H.N.TấnHải · sngedu.site</footer>
+    <footer id="siteFooter">SNG © H.N.TấnHải · sngedu.site</footer>
 </div>
 
 <!-- ================= MODAL GÓP Ý (gửi thẳng vào bảng feedback, admin xem trong trang quản trị) ================= -->
@@ -637,6 +637,22 @@ themeBtn.addEventListener('click', ()=>{
     try{ localStorage.setItem('sng-theme', next); }catch(e){}
     applyPalette(next);
 });
+
+// ---------------- CHÂN TRANG — đọc từ Supabase site_settings, đồng bộ với admin (giống index.html) ----------------
+async function loadFooterSettings(){
+    const el = document.getElementById('siteFooter');
+    try{
+        const { data, error } = await sb.from('site_settings').select('*').eq('key', 'site_footer').single();
+        if (error || !data || !data.payload || !data.payload.text){
+            if (el) el.textContent = ''; // chưa cấu hình ở admin -> để trống, không dùng chữ mặc định
+            return;
+        }
+        if (el) el.textContent = data.payload.text;
+    }catch(e){
+        if (el) el.textContent = '';
+    }
+}
+loadFooterSettings();
 
 loadPage();
 

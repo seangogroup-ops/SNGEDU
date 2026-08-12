@@ -2969,13 +2969,13 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const iconHtml = `<div class="doc-icon"><i class="fa-solid ${isPaid ? 'fa-lock' : 'fa-file-lines'}"></i></div>`;
         const topClass = item.image ? 'doc-card-top' : 'doc-card-top no-thumb';
 
-        // Tài liệu miễn phí: mở/tải trực tiếp như cũ (có kiểm tra giới hạn lượt/ngày cho tài khoản Free).
+        // Tài liệu miễn phí: bấm vào thẻ -> mở trang chi tiết riêng (có URL riêng, back được),
+        // việc tải xuống thật sự (kiểm tra giới hạn lượt/ngày) diễn ra trên trang đó.
         if (!isPaid){
-            const href = item.link || '#';
             const idAttr = escapeHtmlHome(String(item.id || ''));
             const disabled = !item.link;
             return `
-                <a class="doc-card is-free${disabled ? ' is-disabled' : ''}" data-cat="free" href="${escapeHtmlHome(href)}" ${item.link ? `target="_blank" rel="noopener" onclick="return handleFreeDocClick(event, '${idAttr}', this)"` : 'onclick="return false;"'}>
+                <a class="doc-card is-free${disabled ? ' is-disabled' : ''}" data-cat="free" href="${disabled ? '#' : `chi-tiet.html?type=doc&id=${idAttr}`}" ${disabled ? 'onclick="return false;"' : ''}>
                     <div class="${topClass}">
                         ${topHtml || iconHtml}
                         <span class="doc-tag free"><i class="fa-solid fa-unlock"></i> Miễn phí</span>
@@ -2983,20 +2983,20 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                     <div class="doc-title">${escapeHtmlHome(item.title || '')}</div>
                     ${metaHtml}
                     ${descHtml}
-                    <div class="doc-cta"><i class="fa-solid ${disabled ? 'fa-hourglass-half' : 'fa-download'}"></i> ${disabled ? 'Sắp ra mắt' : 'Tải xuống'}</div>
+                    <div class="doc-cta"><i class="fa-solid ${disabled ? 'fa-hourglass-half' : 'fa-arrow-right'}"></i> ${disabled ? 'Sắp ra mắt' : 'Xem chi tiết'}</div>
                 </a>`;
         }
 
-        // Tài liệu trả phí: chỉ lộ link tải sau khi đã thanh toán thành công.
+        // Tài liệu trả phí: bấm vào thẻ -> mở trang chi tiết riêng để mua/tải, chỉ lộ link tải sau khi đã thanh toán thành công.
         const docId = String(item.id);
         DOC_PAID_ITEMS_MAP[docId] = item;
         const owned = purchasedDocIds.has(docId);
         const priceLabel = Number(item.price) > 0 ? Number(item.price).toLocaleString('vi-VN') + 'đ' : '';
+        const idAttr = escapeHtmlHome(docId);
 
         if (owned){
-            const href = item.link || '#';
             return `
-                <a class="doc-card is-owned" data-cat="paid" href="${escapeHtmlHome(href)}" ${item.link ? 'target="_blank" rel="noopener"' : 'onclick="return false;"'}>
+                <a class="doc-card is-owned" data-cat="paid" href="chi-tiet.html?type=doc&id=${idAttr}">
                     <div class="${topClass}">
                         ${topHtml || iconHtml}
                         <span class="doc-tag owned"><i class="fa-solid fa-circle-check"></i> Đã mua</span>
@@ -3008,9 +3008,8 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 </a>`;
         }
 
-        const idAttr = escapeHtmlHome(docId);
         return `
-            <div class="doc-card is-paid" data-cat="paid" role="button" tabindex="0" onclick="openDocPurchase('${idAttr}')" onkeydown="if(event.key==='Enter')openDocPurchase('${idAttr}')">
+            <a class="doc-card is-paid" data-cat="paid" href="chi-tiet.html?type=doc&id=${idAttr}">
                 <div class="${topClass}">
                     ${topHtml || iconHtml}
                     <span class="doc-tag paid"><i class="fa-solid fa-lock"></i> Trả phí</span>
@@ -3019,7 +3018,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
                 ${metaHtml}
                 ${descHtml}
                 <div class="doc-cta"><i class="fa-solid fa-cart-shopping"></i> ${priceLabel ? 'Mua ngay · ' + priceLabel : 'Mua ngay'}</div>
-            </div>`;
+            </a>`;
     }
 
     async function renderDocContent(){
@@ -3301,7 +3300,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         }
 
         return `
-            <a class="prod-card" href="#" onclick="event.preventDefault(); openProductDetail('${escapeHtmlHome(productId)}');">
+            <a class="prod-card" href="chi-tiet.html?type=product&id=${encodeURIComponent(productId)}">
                 <div class="prod-thumb-wrap">${mediaHtml}${tagHtml}</div>
                 <div class="prod-body">
                     <div class="prod-title">${escapeHtmlHome(item.title || '')}</div>

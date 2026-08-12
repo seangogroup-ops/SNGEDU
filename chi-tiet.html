@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14151c" media="(prefers-color-scheme: dark)">
+<script>
+    try{
+        var savedTheme = localStorage.getItem('sng-theme');
+        if(savedTheme === 'dark' || savedTheme === 'light'){
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }else{
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    }catch(e){}
+</script>
+<title>Chi tiết · SNG EDU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+    :root{
+        --bg:        #f5f7fb;
+        --card:      #ffffff;
+        --line:      #e8eaf1;
+        --ink:       #1f2433;
+        --ink-soft:  #6b7180;
+        --ink-mute:  #9aa0b1;
+        --green:     #17b26a;
+        --green-bg:  #e7f9f0;
+        --amber:     #f5a524;
+        --amber-bg:  #fef3e0;
+        --red:       #e5484d;
+        --red-bg:    #fde8e8;
+        --brand:     #4f6bff;
+        --brand-bg:  #eef1ff;
+        --accent:    #4f6bff;
+        --accent-bg: #eef1ff;
+        --shadow:    0 1px 2px rgba(20,22,40,.04), 0 8px 24px -12px rgba(20,22,40,.08);
+        --shadow-hov:0 4px 10px rgba(20,22,40,.05), 0 20px 40px -16px rgba(20,22,40,.16);
+    }
+    html[data-theme="dark"]{
+        --bg:        #14151c;
+        --card:      #1c1e28;
+        --line:      #2c2f3c;
+        --ink:       #f0f1f6;
+        --ink-soft:  #a2a7ba;
+        --ink-mute:  #6f7488;
+        --green:     #2ed392;
+        --green-bg:  #163a2c;
+        --amber:     #ffbd4a;
+        --amber-bg:  #3a2e12;
+        --red:       #ff6b6b;
+        --red-bg:    #3a1c1e;
+        --brand:     #7b93ff;
+        --brand-bg:  #232a4d;
+        --shadow:    0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
+        --shadow-hov:0 4px 10px rgba(0,0,0,.25), 0 20px 40px -16px rgba(0,0,0,.6);
+    }
+    html{ transition: background 0.38s ease; }
+    *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+    body, header{ transition: background 0.38s ease, border-color 0.38s ease, color 0.38s ease; }
+    body{
+        background: var(--bg); color: var(--ink);
+        font-family:'Be Vietnam Pro', sans-serif; min-height:100vh; line-height:1.6;
+    }
+    @media (prefers-reduced-motion: reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+    a{ color:inherit; }
+
+    /* ---------------- header ---------------- */
+    header{
+        background:var(--card); height:64px; display:flex; align-items:center; gap:10px;
+        padding:0 clamp(14px, 4vw, 24px); border-bottom:1px solid var(--line);
+        padding-left:max(14px, env(safe-area-inset-left)); padding-right:max(14px, env(safe-area-inset-right));
+        position:fixed; top:0; width:100%; z-index:1000;
+    }
+    .back-btn{
+        width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:var(--card);
+        display:flex; align-items:center; justify-content:center; color:var(--ink); font-size:.95rem;
+        cursor:pointer; flex-shrink:0; text-decoration:none;
+        transition:background .25s ease, transform .2s ease;
+    }
+    @media (hover:hover){ .back-btn:hover{ background:var(--brand-bg); color:var(--brand); } }
+    .back-btn:active{ transform:scale(.9); }
+    .header-title{
+        font-weight:700; color:var(--ink); font-size:.98rem; flex:1;
+        overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .theme-toggle{
+        width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:var(--card);
+        cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--ink-soft);
+        font-size:.9rem; flex-shrink:0; transition:background .25s ease, color .25s ease;
+    }
+    @media (hover:hover){ .theme-toggle:hover{ background:var(--brand-bg); color:var(--brand); } }
+    .theme-toggle .fa-sun{ display:none; }
+    html[data-theme="dark"] .theme-toggle .fa-sun{ display:inline; }
+    html[data-theme="dark"] .theme-toggle .fa-moon{ display:none; }
+
+    /* ---------------- wrap ---------------- */
+    .pd-screen{
+        max-width:1080px; width:100%; margin:0 auto;
+        padding:88px clamp(16px, 4vw, 28px) 60px;
+        padding-left:max(clamp(16px, 4vw, 28px), env(safe-area-inset-left));
+        padding-right:max(clamp(16px, 4vw, 28px), env(safe-area-inset-right));
+        padding-bottom:max(60px, env(safe-area-inset-bottom));
+    }
+
+    .state-card{
+        background:var(--card); border:1px solid var(--line); border-radius:20px;
+        padding:60px 24px; text-align:center; color:var(--ink-soft); font-size:.92rem;
+    }
+    .state-card i{ font-size:1.8rem; color:var(--ink-mute); margin-bottom:14px; display:block; }
+    .state-card.is-error i{ color:var(--amber); }
+    .state-card a{ color:var(--accent); font-weight:700; text-decoration:none; }
+    .state-card a:hover{ text-decoration:underline; }
+
+    /* ---------------- detail layout (dùng chung cho sản phẩm + tài liệu) ---------------- */
+    .pd-grid{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px, 4vw, 48px); align-items:flex-start; }
+    @media (max-width:820px){ .pd-grid{ grid-template-columns:1fr; } }
+
+    .pd-media{
+        background:var(--card); border:1px solid var(--line); border-radius:22px;
+        aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;
+        overflow:hidden; box-shadow:var(--shadow); position:sticky; top:88px;
+    }
+    @media (max-width:820px){ .pd-media{ position:static; } }
+    .pd-media img{ width:100%; height:100%; object-fit:cover; }
+    .pd-media .pd-icon{
+        width:120px; height:120px; border-radius:28px;
+        display:flex; align-items:center; justify-content:center; font-size:2.8rem;
+        background:var(--brand-bg); color:var(--brand);
+    }
+
+    .pd-info{ padding-top:4px; }
+    .pd-eyebrow{
+        font-size:.76rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+        color:var(--accent); margin-bottom:10px; display:flex; align-items:center; gap:6px;
+    }
+    .pd-title{ font-size:clamp(1.35rem, 1.1rem + 1.4vw, 1.9rem); font-weight:800; line-height:1.3; margin-bottom:14px; }
+    .pd-price{ font-size:1.3rem; font-weight:800; color:var(--ink); margin-bottom:18px; }
+    .pd-price.owned{ color:var(--green); font-size:1.05rem; }
+    .pd-price.free{ color:var(--green); font-size:1.15rem; }
+
+    .pd-cta{
+        display:flex; align-items:center; justify-content:center; gap:10px;
+        width:100%; padding:15px 20px; border-radius:14px; border:none;
+        font-family:inherit; font-size:.98rem; font-weight:700; cursor:pointer;
+        text-decoration:none; margin-bottom:12px;
+        background:var(--amber-bg); color:var(--amber);
+        transition:transform .2s ease, filter .2s ease;
+    }
+    .pd-cta:active{ transform:scale(.98); }
+    .pd-cta:disabled, .pd-cta.disabled{ opacity:.55; cursor:not-allowed; pointer-events:none; }
+    .pd-cta.owned{ background:var(--brand-bg); color:var(--brand); }
+    .pd-cta.free{ background:var(--green-bg); color:var(--green); }
+    .pd-cta.outline{ background:transparent; color:var(--ink); border:1.5px solid var(--line); }
+
+    .pd-desc{ color:var(--ink-soft); font-size:.94rem; line-height:1.75; margin:18px 0 24px; white-space:pre-line; }
+
+    .pd-specs{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:8px; }
+    .pd-spec{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+    .pd-spec .lbl{ font-size:.76rem; color:var(--ink-mute); margin-bottom:4px; }
+    .pd-spec .val{ font-size:.98rem; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:6px; }
+
+    footer{ text-align:center; color:var(--ink-mute); font-size:.78rem; padding:30px 0 4px; }
+</style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="frontend/track-visit.js"></script>
+
+<header>
+    <a href="javascript:void(0)" class="back-btn" id="backBtn" aria-label="Quay lại"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="header-title" id="headerTitle">Chi tiết</div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
+        <i class="fa-solid fa-moon"></i>
+        <i class="fa-solid fa-sun"></i>
+    </button>
+</header>
+
+<div class="pd-screen">
+    <div id="content"><div class="state-card"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải...</div></div>
+    <footer>SNG © H.N.TấnHải · sngedu.site</footer>
+</div>
+
+<script src="frontend/usage-limits.js"></script>
+<script>
+const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ---------------- Loại nội dung: 'product' (sản phẩm) hoặc 'doc' (tài liệu) — lấy từ ?type= ----------------
+const params = new URLSearchParams(location.search);
+const TYPE = params.get('type') === 'doc' ? 'doc' : 'product'; // mặc định 'product' nếu thiếu/khác
+const ITEM_ID = params.get('id');
+const backFallback = TYPE === 'doc' ? 'index.html#doc' : 'index.html#product';
+
+document.getElementById('backBtn').addEventListener('click', () => {
+    if (document.referrer && history.length > 1){ history.back(); }
+    else { location.href = backFallback; }
+});
+
+const themeBtn = document.getElementById('themeToggle');
+themeBtn.addEventListener('click', ()=>{
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem('sng-theme', next); }catch(e){}
+});
+
+function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function loginUrl(){
+    return 'account/login.html?next=' + encodeURIComponent(location.pathname + location.search);
+}
+
+const QL_COLOR_MAP = {
+    indigo: { bg:'var(--brand-bg)', fg:'var(--brand)' },
+    purple: { bg:'#f1ecff',         fg:'#8b5cf6' },
+    green:  { bg:'var(--green-bg)', fg:'var(--green)' },
+    amber:  { bg:'var(--amber-bg)', fg:'var(--amber)' },
+    blue:   { bg:'#e8f3ff',         fg:'#0068ff' },
+    red:    { bg:'var(--red-bg)',   fg:'var(--red)' }
+};
+
+let currentSession = null;
+let paymentSettings = { sepay_enabled: true, sepay_disabled_message: '', balance_payment_enabled: true, wallet_topup_enabled: true };
+let currentItem = null;
+let currentIsPaid = false; // chỉ có ý nghĩa khi TYPE === 'doc'
+
+async function laySoDuViHienTaiSafe(){
+    try{ return await laySoDuViHienTai(); }catch(e){ return 0; }
+}
+
+function showState(html, isError){
+    document.getElementById('content').innerHTML = `<div class="state-card${isError ? ' is-error' : ''}">${html}</div>`;
+}
+
+async function loadPage(){
+    const { data: { session } } = await sb.auth.getSession();
+    currentSession = session;
+
+    try{
+        const { data } = await sb.from('site_settings').select('payload').eq('key', 'payment_settings').maybeSingle();
+        if (data && data.payload) paymentSettings = Object.assign({}, paymentSettings, data.payload);
+    }catch(e){}
+
+    if (!ITEM_ID){
+        document.getElementById('headerTitle').textContent = 'Không tìm thấy';
+        showState(`<i class="fa-solid fa-circle-exclamation"></i>Thiếu mã ${TYPE === 'doc' ? 'tài liệu' : 'sản phẩm'}.<br>Vui lòng quay lại <a href="${backFallback}">trang chủ</a>.`, true);
+        return;
+    }
+
+    if (TYPE === 'doc') await loadDocItem(); else await loadProductItem();
+}
+
+// ==================== SẢN PHẨM ====================
+async function loadProductItem(){
+    let payload = { items: [] };
+    try{
+        const { data, error } = await sb.from('site_settings').select('payload').eq('key', 'product_content').single();
+        if (!error && data && data.payload) payload = data.payload;
+    }catch(e){}
+
+    const items = Array.isArray(payload.items) ? payload.items : [];
+    const item = items.find(it => String(it.id) === String(ITEM_ID));
+
+    if (!item){
+        document.getElementById('headerTitle').textContent = 'Không tìm thấy sản phẩm';
+        showState(`<i class="fa-solid fa-circle-exclamation"></i>Sản phẩm này không tồn tại hoặc đã bị gỡ bỏ.<br>Vui lòng quay lại <a href="index.html#product">trang Sản phẩm</a> để chọn sản phẩm khác.`, true);
+        return;
+    }
+    currentItem = item;
+
+    let owned = false;
+    if (currentSession){
+        try{
+            const { data } = await sb.from('product_purchases').select('product_id').eq('user_id', currentSession.user.id).eq('product_id', String(ITEM_ID));
+            owned = !!(data && data.length);
+        }catch(e){}
+    }
+
+    document.title = `${item.title || 'Sản phẩm'} · SNG EDU`;
+    document.getElementById('headerTitle').textContent = item.title || 'Chi tiết sản phẩm';
+
+    const style = QL_COLOR_MAP[item.color] || QL_COLOR_MAP.indigo;
+    const price = Number(item.price) || 0;
+    const priceLabel = price > 0 ? price.toLocaleString('vi-VN') + 'đ' : '';
+
+    const mediaHtml = item.image
+        ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title || '')}">`
+        : `<div class="pd-icon" style="background:${style.bg}; color:${style.fg}"><i class="${escapeHtml(item.icon || 'fa-solid fa-bag-shopping')}"></i></div>`;
+
+    let priceHtml = '';
+    if (owned) priceHtml = `<div class="pd-price owned"><i class="fa-solid fa-circle-check"></i> Đã sở hữu${priceLabel ? ' · ' + priceLabel : ''}</div>`;
+    else if (priceLabel) priceHtml = `<div class="pd-price">${priceLabel}</div>`;
+
+    let ctaHtml = '';
+    if (owned){
+        ctaHtml = item.link
+            ? `<a class="pd-cta owned" href="${escapeHtml(item.link)}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Mở / Tải sản phẩm</a>`
+            : `<button class="pd-cta owned" disabled><i class="fa-solid fa-circle-check"></i> Đã sở hữu</button>`;
+    } else if (price > 0){
+        ctaHtml = `<button class="pd-cta" id="pdBuyBtn" onclick="muaSanPham()">
+                        <i class="fa-solid fa-cart-shopping"></i> Mua ngay · ${priceLabel}
+                   </button>
+                   <button class="pd-cta outline" id="pdBalanceBtn" style="display:none;" onclick="muaSanPhamBangSoDu()">
+                        <i class="fa-solid fa-wallet"></i> Thanh toán bằng số dư (<span id="pdBalanceText">—</span>)
+                   </button>`;
+    } else if (item.link){
+        ctaHtml = `<a class="pd-cta" style="background:${style.bg}; color:${style.fg};" href="${escapeHtml(item.link)}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Xem / mua sản phẩm</a>`;
+    } else {
+        ctaHtml = `<button class="pd-cta" disabled>Sắp ra mắt</button>`;
+    }
+
+    const specs = [];
+    specs.push({ lbl:'Trạng thái', val: owned ? 'Đã sở hữu' : (price > 0 ? 'Trả phí' : 'Miễn phí / Giới thiệu'), icon: owned ? 'fa-circle-check' : (price > 0 ? 'fa-lock' : 'fa-unlock') });
+    if (priceLabel) specs.push({ lbl:'Giá', val: priceLabel, icon:'fa-tag' });
+    if (item.category) specs.push({ lbl:'Danh mục', val: item.category, icon:'fa-layer-group' });
+    specs.push({ lbl:'Định dạng', val: item.format || 'Kỹ thuật số', icon:'fa-file' });
+
+    renderDetail({
+        eyebrow: '<i class="fa-solid fa-bag-shopping"></i> Sản phẩm',
+        mediaHtml, title: item.title, priceHtml, ctaHtml, desc: item.desc, specs
+    });
+
+    if (!owned && price > 0){
+        const btn = document.getElementById('pdBuyBtn');
+        if (!paymentSettings.sepay_enabled){
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + (paymentSettings.sepay_disabled_message || 'Cổng thanh toán đang tạm ngưng, vui lòng quay lại sau');
+        }
+        if (paymentSettings.balance_payment_enabled && currentSession){
+            await capNhatNutSoDu(price);
+        }
+    }
+}
+
+function muaSanPham(){
+    if (!currentSession){ location.href = loginUrl(); return; }
+    const btn = document.getElementById('pdBuyBtn');
+    if (btn){ btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chuyển tới cổng thanh toán...'; }
+    thanhToanSanPham(String(currentItem.id));
+}
+
+async function muaSanPhamBangSoDu(){
+    if (!currentSession){ location.href = loginUrl(); return; }
+    const btn = document.getElementById('pdBalanceBtn');
+    const original = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+    const result = await thanhToanBangSoDu({ order_type: 'product', product_id: String(currentItem.id) });
+    if (!result.ok){
+        alert(result.error || 'Có lỗi xảy ra khi thanh toán bằng số dư.');
+        btn.disabled = false; btn.innerHTML = original;
+        return;
+    }
+    loadPage();
+}
+
+// ==================== TÀI LIỆU ====================
+async function loadDocItem(){
+    let payload = { free: [], paid: [] };
+    try{
+        const { data, error } = await sb.from('site_settings').select('payload').eq('key', 'doc_content').single();
+        if (!error && data && data.payload) payload = data.payload;
+    }catch(e){}
+
+    const free = Array.isArray(payload.free) ? payload.free : [];
+    const paid = Array.isArray(payload.paid) ? payload.paid : [];
+    let item = free.find(it => String(it.id) === String(ITEM_ID));
+    let isPaid = false;
+    if (!item){ item = paid.find(it => String(it.id) === String(ITEM_ID)); isPaid = !!item; }
+
+    if (!item){
+        document.getElementById('headerTitle').textContent = 'Không tìm thấy tài liệu';
+        showState(`<i class="fa-solid fa-circle-exclamation"></i>Tài liệu này không tồn tại hoặc đã bị gỡ bỏ.<br>Vui lòng quay lại <a href="index.html#doc">trang Tài liệu</a> để chọn tài liệu khác.`, true);
+        return;
+    }
+    currentItem = item;
+    currentIsPaid = isPaid;
+
+    let owned = false;
+    if (isPaid && currentSession){
+        try{
+            const { data } = await sb.from('document_purchases').select('document_id').eq('user_id', currentSession.user.id).eq('document_id', String(ITEM_ID));
+            owned = !!(data && data.length);
+        }catch(e){}
+    }
+
+    document.title = `${item.title || 'Tài liệu'} · SNG EDU`;
+    document.getElementById('headerTitle').textContent = item.title || 'Chi tiết tài liệu';
+
+    const price = isPaid ? (Number(item.price) || 0) : 0;
+    const priceLabel = price > 0 ? price.toLocaleString('vi-VN') + 'đ' : '';
+
+    const mediaHtml = item.image
+        ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title || '')}">`
+        : `<div class="pd-icon"><i class="fa-solid ${isPaid ? 'fa-lock' : 'fa-file-lines'}"></i></div>`;
+
+    let priceHtml = '';
+    if (isPaid && owned) priceHtml = `<div class="pd-price owned"><i class="fa-solid fa-circle-check"></i> Đã mua${priceLabel ? ' · ' + priceLabel : ''}</div>`;
+    else if (isPaid && priceLabel) priceHtml = `<div class="pd-price">${priceLabel}</div>`;
+    else if (!isPaid) priceHtml = `<div class="pd-price free"><i class="fa-solid fa-unlock"></i> Miễn phí</div>`;
+
+    let ctaHtml = '';
+    if (!isPaid){
+        const disabled = !item.link;
+        ctaHtml = disabled
+            ? `<button class="pd-cta free" disabled><i class="fa-solid fa-hourglass-half"></i> Sắp ra mắt</button>`
+            : `<button class="pd-cta free" id="pdFreeBtn" onclick="taiTaiLieuMienPhi()"><i class="fa-solid fa-download"></i> Tải xuống</button>`;
+    } else if (owned){
+        ctaHtml = item.link
+            ? `<a class="pd-cta owned" href="${escapeHtml(item.link)}" target="_blank" rel="noopener"><i class="fa-solid fa-download"></i> Tải xuống</a>`
+            : `<button class="pd-cta owned" disabled><i class="fa-solid fa-circle-check"></i> Đã mua</button>`;
+    } else {
+        ctaHtml = `<button class="pd-cta" id="pdBuyBtn" onclick="muaTaiLieu()">
+                        <i class="fa-solid fa-cart-shopping"></i> Mua ngay${priceLabel ? ' · ' + priceLabel : ''}
+                   </button>
+                   <button class="pd-cta outline" id="pdBalanceBtn" style="display:none;" onclick="muaTaiLieuBangSoDu()">
+                        <i class="fa-solid fa-wallet"></i> Thanh toán bằng số dư (<span id="pdBalanceText">—</span>)
+                   </button>`;
+    }
+
+    const specs = [];
+    specs.push({ lbl:'Trạng thái', val: isPaid ? (owned ? 'Đã mua' : 'Trả phí') : 'Miễn phí', icon: isPaid ? (owned ? 'fa-circle-check' : 'fa-lock') : 'fa-unlock' });
+    if (priceLabel) specs.push({ lbl:'Giá', val: priceLabel, icon:'fa-tag' });
+    if (item.size) specs.push({ lbl:'Dung lượng / định dạng', val: item.size, icon:'fa-file-lines' });
+    specs.push({ lbl:'Loại tài liệu', val: isPaid ? 'Tài liệu trả phí' : 'Tài liệu miễn phí', icon:'fa-graduation-cap' });
+
+    renderDetail({
+        eyebrow: '<i class="fa-solid fa-file-lines"></i> Tài liệu',
+        mediaHtml, title: item.title, priceHtml, ctaHtml, desc: item.desc, specs
+    });
+
+    if (isPaid && !owned){
+        const btn = document.getElementById('pdBuyBtn');
+        if (!paymentSettings.sepay_enabled){
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + (paymentSettings.sepay_disabled_message || 'Cổng thanh toán đang tạm ngưng, vui lòng quay lại sau');
+        }
+        if (paymentSettings.balance_payment_enabled && currentSession){
+            await capNhatNutSoDu(price);
+        }
+    }
+}
+
+function taiTaiLieuMienPhi(){
+    if (!currentSession){ location.href = loginUrl(); return; }
+    const btn = document.getElementById('pdFreeBtn');
+    const original = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang kiểm tra...';
+    SNG_USAGE.checkLimit(currentSession.user, 'doc_download').then(result => {
+        btn.disabled = false; btn.innerHTML = original;
+        if (!result.allowed){
+            alert(`Bạn đã hết ${result.limit} lượt tải tài liệu miễn phí hôm nay.\nNâng cấp Pro để tải không giới hạn.`);
+            return;
+        }
+        SNG_USAGE.logUsage(currentSession.user.id, 'doc_download', String(currentItem.id));
+        window.open(currentItem.link, '_blank', 'noopener');
+    }).catch(() => {
+        btn.disabled = false; btn.innerHTML = original;
+        window.open(currentItem.link, '_blank', 'noopener');
+    });
+}
+
+function muaTaiLieu(){
+    if (!currentSession){ location.href = loginUrl(); return; }
+    const btn = document.getElementById('pdBuyBtn');
+    if (btn){ btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chuyển tới cổng thanh toán...'; }
+    thanhToanTaiLieu(String(currentItem.id));
+}
+
+async function muaTaiLieuBangSoDu(){
+    if (!currentSession){ location.href = loginUrl(); return; }
+    const btn = document.getElementById('pdBalanceBtn');
+    const original = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+    const result = await thanhToanBangSoDu({ order_type: 'document', document_id: String(currentItem.id) });
+    if (!result.ok){
+        alert(result.error || 'Có lỗi xảy ra khi thanh toán bằng số dư.');
+        btn.disabled = false; btn.innerHTML = original;
+        return;
+    }
+    loadPage();
+}
+
+// ==================== DÙNG CHUNG ====================
+function renderDetail({ eyebrow, mediaHtml, title, priceHtml, ctaHtml, desc, specs }){
+    document.getElementById('content').innerHTML = `
+        <div class="pd-grid">
+            <div class="pd-media">${mediaHtml}</div>
+            <div class="pd-info">
+                <div class="pd-eyebrow">${eyebrow}</div>
+                <h1 class="pd-title">${escapeHtml(title || '')}</h1>
+                ${priceHtml}
+                ${ctaHtml}
+                ${desc ? `<div class="pd-desc">${escapeHtml(desc)}</div>` : ''}
+                <div class="pd-specs">
+                    ${specs.map(s => `<div class="pd-spec"><div class="lbl">${escapeHtml(s.lbl)}</div><div class="val"><i class="fa-solid ${s.icon}"></i> ${escapeHtml(s.val)}</div></div>`).join('')}
+                </div>
+            </div>
+        </div>`;
+}
+
+async function capNhatNutSoDu(price){
+    const balance = await laySoDuViHienTaiSafe();
+    const wrap = document.getElementById('pdBalanceBtn');
+    const textEl = document.getElementById('pdBalanceText');
+    if (!wrap || !textEl) return;
+    textEl.textContent = 'còn ' + balance.toLocaleString('vi-VN') + 'đ';
+    wrap.style.display = 'flex';
+    const enough = balance >= price;
+    wrap.disabled = !enough;
+    wrap.style.opacity = enough ? '1' : '.55';
+    wrap.title = enough ? '' : 'Số dư không đủ, vui lòng nạp thêm tiền vào ví';
+}
+
+loadPage();
+</script>
+<script src="frontend/sepay-checkout.js"></script>
+</body>
+</html>

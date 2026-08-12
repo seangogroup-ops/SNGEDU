@@ -400,7 +400,8 @@ async function loadProductItem(){
         const ownedFirst = currentVariants.find(v => ownedVariantsMap.hasOwnProperty(String(v.id)));
         const inStockFirst = currentVariants.find(v => {
             const st = variantStockMap[String(v.id)];
-            return !st || st.total === 0 || st.available > 0;
+            const uses = !!item.stock_managed || !!(st && st.total > 0);
+            return !uses || (st && st.available > 0);
         });
         currentVariantId = String((ownedFirst || inStockFirst || currentVariants[0]).id);
     } else {
@@ -427,7 +428,10 @@ function renderProductDetail(){
     currentAccountInfo = owned ? (ownedVariantsMap[currentVariantId] || '') : '';
 
     const stockInfo = variantStockMap[currentVariantId];
-    const usesStock = !!(stockInfo && stockInfo.total > 0);
+    // Nếu sản phẩm đã bật "Giao hàng tự động qua Kho tài khoản" (item.stock_managed),
+    // thì LUÔN coi là có dùng kho -- kể cả khi kho đang rỗng (total = 0) -> hết hàng,
+    // thay vì hiểu nhầm thành "không giới hạn" như trước.
+    const usesStock = !!item.stock_managed || !!(stockInfo && stockInfo.total > 0);
     const stockAvailable = stockInfo ? stockInfo.available : 0;
     const outOfStock = usesStock && stockAvailable <= 0;
 
@@ -444,7 +448,8 @@ function renderProductDetail(){
                 ${currentVariants.map(v => {
                     const vId = String(v.id);
                     const vSt = variantStockMap[vId];
-                    const vOut = vSt && vSt.total > 0 && vSt.available <= 0;
+                    const vUsesStock = !!item.stock_managed || !!(vSt && vSt.total > 0);
+                    const vOut = vUsesStock && (!vSt || vSt.available <= 0);
                     const vOwned = ownedVariantsMap.hasOwnProperty(vId);
                     const selected = vId === currentVariantId;
                     return `<button type="button" class="pd-variant-opt${selected ? ' selected' : ''}${vOut ? ' out' : ''}" ${vOut ? 'disabled' : ''} onclick="selectVariant('${vId.replace(/'/g,"\\'")}')">

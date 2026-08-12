@@ -119,13 +119,16 @@ Deno.serve(async (req) => {
 
       // Nếu sản phẩm (hoặc biến thể) này có dùng "kho tài khoản" (product_stock, quản lý ở trang admin)
       // thì phải còn ít nhất 1 tài khoản trống mới cho tạo đơn — tránh thu tiền nhưng không có gì để giao.
-      // Không dùng kho (total = 0) thì coi như không giới hạn số lượng, bỏ qua kiểm tra.
+      // "Có dùng kho" = đã bật item.stock_managed HOẶC đã có sẵn dòng nào trong kho cho biến thể này
+      // (kể cả khi kho đang trống — bật cờ này rồi mà chưa kịp nhập tài khoản vẫn phải coi là hết hàng,
+      // không được ngầm hiểu là "không giới hạn").
       const { count: totalStock } = await db
         .from("product_stock")
         .select("id", { count: "exact", head: true })
         .eq("product_id", String(product_id))
         .eq("variant", productVariantId);
-      if ((totalStock ?? 0) > 0) {
+      const usesStock = Boolean(item.stock_managed) || (totalStock ?? 0) > 0;
+      if (usesStock) {
         const { count: availableStock } = await db
           .from("product_stock")
           .select("id", { count: "exact", head: true })

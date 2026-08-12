@@ -98,6 +98,25 @@ export async function grantEntitlement(db: DbClient, order: OrderRow): Promise<v
       { onConflict: "user_id,product_id" },
     );
     if (prodErr) throw prodErr;
+
+    // Nếu sản phẩm này có "kho tài khoản" (admin nhập sẵn ở trang quản trị), tự động lấy
+    // 1 dòng còn trống, đánh dấu đã bán và lưu lại để khách xem ở trang chi tiết sản phẩm.
+    // Không có kho / hết hàng thì bỏ qua, không ảnh hưởng tới việc mua hàng.
+    const { data: claimed, error: claimErr } = await db.rpc("claim_product_stock", {
+      p_product_id: order.product_id,
+      p_user_id: order.user_id,
+      p_order_id: order.id,
+    });
+    if (claimErr) {
+      console.error("grantEntitlement: lỗi lấy tài khoản từ kho:", claimErr);
+    } else if (claimed) {
+      const { error: updErr } = await db
+        .from("product_purchases")
+        .update({ account_info: claimed })
+        .eq("user_id", order.user_id)
+        .eq("product_id", order.product_id);
+      if (updErr) console.error("grantEntitlement: lỗi lưu account_info:", updErr);
+    }
     return;
   }
 }

@@ -101,6 +101,24 @@ Deno.serve(async (req) => {
       if (!item) throw new Error("Không tìm thấy sản phẩm");
       amount = Number(item.price);
       description = `Mua san pham: ${item.title || ""}`.slice(0, 250);
+
+      // Nếu sản phẩm này có dùng "kho tài khoản" (product_stock, quản lý ở trang admin) thì phải
+      // còn ít nhất 1 tài khoản trống mới cho tạo đơn — tránh thu tiền nhưng không có gì để giao.
+      // Sản phẩm không dùng kho (total = 0) thì coi như không giới hạn số lượng, bỏ qua kiểm tra.
+      const { count: totalStock } = await db
+        .from("product_stock")
+        .select("id", { count: "exact", head: true })
+        .eq("product_id", String(product_id));
+      if ((totalStock ?? 0) > 0) {
+        const { count: availableStock } = await db
+          .from("product_stock")
+          .select("id", { count: "exact", head: true })
+          .eq("product_id", String(product_id))
+          .eq("status", "available");
+        if ((availableStock ?? 0) <= 0) {
+          throw new Error("Sản phẩm này đã hết hàng, vui lòng quay lại sau.");
+        }
+      }
     } else if (order_type === "wallet_topup") {
       if (useBalance) throw new Error("Không thể nạp tiền bằng chính số dư ví");
       amount = Number(body.amount);

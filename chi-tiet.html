@@ -166,6 +166,14 @@
     .pd-price{ font-size:1.3rem; font-weight:800; color:var(--ink); margin-bottom:18px; }
     .pd-price.owned{ color:var(--green); font-size:1.05rem; }
     .pd-price.free{ color:var(--green); font-size:1.15rem; }
+    .pd-price.has-stock{ margin-bottom:6px; }
+
+    .pd-stock{ display:flex; align-items:center; gap:7px; font-size:.86rem; font-weight:700; margin-bottom:18px; }
+    .pd-stock::before{ content:''; width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .pd-stock.in{ color:var(--green); }
+    .pd-stock.in::before{ background:var(--green); }
+    .pd-stock.out{ color:var(--red); }
+    .pd-stock.out::before{ background:var(--red); }
 
     .pd-cta{
         display:flex; align-items:center; justify-content:center; gap:10px;
@@ -182,6 +190,23 @@
     .pd-cta.outline{ background:transparent; color:var(--ink); border:1.5px solid var(--line); }
 
     .pd-desc{ color:var(--ink-soft); font-size:.94rem; line-height:1.75; margin:18px 0 24px; white-space:pre-line; overflow-wrap:break-word; word-break:break-word; }
+
+    .pd-account{
+        background:var(--green-bg); border:1px solid color-mix(in srgb, var(--green) 30%, transparent);
+        border-radius:14px; padding:14px 16px; margin-bottom:10px;
+    }
+    .pd-account-lbl{ font-size:.78rem; font-weight:700; color:var(--green); display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+    .pd-account-val{
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.92rem; font-weight:600;
+        color:var(--ink); word-break:break-all; background:var(--card); border:1px solid var(--line);
+        border-radius:10px; padding:10px 12px; margin-bottom:10px;
+    }
+    .pd-account-copy{
+        display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+        padding:10px 14px; border-radius:12px; font-weight:700; font-size:.84rem; border:none; cursor:pointer;
+        background:var(--green); color:#fff; transition:filter .2s ease;
+    }
+    .pd-account-copy:hover{ filter:brightness(.95); }
 
     .pd-specs{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:8px; }
     .pd-spec{
@@ -266,6 +291,7 @@ let currentSession = null;
 let paymentSettings = { sepay_enabled: true, sepay_disabled_message: '', balance_payment_enabled: true, wallet_topup_enabled: true };
 let currentItem = null;
 let currentIsPaid = false; // chỉ có ý nghĩa khi TYPE === 'doc'
+let currentAccountInfo = ''; // tài khoản kho được giao tự động cho sản phẩm (nếu có)
 
 async function laySoDuViHienTaiSafe(){
     try{ return await laySoDuViHienTai(); }catch(e){ return 0; }
@@ -329,12 +355,28 @@ async function loadProductItem(){
     currentItem = item;
 
     let owned = false;
+    currentAccountInfo = '';
     if (currentSession){
         try{
-            const { data } = await sb.from('product_purchases').select('product_id').eq('user_id', currentSession.user.id).eq('product_id', String(ITEM_ID));
+            const { data } = await sb.from('product_purchases').select('product_id, account_info').eq('user_id', currentSession.user.id).eq('product_id', String(ITEM_ID));
             owned = !!(data && data.length);
+            if (owned) currentAccountInfo = (data[0].account_info || '').trim();
         }catch(e){}
     }
+
+    // Sản phẩm dạng "kho tài khoản" (vd: YouTube Premium...) — nếu admin có nhập kho cho sản phẩm này
+    // thì hiện số lượng còn lại; hết hàng thì khoá nút mua. Sản phẩm chỉ dùng link ngoài (không có kho)
+    // thì total_count = 0, coi như không giới hạn số lượng, giữ nguyên hành vi cũ.
+    let usesStock = false, stockAvailable = 0, outOfStock = false;
+    try{
+        const { data: stockData } = await sb.rpc('get_product_stock_info', { p_product_id: String(ITEM_ID) });
+        const info = Array.isArray(stockData) ? stockData[0] : stockData;
+        if (info && Number(info.total_count) > 0){
+            usesStock = true;
+            stockAvailable = Number(info.available_count) || 0;
+            outOfStock = stockAvailable <= 0;
+        }
+    }catch(e){}
 
     document.title = `${item.title || 'Sản phẩm'} · SNG EDU`;
     document.getElementById('headerTitle').textContent = item.title || 'Chi tiết sản phẩm';
@@ -349,13 +391,29 @@ async function loadProductItem(){
 
     let priceHtml = '';
     if (owned) priceHtml = `<div class="pd-price owned"><i class="fa-solid fa-circle-check"></i> Đã sở hữu${priceLabel ? ' · ' + priceLabel : ''}</div>`;
-    else if (priceLabel) priceHtml = `<div class="pd-price">${priceLabel}</div>`;
+    else if (priceLabel) priceHtml = `<div class="pd-price${usesStock ? ' has-stock' : ''}">${priceLabel}</div>`;
+    if (usesStock && !owned){
+        priceHtml += outOfStock
+            ? `<div class="pd-stock out">Hết hàng</div>`
+            : `<div class="pd-stock in">Còn ${stockAvailable} tài khoản</div>`;
+    }
 
     let ctaHtml = '';
     if (owned){
-        ctaHtml = item.link
+        const linkHtml = item.link
             ? `<a class="pd-cta owned" href="${escapeHtml(item.link)}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Mở / Tải sản phẩm</a>`
-            : `<button class="pd-cta owned" disabled><i class="fa-solid fa-circle-check"></i> Đã sở hữu</button>`;
+            : '';
+        if (currentAccountInfo){
+            ctaHtml = `<div class="pd-account">
+                    <div class="pd-account-lbl"><i class="fa-solid fa-key"></i> Tài khoản của bạn</div>
+                    <div class="pd-account-val" id="pdAccountVal">${escapeHtml(currentAccountInfo)}</div>
+                    <button class="pd-account-copy" id="pdAccountCopyBtn" onclick="copyAccountInfo()"><i class="fa-solid fa-copy"></i> Sao chép</button>
+                </div>` + linkHtml;
+        } else {
+            ctaHtml = linkHtml || `<button class="pd-cta owned" disabled><i class="fa-solid fa-circle-check"></i> Đã sở hữu</button>`;
+        }
+    } else if (outOfStock){
+        ctaHtml = `<button class="pd-cta" disabled><i class="fa-solid fa-box-open"></i> Hết hàng</button>`;
     } else if (price > 0){
         ctaHtml = `<button class="pd-cta" id="pdBuyBtn" onclick="muaSanPham()">
                         <i class="fa-solid fa-cart-shopping"></i> Mua ngay · ${priceLabel}
@@ -384,7 +442,7 @@ async function loadProductItem(){
         mediaHtml, title: item.title, priceHtml, ctaHtml, desc: item.desc, specs
     });
 
-    if (!owned && price > 0){
+    if (!owned && price > 0 && !outOfStock){
         const btn = document.getElementById('pdBuyBtn');
         if (!paymentSettings.sepay_enabled){
             btn.disabled = true;
@@ -394,6 +452,30 @@ async function loadProductItem(){
             await capNhatNutSoDu(price);
         }
     }
+}
+
+function copyAccountInfo(){
+    if (!currentAccountInfo) return;
+    const btn = document.getElementById('pdAccountCopyBtn');
+    const original = btn ? btn.innerHTML : '';
+    const done = () => {
+        if (!btn) return;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Đã sao chép';
+        setTimeout(() => { btn.innerHTML = original; }, 1800);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(currentAccountInfo).then(done).catch(() => fallbackCopy(currentAccountInfo, done));
+    } else {
+        fallbackCopy(currentAccountInfo, done);
+    }
+}
+function fallbackCopy(text, done){
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    done();
 }
 
 function muaSanPham(){
@@ -559,13 +641,6 @@ function renderDetail({ eyebrow, mediaHtml, title, priceHtml, ctaHtml, desc, spe
                 ${priceHtml}
                 ${ctaHtml}
                 ${desc ? `<div class="pd-desc">${escapeHtml(desc)}</div>` : ''}
-                <div class="pd-specs">
-                    ${specs.map(s => `
-                        <div class="pd-spec">
-                            <div class="ic" style="background:${s.bg || 'var(--brand-bg)'}; color:${s.fg || 'var(--brand)'}"><i class="fa-solid ${s.icon}"></i></div>
-                            <div class="txt"><div class="lbl">${escapeHtml(s.lbl)}</div><div class="val">${escapeHtml(s.val)}</div></div>
-                        </div>`).join('')}
-                </div>
             </div>
         </div>`;
 }

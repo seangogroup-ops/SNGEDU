@@ -149,9 +149,35 @@
         .nav-legend-item { display: flex; align-items: center; gap: 6px; font-size: .72rem; color: var(--text-gray); font-weight: 600; }
         .nav-legend-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
 
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17,20,34,0.55); backdrop-filter: blur(2px); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
         .modal-content { background: var(--modal-bg); color: var(--text-main); padding: 30px; border-radius: 16px; text-align: center; width: 350px; }
         .score-big { font-size: 4rem; color: var(--azota-blue); font-weight: 800; margin: 10px 0; }
+
+        /* ---------------- Kết quả bài thi (result modal) ---------------- */
+        .result-card{ position:relative; width:340px; max-width:100%; padding:34px 26px 26px; border-radius:22px;
+            box-shadow:0 24px 60px -16px rgba(20,22,50,.35); animation: resultPop .32s cubic-bezier(.34,1.56,.64,1); }
+        @keyframes resultPop{ from{ opacity:0; transform:scale(.88) translateY(12px); } to{ opacity:1; transform:none; } }
+        .result-close{ position:absolute; top:14px; right:14px; width:32px; height:32px; border:none; border-radius:50%;
+            background:var(--report-btn-bg); color:var(--text-gray); font-size:.95rem; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; transition:background .2s ease, color .2s ease; }
+        .result-close:hover{ background:#e5e7eb; color:var(--text-main); }
+        .result-icon{ font-size:2.6rem; line-height:1; margin-bottom:2px; }
+        .result-card h2{ font-size:1.15rem; font-weight:700; color:var(--text-main); margin:2px 0 20px; }
+        .result-ring{ --pct:0; --ring-color:var(--azota-blue); width:148px; height:148px; border-radius:50%; margin:0 auto 20px;
+            display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;
+            background:conic-gradient(var(--ring-color) calc(var(--pct)*1%), var(--border-color) 0);
+            transition:background .6s ease; }
+        .result-ring::before{ content:''; position:absolute; inset:9px; border-radius:50%; background:var(--modal-bg); }
+        .result-ring .score-big{ position:relative; font-size:2.5rem; margin:0; line-height:1.1; color:var(--text-main); }
+        .result-ring .score-max{ position:relative; font-size:.78rem; font-weight:600; color:var(--text-gray); margin-top:2px; }
+        .result-stats{ display:flex; justify-content:center; gap:20px; margin-bottom:22px; }
+        .stat-item{ display:flex; align-items:center; gap:6px; font-size:.88rem; font-weight:700; }
+        .stat-item.correct{ color:var(--correct-color); }
+        .stat-item.wrong{ color:var(--wrong-color); }
+        .result-btn-primary{ width:100%; justify-content:center; padding:13px; font-size:.96rem; border-radius:12px; margin-bottom:10px; }
+        .result-btn-secondary{ display:block; width:100%; padding:12px; border-radius:12px; background:var(--report-btn-bg);
+            color:var(--text-main); text-decoration:none; font-weight:700; font-size:.9rem; transition:background .2s ease; }
+        .result-btn-secondary:hover{ background:#e5e7eb; }
 
         .state-msg { text-align: center; padding: 80px 20px; color: var(--text-gray); font-size: 1.05rem; }
         .state-msg i { font-size: 2rem; display: block; margin-bottom: 12px; color: var(--azota-blue); }
@@ -266,11 +292,24 @@
 </div>
 
 <div class="modal" id="resultModal">
-    <div class="modal-content">
-        <h2>Kết Quả</h2>
-        <div class="score-big" id="final-score">0.0</div>
-        <p style="color: var(--text-gray); margin-bottom: 25px;">Điểm số của bạn</p>
-        <button class="btn-submit" style="width:100%; justify-content:center; padding:12px;" onclick="closeModal()">Xem lời giải chi tiết</button>
+    <div class="modal-content result-card">
+        <button type="button" class="result-close" onclick="closeModal()" aria-label="Đóng">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="result-icon" id="result-icon">🏆</div>
+        <h2 id="result-title">Hoàn thành bài thi!</h2>
+        <div class="result-ring" id="result-ring">
+            <div class="score-big" id="final-score">0.0</div>
+            <div class="score-max">/ 10 điểm</div>
+        </div>
+        <div class="result-stats">
+            <div class="stat-item correct"><i class="fa-solid fa-circle-check"></i><span id="stat-correct">0</span> câu đúng</div>
+            <div class="stat-item wrong"><i class="fa-solid fa-circle-xmark"></i><span id="stat-wrong">0</span> câu sai</div>
+        </div>
+        <button class="btn-submit result-btn-primary" onclick="closeModal()">
+            <i class="fa-solid fa-magnifying-glass"></i> Xem lời giải chi tiết
+        </button>
+        <a class="result-btn-secondary" href="index.html">Về trang chủ</a>
     </div>
 </div>
 
@@ -550,10 +589,26 @@
             }
         });
 
+        const wrongCount = questions.length - correctCount;
         const score = ((correctCount / questions.length) * 10).toFixed(1);
         document.getElementById('final-score').innerText = score;
+        document.getElementById('stat-correct').textContent = correctCount;
+        document.getElementById('stat-wrong').textContent = wrongCount;
         document.getElementById('nav-count').textContent = `${correctCount}/${questions.length} đúng`;
         document.getElementById('nav-progress-fill').style.width = '100%';
+
+        // Vòng tròn điểm + icon/tiêu đề đổi theo mức điểm đạt được
+        const pct = questions.length ? (correctCount / questions.length * 100) : 0;
+        const ring = document.getElementById('result-ring');
+        let ringColor, icon, title;
+        if (score >= 8)      { ringColor = 'var(--correct-color)'; icon = '🏆'; title = 'Xuất sắc!'; }
+        else if (score >= 5) { ringColor = 'var(--azota-blue)';    icon = '👍'; title = 'Khá tốt!'; }
+        else                 { ringColor = 'var(--wrong-color)';   icon = '💪'; title = 'Cần cố gắng hơn!'; }
+        ring.style.setProperty('--pct', pct);
+        ring.style.setProperty('--ring-color', ringColor);
+        document.getElementById('result-icon').textContent = icon;
+        document.getElementById('result-title').textContent = title;
+
         document.getElementById('resultModal').style.display = 'flex';
         renderMath();
     }

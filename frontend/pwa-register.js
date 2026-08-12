@@ -6,6 +6,16 @@
         window.addEventListener('load', function () {
             navigator.serviceWorker.register('/sw.js').catch(function () { /* im lặng bỏ qua, không chặn trang */ });
         });
+
+        // Khi có bản Service Worker mới được kích hoạt (đổi CACHE_VERSION khi deploy),
+        // tự tải lại trang 1 lần để lấy đúng bản mới nhất, không cần người dùng tự xoá cache.
+        // Cờ "sngedu_sw_reloaded" chỉ để tránh lặp vô hạn nếu controllerchange bắn nhiều lần.
+        var alreadyReloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (alreadyReloaded) return;
+            alreadyReloaded = true;
+            location.reload();
+        });
     }
 
     // ============================================================

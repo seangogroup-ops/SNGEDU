@@ -5761,9 +5761,9 @@ function contentItemRowHtml(subKey, item){
                 <span class="menu-wrap">
                     <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleContentMenu('${subKey}','${item.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
                     <div class="menu-drop hidden" id="cmmenu-${subKey}-${item.id}">
-                        ${subKey === 'product_items' ? `<button onclick="event.stopPropagation(); closeAllContentMenus(); openProductStockModal('${item.id}')">🔑 Kho tài khoản</button>` : ''}
                         <button onclick="event.stopPropagation(); closeAllContentMenus(); editContentItem('${subKey}','${item.id}')">✏️ Sửa</button>
                         <button onclick="event.stopPropagation(); closeAllContentMenus(); deleteContentItem('${subKey}','${item.id}')">🗑️ Xóa</button>
+                        ${subKey === 'product_items' ? `<button onclick="event.stopPropagation(); closeAllContentMenus(); openProductStockModal('${item.id}')">🔑 Kho tài khoản</button>` : ''}
                     </div>
                 </span>
             </span>

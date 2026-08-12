@@ -1606,9 +1606,14 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         </div>
 
         <!-- Các khối "nổi bật" theo từng loại — ghim ở trang admin > Ghim nổi bật, tự ẩn nếu chưa ghim mục nào -->
-        <div id="featuredDocSection" style="display:none; margin-top:8px">
-            <div class="sec-head"><h2 id="featuredDocTitle">Tài liệu nổi bật</h2><a class="sec-view-all" href="#" data-go="doc">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a></div>
-            <div class="grid grid-hscroll" id="featuredDocGrid"></div>
+        <!-- Tài liệu nổi bật được tách riêng Miễn phí / Trả phí, mỗi khối có thứ tự ghim và tiêu đề riêng (chỉnh ở admin) -->
+        <div id="featuredDocFreeSection" style="display:none; margin-top:8px">
+            <div class="sec-head"><h2 id="featuredDocFreeTitle">Tài liệu miễn phí nổi bật</h2><a class="sec-view-all" href="#" data-go="doc" data-doc-filter="free">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a></div>
+            <div class="grid grid-hscroll" id="featuredDocFreeGrid"></div>
+        </div>
+        <div id="featuredDocPaidSection" style="display:none; margin-top:8px">
+            <div class="sec-head"><h2 id="featuredDocPaidTitle">Tài liệu trả phí nổi bật</h2><a class="sec-view-all" href="#" data-go="doc" data-doc-filter="paid">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a></div>
+            <div class="grid grid-hscroll" id="featuredDocPaidGrid"></div>
         </div>
         <div id="featuredToolSection" style="display:none; margin-top:8px">
             <div class="sec-head"><h2 id="featuredToolTitle">Công cụ nổi bật</h2><a class="sec-view-all" href="#" data-go="tool">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a></div>
@@ -2846,7 +2851,8 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         const map = {
             quickAccessTitle: payload.quickTitle,
             homeSubjectsTitle: payload.homeSubjectsTitle,
-            featuredDocTitle: payload.featuredDocTitle,
+            featuredDocFreeTitle: payload.featuredDocFreeTitle,
+            featuredDocPaidTitle: payload.featuredDocPaidTitle,
             featuredToolTitle: payload.featuredToolTitle,
             featuredProductTitle: payload.featuredProductTitle,
             quizSectionTitle: payload.quizTitle,
@@ -3441,13 +3447,15 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     }
 
     async function renderFeaturedExtras(){
-        const docSection = document.getElementById('featuredDocSection');
-        const docGrid = document.getElementById('featuredDocGrid');
+        const docFreeSection = document.getElementById('featuredDocFreeSection');
+        const docFreeGrid = document.getElementById('featuredDocFreeGrid');
+        const docPaidSection = document.getElementById('featuredDocPaidSection');
+        const docPaidGrid = document.getElementById('featuredDocPaidGrid');
         const toolSection = document.getElementById('featuredToolSection');
         const toolGrid = document.getElementById('featuredToolGrid');
         const productSection = document.getElementById('featuredProductSection');
         const productGrid = document.getElementById('featuredProductGrid');
-        if (!docSection || !toolSection || !productSection) return;
+        if (!docFreeSection || !docPaidSection || !toolSection || !productSection) return;
 
         const pins = await getHomeFeaturedPins();
         const docIds     = pins.filter(p => p.type === 'doc').map(p => String(p.ref_id));
@@ -3459,9 +3467,12 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             const docsMap = {};
             (docPayload.free || []).forEach(it => { if (!it.hidden) docsMap[String(it.id)] = { item: it, isPaid: false }; });
             (docPayload.paid || []).forEach(it => { if (!it.hidden || purchasedDocIds.has(String(it.id))) docsMap[String(it.id)] = { item: it, isPaid: true }; });
-            const html = docIds.map(id => { const e = docsMap[id]; return e ? docItemCardHtml(e.item, e.isPaid) : ''; }).join('');
-            if (html){ docGrid.innerHTML = html; docSection.style.display = ''; } else { docSection.style.display = 'none'; }
-        } else { docSection.style.display = 'none'; }
+            // Tách 2 nhóm Miễn phí / Trả phí, mỗi nhóm giữ nguyên thứ tự đã ghim riêng ở admin (không xáo trộn thứ tự tương đối trong từng nhóm)
+            const freeHtml = docIds.filter(id => docsMap[id] && !docsMap[id].isPaid).map(id => docItemCardHtml(docsMap[id].item, false)).join('');
+            const paidHtml = docIds.filter(id => docsMap[id] && docsMap[id].isPaid).map(id => docItemCardHtml(docsMap[id].item, true)).join('');
+            if (freeHtml){ docFreeGrid.innerHTML = freeHtml; docFreeSection.style.display = ''; } else { docFreeSection.style.display = 'none'; }
+            if (paidHtml){ docPaidGrid.innerHTML = paidHtml; docPaidSection.style.display = ''; } else { docPaidSection.style.display = 'none'; }
+        } else { docFreeSection.style.display = 'none'; docPaidSection.style.display = 'none'; }
 
         if (toolIds.length){
             const toolPayload = await fetchSiteSettingPayload('tool_content', DEFAULT_TOOL_CONTENT);
@@ -4520,7 +4531,16 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
     }
 
     document.querySelectorAll('[data-go]').forEach(el=>{
-        el.addEventListener('click', (e)=>{ e.preventDefault(); goTab(el.dataset.go); });
+        el.addEventListener('click', (e)=>{
+            e.preventDefault();
+            goTab(el.dataset.go);
+            // "Xem tất cả" từ khối Tài liệu miễn phí/trả phí nổi bật -> mở đúng bộ lọc tương ứng trong tab Tài liệu
+            const docFilter = el.dataset.docFilter;
+            if (docFilter){
+                const pill = document.querySelector(`.filter-pill[data-filter="${docFilter}"]`);
+                if (pill) pill.click();
+            }
+        });
     });
 
     // Bấm nút "Quay lại" của trình duyệt sẽ chuyển tab thay vì thoát hẳn trang

@@ -1939,7 +1939,7 @@ textarea{resize:vertical;}
         <div id="featuredPanel" class="hidden">
             <div class="subj-mgr-head">
                 <h2>⭐ Ghim nổi bật</h2>
-                <p class="hint">Chọn Học phần / Tài liệu / Công cụ / Sản phẩm để ghim. Mỗi loại sẽ tự hiện đúng khối tương ứng trên trang chủ: Học phần → nổi lên đầu khối "Học phần nổi bật" (có ribbon ★); Tài liệu / Công cụ / Sản phẩm → hiện ở khối "X nổi bật" riêng ngay bên dưới. Kéo thả (⋮⋮) trong danh sách "Đang ghim" để đổi thứ tự hiển thị, bấm biểu tượng mắt để ẩn/hiện tạm thời mà không cần bỏ ghim.</p>
+                <p class="hint">Chọn Học phần / Tài liệu / Công cụ / Sản phẩm để ghim. Mỗi loại sẽ tự hiện đúng khối tương ứng trên trang chủ: Học phần → nổi lên đầu khối "Học phần nổi bật" (có ribbon ★); Công cụ / Sản phẩm → hiện ở khối "X nổi bật" riêng ngay bên dưới. Riêng <b>Tài liệu</b> được tách thành 2 khối độc lập trên trang chủ — "Tài liệu miễn phí nổi bật" và "Tài liệu trả phí nổi bật" — thứ tự ghim của mỗi khối tính riêng theo đúng thứ tự tương đối trong nhóm con tương ứng bên dưới. Kéo thả (⋮⋮) trong danh sách "Đang ghim" để đổi thứ tự hiển thị, bấm biểu tượng mắt để ẩn/hiện tạm thời mà không cần bỏ ghim.</p>
             </div>
             <div class="subj-mgr-grid">
                 <div class="subj-mgr-col" style="max-width:460px;">
@@ -2402,8 +2402,10 @@ textarea{resize:vertical;}
                     <input id="setTextQuick" placeholder="Truy cập nhanh">
                     <label style="margin-top:10px;">Tiêu đề "Học phần nổi bật" (trang chủ)</label>
                     <input id="setTextHomeSubjects" placeholder="Học phần nổi bật">
-                    <label style="margin-top:10px;">Tiêu đề khối "Tài liệu nổi bật" (chỉ hiện khi có tài liệu được ghim)</label>
-                    <input id="setTextFeaturedDoc" placeholder="Tài liệu nổi bật">
+                    <label style="margin-top:10px;">Tiêu đề khối "Tài liệu miễn phí nổi bật" (chỉ hiện khi có tài liệu miễn phí được ghim)</label>
+                    <input id="setTextFeaturedDocFree" placeholder="Tài liệu miễn phí nổi bật">
+                    <label style="margin-top:10px;">Tiêu đề khối "Tài liệu trả phí nổi bật" (chỉ hiện khi có tài liệu trả phí được ghim)</label>
+                    <input id="setTextFeaturedDocPaid" placeholder="Tài liệu trả phí nổi bật">
                     <label style="margin-top:10px;">Tiêu đề khối "Công cụ nổi bật" (chỉ hiện khi có công cụ được ghim)</label>
                     <input id="setTextFeaturedTool" placeholder="Công cụ nổi bật">
                     <label style="margin-top:10px;">Tiêu đề khối "Sản phẩm nổi bật" (chỉ hiện khi có sản phẩm được ghim)</label>
@@ -6522,8 +6524,8 @@ async function loadFeaturedSources(){
 
     const { data: docRow } = await sb.from('site_settings').select('*').eq('key', 'doc_content').single();
     const docPayload = (docRow && docRow.payload) ? docRow.payload : { free: [], paid: [] };
-    const freeArr = (Array.isArray(docPayload.free) ? docPayload.free : []).map(it => ({ id: String(it.id), title: it.title || '(chưa đặt tên)', sub: 'Miễn phí' }));
-    const paidArr = (Array.isArray(docPayload.paid) ? docPayload.paid : []).map(it => ({ id: String(it.id), title: it.title || '(chưa đặt tên)', sub: 'Trả phí' }));
+    const freeArr = (Array.isArray(docPayload.free) ? docPayload.free : []).map(it => ({ id: String(it.id), title: it.title || '(chưa đặt tên)', sub: 'Miễn phí', paid: false }));
+    const paidArr = (Array.isArray(docPayload.paid) ? docPayload.paid : []).map(it => ({ id: String(it.id), title: it.title || '(chưa đặt tên)', sub: 'Trả phí', paid: true }));
     featuredSourceData.doc = freeArr.concat(paidArr);
 
     const { data: toolRow } = await sb.from('site_settings').select('*').eq('key', 'tool_content').single();
@@ -6562,6 +6564,24 @@ function renderFeaturedSourceList(){
     }).join('');
 }
 
+function featuredPinItemHtml(p, meta){
+    const src = featuredSourceData[p.type] || [];
+    const found = src.find(x => String(x.id) === String(p.ref_id));
+    const title = found ? found.title : ('(#' + p.ref_id + ' — không còn tồn tại)');
+    const domId = p.type + ':' + p.ref_id;
+    const isHidden = !!p.hidden;
+    return `
+    <div class="side-item" data-id="${escapeHtml(domId)}" style="${isHidden ? 'opacity:.55;' : ''}">
+        <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
+        <span class="prev-ico color-swatch indigo" style="width:26px;height:26px;min-width:26px;font-size:.78rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;">${meta.icon}</span>
+        <span class="name">${escapeHtml(title)}${isHidden ? '<span class="hint-inline"> · đang ẩn</span>' : ''}</span>
+        <span class="right-cluster">
+            <button class="icon-x" title="${isHidden ? 'Hiện lại' : 'Ẩn tạm (vẫn giữ ghim)'}" onclick="toggleFeaturedPinHidden('${p.type}','${escapeHtml(String(p.ref_id))}')"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'}"></i></button>
+            <button class="icon-x" title="Bỏ ghim" onclick="toggleFeaturedPin('${p.type}','${escapeHtml(String(p.ref_id))}')">✕</button>
+        </span>
+    </div>`;
+}
+
 function renderFeaturedPinnedList(){
     const box = document.getElementById('featuredPinnedList');
     if (!box) return;
@@ -6570,24 +6590,22 @@ function renderFeaturedPinnedList(){
     const groups = {};
     featuredPins.forEach(p => { (groups[p.type] || (groups[p.type] = [])).push(p); });
     box.innerHTML = groupOrder.filter(t => groups[t] && groups[t].length).map(type => {
-        const meta = FEATURED_TYPE_META[type] || { label: type, icon: '⭐' };
-        const itemsHtml = groups[type].map(p => {
-            const src = featuredSourceData[p.type] || [];
-            const found = src.find(x => String(x.id) === String(p.ref_id));
-            const title = found ? found.title : ('(#' + p.ref_id + ' — không còn tồn tại)');
-            const domId = p.type + ':' + p.ref_id;
-            const isHidden = !!p.hidden;
-            return `
-            <div class="side-item" data-id="${escapeHtml(domId)}" style="${isHidden ? 'opacity:.55;' : ''}">
-                <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
-                <span class="prev-ico color-swatch indigo" style="width:26px;height:26px;min-width:26px;font-size:.78rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;">${meta.icon}</span>
-                <span class="name">${escapeHtml(title)}${isHidden ? '<span class="hint-inline"> · đang ẩn</span>' : ''}</span>
-                <span class="right-cluster">
-                    <button class="icon-x" title="${isHidden ? 'Hiện lại' : 'Ẩn tạm (vẫn giữ ghim)'}" onclick="toggleFeaturedPinHidden('${p.type}','${escapeHtml(String(p.ref_id))}')"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'}"></i></button>
-                    <button class="icon-x" title="Bỏ ghim" onclick="toggleFeaturedPin('${p.type}','${escapeHtml(String(p.ref_id))}')">✕</button>
-                </span>
+        // Riêng "Tài liệu" tách hiển thị 2 nhóm con Miễn phí / Trả phí (thứ tự kéo-thả vẫn tính riêng theo thứ tự
+        // tương đối trong từng nhóm con — kéo thả trong nhóm nào chỉ đổi chỗ trong nhóm đó).
+        if (type === 'doc'){
+            const docSrc = featuredSourceData.doc || [];
+            const isPaidRef = (refId) => { const f = docSrc.find(x => String(x.id) === String(refId)); return f ? !!f.paid : false; };
+            const freePins = groups.doc.filter(p => !isPaidRef(p.ref_id));
+            const paidPins = groups.doc.filter(p => isPaidRef(p.ref_id));
+            const subGroupHtml = (label, icon, pins) => !pins.length ? '' : `
+            <div class="fmgr-pin-group">
+                <div class="fmgr-pin-group-head">${icon} ${escapeHtml(label)}<span class="fmgr-pin-count">${pins.length}</span></div>
+                <div class="side-list">${pins.map(p => featuredPinItemHtml(p, { icon })).join('')}</div>
             </div>`;
-        }).join('');
+            return subGroupHtml('Tài liệu miễn phí', '📁', freePins) + subGroupHtml('Tài liệu trả phí', '🔒', paidPins);
+        }
+        const meta = FEATURED_TYPE_META[type] || { label: type, icon: '⭐' };
+        const itemsHtml = groups[type].map(p => featuredPinItemHtml(p, meta)).join('');
         return `
         <div class="fmgr-pin-group">
             <div class="fmgr-pin-group-head">${meta.icon} ${escapeHtml(meta.label)}<span class="fmgr-pin-count">${groups[type].length}</span></div>
@@ -7898,7 +7916,8 @@ async function openSettingsPanel(key){
     } else if (isTexts){
         document.getElementById('setTextQuick').value = currentSetPayload.quickTitle || '';
         document.getElementById('setTextHomeSubjects').value = currentSetPayload.homeSubjectsTitle || '';
-        document.getElementById('setTextFeaturedDoc').value = currentSetPayload.featuredDocTitle || '';
+        document.getElementById('setTextFeaturedDocFree').value = currentSetPayload.featuredDocFreeTitle || '';
+        document.getElementById('setTextFeaturedDocPaid').value = currentSetPayload.featuredDocPaidTitle || '';
         document.getElementById('setTextFeaturedTool').value = currentSetPayload.featuredToolTitle || '';
         document.getElementById('setTextFeaturedProduct').value = currentSetPayload.featuredProductTitle || '';
         document.getElementById('setTextQuiz').value = currentSetPayload.quizTitle || '';
@@ -8222,7 +8241,8 @@ async function saveSiteSetting(){
         payload = {
             quickTitle: document.getElementById('setTextQuick').value.trim(),
             homeSubjectsTitle: document.getElementById('setTextHomeSubjects').value.trim(),
-            featuredDocTitle: document.getElementById('setTextFeaturedDoc').value.trim(),
+            featuredDocFreeTitle: document.getElementById('setTextFeaturedDocFree').value.trim(),
+            featuredDocPaidTitle: document.getElementById('setTextFeaturedDocPaid').value.trim(),
             featuredToolTitle: document.getElementById('setTextFeaturedTool').value.trim(),
             featuredProductTitle: document.getElementById('setTextFeaturedProduct').value.trim(),
             quizTitle: document.getElementById('setTextQuiz').value.trim(),

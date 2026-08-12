@@ -360,6 +360,9 @@ aside{
 .subj-mgr-head p.hint{margin:0;color:var(--gray);font-size:.86rem;}
 .subj-mgr-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;}
 @media (max-width: 860px){.subj-mgr-grid{grid-template-columns:minmax(0,1fr);}}
+/* Kho tài khoản: cột sản phẩm cố định hẹp, cột chi tiết giãn hết phần còn lại (tránh khoảng trắng chết ở giữa) */
+.subj-mgr-grid.stock-grid{grid-template-columns:340px minmax(0,1fr);}
+@media (max-width: 860px){.subj-mgr-grid.stock-grid{grid-template-columns:minmax(0,1fr);}}
 .subj-mgr-col{background:var(--white);border:1px solid var(--border);border-radius:18px;padding:22px;box-shadow:var(--shadow-sm);}
 .subj-mgr-col-head{
     display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;flex-wrap:wrap;
@@ -2892,8 +2895,8 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
         <h2>🔑 Kho tài khoản</h2>
         <p class="hint">Chọn 1 sản phẩm bên trái, dán mỗi tài khoản 1 dòng, ví dụ: <code>email@gmail.com:matkhau123</code>. Khi khách thanh toán sản phẩm đó thành công, hệ thống <b>tự động lấy 1 dòng còn trống</b>, đánh dấu đã bán và hiển thị cho khách ở trang chi tiết sản phẩm — không cần thao tác thủ công.</p>
     </div>
-    <div class="subj-mgr-grid">
-        <div class="subj-mgr-col" style="max-width:360px;">
+    <div class="subj-mgr-grid stock-grid">
+        <div class="subj-mgr-col">
             <div class="subj-mgr-col-head">
                 <h4><i class="fa-solid fa-bag-shopping"></i> Sản phẩm</h4>
             </div>
@@ -5568,7 +5571,7 @@ registerContentList('pro_items', 'pro_content', 'items', {
 const CONTENT_MANAGER_GROUPS = {
     doc:     { title:'Tài liệu',  icon:'📁',  hint:'Quản lý danh sách tài liệu (miễn phí & trả phí) hiển thị ở tab "Tài liệu" trên trang chủ. Tải file PDF/Word lên trực tiếp, không cần link ngoài. Chọn loại "Trả phí" và bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Tải xuống", trước đó file không lộ link công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn tải được bình thường khi bị ẩn.', subKeys:['doc'] },
     tool:    { title:'Công cụ',   icon:'🧰',  hint:'Quản lý các thẻ công cụ hiển thị ở tab "Công cụ" trên trang chủ.', subKeys:['tool_items'] },
-    product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ. Bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Mở/Tải sản phẩm" và link mới lộ ra, trước đó link không công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn xem/tải được bình thường khi bị ẩn. Sản phẩm có thể chia thành nhiều <b>phiên bản</b> (VD: "1 tháng"/"3 tháng"/"6 tháng"), mỗi phiên bản giá và kho tài khoản riêng — bật ở mục "Giá" trong form. Với sản phẩm dạng bán tài khoản (VD: YouTube Premium), vào tab <b>🔑 Kho tài khoản</b> ở sidebar bên trái để nhập sẵn danh sách tài khoản (chọn đúng tab phiên bản nếu có) — khi khách thanh toán thành công, hệ thống tự động lấy 1 tài khoản còn trống và đánh dấu đã bán, khách xem được ngay ở trang chi tiết sản phẩm.', subKeys:['product_items'] },
+    product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ. Bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Mở/Tải sản phẩm" và link mới lộ ra, trước đó link không công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn xem/tải được bình thường khi bị ẩn. Sản phẩm có thể chia thành nhiều <b>phiên bản</b> (VD: "1 tháng"/"3 tháng"/"6 tháng"), mỗi phiên bản giá và kho tài khoản riêng — bật ở mục "Giá" trong form. Với sản phẩm dạng bán tài khoản (VD: YouTube Premium), tick <b>"Giao hàng tự động qua Kho tài khoản"</b> rồi vào tab <b>🔑 Kho tài khoản</b> ở sidebar bên trái để nhập sẵn danh sách tài khoản (chọn đúng tab phiên bản nếu có) — khi khách thanh toán thành công, hệ thống tự động lấy 1 tài khoản còn trống và đánh dấu đã bán, khách xem được ngay ở trang chi tiết sản phẩm. <b>Lưu ý:</b> nếu đã tick ô này mà kho chưa có tài khoản nào, trang sản phẩm sẽ tự hiện "Hết hàng" và khoá nút mua — tránh trường hợp khách thanh toán xong mà không có gì để giao.', subKeys:['product_items'], stockManagedField:true },
     pro:     { title:'Gói Pro',   icon:'👑',  hint:'Quản lý các gói Pro hiển thị ở tab "Tài khoản & Gói Pro" trên trang chủ. Chọn màu "amber" để đánh dấu gói "Phổ biến nhất". Mục "Gói thanh toán tự động (SePay)" cho phép chọn gói tương ứng trong bảng giá tự động — khi đã chọn, thẻ sẽ hiện nút "Mua ngay" mở thẳng cổng SePay thay vì link ngoài. Nếu để trống, thẻ vẫn hoạt động theo kiểu cũ: trỏ ra Zalo/Momo, sau khi khách chuyển khoản bạn vào mục "Tài khoản" bên dưới để gán Premium thủ công.', subKeys:['pro_items'] },
     support: { title:'Hỗ trợ',    icon:'🆘',  hint:'Quản lý nội dung tab "Hỗ trợ" trên trang chủ: khối giới thiệu đầu trang, các kênh liên hệ (Zalo, Form...) và danh sách câu hỏi thường gặp.', subKeys:['support_contacts','support_faq'], intro:true }
 };
@@ -5621,6 +5624,13 @@ function contentBlockHtml(subKey){
                     <input id="cmExtra_${subKey}" placeholder="${escapeHtml(meta.extraField.placeholder)}" ${meta.extraField.suggest ? `list="cmExtraList_${subKey}"` : ''}>
                     ${meta.extraField.suggest ? `<datalist id="cmExtraList_${subKey}"></datalist>` : ''}
                     ${meta.extraField.hint ? `<div class="hint" style="margin-top:4px;">${meta.extraField.hint}</div>` : ''}` : ''}
+                    ${meta.stockManagedField ? `
+                    <div class="cm-section"><i class="fa-solid fa-key"></i> Giao hàng</div>
+                    <label class="cm-visibility-toggle" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
+                        <input type="checkbox" id="cmStockManaged_${subKey}" style="width:16px;height:16px;flex-shrink:0;">
+                        <span>🔑 Giao hàng tự động qua <b>Kho tài khoản</b> — nếu tick, sản phẩm bắt buộc phải có tài khoản trong kho mới bán được; hết tài khoản sẽ tự hiện "Hết hàng" và khoá nút mua (tránh khách trả tiền mà không có gì để giao).</span>
+                    </label>
+                    ` : ''}
                     ${meta.priceField && !meta.docTypeField ? `
                     <div class="cm-section"><i class="fa-solid fa-tags"></i> Giá</div>
                     ${meta.variantsField ? `
@@ -6717,6 +6727,9 @@ function openContentForm(subKey){
     if (!cfg.meta.hideIconColor) pickContentColor(subKey, cfg.meta.color || 'indigo');
     if (cfg.meta.docTypeField) pickDocType(subKey, 'free');
     const visibleEl = document.getElementById('cmVisible_' + subKey); if (visibleEl) visibleEl.checked = true;
+    if (cfg.meta.stockManagedField){
+        const stockEl = document.getElementById('cmStockManaged_' + subKey); if (stockEl) stockEl.checked = false;
+    }
     if (cfg.meta.variantsField){
         const toggleEl = document.getElementById('cmVariantToggle_' + subKey);
         if (toggleEl) toggleEl.checked = false;
@@ -6760,6 +6773,9 @@ function editContentItem(subKey, id){
     if (cfg.meta.docTypeField) pickDocType(subKey, item.type === 'paid' ? 'paid' : 'free');
     if (cfg.meta.docTypeField && priceEl) priceEl.value = item.price || (item.type === 'paid' ? '' : 0);
     const visibleEl = document.getElementById('cmVisible_' + subKey); if (visibleEl) visibleEl.checked = !item.hidden;
+    if (cfg.meta.stockManagedField){
+        const stockEl = document.getElementById('cmStockManaged_' + subKey); if (stockEl) stockEl.checked = !!item.stock_managed;
+    }
     if (cfg.meta.variantsField){
         const hasVariants = Array.isArray(item.variants) && item.variants.length > 0;
         const toggleEl = document.getElementById('cmVariantToggle_' + subKey);
@@ -6844,6 +6860,10 @@ async function saveContentItem(subKey){
     if (cfg.meta.visibilityField){
         const visibleEl = document.getElementById('cmVisible_' + subKey);
         item.hidden = visibleEl ? !visibleEl.checked : false;
+    }
+    if (cfg.meta.stockManagedField){
+        const stockEl = document.getElementById('cmStockManaged_' + subKey);
+        item.stock_managed = stockEl ? !!stockEl.checked : false;
     }
 
     const wasEditing = cfg.editingId;

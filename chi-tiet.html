@@ -79,27 +79,29 @@
         padding-left:max(14px, env(safe-area-inset-left)); padding-right:max(14px, env(safe-area-inset-right));
         position:fixed; top:0; width:100%; z-index:1000;
     }
-    .back-btn{
-        width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:var(--card);
-        display:flex; align-items:center; justify-content:center; color:var(--ink); font-size:.95rem;
-        cursor:pointer; flex-shrink:0; text-decoration:none;
-        transition:background .25s ease, transform .2s ease;
+    .back-btn, .theme-toggle{
+        width:40px; height:40px; min-width:40px; min-height:40px; aspect-ratio:1/1;
+        border-radius:50%; border:1px solid var(--line); background:var(--card);
+        display:flex; align-items:center; justify-content:center;
+        cursor:pointer; flex-shrink:0; text-decoration:none; padding:0; line-height:0;
+        transition:background .25s ease, transform .2s ease, color .25s ease, border-color .25s ease;
     }
-    @media (hover:hover){ .back-btn:hover{ background:var(--brand-bg); color:var(--brand); } }
-    .back-btn:active{ transform:scale(.9); }
+    .back-btn{ color:var(--ink); }
+    .back-btn svg{ width:19px; height:19px; display:block; }
+    .theme-toggle{ color:var(--ink-soft); }
+    .theme-toggle svg{ width:19px; height:19px; display:block; }
+    @media (hover:hover){
+        .back-btn:hover{ background:var(--brand-bg); color:var(--brand); border-color:var(--brand-bg); }
+        .theme-toggle:hover{ background:var(--brand-bg); color:var(--brand); border-color:var(--brand-bg); }
+    }
+    .back-btn:active, .theme-toggle:active{ transform:scale(.9); }
     .header-title{
-        font-weight:700; color:var(--ink); font-size:.98rem; flex:1;
+        font-weight:700; color:var(--ink); font-size:.98rem; flex:1; min-width:0;
         overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
     }
-    .theme-toggle{
-        width:40px; height:40px; border-radius:50%; border:1px solid var(--line); background:var(--card);
-        cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--ink-soft);
-        font-size:.9rem; flex-shrink:0; transition:background .25s ease, color .25s ease;
-    }
-    @media (hover:hover){ .theme-toggle:hover{ background:var(--brand-bg); color:var(--brand); } }
-    .theme-toggle .fa-sun{ display:none; }
-    html[data-theme="dark"] .theme-toggle .fa-sun{ display:inline; }
-    html[data-theme="dark"] .theme-toggle .fa-moon{ display:none; }
+    .theme-toggle .ic-sun{ display:none; }
+    html[data-theme="dark"] .theme-toggle .ic-sun{ display:block; }
+    html[data-theme="dark"] .theme-toggle .ic-moon{ display:none; }
 
     /* ---------------- wrap ---------------- */
     .pd-screen{
@@ -196,11 +198,13 @@
 <script src="frontend/track-visit.js"></script>
 
 <header>
-    <a href="javascript:void(0)" class="back-btn" id="backBtn" aria-label="Quay lại"><i class="fa-solid fa-arrow-left"></i></a>
+    <a href="javascript:void(0)" class="back-btn" id="backBtn" aria-label="Quay lại">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+    </a>
     <div class="header-title" id="headerTitle">Chi tiết</div>
     <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
-        <i class="fa-solid fa-moon"></i>
-        <i class="fa-solid fa-sun"></i>
+        <svg class="ic-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.4 14.7A8.5 8.5 0 1 1 9.3 3.6a7 7 0 0 0 11.1 11.1Z"/></svg>
+        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"/></svg>
     </button>
 </header>
 

@@ -39,6 +39,10 @@
         --brand-bg:  #eef1ff;
         --accent:    #4f6bff;
         --accent-bg: #eef1ff;
+        --blue:      #0068ff;
+        --blue-bg:   #e8f3ff;
+        --purple:    #8b5cf6;
+        --purple-bg: #f1ecff;
         --shadow:    0 1px 2px rgba(20,22,40,.04), 0 8px 24px -12px rgba(20,22,40,.08);
         --shadow-hov:0 4px 10px rgba(20,22,40,.05), 0 20px 40px -16px rgba(20,22,40,.16);
     }
@@ -57,6 +61,10 @@
         --red-bg:    #3a1c1e;
         --brand:     #7b93ff;
         --brand-bg:  #232a4d;
+        --blue:      #5b9dff;
+        --blue-bg:   #14283f;
+        --purple:    #b48cff;
+        --purple-bg: #2a2145;
         --shadow:    0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
         --shadow-hov:0 4px 10px rgba(0,0,0,.25), 0 20px 40px -16px rgba(0,0,0,.6);
     }
@@ -247,10 +255,10 @@ function loginUrl(){
 
 const QL_COLOR_MAP = {
     indigo: { bg:'var(--brand-bg)', fg:'var(--brand)' },
-    purple: { bg:'#f1ecff',         fg:'#8b5cf6' },
+    purple: { bg:'var(--purple-bg)', fg:'var(--purple)' },
     green:  { bg:'var(--green-bg)', fg:'var(--green)' },
     amber:  { bg:'var(--amber-bg)', fg:'var(--amber)' },
-    blue:   { bg:'#e8f3ff',         fg:'#0068ff' },
+    blue:   { bg:'var(--blue-bg)',  fg:'var(--blue)' },
     red:    { bg:'var(--red-bg)',   fg:'var(--red)' }
 };
 
@@ -368,8 +376,8 @@ async function loadProductItem(){
             ? { lbl:'Trạng thái', val:'Trả phí', icon:'fa-lock', bg:'var(--amber-bg)', fg:'var(--amber)' }
             : { lbl:'Trạng thái', val:'Miễn phí / Giới thiệu', icon:'fa-unlock', bg:'var(--green-bg)', fg:'var(--green)' });
     specs.push({ lbl:'Giá', val: priceLabel || 'Miễn phí', icon:'fa-tag', bg:'var(--brand-bg)', fg:'var(--brand)' });
-    specs.push({ lbl:'Danh mục', val: item.category || 'Chưa phân loại', icon:'fa-layer-group', bg:'#f1ecff', fg:'#8b5cf6' });
-    specs.push({ lbl:'Định dạng', val: item.format || 'Kỹ thuật số', icon:'fa-file', bg:'#e8f3ff', fg:'#0068ff' });
+    specs.push({ lbl:'Danh mục', val: item.category || 'Chưa phân loại', icon:'fa-layer-group', bg:'var(--purple-bg)', fg:'var(--purple)' });
+    specs.push({ lbl:'Định dạng', val: item.format || 'Kỹ thuật số', icon:'fa-file', bg:'var(--blue-bg)', fg:'var(--blue)' });
 
     renderDetail({
         eyebrow: '<i class="fa-solid fa-bag-shopping"></i> Sản phẩm',
@@ -480,8 +488,8 @@ async function loadDocItem(){
             : { lbl:'Trạng thái', val:'Trả phí', icon:'fa-lock', bg:'var(--amber-bg)', fg:'var(--amber)' })
         : { lbl:'Trạng thái', val:'Miễn phí', icon:'fa-unlock', bg:'var(--green-bg)', fg:'var(--green)' });
     specs.push({ lbl:'Giá', val: priceLabel || 'Miễn phí', icon:'fa-tag', bg:'var(--brand-bg)', fg:'var(--brand)' });
-    specs.push({ lbl:'Định dạng', val: item.size || 'PDF', icon:'fa-file-lines', bg:'#e8f3ff', fg:'#0068ff' });
-    specs.push({ lbl:'Loại tài liệu', val: isPaid ? 'Tài liệu trả phí' : 'Tài liệu miễn phí', icon:'fa-graduation-cap', bg:'#f1ecff', fg:'#8b5cf6' });
+    specs.push({ lbl:'Định dạng', val: item.size || 'PDF', icon:'fa-file-lines', bg:'var(--blue-bg)', fg:'var(--blue)' });
+    specs.push({ lbl:'Loại tài liệu', val: isPaid ? 'Tài liệu trả phí' : 'Tài liệu miễn phí', icon:'fa-graduation-cap', bg:'var(--purple-bg)', fg:'var(--purple)' });
 
     renderDetail({
         eyebrow: '<i class="fa-solid fa-file-lines"></i> Tài liệu',

@@ -310,6 +310,8 @@ let currentVariants = [];        // item.variants, [] nếu sản phẩm không 
 let currentVariantId = '';       // biến thể đang chọn ('' nếu không chia biến thể)
 let ownedVariantsMap = {};       // { variantId: accountInfo }  (variantId '' = không chia biến thể)
 let variantStockMap = {};        // { variantId: { available, total } }
+let productUsesStock = false;    // true nếu sản phẩm dùng kho tài khoản (áp dụng thống nhất cho MỌI biến thể,
+                                  // tránh trường hợp biến thể chưa từng nhập kho bị hiểu nhầm là "không giới hạn")
 
 async function laySoDuViHienTaiSafe(){
     try{ return await laySoDuViHienTai(); }catch(e){ return 0; }
@@ -392,6 +394,12 @@ async function loadProductItem(){
         });
     }catch(e){}
 
+    // Sản phẩm được coi là "dùng kho" nếu công tắc stock_managed bật, HOẶC bất kỳ biến thể nào
+    // (kể cả biến thể không chia phiên bản, key '') đã từng có tài khoản được nhập vào kho (total > 0).
+    // Khi đã dùng kho, áp dụng cho TẤT CẢ biến thể của sản phẩm — biến thể nào chưa từng nhập kho
+    // (total = 0) vẫn coi là hết hàng, không được xem là "không giới hạn".
+    productUsesStock = !!item.stock_managed || Object.values(variantStockMap).some(st => st && st.total > 0);
+
     document.title = `${item.title || 'Sản phẩm'} · SNG EDU`;
     document.getElementById('headerTitle').textContent = item.title || 'Chi tiết sản phẩm';
 
@@ -400,8 +408,7 @@ async function loadProductItem(){
         const ownedFirst = currentVariants.find(v => ownedVariantsMap.hasOwnProperty(String(v.id)));
         const inStockFirst = currentVariants.find(v => {
             const st = variantStockMap[String(v.id)];
-            const uses = !!item.stock_managed || !!(st && st.total > 0);
-            return !uses || (st && st.available > 0);
+            return !productUsesStock || (st && st.available > 0);
         });
         currentVariantId = String((ownedFirst || inStockFirst || currentVariants[0]).id);
     } else {
@@ -428,10 +435,9 @@ function renderProductDetail(){
     currentAccountInfo = owned ? (ownedVariantsMap[currentVariantId] || '') : '';
 
     const stockInfo = variantStockMap[currentVariantId];
-    // Nếu sản phẩm đã bật "Giao hàng tự động qua Kho tài khoản" (item.stock_managed),
-    // thì LUÔN coi là có dùng kho -- kể cả khi kho đang rỗng (total = 0) -> hết hàng,
-    // thay vì hiểu nhầm thành "không giới hạn" như trước.
-    const usesStock = !!item.stock_managed || !!(stockInfo && stockInfo.total > 0);
+    // Dùng cờ productUsesStock (thống nhất cho cả sản phẩm) thay vì chỉ xét riêng biến thể này,
+    // để biến thể chưa từng nhập kho cũng bị coi là hết hàng thay vì "không giới hạn".
+    const usesStock = productUsesStock;
     const stockAvailable = stockInfo ? stockInfo.available : 0;
     const outOfStock = usesStock && stockAvailable <= 0;
 
@@ -448,8 +454,7 @@ function renderProductDetail(){
                 ${currentVariants.map(v => {
                     const vId = String(v.id);
                     const vSt = variantStockMap[vId];
-                    const vUsesStock = !!item.stock_managed || !!(vSt && vSt.total > 0);
-                    const vOut = vUsesStock && (!vSt || vSt.available <= 0);
+                    const vOut = productUsesStock && (!vSt || vSt.available <= 0);
                     const vOwned = ownedVariantsMap.hasOwnProperty(vId);
                     const selected = vId === currentVariantId;
                     return `<button type="button" class="pd-variant-opt${selected ? ' selected' : ''}${vOut ? ' out' : ''}" ${vOut ? 'disabled' : ''} onclick="selectVariant('${vId.replace(/'/g,"\\'")}')">

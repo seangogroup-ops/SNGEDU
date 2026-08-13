@@ -808,19 +808,32 @@ textarea{resize:vertical;}
     width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm);
     font-size:.86rem; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; resize:vertical; margin-top:10px;
 }
-.stock-add-row{ display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:8px; }
-.stock-add-row button{ white-space:nowrap; padding:9px 16px; font-size:.84rem; }
-.stock-stats-row{ display:flex; gap:16px; margin:16px 0 8px; font-size:.84rem; color:var(--text); }
-.stock-stat b{ font-family:var(--font-display); }
-.stock-stat.available b{ color:#1a8a4a; }
-.stock-stat.sold b{ color:var(--gray); }
-.stock-tabs{ display:flex; gap:6px; margin-bottom:8px; }
-.stock-tab{
-    flex:1; padding:8px; border-radius:var(--radius-sm); border:1px solid var(--border);
-    background:var(--bg); font-size:.82rem; font-weight:700; color:var(--gray); cursor:pointer;
+.stock-add-box{ background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:4px; }
+.stock-box textarea{
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm);
+    font-size:.86rem; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; resize:vertical; margin-top:10px;
 }
-.stock-tab.selected{ background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
-.stock-list{ max-height:340px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm); padding:6px; display:flex; flex-direction:column; gap:5px; }
+.stock-add-box textarea{
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:var(--white);
+    font-size:.86rem; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; resize:vertical;
+}
+.stock-add-row{ display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:10px; }
+.stock-add-row button{ white-space:nowrap; padding:9px 18px; font-size:.84rem; display:inline-flex; align-items:center; gap:7px; }
+.stock-stats-row{ display:flex; gap:10px; margin:16px 0 12px; }
+.stock-stat{ display:inline-flex; align-items:center; gap:7px; font-size:.82rem; font-weight:600; padding:8px 14px; border-radius:11px; }
+.stock-stat b{ font-family:var(--font-display); font-size:.92rem; }
+.stock-stat.available{ background:#e9f9ef; color:#1a8a4a; }
+.stock-stat.available i{ color:#1a8a4a; }
+.stock-stat.sold{ background:var(--bg); color:var(--gray); }
+.stock-stat.sold i{ color:var(--gray); }
+.stock-tabs{ display:flex; gap:6px; margin-bottom:10px; background:var(--bg); padding:4px; border-radius:12px; }
+.stock-tab{
+    flex:1; padding:9px; border-radius:9px; border:1px solid transparent;
+    background:transparent; font-size:.82rem; font-weight:700; color:var(--gray); cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:background .15s ease, color .15s ease;
+}
+.stock-tab.selected{ background:var(--white); color:var(--accent); border-color:var(--border); box-shadow:0 2px 6px -2px rgba(0,0,0,.08); }
+.stock-list{ max-height:340px; overflow-y:auto; border:1px solid var(--border); border-radius:12px; padding:6px; display:flex; flex-direction:column; gap:5px; background:var(--white); }
 .stock-row{ display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:8px; font-size:.82rem; border:1px solid transparent; }
 .stock-row:hover{ background:var(--bg); border-color:var(--border); }
 .stock-row .sr-idx{ flex:0 0 auto; width:22px; color:var(--gray); font-size:.72rem; text-align:right; }
@@ -849,6 +862,24 @@ textarea{resize:vertical;}
     color:var(--gray); font-family:var(--font-display); font-size:.78rem; font-weight:700; cursor:pointer;
 }
 .stock-variant-tab.selected{ background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
+.stock-empty-state{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    padding:56px 24px; color:var(--gray); gap:10px;
+}
+.stock-empty-ico{
+    width:56px; height:56px; border-radius:16px; background:var(--bg); color:var(--gray-soft,var(--gray));
+    display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin-bottom:2px;
+}
+.stock-empty-state p{ margin:0; font-size:.9rem; }
+.subj-mgr-col .side-item .stock-badge-dot{
+    width:8px; height:8px; border-radius:50%; flex:0 0 auto; margin-right:2px; display:inline-block;
+}
+.subj-mgr-col .side-item .stock-badge-dot.ok{ background:#2fb865; }
+.subj-mgr-col .side-item .stock-badge-dot.out{ background:#e5484d; }
+.subj-mgr-col .side-item .stock-badge-dot.none{ background:var(--border); }
+.subj-mgr-col .side-item.active .stock-badge-dot.ok{ background:#7bffb0; }
+.subj-mgr-col .side-item.active .stock-badge-dot.out{ background:#ffb3b0; }
+.subj-mgr-col .side-item.active .stock-badge-dot.none{ background:rgba(255,255,255,.6); }
 .cm-variants-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:4px; }
 .cm-variant-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .cm-variant-row input.cm-variant-label{ flex:1 1 140px; min-width:0; }
@@ -2335,7 +2366,6 @@ textarea{resize:vertical;}
                         <div class="mini-actions" style="margin-top:14px;">
                             <button class="btn-mini-save" onclick="saveAdminContact()">💾 Lưu thay đổi</button>
                         </div>
-                        <div class="hint" id="acSaveMsg" style="margin-top:10px;min-height:1.2em;"></div>
                     </div>
 
                     <div class="settings-form-card" style="margin-top:16px;">
@@ -2885,9 +2915,12 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
 
 <!-- ================= KHO TÀI KHOẢN SẢN PHẨM (tab lớn riêng) ================= -->
 <div id="stockManagerPanel" class="hidden">
-    <div class="subj-mgr-head">
-        <h2>🔑 Kho tài khoản</h2>
-        <p class="hint">Chọn 1 sản phẩm bên trái, dán mỗi tài khoản 1 dòng, ví dụ: <code>email@gmail.com:matkhau123</code>. Khi khách thanh toán sản phẩm đó thành công, hệ thống <b>tự động lấy 1 dòng còn trống</b>, đánh dấu đã bán và hiển thị cho khách ở trang chi tiết sản phẩm — không cần thao tác thủ công.</p>
+    <div class="subj-mgr-head with-icon">
+        <div class="smh-ico">🔑</div>
+        <div>
+            <h2>Kho tài khoản</h2>
+            <p class="hint">Chọn 1 sản phẩm bên trái, dán mỗi tài khoản 1 dòng, ví dụ: <code>email@gmail.com:matkhau123</code>. Khi khách thanh toán sản phẩm đó thành công, hệ thống <b>tự động lấy 1 dòng còn trống</b>, đánh dấu đã bán và hiển thị cho khách ở trang chi tiết sản phẩm — không cần thao tác thủ công.</p>
+        </div>
     </div>
     <div class="subj-mgr-grid stock-grid">
         <div class="subj-mgr-col">
@@ -2897,23 +2930,28 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
             <div id="stockProductList" class="side-list subj-mgr-list"></div>
         </div>
         <div class="subj-mgr-col">
-            <div id="stockEmptyState" class="empty-state" style="padding:24px;">Chọn 1 sản phẩm bên trái để quản lý kho tài khoản.</div>
+            <div id="stockEmptyState" class="stock-empty-state">
+                <div class="stock-empty-ico"><i class="fa-solid fa-box-open"></i></div>
+                <p>Chọn 1 sản phẩm bên trái để quản lý kho tài khoản</p>
+            </div>
             <div id="stockDetailWrap" class="hidden">
                 <div class="subj-mgr-col-head">
                     <h4 id="stockProductTitle"></h4>
                 </div>
                 <div id="stockVariantTabs" class="stock-variant-tabs"></div>
-                <textarea id="stockAddTextarea" rows="4" placeholder="email1@gmail.com:matkhau1&#10;email2@gmail.com:matkhau2&#10;..."></textarea>
-                <div class="stock-add-row">
-                    <button class="btn-primary" onclick="submitAddStock()">+ Thêm vào kho</button>
+                <div class="stock-add-box">
+                    <textarea id="stockAddTextarea" rows="4" placeholder="email1@gmail.com:matkhau1&#10;email2@gmail.com:matkhau2&#10;..."></textarea>
+                    <div class="stock-add-row">
+                        <button class="btn-primary" onclick="submitAddStock()"><i class="fa-solid fa-plus"></i> Thêm vào kho</button>
+                    </div>
                 </div>
                 <div class="stock-stats-row">
-                    <span class="stock-stat available">Còn trống: <b id="stockAvailCount">0</b></span>
-                    <span class="stock-stat sold">Đã bán: <b id="stockSoldCount">0</b></span>
+                    <span class="stock-stat available"><i class="fa-solid fa-circle-check"></i> Còn trống: <b id="stockAvailCount">0</b></span>
+                    <span class="stock-stat sold"><i class="fa-solid fa-cart-shopping"></i> Đã bán: <b id="stockSoldCount">0</b></span>
                 </div>
                 <div class="stock-tabs">
-                    <button class="stock-tab selected" data-tab="available" onclick="switchStockTab('available')">Còn trống</button>
-                    <button class="stock-tab" data-tab="sold" onclick="switchStockTab('sold')">Đã bán</button>
+                    <button class="stock-tab selected" data-tab="available" onclick="switchStockTab('available')"><i class="fa-solid fa-box"></i> Còn trống</button>
+                    <button class="stock-tab" data-tab="sold" onclick="switchStockTab('sold')"><i class="fa-solid fa-receipt"></i> Đã bán</button>
                 </div>
                 <div class="stock-list" id="stockList"></div>
             </div>
@@ -5964,15 +6002,29 @@ let stockCurrentTab = 'available';
 let stockCurrentVariant = '';   // '' = không chia phiên bản (hoặc phiên bản đang chọn)
 let stockRowsCache = [];
 let stockEditingId = null;      // id dòng đang được sửa nội dung tại chỗ
+let stockOverviewMap = {};      // { productId: {available, total} } -- hiện chấm màu còn/hết hàng ở danh sách sản phẩm
 
 function stockCurrentVariants(){
     const item = contentLists.product_items && contentLists.product_items.items.find(x => String(x.id) === String(stockCurrentProductId));
     return item && Array.isArray(item.variants) ? item.variants.filter(v => v && v.id) : [];
 }
+async function loadStockOverview(){
+    const { data, error } = await sb.from('product_stock').select('product_id, status');
+    if (error) return;
+    const map = {};
+    (data || []).forEach(r => {
+        const id = String(r.product_id);
+        if (!map[id]) map[id] = { available: 0, total: 0 };
+        map[id].total++;
+        if (r.status === 'available') map[id].available++;
+    });
+    stockOverviewMap = map;
+}
 async function showStockManager(){
     rememberAdminPanel('stock');
     showAdminPanel('stockManagerPanel', 'nav_stock');
     if (!contentLists.product_items.items.length) await loadContentList('product_items');
+    await loadStockOverview();
     renderStockProductList();
     if (stockCurrentProductId){
         const stillExists = contentLists.product_items.items.some(x => String(x.id) === String(stockCurrentProductId));
@@ -5989,7 +6041,11 @@ function renderStockProductList(){
         const hasVariants = Array.isArray(item.variants) && item.variants.length > 0;
         const extra = hasVariants ? `${item.variants.length} phiên bản` : (Number(item.price) > 0 ? Number(item.price).toLocaleString('vi-VN') + 'đ' : 'Miễn phí');
         const active = String(item.id) === String(stockCurrentProductId);
+        const ov = stockOverviewMap[String(item.id)];
+        const dotClass = !ov || ov.total === 0 ? 'none' : (ov.available > 0 ? 'ok' : 'out');
+        const dotTitle = !ov || ov.total === 0 ? 'Chưa nhập kho' : `Còn ${ov.available}/${ov.total} tài khoản`;
         return `<div class="side-item${active ? ' active' : ''}" onclick="selectStockProduct('${String(item.id).replace(/'/g,"\\'")}')">
+            <span class="stock-badge-dot ${dotClass}" title="${escapeHtml(dotTitle)}"></span>
             <span class="name">${escapeHtml(item.title || '')}</span>
             <span class="code">${escapeHtml(extra)}</span>
         </div>`;
@@ -6065,8 +6121,7 @@ function updateStockCounts(){
     const sold = rows.filter(r => r.status === 'sold').length;
     document.getElementById('stockAvailCount').innerText = avail;
     document.getElementById('stockSoldCount').innerText = sold;
-}
-function stockUserLabel(userId){
+}function stockUserLabel(userId){
     const u = accountsCache.find(x => x.id === userId);
     return u ? (u.email || userId) : (userId || '—');
 }
@@ -6139,6 +6194,7 @@ async function submitAddStock(){
     showMsg(`Đã thêm ${lines.length} tài khoản vào kho.`, 'ok');
     ta.value = '';
     loadStockList();
+    loadStockOverview().then(renderStockProductList);
 }
 function deleteStockRow(id){
     const row = stockRowsCache.find(x => String(x.id) === String(id));
@@ -6150,6 +6206,7 @@ function deleteStockRow(id){
             if (error){ showMsg('Lỗi xoá: ' + error.message, 'err'); return; }
             showMsg('Đã xoá tài khoản khỏi kho.', 'ok');
             loadStockList();
+            loadStockOverview().then(renderStockProductList);
         }
     );
 }
@@ -7395,7 +7452,6 @@ const CONTACT_PLATFORMS = {
 let adminContactState = { avatar:'', name:'', role:'', bio:'', note:'', contacts:[] };
 
 async function loadAdminContact(){
-    document.getElementById('acSaveMsg').innerText = '';
     const { data, error } = await sb.from('site_settings').select('*').eq('key', 'admin_contact').single();
     if (error && error.code !== 'PGRST116') showMsg('Lỗi tải trang Liên hệ Admin: ' + error.message, 'err');
     const p = (data && data.payload) ? data.payload : {};
@@ -7551,16 +7607,12 @@ async function saveAdminContact(){
     };
     const { error } = await sb.from('site_settings')
         .upsert({ key:'admin_contact', payload, updated_at: new Date().toISOString() }, { onConflict:'key' });
-    const msgEl = document.getElementById('acSaveMsg');
     if (error){
-        msgEl.style.color = 'var(--red)';
-        msgEl.innerText = 'Lỗi: ' + error.message;
+        showMsg('Lỗi lưu trang Liên hệ Admin: ' + error.message, 'err');
     } else {
         adminContactState.contacts = cleanedContacts;
         renderAdminContactsList();
-        msgEl.style.color = 'var(--green)';
-        msgEl.innerText = '✔ Đã lưu. Xem tại lien-he.html — trang sẽ cập nhật ngay khi tải lại.';
-        setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4000);
+        showMsg('Đã lưu trang Liên hệ Admin. Xem tại lien-he.html.', 'ok');
     }
 }
 

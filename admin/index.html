@@ -888,13 +888,20 @@ textarea{resize:vertical;}
 .subj-mgr-col .side-item.active .stock-badge-dot.out{ background:#ffb3b0; }
 .subj-mgr-col .side-item.active .stock-badge-dot.none{ background:rgba(255,255,255,.6); }
 .cm-variants-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:4px; }
-.cm-variant-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.cm-variant-row input.cm-variant-label{ flex:1 1 140px; min-width:0; }
-.cm-variant-row input.cm-variant-price{ flex:1 1 100px; min-width:0; max-width:140px; }
-.cm-variant-row .cm-variant-del{ flex:0 0 auto; margin-left:auto; background:none; border:none; color:var(--red,#dc2626); cursor:pointer; font-size:.95rem; padding:6px; }
+.cm-variant-row{ display:grid; grid-template-columns:1fr 140px 34px; align-items:center; gap:8px; }
+.cm-variant-row input.cm-variant-label{ min-width:0; }
+.cm-variant-row input.cm-variant-price{ min-width:0; }
+.cm-variant-row .cm-variant-del{
+    flex:0 0 auto; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center;
+    border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--red,#dc2626);
+    cursor:pointer; font-size:.9rem; padding:0;
+}
+.cm-variant-row .cm-variant-del:hover{ background:var(--red-bg,#fde8e8); border-color:var(--red,#dc2626); }
 @media (max-width: 420px){
-    .cm-variant-row input.cm-variant-label{ flex:1 1 100%; }
-    .cm-variant-row input.cm-variant-price{ flex:1 1 auto; max-width:none; }
+    .cm-variant-row{ grid-template-columns:1fr 1fr; grid-template-areas:'label label' 'price del'; row-gap:6px; }
+    .cm-variant-row input.cm-variant-label{ grid-area:label; }
+    .cm-variant-row input.cm-variant-price{ grid-area:price; }
+    .cm-variant-row .cm-variant-del{ grid-area:del; justify-self:end; }
 }
 
 /* ---------- MERGE (TỔNG HỢP) MODAL ---------- */
@@ -7023,7 +7030,10 @@ function addVariantRow(subKey){
 }
 function removeVariantRow(subKey, vid){
     const cfg = contentLists[subKey];
-    cfg._variantRows = (cfg._variantRows || []).filter(v => String(v.id) !== String(vid));
+    const rows = cfg._variantRows || [];
+    const row = rows.find(v => String(v.id) === String(vid));
+    if (row && !confirm(`Xoá phiên bản "${row.label || '(chưa đặt tên)'}"?`)) return;
+    cfg._variantRows = rows.filter(v => String(v.id) !== String(vid));
     renderVariantRows(subKey);
 }
 

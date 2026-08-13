@@ -562,6 +562,24 @@ aside{
 }
 .settings-form-card h3{margin:0 0 4px;font-size:1.1rem;letter-spacing:-.01em;}
 .settings-form-card .hint{margin-bottom:18px;}
+.file-upload-row{display:flex;gap:14px;align-items:center;}
+.file-upload-preview{
+    width:64px;height:64px;border-radius:50%;flex:0 0 auto;overflow:hidden;
+    background:var(--accent-soft);display:flex;align-items:center;justify-content:center;
+    font-size:1.5rem;color:var(--accent);border:1px solid var(--border);
+}
+.file-upload-preview img{width:100%;height:100%;object-fit:cover;display:block;}
+.ac-row{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;background:var(--white);}
+.ac-row .ac-icon-badge{
+    width:38px;height:38px;border-radius:10px;flex:0 0 auto;margin-top:2px;
+    display:flex;align-items:center;justify-content:center;font-size:1rem;color:#fff;
+}
+.ac-row .ac-fields{flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ac-row .ac-fields > div.full{grid-column:1 / -1;}
+.ac-row .ac-fields label{margin:6px 0 4px;font-size:.72rem;}
+.ac-row .ac-fields label:first-child{margin-top:0;}
+.ac-row .ac-del{background:none;border:none;color:var(--gray);cursor:pointer;font-size:.95rem;padding:6px 8px;border-radius:8px;flex:0 0 auto;}
+.ac-row .ac-del:hover{background:#fdebe8;color:#e55d48;}
 .pf-row{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;background:var(--white);}
 .pf-row .drag-handle{cursor:grab;color:#d9d1c2;padding-top:9px;flex:0 0 auto;}
 .pf-row .pf-fields{flex:1;min-width:0;}
@@ -2277,6 +2295,47 @@ textarea{resize:vertical;}
                             <button class="btn-mini-save" onclick="saveProFeatures()">💾 Lưu thay đổi</button>
                         </div>
                         <div class="hint" id="proFeaturesMsg" style="margin-top:10px;min-height:1.2em;"></div>
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
+                        <h3>🪪 Trang "Liên hệ Admin"</h3>
+                        <p class="hint">Trang giới thiệu &amp; liên hệ quản trị viên, xem tại <code>lien-he.html</code>. Gắn link này vào thẻ "Truy cập nhanh" (mục Truy cập nhanh ở trên) để hiện lên trang chủ cho học viên bấm vào.</p>
+
+                        <label>Ảnh đại diện</label>
+                        <div class="file-upload-row">
+                            <div class="file-upload-preview" id="acAvatarPreviewWrap">
+                                <img id="acAvatarPreviewImg" class="hidden" alt="">
+                                <i class="fa-solid fa-user-tie" id="acAvatarPreviewIcon"></i>
+                            </div>
+                            <div style="flex:1;min-width:0;">
+                                <input type="file" id="acAvatarInput" accept="image/*" onchange="onAdminContactAvatarSelected()" style="margin-bottom:6px;">
+                                <div class="hint" id="acAvatarName" style="min-height:1.1em;"></div>
+                                <button type="button" class="btn-mini-cancel" id="acAvatarRemoveBtn" style="display:none;margin-top:4px;" onclick="removeAdminContactAvatar()">Xoá ảnh</button>
+                            </div>
+                        </div>
+                        <input type="hidden" id="acAvatarUrl">
+
+                        <label style="margin-top:12px;">Họ tên hiển thị</label>
+                        <input type="text" id="acName" placeholder="Nguyễn Văn A">
+
+                        <label>Chức danh</label>
+                        <input type="text" id="acRole" placeholder="Quản trị viên SNG EDU">
+
+                        <label>Giới thiệu ngắn</label>
+                        <textarea id="acBio" rows="3" placeholder="Mình phụ trách nội dung và hỗ trợ kỹ thuật cho SNG EDU. Có gì thắc mắc về tài liệu, đề thi hay tài khoản Premium, cứ nhắn mình qua các kênh bên dưới nhé!"></textarea>
+
+                        <label>Danh sách liên hệ</label>
+                        <div class="hint" style="margin:2px 0 8px;">Chọn nền tảng (icon tự động điền), dán link/username rồi bấm Lưu. Chọn "Khác" nếu nền tảng không có trong danh sách.</div>
+                        <div id="acContactsList"></div>
+                        <button type="button" class="side-add" onclick="addAdminContactRow()">+ Thêm kênh liên hệ</button>
+
+                        <label style="margin-top:12px;">Ghi chú thêm (không bắt buộc)</label>
+                        <textarea id="acNote" rows="2" placeholder="Phản hồi trong giờ hành chính 8h-22h hàng ngày."></textarea>
+
+                        <div class="mini-actions" style="margin-top:14px;">
+                            <button class="btn-mini-save" onclick="saveAdminContact()">💾 Lưu thay đổi</button>
+                        </div>
+                        <div class="hint" id="acSaveMsg" style="margin-top:10px;min-height:1.2em;"></div>
                     </div>
 
                     <div class="settings-form-card" style="margin-top:16px;">
@@ -4024,6 +4083,7 @@ function showGeneralSettings(){
     loadSupportCard();
     loadNavTabsList();
     loadProFeaturesList();
+    loadAdminContact();
 }
 
 // ---------- Thẻ "Hỗ trợ" (trang chủ) — quản lý ngay trong tab Cài đặt, dùng chung bảng quick_links ----------
@@ -7313,6 +7373,196 @@ async function saveProFeatures(){
     }
 }
 enableDragReorder('proFeaturesList', '.pf-row', el => el.dataset.idx, null, reorderProFeatures);
+
+// ============================================================================
+// TRANG "LIÊN HỆ ADMIN" (site_settings key 'admin_contact') — hiện ở lien-he.html
+// ============================================================================
+// Danh sách nền tảng dựng sẵn: chọn xong tự điền icon + màu + nhãn, admin chỉ cần dán link.
+// Zalo không có icon chính thức trong bộ Font Awesome Free nên dùng icon bong bóng chat thay thế.
+const CONTACT_PLATFORMS = {
+    zalo:      { label: 'Zalo',      icon: 'fa-solid fa-comment-dots',        color: '#0068ff', placeholder: 'https://zalo.me/09xxxxxxxx' },
+    facebook:  { label: 'Facebook',  icon: 'fa-brands fa-facebook',            color: '#1877f2', placeholder: 'https://facebook.com/tenfanpage' },
+    messenger: { label: 'Messenger', icon: 'fa-brands fa-facebook-messenger',  color: '#0084ff', placeholder: 'https://m.me/tenfanpage' },
+    telegram:  { label: 'Telegram',  icon: 'fa-brands fa-telegram',            color: '#26a5e4', placeholder: 'https://t.me/username' },
+    instagram: { label: 'Instagram', icon: 'fa-brands fa-instagram',           color: '#e1306c', placeholder: 'https://instagram.com/username' },
+    tiktok:    { label: 'TikTok',    icon: 'fa-brands fa-tiktok',              color: '#111111', placeholder: 'https://tiktok.com/@username' },
+    youtube:   { label: 'YouTube',   icon: 'fa-brands fa-youtube',             color: '#ff0000', placeholder: 'https://youtube.com/@kenh' },
+    email:     { label: 'Email',     icon: 'fa-solid fa-envelope',             color: '#f5a524', placeholder: 'mailto:admin@sngedu.site' },
+    phone:     { label: 'Điện thoại',icon: 'fa-solid fa-phone',                color: '#17b26a', placeholder: 'tel:0987654321' },
+    website:   { label: 'Website',   icon: 'fa-solid fa-globe',                color: '#8b5cf6', placeholder: 'https://sngedu.site' },
+    custom:    { label: 'Khác',      icon: 'fa-solid fa-link',                 color: '#6b7180', placeholder: 'https://...' },
+};
+let adminContactState = { avatar:'', name:'', role:'', bio:'', note:'', contacts:[] };
+
+async function loadAdminContact(){
+    document.getElementById('acSaveMsg').innerText = '';
+    const { data, error } = await sb.from('site_settings').select('*').eq('key', 'admin_contact').single();
+    if (error && error.code !== 'PGRST116') showMsg('Lỗi tải trang Liên hệ Admin: ' + error.message, 'err');
+    const p = (data && data.payload) ? data.payload : {};
+    adminContactState = {
+        avatar: p.avatar || '',
+        name: p.name || '',
+        role: p.role || '',
+        bio: p.bio || '',
+        note: p.note || '',
+        contacts: Array.isArray(p.contacts) ? p.contacts.map(c => ({
+            platform: c.platform || 'custom', icon: c.icon || '', label: c.label || '', value: c.value || '', link: c.link || '',
+        })) : [],
+    };
+    document.getElementById('acName').value = adminContactState.name;
+    document.getElementById('acRole').value = adminContactState.role;
+    document.getElementById('acBio').value = adminContactState.bio;
+    document.getElementById('acNote').value = adminContactState.note;
+
+    const avatarImg = document.getElementById('acAvatarPreviewImg');
+    const avatarIcon = document.getElementById('acAvatarPreviewIcon');
+    const avatarName = document.getElementById('acAvatarName');
+    const avatarRemoveBtn = document.getElementById('acAvatarRemoveBtn');
+    document.getElementById('acAvatarUrl').value = adminContactState.avatar;
+    if (adminContactState.avatar){
+        avatarImg.src = adminContactState.avatar; avatarImg.classList.remove('hidden'); avatarIcon.classList.add('hidden');
+        avatarName.textContent = '🖼️ ' + fileNameFromUrl(adminContactState.avatar) + ' (đang dùng)';
+        avatarRemoveBtn.style.display = '';
+    } else {
+        avatarImg.classList.add('hidden'); avatarIcon.classList.remove('hidden');
+        avatarName.textContent = ''; avatarRemoveBtn.style.display = 'none';
+    }
+
+    renderAdminContactsList();
+}
+function contactPlatformOptionsHtml(selected){
+    return Object.entries(CONTACT_PLATFORMS).map(([key, meta]) =>
+        `<option value="${key}" ${key === selected ? 'selected' : ''}>${escapeHtml(meta.label)}</option>`
+    ).join('');
+}
+function adminContactRowHtml(c, idx){
+    const meta = CONTACT_PLATFORMS[c.platform] || CONTACT_PLATFORMS.custom;
+    const icon = c.icon || meta.icon;
+    const isCustom = c.platform === 'custom';
+    return `
+        <div class="ac-row" data-idx="${idx}">
+            <span class="ac-icon-badge" style="background:${meta.color}"><i class="${escapeHtml(icon)}"></i></span>
+            <div class="ac-fields">
+                <div>
+                    <label>Nền tảng</label>
+                    <select onchange="updateAdminContactPlatform(${idx}, this.value)">${contactPlatformOptionsHtml(c.platform)}</select>
+                </div>
+                <div>
+                    <label>Tên hiển thị (không bắt buộc)</label>
+                    <input type="text" value="${escapeHtml(c.value || '')}" placeholder="${escapeHtml(meta.label)}" oninput="updateAdminContactField(${idx}, 'value', this.value)">
+                </div>
+                ${isCustom ? `<div><label>Mã icon Font Awesome</label><input type="text" value="${escapeHtml(c.icon || '')}" placeholder="fa-solid fa-link" oninput="updateAdminContactField(${idx}, 'icon', this.value)"></div>` : ''}
+                <div class="full">
+                    <label>Link / username</label>
+                    <input type="text" value="${escapeHtml(c.link || '')}" placeholder="${escapeHtml(meta.placeholder)}" oninput="updateAdminContactField(${idx}, 'link', this.value)">
+                </div>
+            </div>
+            <button type="button" class="ac-del" title="Xoá kênh này" onclick="removeAdminContactRow(${idx})"><i class="fa-solid fa-trash"></i></button>
+        </div>`;
+}
+function renderAdminContactsList(){
+    const wrap = document.getElementById('acContactsList');
+    wrap.innerHTML = adminContactState.contacts.length
+        ? adminContactState.contacts.map(adminContactRowHtml).join('')
+        : '<p class="hint">Chưa có kênh liên hệ nào, bấm "+ Thêm kênh liên hệ" bên dưới.</p>';
+}
+function updateAdminContactField(idx, field, value){
+    if (!adminContactState.contacts[idx]) return;
+    adminContactState.contacts[idx][field] = value;
+}
+function updateAdminContactPlatform(idx, platform){
+    if (!adminContactState.contacts[idx]) return;
+    adminContactState.contacts[idx].platform = platform;
+    if (platform !== 'custom') adminContactState.contacts[idx].icon = ''; // dùng icon mặc định của nền tảng
+    renderAdminContactsList();
+}
+function addAdminContactRow(){
+    adminContactState.contacts.push({ platform:'zalo', icon:'', label:'', value:'', link:'' });
+    renderAdminContactsList();
+}
+function removeAdminContactRow(idx){
+    adminContactState.contacts.splice(idx, 1);
+    renderAdminContactsList();
+}
+async function onAdminContactAvatarSelected(){
+    const input = document.getElementById('acAvatarInput');
+    const file = input.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')){ showMsg('Vui lòng chọn một file ảnh.', 'err'); input.value=''; return; }
+    if (file.size > DOC_IMAGE_MAX_SIZE){ showMsg('Ảnh quá lớn (tối đa 5MB).', 'err'); input.value=''; return; }
+
+    const nameEl = document.getElementById('acAvatarName');
+    nameEl.textContent = '⏳ Đang tải lên...';
+
+    const oldAvatar = document.getElementById('acAvatarUrl').value;
+    const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const path = 'admin-contact/' + Date.now() + '-' + safeName;
+
+    const { error: upErr } = await sb.storage.from(DOC_BUCKET).upload(path, file, { upsert:false });
+    if (upErr){ nameEl.textContent = ''; showMsg('Lỗi tải ảnh lên: ' + upErr.message, 'err'); input.value=''; return; }
+
+    const { data: pub } = sb.storage.from(DOC_BUCKET).getPublicUrl(path);
+    document.getElementById('acAvatarUrl').value = pub.publicUrl;
+    const avatarImg = document.getElementById('acAvatarPreviewImg');
+    avatarImg.src = pub.publicUrl; avatarImg.classList.remove('hidden');
+    document.getElementById('acAvatarPreviewIcon').classList.add('hidden');
+    nameEl.textContent = '🖼️ ' + file.name;
+    document.getElementById('acAvatarRemoveBtn').style.display = '';
+
+    if (oldAvatar){
+        const oldPath = storagePathFromPublicUrl(oldAvatar, DOC_BUCKET);
+        if (oldPath) sb.storage.from(DOC_BUCKET).remove([oldPath]).catch(()=>{});
+    }
+}
+function removeAdminContactAvatar(){
+    const oldAvatar = document.getElementById('acAvatarUrl').value;
+    document.getElementById('acAvatarUrl').value = '';
+    document.getElementById('acAvatarInput').value = '';
+    document.getElementById('acAvatarName').textContent = '';
+    document.getElementById('acAvatarRemoveBtn').style.display = 'none';
+    document.getElementById('acAvatarPreviewImg').classList.add('hidden');
+    document.getElementById('acAvatarPreviewIcon').classList.remove('hidden');
+    if (oldAvatar){
+        const oldPath = storagePathFromPublicUrl(oldAvatar, DOC_BUCKET);
+        if (oldPath) sb.storage.from(DOC_BUCKET).remove([oldPath]).catch(()=>{});
+    }
+}
+async function saveAdminContact(){
+    const cleanedContacts = adminContactState.contacts
+        .map(c => {
+            const meta = CONTACT_PLATFORMS[c.platform] || CONTACT_PLATFORMS.custom;
+            return {
+                platform: c.platform || 'custom',
+                icon: c.platform === 'custom' ? (c.icon || '').trim() || 'fa-solid fa-link' : meta.icon,
+                label: meta.label,
+                color: meta.color,
+                value: (c.value || '').trim(),
+                link: (c.link || '').trim(),
+            };
+        })
+        .filter(c => c.link); // bỏ dòng chưa nhập link
+    const payload = {
+        avatar: document.getElementById('acAvatarUrl').value || '',
+        name: document.getElementById('acName').value.trim(),
+        role: document.getElementById('acRole').value.trim(),
+        bio: document.getElementById('acBio').value.trim(),
+        note: document.getElementById('acNote').value.trim(),
+        contacts: cleanedContacts,
+    };
+    const { error } = await sb.from('site_settings')
+        .upsert({ key:'admin_contact', payload, updated_at: new Date().toISOString() }, { onConflict:'key' });
+    const msgEl = document.getElementById('acSaveMsg');
+    if (error){
+        msgEl.style.color = 'var(--red)';
+        msgEl.innerText = 'Lỗi: ' + error.message;
+    } else {
+        adminContactState.contacts = cleanedContacts;
+        renderAdminContactsList();
+        msgEl.style.color = 'var(--green)';
+        msgEl.innerText = '✔ Đã lưu. Xem tại lien-he.html — trang sẽ cập nhật ngay khi tải lại.';
+        setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4000);
+    }
+}
 
 // ============================================================================
 // QUẢN LÝ TÀI KHOẢN — gọi Edge Function "admin-users" (giữ service_role key an toàn phía server)

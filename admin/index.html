@@ -2572,15 +2572,19 @@ textarea{resize:vertical;}
 
                     <div style="display:flex;gap:14px;flex-wrap:wrap;">
                         <div style="flex:1;min-width:140px;">
-                            <label>Số suất còn lại</label>
-                            <input type="number" id="setPromoSlotsLeft" min="0" placeholder="12" oninput="updatePromoPreview()">
-                        </div>
-                        <div style="flex:1;min-width:140px;">
                             <label>Tổng số suất</label>
                             <input type="number" id="setPromoSlotsTotal" min="0" placeholder="100" oninput="updatePromoPreview()">
                         </div>
+                        <div style="flex:1;min-width:180px;">
+                            <label>Tính suất đã bán từ ngày</label>
+                            <input type="datetime-local" id="setPromoStartAt" oninput="updatePromoPreview()">
+                        </div>
                     </div>
-                    <div class="hint" style="margin:2px 0 10px;">Để trống 1 trong 2 ô (hoặc để 0) nếu không muốn hiện cụm "còn X/Y suất".</div>
+                    <div class="hint" style="margin:2px 0 10px;">
+                        "Số suất còn lại" giờ <b>tự động trừ theo đơn Gói thành viên đã thanh toán thành công thật</b> kể từ mốc thời gian ở ô "Tính suất đã bán từ ngày" — không cần admin gõ tay/cập nhật thủ công nữa.
+                        Để trống ô này thì mặc định tính từ lúc bạn lưu cấu hình này. Để trống hoặc để 0 ở "Tổng số suất" nếu không muốn hiện cụm "còn X/Y suất".
+                        <span id="setPromoSoldNote"></span>
+                    </div>
 
                     <label>Thời điểm kết thúc ưu đãi</label>
                     <input type="datetime-local" id="setPromoEndAt" oninput="updatePromoPreview()">
@@ -8280,6 +8284,7 @@ let bannerColor = 'amber';
 let bannerShape = 'pill';
 let bannerSize = 'md';
 let bannerEffect = 'subtle';
+let promoRealSoldCount = 0; // số đơn Gói thành viên đã thanh toán thật, lấy qua RPC, dùng để tính "còn X/Y suất" ở preview
 
 const SETTINGS_META = {
     site_theme: { title: 'Giao diện', hint: 'Bộ màu thương hiệu &amp; gradient dùng cho TOÀN BỘ trang (khối hero, menu, nút bấm, thẻ...). Đổi ở đây sẽ áp dụng ngay cho mọi người dùng sau khi họ tải lại trang.' },
@@ -8394,10 +8399,23 @@ async function openSettingsPanel(key){
     } else if (isPromo){
         document.getElementById('setPromoEnabled').checked = !!currentSetPayload.enabled;
         document.getElementById('setPromoMessage').value = currentSetPayload.message || '';
-        document.getElementById('setPromoSlotsLeft').value = currentSetPayload.slots_left ?? '';
         document.getElementById('setPromoSlotsTotal').value = currentSetPayload.slots_total ?? '';
+        document.getElementById('setPromoStartAt').value = currentSetPayload.start_at || '';
         document.getElementById('setPromoEndAt').value = currentSetPayload.end_at || '';
+        promoRealSoldCount = 0;
+        document.getElementById('setPromoSoldNote').innerText = '';
         updatePromoPreview();
+        // Lấy số đơn Premium đã thanh toán thật kể từ mốc "Tính suất đã bán từ ngày" để admin xem trước
+        // số suất còn lại sẽ hiện đúng thế nào trên trang chủ (không chặn giao diện nếu lỗi mạng).
+        const sinceIso = currentSetPayload.start_at ? new Date(currentSetPayload.start_at).toISOString() : (data && data.updated_at ? data.updated_at : new Date().toISOString());
+        sb.rpc('get_paid_subscription_count', { p_since: sinceIso }).then(({ data: cnt, error: cntErr }) => {
+            if (currentSetKey !== 'promo_banner') return; // đã chuyển sang mục khác thì bỏ qua
+            if (!cntErr){
+                promoRealSoldCount = Number(cnt) || 0;
+                document.getElementById('setPromoSoldNote').innerText = ` Hiện đã bán thật: ${promoRealSoldCount} suất kể từ mốc trên.`;
+                updatePromoPreview();
+            }
+        });
     } else if (isAnnounce){
         document.getElementById('setAnnounceEnabled').checked = !!currentSetPayload.enabled;
         document.getElementById('setAnnounceTitle').value = currentSetPayload.title || '';
@@ -8590,10 +8608,10 @@ function updatePromoPreview(){
     const msg = document.getElementById('setPromoMessage').value.trim() || 'Người dùng Premium ghi nhớ hiệu quả hơn gấp 3 lần...';
     document.getElementById('setPromoPreviewMsg').innerText = msg;
 
-    const left = Number(document.getElementById('setPromoSlotsLeft').value) || 0;
     const total = Number(document.getElementById('setPromoSlotsTotal').value) || 0;
+    const left = Math.max(0, total - promoRealSoldCount);
     const slotsEl = document.getElementById('setPromoPreviewSlots');
-    if (left > 0 && total > 0){
+    if (total > 0){
         slotsEl.innerText = `còn ${left}/${total} suất`;
         slotsEl.style.display = '';
     } else {
@@ -8718,11 +8736,13 @@ async function saveSiteSetting(){
             effect: bannerEffect,
         };
     } else if (currentSetKey === 'promo_banner'){
+        // "Số suất còn lại" không lưu tay nữa -- trang chủ tự tính = slots_total trừ số đơn Gói thành viên
+        // đã thanh toán thật kể từ start_at (xem hàm loadPromoBanner() ở index.html + RPC get_paid_subscription_count).
         payload = {
             enabled: document.getElementById('setPromoEnabled').checked,
             message: document.getElementById('setPromoMessage').value.trim(),
-            slots_left: Number(document.getElementById('setPromoSlotsLeft').value) || 0,
             slots_total: Number(document.getElementById('setPromoSlotsTotal').value) || 0,
+            start_at: document.getElementById('setPromoStartAt').value || '',
             end_at: document.getElementById('setPromoEndAt').value || '',
         };
     } else if (currentSetKey === 'announcement_popup'){

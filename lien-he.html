@@ -76,15 +76,24 @@
     body{
         background: var(--bg); color: var(--ink);
         font-family:'Be Vietnam Pro', sans-serif; min-height:100vh; line-height:1.6;
-        width:100%; overflow-x:hidden;
+        width:100%; overflow-x:hidden; position:relative;
     }
+    /* quầng sáng gradient mờ phía sau trang cho đỡ trống trải, không ảnh hưởng nội dung */
+    body::before, body::after{
+        content:''; position:fixed; z-index:0; border-radius:50%; pointer-events:none;
+        filter:blur(64px); opacity:.35;
+    }
+    body::before{ width:420px; height:420px; top:-140px; right:-120px; background:radial-gradient(circle, var(--brand), transparent 70%); }
+    body::after{ width:380px; height:380px; bottom:-120px; left:-110px; background:radial-gradient(circle, var(--brand2), transparent 70%); }
+    html[data-theme="dark"] body::before, html[data-theme="dark"] body::after{ opacity:.16; }
     img{ max-width:100%; }
     @media (prefers-reduced-motion: reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
     a{ color:inherit; }
 
     /* ---------------- header ---------------- */
     header{
-        background:var(--card); height:64px; display:flex; align-items:center; gap:10px;
+        background:color-mix(in srgb, var(--card) 82%, transparent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+        height:64px; display:flex; align-items:center; gap:10px;
         padding:0 clamp(14px, 4vw, 24px); border-bottom:1px solid var(--line);
         padding-left:max(14px, env(safe-area-inset-left)); padding-right:max(14px, env(safe-area-inset-right));
         position:fixed; top:0; width:100%; z-index:1000;
@@ -115,7 +124,7 @@
 
     /* ---------------- wrap ---------------- */
     .lh-screen{
-        max-width:640px; width:100%; margin:0 auto;
+        max-width:640px; width:100%; margin:0 auto; position:relative; z-index:1;
         padding:88px clamp(16px, 4vw, 28px) 60px;
         padding-left:max(clamp(16px, 4vw, 28px), env(safe-area-inset-left));
         padding-right:max(clamp(16px, 4vw, 28px), env(safe-area-inset-right));
@@ -129,51 +138,74 @@
     .state-card i{ font-size:1.8rem; color:var(--ink-mute); margin-bottom:14px; display:block; }
     .state-card.is-error i{ color:var(--amber); }
 
+    @keyframes lhFadeUp{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:translateY(0); } }
+
     /* ---------------- thẻ giới thiệu admin ---------------- */
     .lh-card{
-        background:var(--card); border:1px solid var(--line); border-radius:26px;
-        overflow:hidden; box-shadow:var(--shadow); text-align:center;
+        background:var(--card); border:1px solid var(--line); border-radius:28px;
+        overflow:hidden; box-shadow:var(--shadow-hov); text-align:center;
+        animation:lhFadeUp .5s cubic-bezier(.2,.8,.2,1) both;
     }
     .lh-cover{
-        height:104px; width:100%;
-        background:linear-gradient(135deg, var(--brand), var(--brand2));
-        position:relative;
+        height:130px; width:100%; position:relative; overflow:hidden;
+        background:linear-gradient(135deg, var(--brand), var(--brand2) 60%, #ff8fd8);
+    }
+    .lh-cover::before{
+        content:''; position:absolute; inset:0;
+        background:radial-gradient(circle at 20% 120%, rgba(255,255,255,.35), transparent 55%);
+    }
+    .lh-avatar-ring{
+        width:116px; height:116px; border-radius:50%; margin:-58px auto 0; position:relative;
+        background:linear-gradient(135deg, var(--brand), var(--brand2)); padding:4px;
+        box-shadow:0 10px 26px -8px rgba(79,107,255,.55);
     }
     .lh-avatar-wrap{
-        width:104px; height:104px; border-radius:50%; margin:-52px auto 0;
-        border:5px solid var(--card); background:var(--brand-bg);
+        width:100%; height:100%; border-radius:50%;
+        border:4px solid var(--card); background:var(--brand-bg);
         display:flex; align-items:center; justify-content:center; overflow:hidden;
-        box-shadow:var(--shadow);
     }
     .lh-avatar-wrap img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .lh-avatar-wrap i{ font-size:2.4rem; color:var(--brand); }
-    .lh-body{ padding:14px 26px 30px; }
-    .lh-name{ font-size:1.32rem; font-weight:800; letter-spacing:-.02em; margin-bottom:5px; }
+    .lh-avatar-wrap i{ font-size:2.3rem; color:var(--brand); }
+    .lh-verified{
+        position:absolute; right:2px; bottom:2px; width:26px; height:26px; border-radius:50%;
+        background:var(--green); border:3px solid var(--card); color:#fff;
+        display:flex; align-items:center; justify-content:center; font-size:.62rem;
+    }
+    .lh-body{ padding:16px 26px 32px; }
+    .lh-name{ font-size:1.4rem; font-weight:800; letter-spacing:-.02em; margin-bottom:6px; }
     .lh-role{
         display:inline-flex; align-items:center; gap:6px; font-size:.78rem; font-weight:700;
         color:var(--brand); background:var(--brand-bg); padding:5px 13px; border-radius:99px; margin-bottom:16px;
     }
-    .lh-bio{ color:var(--ink-soft); font-size:.92rem; line-height:1.75; margin-bottom:24px; white-space:pre-line; overflow-wrap:break-word; }
+    .lh-bio{ color:var(--ink-soft); font-size:.92rem; line-height:1.75; margin-bottom:26px; white-space:pre-line; overflow-wrap:break-word; }
 
-    .lh-contacts{ display:flex; flex-direction:column; gap:10px; text-align:left; }
+    .lh-section-label{
+        display:flex; align-items:center; gap:10px; margin-bottom:14px;
+        font-size:.72rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-mute);
+    }
+    .lh-section-label::before, .lh-section-label::after{ content:''; flex:1; height:1px; background:var(--line); }
+
+    .lh-contacts{ display:flex; flex-direction:column; gap:11px; text-align:left; }
     .lh-contact-btn{
         display:flex; align-items:center; gap:14px; width:100%;
-        padding:13px 16px; border-radius:16px; border:1px solid var(--line); background:var(--bg);
-        text-decoration:none; color:var(--ink); transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+        padding:14px 16px; border-radius:18px; border:1px solid var(--line); background:var(--bg);
+        text-decoration:none; color:var(--ink); transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
+        opacity:0; animation:lhFadeUp .45s cubic-bezier(.2,.8,.2,1) both;
     }
     @media (hover:hover){
-        .lh-contact-btn:hover{ transform:translateY(-2px); box-shadow:var(--shadow-hov); border-color:transparent; }
+        .lh-contact-btn:hover{ transform:translateY(-3px); box-shadow:var(--shadow-hov); border-color:transparent; background:var(--card); }
     }
     .lh-contact-btn:active{ transform:scale(.98); }
     .lh-contact-ic{
-        width:42px; height:42px; border-radius:12px; flex-shrink:0;
-        display:flex; align-items:center; justify-content:center; font-size:1.05rem;
+        width:44px; height:44px; border-radius:13px; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center; font-size:1.1rem;
         background:var(--brand-bg); color:var(--brand);
     }
     .lh-contact-txt{ min-width:0; flex:1; }
     .lh-contact-lbl{ font-size:.72rem; color:var(--ink-mute); margin-bottom:2px; }
-    .lh-contact-val{ font-size:.92rem; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .lh-contact-btn .lh-arrow{ color:var(--ink-mute); font-size:.85rem; flex-shrink:0; }
+    .lh-contact-val{ font-size:.94rem; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .lh-contact-btn .lh-arrow{ color:var(--ink-mute); font-size:.85rem; flex-shrink:0; transition:transform .22s ease, color .22s ease; }
+    @media (hover:hover){ .lh-contact-btn:hover .lh-arrow{ color:var(--brand); transform:translate(2px,-2px); } }
 
     .lh-note{
         display:flex; align-items:flex-start; gap:10px; margin-top:20px;
@@ -265,7 +297,7 @@ async function loadAdminContactPage(){
             : '';
 
         const contacts = Array.isArray(payload.contacts) ? payload.contacts.filter(c => c && (c.value || c.link)) : [];
-        const contactsHtml = contacts.length ? contacts.map(c => {
+        const contactsHtml = contacts.length ? contacts.map((c, i) => {
             const icon = (c.icon || '').trim() || 'fa-solid fa-link';
             const label = escapeHtml(c.label || '');
             const value = escapeHtml(c.value || c.link || '');
@@ -274,7 +306,7 @@ async function loadAdminContactPage(){
             const tag = link ? 'a' : 'div';
             const attrs = link ? `href="${escapeHtml(link)}" target="_blank" rel="noopener"` : '';
             const badgeStyle = color ? ` style="background:${escapeHtml(color)}1a;color:${escapeHtml(color)};"` : '';
-            return `<${tag} class="lh-contact-btn" ${attrs}>
+            return `<${tag} class="lh-contact-btn" ${attrs} style="animation-delay:${.08 + i * .06}s">
                         <span class="lh-contact-ic"${badgeStyle}><i class="${escapeHtml(icon)}"></i></span>
                         <span class="lh-contact-txt">
                             ${label ? `<span class="lh-contact-lbl">${label}</span>` : ''}
@@ -291,11 +323,15 @@ async function loadAdminContactPage(){
         document.getElementById('content').innerHTML = `
             <div class="lh-card">
                 <div class="lh-cover"></div>
-                <div class="lh-avatar-wrap">${avatarHtml}</div>
+                <div class="lh-avatar-ring">
+                    <div class="lh-avatar-wrap">${avatarHtml}</div>
+                    <span class="lh-verified"><i class="fa-solid fa-check"></i></span>
+                </div>
                 <div class="lh-body">
                     <div class="lh-name">${escapeHtml(payload.name || '')}</div>
                     ${roleHtml}
                     ${bioHtml}
+                    ${contactsHtml ? `<div class="lh-section-label">Kết nối trực tiếp</div>` : ''}
                     <div class="lh-contacts">${contactsHtml}</div>
                     ${noteHtml}
                 </div>

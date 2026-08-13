@@ -858,10 +858,17 @@ textarea{resize:vertical;}
 .stock-row .sr-edit-cancel{ background:none; border:1px solid var(--border); border-radius:6px; padding:6px 12px; font-size:.76rem; cursor:pointer; color:var(--gray); }
 .stock-variant-tabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
 .stock-variant-tab{
-    padding:6px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg);
+    display:inline-flex; align-items:center; gap:6px;
+    padding:6px 8px 6px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg);
     color:var(--gray); font-family:var(--font-display); font-size:.78rem; font-weight:700; cursor:pointer;
 }
 .stock-variant-tab.selected{ background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
+.stock-variant-tab-del{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:18px; height:18px; border-radius:50%; border:none; background:transparent; color:inherit;
+    opacity:.55; cursor:pointer; font-size:.68rem; padding:0; line-height:1;
+}
+.stock-variant-tab-del:hover{ opacity:1; background:rgba(220,38,38,.14); color:#dc2626; }
 .stock-empty-state{
     display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
     padding:56px 24px; color:var(--gray); gap:10px;
@@ -1056,6 +1063,38 @@ textarea{resize:vertical;}
 .acct-stat-card.month .ico{background:#fff3d6;color:#9a6300;}
 .acct-stat-card.pending .ico{background:var(--amber-bg);color:var(--amber);}
 .acct-stat-card.failed .ico{background:var(--red-bg);color:var(--red);}
+
+/* ---------- BẢO TRÌ ---------- */
+#mntGlobalBanner{
+    display:flex; align-items:center; gap:10px; cursor:pointer;
+    background:var(--amber-bg,#fbedd6); color:#9a6300; border:1px solid var(--amber,#f5a524);
+    border-radius:var(--radius); padding:10px 14px; font-size:.84rem; font-weight:600;
+    margin:0 0 16px;
+}
+#mntGlobalBanner i{ font-size:1rem; flex:0 0 auto; }
+.mnt-toggle-row{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    background:var(--bg); border:1px solid var(--border); border-radius:var(--radius);
+    padding:14px 16px; margin-bottom:16px;
+}
+.mnt-toggle-row .mnt-toggle-label{ font-weight:700; font-size:.92rem; }
+.mnt-toggle-row .mnt-toggle-sub{ font-size:.78rem; color:var(--gray); font-weight:500; margin-top:2px; }
+.mnt-switch{ position:relative; display:inline-block; width:46px; height:26px; flex:0 0 auto; }
+.mnt-switch input{ opacity:0; width:0; height:0; }
+.mnt-switch .slider{
+    position:absolute; cursor:pointer; inset:0; background:var(--border); border-radius:999px; transition:.2s;
+}
+.mnt-switch .slider::before{
+    content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s;
+}
+.mnt-switch input:checked + .slider{ background:var(--red,#dc2626); }
+.mnt-switch input:checked + .slider::before{ transform:translateX(20px); }
+.mnt-status-pill{
+    display:inline-flex; align-items:center; gap:6px; font-size:.76rem; font-weight:800;
+    padding:3px 10px; border-radius:999px; font-family:var(--font-display);
+}
+.mnt-status-pill.off{ background:var(--green-bg); color:var(--green); }
+.mnt-status-pill.on{ background:var(--red-bg,#fde8e8); color:var(--red,#dc2626); }
 
 /* ---------- GÓP Ý HỌC VIÊN (feedbackPanel) ---------- */
 .fb-nav-badge{
@@ -1535,6 +1574,11 @@ textarea{resize:vertical;}
                     <span class="set-ico">🎨</span><span class="name">Giao diện</span>
                 </div>
 
+                <div class="side-item settings-item" id="navMaintenance" onclick="showMaintenancePanel()" style="margin-bottom:16px;">
+                    <span class="set-ico">🚧</span><span class="name">Bảo trì</span>
+                    <span id="mntNavBadge" class="fb-nav-badge hidden">BẬT</span>
+                </div>
+
                 <div class="side-group" data-group="home">
                     <div class="side-group-head" onclick="toggleSideGroup('home')">
                         <span class="sg-ico">🏠</span><span class="sg-label">Trang chủ</span>
@@ -1654,6 +1698,11 @@ textarea{resize:vertical;}
             <div class="admin-topbar-title" id="adminTopbarTitle">Thống kê</div>
         </div>
         <div id="msgBox"></div>
+
+        <div id="mntGlobalBanner" class="hidden" onclick="showMaintenancePanel()">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Website đang ở chế độ <b>Bảo trì</b> — khách chỉ vào được trang "Liên hệ Admin", các trang còn lại tự chuyển sang trang bảo trì. Bấm để tắt.</span>
+        </div>
 
         <!-- ================= THỐNG KÊ (trang đầu tiên khi đăng nhập) ================= -->
         <div id="statsPanel">
@@ -2417,6 +2466,54 @@ textarea{resize:vertical;}
                             <button class="btn-mini-save" onclick="changePassword()">Lưu mật khẩu mới</button>
                         </div>
                         <div id="genPassMsg" class="hint" style="margin-top:8px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="maintenancePanel" class="hidden">
+            <div class="subj-mgr-head">
+                <h2>🚧 Bảo trì website</h2>
+                <p class="hint">Khi bật, mọi trang thuộc "trang chủ" (Trang chủ, Môn học, Trắc nghiệm, Tài liệu, Sản phẩm, Đăng nhập...) sẽ tự chuyển sang trang bảo trì. Riêng trang <b>quản trị (admin)</b> và trang <b>"Liên hệ Admin"</b> (lien-he.html) vẫn dùng được bình thường để bạn thao tác và học viên vẫn liên hệ được khi cần gấp.</p>
+            </div>
+            <div class="subj-mgr-grid">
+                <div class="subj-mgr-col" style="max-width:520px;">
+                    <div class="settings-form-card">
+                        <div class="mnt-toggle-row">
+                            <div>
+                                <div class="mnt-toggle-label">Bật chế độ bảo trì</div>
+                                <div class="mnt-toggle-sub">Trạng thái hiện tại: <span id="mntStatusPill" class="mnt-status-pill off">Đang hoạt động</span></div>
+                            </div>
+                            <label class="mnt-switch">
+                                <input type="checkbox" id="mntEnabledToggle" onchange="onMntToggleChange()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <label>Lời nhắn hiển thị cho khách (không bắt buộc)</label>
+                        <textarea id="mntMessageInput" rows="3" placeholder="Bọn mình đang nâng cấp để mang lại trải nghiệm tốt hơn. Vui lòng quay lại sau ít phút nhé!"></textarea>
+                        <div class="hint" style="margin-top:2px;">Để trống sẽ dùng lời nhắn mặc định ở trang bảo trì.</div>
+
+                        <div class="mini-actions" style="margin-top:14px;">
+                            <button class="btn-mini-save" onclick="saveMaintenanceSettings()">💾 Lưu thay đổi</button>
+                        </div>
+                        <div id="mntSaveMsg" class="hint" style="margin-top:8px;"></div>
+                    </div>
+
+                    <div class="settings-form-card" style="margin-top:16px;">
+                        <h3>Áp dụng cho những trang nào?</h3>
+                        <p class="hint" style="margin-bottom:10px;">Tự động chuyển sang trang bảo trì:</p>
+                        <ul style="margin:0 0 12px;padding-left:18px;font-size:.84rem;color:var(--gray);line-height:1.8;">
+                            <li>Trang chủ (index.html)</li>
+                            <li>Danh sách môn học, chi tiết môn học</li>
+                            <li>Trắc nghiệm / đề thi thử / bài tập tính toán</li>
+                            <li>Góp ý học viên, Đăng nhập tài khoản</li>
+                        </ul>
+                        <p class="hint" style="margin-bottom:10px;">Vẫn hoạt động bình thường:</p>
+                        <ul style="margin:0;padding-left:18px;font-size:.84rem;color:var(--gray);line-height:1.8;">
+                            <li>Trang quản trị (/admin)</li>
+                            <li>Liên hệ Admin (lien-he.html)</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -3220,6 +3317,7 @@ function showAdmin(email){
     restoreLastAdminPanel();
     expandGroupOfActiveNavItem();
     refreshFeedbackBadge();
+    loadMaintenanceStatus();
 }
 
 // Chỉ cập nhật số đếm "chưa đọc" trên menu, không đụng tới danh sách/panel đang mở
@@ -3253,6 +3351,7 @@ function restoreLastAdminPanel(){
         if (last === 'emailSettings')     return showEmailSettingsPanel();
         if (last === 'usageLimits')       return showUsageLimitsPanel();
         if (last === 'generalSettings')   return showGeneralSettings();
+        if (last === 'maintenance')       return showMaintenancePanel();
         if (last === 'featured')          return showFeaturedManager();
         if (last === 'subjectMgr')        return showSubjectManager();
         if (last === 'stats')             return showStatsPanel();
@@ -3266,7 +3365,7 @@ function restoreLastAdminPanel(){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['statsPanel', 'visitsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel', 'paymentSettingsPanel', 'emailSettingsPanel', 'stockManagerPanel'];
+const ADMIN_PANEL_IDS = ['statsPanel', 'visitsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'maintenancePanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel', 'paymentSettingsPanel', 'emailSettingsPanel', 'stockManagerPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -4107,6 +4206,60 @@ async function saveEmailSettings(){
         msgEl.innerText = '✔ Đã lưu. Áp dụng ngay từ email tiếp theo được gửi.';
         setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 4500);
     }
+}
+
+// ---------- BẢO TRÌ WEBSITE (site_settings key 'site_maintenance') ----------
+// Các trang thuộc "trang chủ" (index, môn học, chi tiết, trắc nghiệm, góp ý, đăng nhập)
+// gắn sẵn frontend/maintenance-check.js, tự đọc key này và chuyển sang bao-tri.html khi enabled=true.
+// Trang admin và lien-he.html KHÔNG gắn script đó nên luôn dùng được.
+let mntCurrentPayload = { enabled: false, message: '' };
+async function loadMaintenanceStatus(){
+    const { data } = await sb.from('site_settings').select('payload').eq('key', 'site_maintenance').maybeSingle();
+    mntCurrentPayload = (data && data.payload) || { enabled: false, message: '' };
+    renderMaintenanceBadges();
+}
+function renderMaintenanceBadges(){
+    const on = !!mntCurrentPayload.enabled;
+    const navBadge = document.getElementById('mntNavBadge');
+    if (navBadge) navBadge.classList.toggle('hidden', !on);
+    const banner = document.getElementById('mntGlobalBanner');
+    if (banner) banner.classList.toggle('hidden', !on);
+}
+async function showMaintenancePanel(){
+    rememberAdminPanel('maintenance');
+    showAdminPanel('maintenancePanel', 'navMaintenance');
+    document.getElementById('mntSaveMsg').innerText = '';
+    await loadMaintenanceStatus();
+    document.getElementById('mntEnabledToggle').checked = !!mntCurrentPayload.enabled;
+    document.getElementById('mntMessageInput').value = mntCurrentPayload.message || '';
+    updateMntStatusPill(!!mntCurrentPayload.enabled);
+}
+function updateMntStatusPill(on){
+    const pill = document.getElementById('mntStatusPill');
+    pill.classList.toggle('on', on);
+    pill.classList.toggle('off', !on);
+    pill.innerText = on ? 'Đang bảo trì' : 'Đang hoạt động';
+}
+function onMntToggleChange(){
+    updateMntStatusPill(document.getElementById('mntEnabledToggle').checked);
+}
+async function saveMaintenanceSettings(){
+    const msgEl = document.getElementById('mntSaveMsg');
+    const enabled = document.getElementById('mntEnabledToggle').checked;
+    const message = document.getElementById('mntMessageInput').value.trim();
+    const payload = { enabled, message };
+    const { error } = await sb.from('site_settings')
+        .upsert({ key: 'site_maintenance', payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error){
+        msgEl.style.color = 'var(--red)';
+        msgEl.innerText = 'Lỗi: ' + error.message;
+        return;
+    }
+    mntCurrentPayload = payload;
+    renderMaintenanceBadges();
+    msgEl.style.color = 'var(--green)';
+    msgEl.innerText = enabled ? '✔ Đã bật bảo trì. Khách vào các trang trang chủ sẽ tự chuyển sang trang bảo trì trong giây lát.' : '✔ Đã tắt bảo trì. Website hoạt động lại bình thường.';
+    setTimeout(()=>{ if (msgEl.innerText.startsWith('✔')) msgEl.innerText=''; }, 5000);
 }
 
 function showGeneralSettings(){
@@ -6076,7 +6229,11 @@ function renderStockVariantTabs(){
     wrap.style.display = '';
     wrap.innerHTML = variants.map(v => {
         const vId = String(v.id);
-        return `<button type="button" class="stock-variant-tab${vId === stockCurrentVariant ? ' selected' : ''}" onclick="switchStockVariant('${vId.replace(/'/g,"\\'")}')">${escapeHtml(v.label || vId)}</button>`;
+        const vIdEsc = vId.replace(/'/g,"\\'");
+        return `<span class="stock-variant-tab${vId === stockCurrentVariant ? ' selected' : ''}" onclick="switchStockVariant('${vIdEsc}')">
+            <span>${escapeHtml(v.label || vId)}</span>
+            <button type="button" class="stock-variant-tab-del" title="Xoá phiên bản ${escapeHtml(v.label || vId)}" onclick="event.stopPropagation(); deleteStockVariant('${vIdEsc}')"><i class="fa-solid fa-xmark"></i></button>
+        </span>`;
     }).join('');
 }
 function switchStockVariant(variantId){
@@ -6085,6 +6242,43 @@ function switchStockVariant(variantId){
     renderStockVariantTabs();
     updateStockCounts();
     renderStockList();
+}
+// Xoá 1 phiên bản khỏi sản phẩm (VD: xoá "3 tháng" nhưng vẫn giữ "1 tháng"/"12 tháng").
+// Xoá cả các tài khoản trong kho đang gắn với phiên bản đó (nếu có), sau khi đã cảnh báo số lượng.
+async function deleteStockVariant(variantId){
+    const cfg = contentLists.product_items;
+    const item = cfg && cfg.items.find(x => String(x.id) === String(stockCurrentProductId));
+    if (!item || !Array.isArray(item.variants)) return;
+    const variant = item.variants.find(v => String(v.id) === String(variantId));
+    if (!variant) return;
+
+    const { count } = await sb.from('product_stock')
+        .select('id', { count: 'exact', head: true })
+        .eq('product_id', String(stockCurrentProductId))
+        .eq('variant', variantId);
+
+    const stockNote = count ? `\n\nLưu ý: phiên bản này đang có ${count} tài khoản trong kho, các tài khoản đó sẽ bị xoá luôn.` : '';
+    if (!confirm(`Xoá phiên bản "${variant.label || variantId}"?${stockNote}`)) return;
+
+    item.variants = item.variants.filter(v => String(v.id) !== String(variantId));
+    const saveErr = await saveContentList('product_items');
+    if (saveErr) return showMsg('Lỗi xoá phiên bản: ' + saveErr.message, 'err');
+
+    if (count){
+        await sb.from('product_stock').delete()
+            .eq('product_id', String(stockCurrentProductId))
+            .eq('variant', variantId);
+    }
+
+    showMsg('Đã xoá phiên bản.', 'ok');
+    const remaining = stockCurrentVariants();
+    stockCurrentVariant = remaining.length ? String(remaining[0].id) : '';
+    stockEditingId = null;
+    renderStockVariantTabs();
+    renderStockProductList();
+    await loadStockOverview();
+    renderStockProductList();
+    loadStockList();
 }
 function switchStockTab(tab){
     stockCurrentTab = tab;

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14151c" media="(prefers-color-scheme: dark)">
+<script>
+    try{
+        var savedTheme = localStorage.getItem('sng-theme');
+        if(savedTheme === 'dark' || savedTheme === 'light'){
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }else{
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    }catch(e){}
+</script>
+<title>Đang bảo trì · SNG EDU</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+<style>
+    :root{
+        --bg:        #e4e7f0;
+        --card:      #f3f4f9;
+        --line:      #d3d7e3;
+        --ink:       #23273a;
+        --ink-soft:  #5c6272;
+        --ink-mute:  #83899c;
+        --brand:     #4f6bff;
+        --brand2:    #8b5cf6;
+        --amber:     #f5a524;
+        --amber-bg:  #fbedd6;
+        --grad-brand: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%);
+        --shadow: 0 1px 2px rgba(20,22,40,.06), 0 8px 24px -12px rgba(20,22,40,.12);
+    }
+    html[data-theme="dark"]{
+        --bg:        #14151c;
+        --card:      #1c1e28;
+        --line:      #2a2d3a;
+        --ink:       #f2f3f8;
+        --ink-soft:  #b4b8c8;
+        --ink-mute:  #7d8296;
+        --amber-bg:  rgba(245,165,36,.14);
+        --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+    *{ box-sizing:border-box; }
+    body{
+        margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+        background:var(--bg); color:var(--ink); font-family:'Be Vietnam Pro','Segoe UI',Roboto,Arial,sans-serif;
+        padding:24px; transition:background .2s,color .2s;
+    }
+    .wrap{
+        max-width:460px; width:100%; text-align:center;
+        background:var(--card); border:1px solid var(--line); border-radius:24px;
+        padding:40px 30px 34px; box-shadow:var(--shadow);
+    }
+    .brand-row{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:22px; }
+    .brand-dot{
+        width:34px; height:34px; border-radius:10px; background:var(--grad-brand);
+        display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+    }
+    .brand-dot svg{ width:20px; height:20px; }
+    .brand-name{ font-weight:800; font-size:1.05rem; letter-spacing:.2px; }
+    .ico-wrap{
+        width:76px; height:76px; border-radius:20px; margin:0 auto 20px; background:var(--amber-bg);
+        display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--amber);
+    }
+    .ico-wrap i{ animation:spin 3.2s linear infinite; }
+    @keyframes spin{ to{ transform:rotate(360deg); } }
+    h1{ font-size:1.3rem; margin:0 0 10px; font-weight:800; }
+    p{ font-size:.92rem; color:var(--ink-soft); line-height:1.6; margin:0 0 6px; }
+    #mntMsg{ margin-bottom:18px; white-space:pre-line; }
+    .dots span{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--ink-mute); margin:0 3px; opacity:.35; animation:blink 1.4s infinite; }
+    .dots span:nth-child(2){ animation-delay:.2s; }
+    .dots span:nth-child(3){ animation-delay:.4s; }
+    @keyframes blink{ 0%,80%,100%{ opacity:.25; } 40%{ opacity:1; } }
+    .foot-hint{ margin-top:22px; font-size:.78rem; color:var(--ink-mute); }
+    .foot-hint a{ color:var(--brand); font-weight:600; text-decoration:none; }
+</style>
+</head>
+<body data-page="maintenance" data-page-label="Bảo trì">
+    <script src="frontend/track-visit.js"></script>
+    <div class="wrap">
+        <div class="brand-row">
+            <span class="brand-dot">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 3 2 8l10 5 8-4.2V15h1.5V8L12 3Z" fill="#fff"/>
+                    <path d="M6 11.5V16c0 1.7 2.7 3.5 6 3.5s6-1.8 6-3.5v-4.5l-6 3-6-3Z" fill="#fff" fill-opacity=".92"/>
+                </svg>
+            </span>
+            <span class="brand-name">SNG EDU</span>
+        </div>
+        <div class="ico-wrap"><i class="fa-solid fa-gear"></i></div>
+        <h1>Website đang được bảo trì</h1>
+        <p id="mntMsg">Bọn mình đang nâng cấp để mang lại trải nghiệm tốt hơn. Vui lòng quay lại sau ít phút nhé!</p>
+        <p class="dots"><span></span><span></span><span></span></p>
+        <div class="foot-hint">Cần hỗ trợ gấp? <a href="lien-he.html">Liên hệ Admin</a></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+        const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Hiện đúng lời nhắn admin đã cấu hình (nếu có), và tự kiểm tra định kỳ —
+        // hết bảo trì thì tự quay lại trang chủ, không cần khách bấm tải lại tay.
+        async function checkMaintenance(){
+            const { data } = await sb.from('site_settings').select('payload').eq('key', 'site_maintenance').maybeSingle();
+            const payload = (data && data.payload) || {};
+            if (payload.message) document.getElementById('mntMsg').innerText = payload.message;
+            if (!payload.enabled){
+                location.replace('/');
+            }
+        }
+        checkMaintenance();
+        setInterval(checkMaintenance, 20000);
+    </script>
+</body>
+</html>

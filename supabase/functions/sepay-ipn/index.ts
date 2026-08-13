@@ -3,7 +3,11 @@ import { grantEntitlement } from "../_shared/grant-entitlement.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const SEPAY_SECRET_KEY = Deno.env.get("SEPAY_SECRET_KEY")!;
+// LƯU Ý: đây LÀ SECRET KEY RIÊNG cho IPN (cấu hình ở tab "IPN" trên my.sepay.vn),
+// KHÁC với SEPAY_SECRET_KEY dùng để ký chữ ký checkout (tab "Thông tin đơn vị").
+// Không dùng chung 1 biến với sepay-create-checkout, nếu không xác thực IPN sẽ luôn sai
+// (đây chính là nguyên nhân đơn hàng "đã thanh toán" bên SePay nhưng không auto nâng cấp).
+const SEPAY_IPN_SECRET_KEY = (Deno.env.get("SEPAY_IPN_SECRET_KEY") ?? "").trim();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,16 +24,24 @@ Deno.serve(async (req) => {
 
   try {
     // --- 1. Xác thực webhook bằng Secret Key (KHÔNG dùng Authorization/JWT của user) ---
-    const secretHeader = req.headers.get("X-Secret-Key");
+    const secretHeader = req.headers.get("X-Secret-Key")?.trim();
     const authHeader = req.headers.get("Authorization");
     const authKey = authHeader?.replace(/^Apikey\s+/i, "").trim();
 
     const isValid =
-      (secretHeader && secretHeader === SEPAY_SECRET_KEY) ||
-      (authKey && authKey === SEPAY_SECRET_KEY);
+      !!SEPAY_IPN_SECRET_KEY &&
+      ((secretHeader && secretHeader === SEPAY_IPN_SECRET_KEY) ||
+        (authKey && authKey === SEPAY_IPN_SECRET_KEY));
 
     if (!isValid) {
-      console.error("sepay-ipn: xác thực thất bại - secret key không khớp hoặc thiếu");
+      // Không log giá trị secret ra ngoài, chỉ log độ dài để debug an toàn nếu cần.
+      console.error(
+        "sepay-ipn: xác thực thất bại - secret key không khớp hoặc thiếu",
+        "| có X-Secret-Key:", !!secretHeader,
+        "| có Authorization:", !!authHeader,
+        "| độ dài secret nhận được:", (secretHeader ?? authKey ?? "").length,
+        "| độ dài secret server đang có:", SEPAY_IPN_SECRET_KEY.length,
+      );
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },

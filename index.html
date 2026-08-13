@@ -3715,10 +3715,21 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
             document.getElementById('promoBannerMsg').innerText = payload.message || '';
 
-            const slotsLeft = Number(payload.slots_left) || 0;
+            // "Số suất còn lại" = Tổng số suất - số đơn Gói thành viên đã thanh toán THẬT kể từ mốc
+            // payload.start_at (hoặc từ lúc admin lưu cấu hình này nếu không đặt mốc riêng) -- không còn
+            // là con số admin gõ tay, nên tự động giảm ngay khi có khách thanh toán thành công.
             const slotsTotal = Number(payload.slots_total) || 0;
             const slotsPill = document.getElementById('promoSlotsPill');
-            if (slotsLeft > 0 && slotsTotal > 0){
+            if (slotsTotal > 0){
+                const sinceIso = payload.start_at ? new Date(payload.start_at).toISOString() : (data && data.updated_at ? data.updated_at : null);
+                let soldCount = 0;
+                if (sinceIso){
+                    try{
+                        const { data: cnt, error: cntErr } = await sb.rpc('get_paid_subscription_count', { p_since: sinceIso });
+                        if (!cntErr) soldCount = Number(cnt) || 0;
+                    }catch(e){}
+                }
+                const slotsLeft = Math.max(0, slotsTotal - soldCount);
                 slotsPill.textContent = `còn ${slotsLeft}/${slotsTotal} suất`;
                 slotsPill.classList.remove('hidden');
             } else {

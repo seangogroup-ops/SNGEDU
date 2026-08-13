@@ -2819,6 +2819,44 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
             </div>
         </div>
         </div>
+
+<!-- ================= KHO TÀI KHOẢN SẢN PHẨM (tab lớn riêng) ================= -->
+<div id="stockManagerPanel" class="hidden">
+    <div class="subj-mgr-head">
+        <h2>🔑 Kho tài khoản</h2>
+        <p class="hint">Chọn 1 sản phẩm bên trái, dán mỗi tài khoản 1 dòng, ví dụ: <code>email@gmail.com:matkhau123</code>. Khi khách thanh toán sản phẩm đó thành công, hệ thống <b>tự động lấy 1 dòng còn trống</b>, đánh dấu đã bán và hiển thị cho khách ở trang chi tiết sản phẩm — không cần thao tác thủ công.</p>
+    </div>
+    <div class="subj-mgr-grid stock-grid">
+        <div class="subj-mgr-col">
+            <div class="subj-mgr-col-head">
+                <h4><i class="fa-solid fa-bag-shopping"></i> Sản phẩm</h4>
+            </div>
+            <div id="stockProductList" class="side-list subj-mgr-list"></div>
+        </div>
+        <div class="subj-mgr-col">
+            <div id="stockEmptyState" class="empty-state" style="padding:24px;">Chọn 1 sản phẩm bên trái để quản lý kho tài khoản.</div>
+            <div id="stockDetailWrap" class="hidden">
+                <div class="subj-mgr-col-head">
+                    <h4 id="stockProductTitle"></h4>
+                </div>
+                <div id="stockVariantTabs" class="stock-variant-tabs"></div>
+                <textarea id="stockAddTextarea" rows="4" placeholder="email1@gmail.com:matkhau1&#10;email2@gmail.com:matkhau2&#10;..."></textarea>
+                <div class="stock-add-row">
+                    <button class="btn-primary" onclick="submitAddStock()">+ Thêm vào kho</button>
+                </div>
+                <div class="stock-stats-row">
+                    <span class="stock-stat available">Còn trống: <b id="stockAvailCount">0</b></span>
+                    <span class="stock-stat sold">Đã bán: <b id="stockSoldCount">0</b></span>
+                </div>
+                <div class="stock-tabs">
+                    <button class="stock-tab selected" data-tab="available" onclick="switchStockTab('available')">Còn trống</button>
+                    <button class="stock-tab" data-tab="sold" onclick="switchStockTab('sold')">Đã bán</button>
+                </div>
+                <div class="stock-list" id="stockList"></div>
+            </div>
+        </div>
+    </div>
+</div>
     </main>
 </div>
 
@@ -2889,44 +2927,6 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
         <div class="merge-actions">
             <button class="btn-merge-cancel" onclick="closeMergeModal()">Hủy</button>
             <button class="btn-primary" id="mergeConfirmBtn" onclick="runMergeQuestions()">Tổng hợp ngay</button>
-        </div>
-    </div>
-</div>
-
-<!-- ================= KHO TÀI KHOẢN SẢN PHẨM (tab lớn riêng) ================= -->
-<div id="stockManagerPanel" class="hidden">
-    <div class="subj-mgr-head">
-        <h2>🔑 Kho tài khoản</h2>
-        <p class="hint">Chọn 1 sản phẩm bên trái, dán mỗi tài khoản 1 dòng, ví dụ: <code>email@gmail.com:matkhau123</code>. Khi khách thanh toán sản phẩm đó thành công, hệ thống <b>tự động lấy 1 dòng còn trống</b>, đánh dấu đã bán và hiển thị cho khách ở trang chi tiết sản phẩm — không cần thao tác thủ công.</p>
-    </div>
-    <div class="subj-mgr-grid stock-grid">
-        <div class="subj-mgr-col">
-            <div class="subj-mgr-col-head">
-                <h4><i class="fa-solid fa-bag-shopping"></i> Sản phẩm</h4>
-            </div>
-            <div id="stockProductList" class="side-list subj-mgr-list"></div>
-        </div>
-        <div class="subj-mgr-col">
-            <div id="stockEmptyState" class="empty-state" style="padding:24px;">Chọn 1 sản phẩm bên trái để quản lý kho tài khoản.</div>
-            <div id="stockDetailWrap" class="hidden">
-                <div class="subj-mgr-col-head">
-                    <h4 id="stockProductTitle"></h4>
-                </div>
-                <div id="stockVariantTabs" class="stock-variant-tabs"></div>
-                <textarea id="stockAddTextarea" rows="4" placeholder="email1@gmail.com:matkhau1&#10;email2@gmail.com:matkhau2&#10;..."></textarea>
-                <div class="stock-add-row">
-                    <button class="btn-primary" onclick="submitAddStock()">+ Thêm vào kho</button>
-                </div>
-                <div class="stock-stats-row">
-                    <span class="stock-stat available">Còn trống: <b id="stockAvailCount">0</b></span>
-                    <span class="stock-stat sold">Đã bán: <b id="stockSoldCount">0</b></span>
-                </div>
-                <div class="stock-tabs">
-                    <button class="stock-tab selected" data-tab="available" onclick="switchStockTab('available')">Còn trống</button>
-                    <button class="stock-tab" data-tab="sold" onclick="switchStockTab('sold')">Đã bán</button>
-                </div>
-                <div class="stock-list" id="stockList"></div>
-            </div>
         </div>
     </div>
 </div>

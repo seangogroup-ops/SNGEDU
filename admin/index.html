@@ -462,12 +462,19 @@ aside{
 #subjectManagerPanel .side-toolbar .side-add:nth-child(2):hover{background:var(--bg); color:var(--text); border-color:var(--gray);}
 
 #subjectManagerPanel .folder-header{
-    color:var(--text); background:var(--white); border:1px solid var(--border); margin:0 0 8px;
-    font-family:var(--font-display);
+    color:var(--text); background:transparent; border:none; border-bottom:2px solid var(--accent);
+    margin:0 0 10px; padding:6px 2px 10px; font-family:var(--font-display);
 }
-#subjectManagerPanel .folder-header:hover{background:var(--bg);}
-#subjectManagerPanel .folder-header .folder-icon{background:var(--accent-soft); color:var(--accent-dark);}
-#subjectManagerPanel .folder-arrow{color:var(--gray);}
+#subjectManagerPanel .folder-header:hover{background:transparent;}
+#subjectManagerPanel .folder-header .folder-name{
+    font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--accent-dark);
+}
+#subjectManagerPanel .folder-header .folder-icon{
+    width:22px; height:22px; border-radius:7px; background:transparent; color:var(--accent);
+    flex:0 0 auto; padding:0;
+}
+#subjectManagerPanel .folder-header .folder-icon svg{width:16px; height:16px; display:block;}
+#subjectManagerPanel .folder-arrow{color:var(--accent);}
 #subjectManagerPanel .folder-count{color:var(--accent-dark); background:var(--accent-soft); border:1px solid transparent; font-weight:800;}
 #subjectManagerPanel .folder-items{border-left:2px dashed var(--border); margin-left:14px; padding-left:10px;}
 
@@ -4597,7 +4604,7 @@ function renderSubjectList(){
         <div class="folder-group">
             <div class="folder-header" onclick='toggleFolderCollapse(${JSON.stringify(f)})'>
                 <span class="folder-arrow ${collapsed ? 'collapsed' : ''}">▾</span>
-                <span class="folder-icon">📁</span>
+                <span class="folder-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>
                 <span class="folder-name">${escapeHtml(f)}</span>
                 <span class="folder-count">${items.length}</span>
             </div>

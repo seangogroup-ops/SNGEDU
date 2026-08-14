@@ -462,20 +462,20 @@ aside{
 #subjectManagerPanel .side-toolbar .side-add:nth-child(2):hover{background:var(--bg); color:var(--text); border-color:var(--gray);}
 
 #subjectManagerPanel .folder-header{
-    color:var(--text); background:transparent; border:none; border-bottom:2px solid var(--accent);
-    margin:0 0 10px; padding:6px 2px 10px; font-family:var(--font-display);
+    color:var(--text); background:var(--bg); border:none; border-radius:10px;
+    margin:0 0 10px; padding:9px 12px;
 }
-#subjectManagerPanel .folder-header:hover{background:transparent;}
+#subjectManagerPanel .folder-header:hover{background:var(--accent-soft);}
 #subjectManagerPanel .folder-header .folder-name{
-    font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--accent-dark);
+    font-size:.76rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--text);
 }
 #subjectManagerPanel .folder-header .folder-icon{
-    width:22px; height:22px; border-radius:7px; background:transparent; color:var(--accent);
+    width:20px; height:20px; border-radius:0; background:transparent; color:var(--accent);
     flex:0 0 auto; padding:0;
 }
 #subjectManagerPanel .folder-header .folder-icon svg{width:16px; height:16px; display:block;}
-#subjectManagerPanel .folder-arrow{color:var(--accent);}
-#subjectManagerPanel .folder-count{color:var(--accent-dark); background:var(--accent-soft); border:1px solid transparent; font-weight:800;}
+#subjectManagerPanel .folder-arrow{color:var(--ink-mute, var(--gray));}
+#subjectManagerPanel .folder-count{color:var(--accent-dark); background:var(--white); border:1px solid var(--border); font-weight:800;}
 #subjectManagerPanel .folder-items{border-left:2px dashed var(--border); margin-left:14px; padding-left:10px;}
 
 #subjectManagerPanel .mini-form{background:var(--bg); border:1px solid var(--border); border-radius:14px;}

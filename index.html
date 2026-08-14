@@ -1837,8 +1837,8 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         <div class="sec-head"><h2>Hỗ trợ</h2></div>
 
         <div id="supportIntroBox" style="background:var(--brand-bg); border:1px solid var(--line); border-radius:20px; padding:26px 28px; margin-bottom:22px;">
-            <div id="supportIntroTitle" style="font-weight:800; font-size:1.1rem; margin-bottom:6px;">Kẹt chỗ nào, nhắn liền chỗ đó 👋</div>
-            <div id="supportIntroDesc" style="color:var(--ink-mute); font-size:.9rem; max-width:600px; line-height:1.6;">Báo lỗi câu hỏi, góp ý tính năng, hay chỉ đơn giản chưa hiểu một đáp án nào đó trong đề — đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.</div>
+            <div id="supportIntroTitle" style="font-weight:800; font-size:1.1rem; margin-bottom:6px;">Vướng chỗ nào, nhắn liền chỗ đó 👋</div>
+            <div id="supportIntroDesc" style="color:var(--ink-mute); font-size:.9rem; max-width:600px; line-height:1.6;">Câu hỏi sai, đáp án chưa rõ, hay muốn góp ý thêm tính năng — cứ nhắn. Đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.</div>
         </div>
 
         <div class="grid" style="grid-template-columns:repeat(2, 1fr)" id="supportContactsGrid"></div>
@@ -3559,16 +3559,16 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
 
     // ---------------- HỖ TRỢ — nội dung động, quản lý ở trang admin > Hỗ trợ (site_settings key 'support_content') ----------------
     const DEFAULT_SUPPORT_CONTENT = {
-        intro_title: 'Kẹt chỗ nào, nhắn liền chỗ đó 👋',
-        intro_desc: 'Báo lỗi câu hỏi, góp ý tính năng, hay chỉ đơn giản chưa hiểu một đáp án nào đó trong đề — đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.',
+        intro_title: 'Vướng chỗ nào, nhắn liền chỗ đó 👋',
+        intro_desc: 'Câu hỏi sai, đáp án chưa rõ, hay muốn góp ý thêm tính năng — cứ nhắn. Đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.',
         contacts: [
-            { id:'c1', icon:'fa-solid fa-comment-dots', color:'blue',  title:'Nhắn Zalo',            desc:'Nhấn để mở Zalo chat', status_label:'Phản hồi trong ngày', link:'https://zalo.me/0825160035' },
+            { id:'c1', icon:'fa-solid fa-comment-dots', color:'blue',  title:'Nhắn Zalo',            desc:'Mở Zalo, nhắn thẳng cho admin', status_label:'Phản hồi trong ngày', link:'https://zalo.me/0825160035' },
             { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi form góp ý',   desc:'Điền ngay trên web, không cần rời trang',           status_label:'Kèm ảnh, chọn đúng môn & câu',    link:'gop-y.html' }
         ],
         faq: [
-            { id:'f1', title:'Tài liệu và trắc nghiệm trên SNG EDU có mất phí không?', desc:'Toàn bộ học phần đang mở đều miễn phí 100%. Các gói nâng cao (nếu có trong tương lai) sẽ được thông báo rõ trước khi ra mắt, không tự động trừ phí.' },
-            { id:'f2', title:'Phát hiện câu hỏi hoặc đáp án bị sai thì báo ở đâu?', desc:'Gửi qua Zalo kèm ảnh chụp câu hỏi, hoặc điền vào Form góp ý ở trên — đội ngũ sẽ kiểm tra và cập nhật trong thời gian sớm nhất.' },
-            { id:'f3', title:'Khi nào các học phần "Sắp ra mắt" sẽ mở?', desc:'Bạn có thể bấm nút "Quan tâm" ngay trên thẻ học phần đó — hệ thống sẽ ghi nhận và ưu tiên biên soạn theo mức độ quan tâm.' }
+            { id:'f1', title:'Tài liệu và trắc nghiệm trên SNG EDU có mất phí không?', desc:'Toàn bộ học phần đang mở đều miễn phí 100%. Nếu SNG EDU ra thêm gói nâng cao, bạn sẽ được báo trước — không có chuyện tự động trừ phí.' },
+            { id:'f2', title:'Phát hiện câu hỏi hoặc đáp án bị sai thì báo ở đâu?', desc:'Chụp ảnh câu hỏi rồi gửi qua Zalo, hoặc điền Form góp ý ở trên. Đội SNG EDU kiểm tra và sửa trong thời gian sớm nhất.' },
+            { id:'f3', title:'Khi nào các học phần "Sắp ra mắt" sẽ mở?', desc:'Bấm nút "Quan tâm" ngay trên thẻ học phần đó. Học phần càng nhiều người quan tâm, SNG EDU càng ưu tiên biên soạn trước.' }
         ]
     };
 

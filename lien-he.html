@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#14151c" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f3ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1117" media="(prefers-color-scheme: dark)">
 <script>
     try{
         var savedTheme = localStorage.getItem('sng-theme');
@@ -18,75 +18,55 @@
 <title>Liên hệ Admin · SNG EDU</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,500;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
     :root{
-        --bg:        #f5f7fb;
-        --card:      #ffffff;
-        --line:      #e8eaf1;
-        --ink:       #1f2433;
-        --ink-soft:  #6b7180;
-        --ink-mute:  #9aa0b1;
-        --green:     #17b26a;
-        --green-bg:  #e7f9f0;
-        --amber:     #f5a524;
-        --amber-bg:  #fef3e0;
-        --red:       #e5484d;
-        --red-bg:    #fde8e8;
-        --brand:     #4f6bff;
-        --brand-bg:  #eef1ff;
-        --brand2:    #8b5cf6;
-        --accent:    #4f6bff;
-        --accent-bg: #eef1ff;
-        --blue:      #0068ff;
-        --blue-bg:   #e8f3ff;
-        --purple:    #8b5cf6;
-        --purple-bg: #f1ecff;
-        --shadow:    0 1px 2px rgba(20,22,40,.04), 0 8px 24px -12px rgba(20,22,40,.08);
-        --shadow-hov:0 4px 10px rgba(20,22,40,.05), 0 20px 40px -16px rgba(20,22,40,.16);
+        --bg:        #f6f3ea;
+        --card:      #fffdf8;
+        --stub:      #fbf6ea;
+        --line:      rgba(28,31,43,.14);
+        --dot:       rgba(28,31,43,.07);
+        --ink:       #1c1f2b;
+        --ink-soft:  #6b6f80;
+        --ink-mute:  #9a9db0;
+        --gold:      #a8681a;
+        --gold-bg:   #f4e2c1;
+        --green:     #0f8f60;
+        --green-bg:  #d7f1e4;
+        --amber:     #b8691a;
+        --amber-bg:  #f6e6cf;
+        --shadow:    0 1px 2px rgba(28,20,10,.05), 0 26px 50px -24px rgba(28,20,10,.22);
     }
     html[data-theme="dark"]{
-        --bg:        #14151c;
-        --card:      #1c1e28;
-        --line:      #2c2f3c;
-        --ink:       #f0f1f6;
-        --ink-soft:  #a2a7ba;
-        --ink-mute:  #6f7488;
-        --green:     #2ed392;
-        --green-bg:  #163a2c;
-        --amber:     #ffbd4a;
-        --amber-bg:  #3a2e12;
-        --red:       #ff6b6b;
-        --red-bg:    #3a1c1e;
-        --brand:     #7b93ff;
-        --brand-bg:  #232a4d;
-        --brand2:    #b48cff;
-        --blue:      #5b9dff;
-        --blue-bg:   #14283f;
-        --purple:    #b48cff;
-        --purple-bg: #2a2145;
-        --shadow:    0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
-        --shadow-hov:0 4px 10px rgba(0,0,0,.25), 0 20px 40px -16px rgba(0,0,0,.6);
+        --bg:        #0f1117;
+        --card:      #191c26;
+        --stub:      #12141d;
+        --line:      rgba(255,255,255,.13);
+        --dot:       rgba(255,255,255,.05);
+        --ink:       #f3f1e7;
+        --ink-soft:  #a2a6ba;
+        --ink-mute:  #5d6178;
+        --gold:      #eab655;
+        --gold-bg:   rgba(234,182,85,.14);
+        --green:     #3ddb9a;
+        --green-bg:  rgba(61,219,154,.14);
+        --amber:     #eab655;
+        --amber-bg:  rgba(234,182,85,.12);
+        --shadow:    0 1px 2px rgba(0,0,0,.3), 0 30px 60px -24px rgba(0,0,0,.65);
     }
     html{ transition: background 0.38s ease; width:100%; overflow-x:hidden; }
     *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
     body, header{ transition: background 0.38s ease, border-color 0.38s ease, color 0.38s ease; }
     body{
-        background: var(--bg); color: var(--ink);
+        background-color: var(--bg);
+        background-image: radial-gradient(var(--dot) 1.4px, transparent 1.4px);
+        background-size: 22px 22px;
+        color: var(--ink);
         font-family:'Be Vietnam Pro', sans-serif; min-height:100vh; line-height:1.6;
         width:100%; overflow-x:hidden; position:relative;
     }
-    /* quầng sáng gradient mờ phía sau trang cho đỡ trống trải, không ảnh hưởng nội dung */
-    body::before, body::after{
-        content:''; position:fixed; z-index:0; border-radius:50%; pointer-events:none;
-        filter:blur(64px); opacity:.35;
-    }
-    body::before{ width:420px; height:420px; top:-140px; right:-120px; background:radial-gradient(circle, var(--brand), transparent 70%); }
-    body::after{ width:380px; height:380px; bottom:-120px; left:-110px; background:radial-gradient(circle, var(--brand2), transparent 70%); }
-    html[data-theme="dark"] body::before, html[data-theme="dark"] body::after{ opacity:.16; }
-    img{ max-width:100%; }
     @media (prefers-reduced-motion: reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
     a{ color:inherit; }
 
@@ -110,8 +90,8 @@
     .theme-toggle{ color:var(--ink-soft); }
     .theme-toggle svg{ width:19px; height:19px; display:block; }
     @media (hover:hover){
-        .back-btn:hover{ background:var(--brand-bg); color:var(--brand); border-color:var(--brand-bg); }
-        .theme-toggle:hover{ background:var(--brand-bg); color:var(--brand); border-color:var(--brand-bg); }
+        .back-btn:hover{ background:var(--gold-bg); color:var(--gold); border-color:var(--gold-bg); }
+        .theme-toggle:hover{ background:var(--gold-bg); color:var(--gold); border-color:var(--gold-bg); }
     }
     .back-btn:active, .theme-toggle:active{ transform:scale(.9); }
     .header-title{
@@ -124,8 +104,8 @@
 
     /* ---------------- wrap ---------------- */
     .lh-screen{
-        max-width:640px; width:100%; margin:0 auto; position:relative; z-index:1;
-        padding:88px clamp(16px, 4vw, 28px) 60px;
+        max-width:560px; width:100%; margin:0 auto; position:relative; z-index:1;
+        padding:100px clamp(16px, 4vw, 28px) 60px;
         padding-left:max(clamp(16px, 4vw, 28px), env(safe-area-inset-left));
         padding-right:max(clamp(16px, 4vw, 28px), env(safe-area-inset-right));
         padding-bottom:max(60px, env(safe-area-inset-bottom));
@@ -138,83 +118,115 @@
     .state-card i{ font-size:1.8rem; color:var(--ink-mute); margin-bottom:14px; display:block; }
     .state-card.is-error i{ color:var(--amber); }
 
-    @keyframes lhFadeUp{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:translateY(0); } }
+    @keyframes tkFadeUp{ from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:translateY(0); } }
 
-    /* ---------------- thẻ giới thiệu admin ---------------- */
-    .lh-card{
-        background:var(--card); border:1px solid var(--line); border-radius:28px;
-        overflow:hidden; box-shadow:var(--shadow-hov); text-align:center;
-        animation:lhFadeUp .5s cubic-bezier(.2,.8,.2,1) both;
+    /* ================= VÉ MỜI LIÊN HỆ ================= */
+    .ticket{
+        position:relative;
+        animation:tkFadeUp .55s cubic-bezier(.2,.8,.2,1) both;
     }
-    .lh-cover{
-        height:130px; width:100%; position:relative; overflow:hidden;
-        background:linear-gradient(135deg, var(--brand), var(--brand2) 60%, #ff8fd8);
+    .ticket-main{
+        background:var(--card); border:1px solid var(--line); border-bottom:none;
+        border-radius:26px 26px 0 0; box-shadow:var(--shadow);
+        padding:30px 28px 26px; position:relative;
     }
-    .lh-cover::before{
-        content:''; position:absolute; inset:0;
-        background:radial-gradient(circle at 20% 120%, rgba(255,255,255,.35), transparent 55%);
+    .ticket-eyebrow{
+        display:inline-flex; align-items:center; gap:9px;
+        font-size:.68rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+        color:var(--gold); margin-bottom:22px;
     }
-    .lh-avatar-ring{
-        width:116px; height:116px; border-radius:50%; margin:-58px auto 0; position:relative;
-        background:linear-gradient(135deg, var(--brand), var(--brand2)); padding:4px;
-        box-shadow:0 10px 26px -8px rgba(79,107,255,.55);
-    }
-    .lh-avatar-wrap{
-        width:100%; height:100%; border-radius:50%;
-        border:4px solid var(--card); background:var(--brand-bg);
-        display:flex; align-items:center; justify-content:center; overflow:hidden;
-    }
-    .lh-avatar-wrap img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .lh-avatar-wrap i{ font-size:2.3rem; color:var(--brand); }
-    .lh-verified{
-        position:absolute; right:2px; bottom:2px; width:26px; height:26px; border-radius:50%;
-        background:var(--green); border:3px solid var(--card); color:#fff;
-        display:flex; align-items:center; justify-content:center; font-size:.62rem;
-    }
-    .lh-body{ padding:16px 26px 32px; }
-    .lh-name{ font-size:1.4rem; font-weight:800; letter-spacing:-.02em; margin-bottom:6px; }
-    .lh-role{
-        display:inline-flex; align-items:center; gap:6px; font-size:.78rem; font-weight:700;
-        color:var(--brand); background:var(--brand-bg); padding:5px 13px; border-radius:99px; margin-bottom:16px;
-    }
-    .lh-bio{ color:var(--ink-soft); font-size:.92rem; line-height:1.75; margin-bottom:26px; white-space:pre-line; overflow-wrap:break-word; }
+    .ticket-eyebrow::before{ content:''; width:16px; height:1px; background:var(--gold); }
 
-    .lh-section-label{
-        display:flex; align-items:center; gap:10px; margin-bottom:14px;
-        font-size:.72rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-mute);
+    .ticket-person{ display:flex; align-items:center; gap:16px; margin-bottom:18px; }
+    .stamp-avatar{
+        width:72px; height:72px; border-radius:50%; flex-shrink:0; padding:3px;
+        background:repeating-conic-gradient(var(--gold) 0deg 9deg, transparent 9deg 20deg);
     }
-    .lh-section-label::before, .lh-section-label::after{ content:''; flex:1; height:1px; background:var(--line); }
+    .stamp-avatar-inner{
+        width:100%; height:100%; border-radius:50%; overflow:hidden;
+        background:var(--gold-bg); display:flex; align-items:center; justify-content:center;
+        border:3px solid var(--card);
+    }
+    .stamp-avatar-inner img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .stamp-avatar-inner i{ font-size:1.55rem; color:var(--gold); }
 
-    .lh-contacts{ display:flex; flex-direction:column; gap:11px; text-align:left; }
-    .lh-contact-btn{
-        display:flex; align-items:center; gap:14px; width:100%;
-        padding:14px 16px; border-radius:18px; border:1px solid var(--line); background:var(--bg);
-        text-decoration:none; color:var(--ink); transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
-        opacity:0; animation:lhFadeUp .45s cubic-bezier(.2,.8,.2,1) both;
+    .ticket-id{ min-width:0; }
+    .ticket-name{
+        font-family:'Fraunces', serif; font-style:italic; font-weight:600;
+        font-size:1.5rem; letter-spacing:-.01em; color:var(--ink); line-height:1.15; margin-bottom:7px;
+        overflow-wrap:break-word;
+    }
+    .ticket-role{ display:inline-flex; align-items:center; gap:7px; font-size:.8rem; font-weight:600; color:var(--ink-soft); }
+    .ticket-role .dot{
+        width:7px; height:7px; border-radius:50%; background:var(--green); flex-shrink:0;
+        box-shadow:0 0 0 3px var(--green-bg); animation:dotPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes dotPulse{ 0%,100%{ box-shadow:0 0 0 3px var(--green-bg);} 50%{ box-shadow:0 0 0 6px var(--green-bg);} }
+
+    .ticket-bio{ color:var(--ink-soft); font-size:.9rem; line-height:1.75; white-space:pre-line; overflow-wrap:break-word; }
+
+    /* perforation seam giữa 2 nửa vé */
+    .ticket-perf{ position:relative; height:0; z-index:2; }
+    .ticket-perf::before{
+        content:''; position:absolute; left:30px; right:30px; top:-1px;
+        border-top:1.5px dashed var(--line);
+    }
+    .notch{ position:absolute; top:0; width:22px; height:22px; border-radius:50%; background:var(--bg); transform:translateY(-50%); }
+    .notch-l{ left:-11px; }
+    .notch-r{ right:-11px; }
+
+    .ticket-stub{
+        background:var(--stub); border:1px solid var(--line); border-top:none;
+        border-radius:0 0 26px 26px; box-shadow:var(--shadow);
+        padding:22px 28px 26px;
+    }
+    .stub-label{
+        font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+        color:var(--ink-mute); margin-bottom:14px;
+    }
+    .stub-rows{ display:flex; flex-direction:column; gap:10px; }
+    .stub-row{
+        display:flex; align-items:center; gap:13px; text-decoration:none; color:var(--ink);
+        padding:12px 14px; border-radius:14px; border:1px solid var(--line); background:var(--card);
+        transition:transform .2s ease, border-color .2s ease, background .2s ease;
+        opacity:0; animation:tkFadeUp .45s cubic-bezier(.2,.8,.2,1) both;
     }
     @media (hover:hover){
-        .lh-contact-btn:hover{ transform:translateY(-3px); box-shadow:var(--shadow-hov); border-color:transparent; background:var(--card); }
+        .stub-row:hover{ transform:translateX(3px); border-color:var(--gold); background:var(--gold-bg); }
     }
-    .lh-contact-btn:active{ transform:scale(.98); }
-    .lh-contact-ic{
-        width:44px; height:44px; border-radius:13px; flex-shrink:0;
-        display:flex; align-items:center; justify-content:center; font-size:1.1rem;
-        background:var(--brand-bg); color:var(--brand);
+    .stub-row:active{ transform:scale(.98); }
+    .stub-ic{
+        width:38px; height:38px; border-radius:10px; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center; font-size:1rem;
+        background:var(--gold-bg); color:var(--gold);
     }
-    .lh-contact-txt{ min-width:0; flex:1; }
-    .lh-contact-lbl{ font-size:.72rem; color:var(--ink-mute); margin-bottom:2px; }
-    .lh-contact-val{ font-size:.94rem; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .lh-contact-btn .lh-arrow{ color:var(--ink-mute); font-size:.85rem; flex-shrink:0; transition:transform .22s ease, color .22s ease; }
-    @media (hover:hover){ .lh-contact-btn:hover .lh-arrow{ color:var(--brand); transform:translate(2px,-2px); } }
+    .stub-txt{ min-width:0; flex:1; }
+    .stub-lbl{ font-size:.7rem; color:var(--ink-mute); margin-bottom:2px; }
+    .stub-val{ font-size:.92rem; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .stub-arrow{ color:var(--ink-mute); font-size:.8rem; flex-shrink:0; transition:transform .2s ease, color .2s ease; }
+    @media (hover:hover){ .stub-row:hover .stub-arrow{ color:var(--gold); transform:translate(2px,-2px); } }
 
-    .lh-note{
-        display:flex; align-items:flex-start; gap:10px; margin-top:20px;
-        background:var(--amber-bg); color:var(--amber); border-radius:14px; padding:13px 15px;
-        font-size:.82rem; line-height:1.6; text-align:left;
+    .stub-note{
+        display:flex; align-items:flex-start; gap:9px; margin-top:18px;
+        font-size:.8rem; line-height:1.65; color:var(--ink-soft); text-align:left;
     }
-    .lh-note i{ margin-top:2px; flex-shrink:0; }
+    .stub-note i{ color:var(--gold); margin-top:2px; flex-shrink:0; }
 
-    footer{ text-align:center; color:var(--ink-mute); font-size:.78rem; padding:30px 0 4px; }
+    .barcode{
+        margin-top:22px; height:26px; border-radius:3px; opacity:.5;
+        background:repeating-linear-gradient(90deg,
+            var(--ink) 0 1px, transparent 1px 3px,
+            var(--ink) 3px 4px, transparent 4px 9px,
+            var(--ink) 9px 10px, transparent 10px 12px,
+            var(--ink) 12px 14px, transparent 14px 19px);
+    }
+    html[data-theme="dark"] .barcode{ opacity:.32; }
+    .ticket-code{
+        margin-top:8px; font-size:.66rem; letter-spacing:.1em; color:var(--ink-mute); text-align:center;
+        font-family:'Be Vietnam Pro', monospace;
+    }
+
+    footer{ text-align:center; color:var(--ink-mute); font-size:.78rem; padding:34px 0 4px; }
 </style>
 </head>
 <body>
@@ -280,7 +292,7 @@ async function loadAdminContactPage(){
         const payload = (!error && data && data.payload) ? data.payload : null;
 
         if (!payload || !(payload.name || '').trim()){
-            showState(`<i class="fa-solid fa-circle-info"></i>Trang liên hệ chưa được cấu hình.<br>Vui lòng quay lại <a href="index.html" style="color:var(--accent);font-weight:700;text-decoration:none;">trang chủ</a>.`, true);
+            showState(`<i class="fa-solid fa-circle-info"></i>Trang liên hệ chưa được cấu hình.<br>Vui lòng quay lại <a href="index.html" style="color:var(--gold);font-weight:700;text-decoration:none;">trang chủ</a>.`, true);
             return;
         }
 
@@ -288,12 +300,11 @@ async function loadAdminContactPage(){
             ? `<img src="${escapeHtml(payload.avatar)}" alt="${escapeHtml(payload.name || '')}">`
             : `<i class="fa-solid fa-user-tie"></i>`;
 
-        const roleHtml = (payload.role || '').trim()
-            ? `<div class="lh-role"><i class="fa-solid fa-shield-halved"></i> ${escapeHtml(payload.role)}</div>`
-            : '';
+        const roleText = (payload.role || '').trim();
+        const roleHtml = `<span class="ticket-role"><span class="dot"></span>${roleText ? escapeHtml(roleText) : 'Đang hoạt động'}</span>`;
 
         const bioHtml = (payload.bio || '').trim()
-            ? `<p class="lh-bio">${escapeHtml(payload.bio)}</p>`
+            ? `<p class="ticket-bio">${escapeHtml(payload.bio)}</p>`
             : '';
 
         const contacts = Array.isArray(payload.contacts) ? payload.contacts.filter(c => c && (c.value || c.link)) : [];
@@ -306,34 +317,39 @@ async function loadAdminContactPage(){
             const tag = link ? 'a' : 'div';
             const attrs = link ? `href="${escapeHtml(link)}" target="_blank" rel="noopener"` : '';
             const badgeStyle = color ? ` style="background:${escapeHtml(color)}1a;color:${escapeHtml(color)};"` : '';
-            return `<${tag} class="lh-contact-btn" ${attrs} style="animation-delay:${.08 + i * .06}s">
-                        <span class="lh-contact-ic"${badgeStyle}><i class="${escapeHtml(icon)}"></i></span>
-                        <span class="lh-contact-txt">
-                            ${label ? `<span class="lh-contact-lbl">${label}</span>` : ''}
-                            <span class="lh-contact-val">${value}</span>
+            return `<${tag} class="stub-row" ${attrs} style="animation-delay:${.1 + i * .06}s">
+                        <span class="stub-ic"${badgeStyle}><i class="${escapeHtml(icon)}"></i></span>
+                        <span class="stub-txt">
+                            ${label ? `<span class="stub-lbl">${label}</span>` : ''}
+                            <span class="stub-val">${value}</span>
                         </span>
-                        ${link ? '<i class="fa-solid fa-arrow-up-right-from-square lh-arrow"></i>' : ''}
+                        ${link ? '<i class="fa-solid fa-arrow-up-right-from-square stub-arrow"></i>' : ''}
                     </${tag}>`;
         }).join('') : '';
 
         const noteHtml = (payload.note || '').trim()
-            ? `<div class="lh-note"><i class="fa-solid fa-circle-info"></i><span>${escapeHtml(payload.note)}</span></div>`
+            ? `<div class="stub-note"><i class="fa-solid fa-circle-info"></i><span>${escapeHtml(payload.note)}</span></div>`
             : '';
 
         document.getElementById('content').innerHTML = `
-            <div class="lh-card">
-                <div class="lh-cover"></div>
-                <div class="lh-avatar-ring">
-                    <div class="lh-avatar-wrap">${avatarHtml}</div>
-                    <span class="lh-verified"><i class="fa-solid fa-check"></i></span>
-                </div>
-                <div class="lh-body">
-                    <div class="lh-name">${escapeHtml(payload.name || '')}</div>
-                    ${roleHtml}
+            <div class="ticket">
+                <div class="ticket-main">
+                    <div class="ticket-eyebrow">Vé mời liên hệ</div>
+                    <div class="ticket-person">
+                        <div class="stamp-avatar"><div class="stamp-avatar-inner">${avatarHtml}</div></div>
+                        <div class="ticket-id">
+                            <div class="ticket-name">${escapeHtml(payload.name || '')}</div>
+                            ${roleHtml}
+                        </div>
+                    </div>
                     ${bioHtml}
-                    ${contactsHtml ? `<div class="lh-section-label">Kết nối trực tiếp</div>` : ''}
-                    <div class="lh-contacts">${contactsHtml}</div>
+                </div>
+                <div class="ticket-perf"><span class="notch notch-l"></span><span class="notch notch-r"></span></div>
+                <div class="ticket-stub">
+                    ${contactsHtml ? `<div class="stub-label">Kênh kết nối</div><div class="stub-rows">${contactsHtml}</div>` : ''}
                     ${noteHtml}
+                    <div class="barcode"></div>
+                    <div class="ticket-code">SNG · EDU · ${(payload.name || 'ADMIN').toUpperCase().replace(/[^A-Z0-9]+/g,'').slice(0,10) || 'ADMIN'}</div>
                 </div>
             </div>`;
     }catch(e){

@@ -1143,6 +1143,30 @@ textarea{resize:vertical;}
     .acct-balance-pill{order:2;margin-left:56px;}
     .acct-row-actions{order:3;margin-left:auto;}
 }
+
+/* ---- Phân trang danh sách tài khoản ---- */
+.acct-pagination{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    margin-top:16px;padding-top:14px;border-top:1px solid var(--border);
+}
+.acct-pg-info{display:flex;align-items:center;gap:8px;font-size:.83rem;color:var(--gray);flex-wrap:wrap;}
+.acct-pg-info select{
+    border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:.83rem;color:var(--text);
+    background:var(--white);cursor:pointer;font-family:inherit;
+}
+.acct-pg-nav{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.acct-pg-btn{
+    border:1px solid var(--border);background:var(--white);color:var(--text);border-radius:8px;
+    padding:6px 12px;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .18s ease;font-family:inherit;
+}
+.acct-pg-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+.acct-pg-btn:disabled{opacity:.4;cursor:not-allowed;}
+.acct-pg-btn.active{background:var(--accent);border-color:var(--accent);color:#ffffff;}
+.acct-pg-ellipsis{padding:0 4px;color:var(--gray);font-size:.83rem;}
+@media (max-width:560px){
+    .acct-pagination{flex-direction:column;align-items:stretch;}
+    .acct-pg-nav{justify-content:center;}
+}
 .acct-stat-card.pro .ico{background:#fff3d6;color:#9a6300;}
 .acct-stat-card.balance .ico{background:var(--accent-soft);color:var(--accent);}
 .acct-stat-card.revenue .ico{background:var(--green-bg);color:var(--green);}
@@ -2063,7 +2087,7 @@ textarea{resize:vertical;}
                 <div class="acct-toolbar">
                     <div class="acct-search-wrap">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input id="acctSearch" placeholder="Tìm theo email hoặc tên..." oninput="renderAccountsList()">
+                        <input id="acctSearch" placeholder="Tìm theo email hoặc tên..." oninput="acctPage=1;renderAccountsList()">
                     </div>
                     <div class="acct-filter-chips" id="acctFilterChips">
                         <button class="acct-chip active" data-f="all" onclick="setAcctFilter('all')">Tất cả</button>
@@ -2076,6 +2100,21 @@ textarea{resize:vertical;}
                 <p class="hint" id="acctCount" style="margin:0 0 12px;"></p>
 
                 <div id="acctListWrap" class="acct-list"></div>
+
+                <div class="acct-pagination" id="acctPagination" style="display:none;">
+                    <div class="acct-pg-info">
+                        Xem
+                        <select id="acctPageSizeSelect" onchange="changeAcctPageSize(this.value)">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        mục
+                        <span id="acctPageRangeInfo"></span>
+                    </div>
+                    <div class="acct-pg-nav" id="acctPageNav"></div>
+                </div>
             </div>
 
             <div id="acctDetailView" class="hidden"></div>
@@ -7906,6 +7945,8 @@ async function saveAdminContact(){
 const EDGE_FUNCTION_URL = SUPABASE_URL + '/functions/v1/admin-users';
 let accountsCache = [];
 let acctFilter = 'all'; // all | active | banned
+let acctPage = 1;
+let acctPageSize = 25;
 
 async function callAdminUsersFn(payload){
     const { data: { session } } = await sb.auth.getSession();
@@ -7946,6 +7987,7 @@ async function loadAccountsList(){
     }
     accountsCache = result.users || [];
     accountsCache.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    acctPage = 1;
     document.getElementById('acctCount').innerText = accountsCache.length + ' tài khoản';
 
     const bannedCount = accountsCache.filter(u => u.banned_until && new Date(u.banned_until) > new Date()).length;
@@ -7962,8 +8004,21 @@ async function loadAccountsList(){
 
 function setAcctFilter(f){
     acctFilter = f;
+    acctPage = 1;
     document.querySelectorAll('#acctFilterChips .acct-chip').forEach(el => el.classList.toggle('active', el.dataset.f === f));
     renderAccountsList();
+}
+
+function changeAcctPageSize(val){
+    acctPageSize = Number(val) || 25;
+    acctPage = 1;
+    renderAccountsList();
+}
+
+function goAcctPage(p){
+    acctPage = p;
+    renderAccountsList();
+    document.getElementById('acctListWrap').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 function fmtDate(iso){
@@ -7981,18 +8036,34 @@ function fmtMoney(n){
 
 function renderAccountsList(){
     const q = (document.getElementById('acctSearch').value || '').trim().toLowerCase();
-    const list = accountsCache.filter(u => {
+    const filtered = accountsCache.filter(u => {
         const isBanned = u.banned_until && new Date(u.banned_until) > new Date();
         if (acctFilter === 'active' && isBanned) return false;
         if (acctFilter === 'banned' && !isBanned) return false;
         if (acctFilter === 'pro' && !isAcctPro(u)) return false;
         return !q || (u.email || '').toLowerCase().includes(q) || (u.full_name || '').toLowerCase().includes(q);
     });
+
     const wrap = document.getElementById('acctListWrap');
-    if (!list.length){
+    const pagWrap = document.getElementById('acctPagination');
+
+    if (!filtered.length){
         wrap.innerHTML = `<div class="empty-state" style="padding:36px 14px;text-align:center;">Không có tài khoản nào khớp.</div>`;
+        if (pagWrap) pagWrap.style.display = 'none';
         return;
     }
+
+    // ---- Phân trang ----
+    const totalItems = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / acctPageSize));
+    if (acctPage > totalPages) acctPage = totalPages;
+    if (acctPage < 1) acctPage = 1;
+    const startIdx = (acctPage - 1) * acctPageSize;
+    const endIdx = Math.min(startIdx + acctPageSize, totalItems);
+    const list = filtered.slice(startIdx, endIdx);
+
+    renderAcctPagination(totalItems, totalPages, startIdx, endIdx);
+
     const avatarColors = ['', 'c1', 'c2', 'c3', 'c4'];
     wrap.innerHTML = list.map((u, idx) => {
         const isBanned = u.banned_until && new Date(u.banned_until) > new Date();
@@ -8012,6 +8083,45 @@ function renderAccountsList(){
             </span>
         </div>`;
     }).join('');
+}
+
+// ---- Render thanh phân trang: "Xem N mục — Đang xem X đến Y trong tổng số Z mục — Trước [1] Tiếp" ----
+function renderAcctPagination(totalItems, totalPages, startIdx, endIdx){
+    const pagWrap = document.getElementById('acctPagination');
+    if (!pagWrap) return;
+
+    if (totalItems <= 0){ pagWrap.style.display = 'none'; return; }
+    pagWrap.style.display = 'flex';
+
+    document.getElementById('acctPageSizeSelect').value = String(acctPageSize);
+    document.getElementById('acctPageRangeInfo').innerText =
+        `Đang xem ${startIdx + 1} đến ${endIdx} trong tổng số ${totalItems} mục`;
+
+    const nav = document.getElementById('acctPageNav');
+    if (totalPages <= 1){ nav.innerHTML = ''; return; }
+
+    // Danh sách số trang hiển thị: luôn có trang đầu/cuối, quanh trang hiện tại, còn lại rút gọn bằng "..."
+    const pages = [];
+    const windowSize = 1; // số trang hiển thị mỗi bên của trang hiện tại
+    for (let p = 1; p <= totalPages; p++){
+        if (p === 1 || p === totalPages || (p >= acctPage - windowSize && p <= acctPage + windowSize)){
+            pages.push(p);
+        } else if (pages[pages.length - 1] !== '...') {
+            pages.push('...');
+        }
+    }
+
+    let html = `<button class="acct-pg-btn" ${acctPage === 1 ? 'disabled' : ''} onclick="goAcctPage(${acctPage - 1})">Trước</button>`;
+    pages.forEach(p => {
+        if (p === '...'){
+            html += `<span class="acct-pg-ellipsis">…</span>`;
+        } else {
+            html += `<button class="acct-pg-btn ${p === acctPage ? 'active' : ''}" onclick="goAcctPage(${p})">${p}</button>`;
+        }
+    });
+    html += `<button class="acct-pg-btn" ${acctPage === totalPages ? 'disabled' : ''} onclick="goAcctPage(${acctPage + 1})">Tiếp</button>`;
+
+    nav.innerHTML = html;
 }
 
 // ---------- MODAL: chi tiết tài khoản (bấm vào 1 dòng để mở) ----------

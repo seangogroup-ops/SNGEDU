@@ -8058,7 +8058,9 @@ function fmtDate(iso){
 }
 
 function isAcctPro(u){
-    return !!(u.premium_until && new Date(u.premium_until) > new Date());
+    // is_premium_plan=true & premium_until=null => Pro vĩnh viễn (không hết hạn), vẫn tính là đang Pro.
+    if (!u.is_premium_plan) return false;
+    return !u.premium_until || new Date(u.premium_until) > new Date();
 }
 function fmtMoney(n){
     return (Number(n) || 0).toLocaleString('vi-VN') + 'đ';
@@ -8174,7 +8176,7 @@ function openAccountDetail(userId){
                 <div class="adh-name">${escapeHtml(u.full_name || '(chưa đặt tên)')}${isPro ? '<span class="acct-badge pro" style="margin-left:8px;">👑 Pro</span>' : ''}</div>
                 <div class="adh-email">${escapeHtml(u.email || '')}</div>
                 <div class="adh-meta">Đăng ký ${fmtDate(u.created_at)} · <span style="color:${isBanned ? 'var(--red)' : 'var(--green)'};font-weight:700;">${isBanned ? 'Đã khoá đăng nhập' : 'Đang hoạt động'}</span></div>
-                <div class="adh-meta">Số dư: <span class="balance-val">${fmtMoney(u.balance)}</span> · Pro: <b style="color:${isPro ? 'var(--green)' : 'var(--gray)'};">${isPro ? ('còn hạn tới ' + fmtDate(u.premium_until)) : 'chưa/không dùng Pro'}</b></div>
+                <div class="adh-meta">Số dư: <span class="balance-val">${fmtMoney(u.balance)}</span> · Pro: <b style="color:${isPro ? 'var(--green)' : 'var(--gray)'};">${isPro ? (u.premium_until ? ('còn hạn tới ' + fmtDate(u.premium_until)) : 'vĩnh viễn (không hết hạn)') : 'chưa/không dùng Pro'}</b></div>
             </div>
         </div>
         <div class="acct-detail-grid">
@@ -8911,7 +8913,7 @@ async function openProModal(userId){
 
     document.getElementById('acctFormBox').innerHTML = `
         <h4>👑 Quản lý Pro</h4>
-        <p class="acct-form-target">Tài khoản <b>${escapeHtml(u.email || '')}</b> — hiện tại: <b style="color:${isPro ? 'var(--green)' : 'var(--gray)'};">${isPro ? ('Pro tới ' + fmtDate(u.premium_until)) : 'Chưa dùng Pro'}</b></p>
+        <p class="acct-form-target">Tài khoản <b>${escapeHtml(u.email || '')}</b> — hiện tại: <b style="color:${isPro ? 'var(--green)' : 'var(--gray)'};">${isPro ? (u.premium_until ? ('Pro tới ' + fmtDate(u.premium_until)) : 'Pro vĩnh viễn') : 'Chưa dùng Pro'}</b></p>
 
         <label style="margin-top:0;">Cách nâng cấp</label>
         <div class="acct-filter-chips" id="proModeChips">

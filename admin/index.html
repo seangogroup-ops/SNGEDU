@@ -1200,6 +1200,18 @@ textarea{resize:vertical;}
 }
 .mnt-switch input:checked + .slider{ background:var(--red,#dc2626); }
 .mnt-switch input:checked + .slider::before{ transform:translateX(20px); }
+.tgl-switch{ position:relative; display:inline-block; width:40px; height:23px; flex:0 0 auto; cursor:pointer; vertical-align:middle; }
+.tgl-switch input{ position:absolute; opacity:0; width:0; height:0; }
+.tgl-switch .tgl-slider{
+    position:absolute; cursor:pointer; inset:0; background:var(--border); border-radius:999px; transition:.2s;
+}
+.tgl-switch .tgl-slider::before{
+    content:''; position:absolute; width:17px; height:17px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 2px rgba(0,0,0,.3);
+}
+.tgl-switch input:checked + .tgl-slider{ background:var(--accent); }
+.tgl-switch input:checked + .tgl-slider::before{ transform:translateX(17px); }
+.tgl-switch input:disabled + .tgl-slider{ opacity:.5; cursor:not-allowed; }
+.tgl-switch input:focus-visible + .tgl-slider{ box-shadow:0 0 0 2px var(--accent-soft,rgba(79,107,255,.4)); }
 .mnt-status-pill{
     display:inline-flex; align-items:center; gap:6px; font-size:.76rem; font-weight:800;
     padding:3px 10px; border-radius:999px; font-family:var(--font-display);
@@ -2027,8 +2039,8 @@ textarea{resize:vertical;}
                             <option value="pending">⚪ Chưa cập nhật</option>
                             <option value="hidden">🚫 Ẩn (không hiện trang chủ)</option>
                         </select>
-                        <label style="display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--gray);font-weight:600;padding:4px 2px;cursor:pointer;">
-                            <input type="checkbox" id="newSubjectShowExpl" style="width:15px;height:15px;margin:0;" checked>
+                        <label style="display:flex;align-items:center;gap:9px;font-size:.8rem;color:var(--gray);font-weight:600;padding:4px 2px;cursor:pointer;">
+                            <span class="tgl-switch"><input type="checkbox" id="newSubjectShowExpl" checked><span class="tgl-slider"></span></span>
                             Hiển thị giải thích đáp án
                         </label>
                         <div class="mini-actions">
@@ -2331,12 +2343,12 @@ textarea{resize:vertical;}
                         <input id="sepayPkgOrder" type="number" step="1" placeholder="0">
                         <div class="hint" style="margin-top:4px;">Số nhỏ hơn hiện trước. Để trống hoặc 0 nếu không cần sắp xếp riêng (sẽ xếp theo giá tăng dần).</div>
 
-                        <label style="margin-top:10px;display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="sepayPkgPopular" style="width:auto;" onchange="updateSepayPkgPreview()">
+                        <label style="margin-top:10px;display:flex;align-items:center;gap:9px;cursor:pointer;">
+                            <span class="tgl-switch"><input type="checkbox" id="sepayPkgPopular" onchange="updateSepayPkgPreview()"><span class="tgl-slider"></span></span>
                             <span>Đánh dấu "Phổ biến nhất" (nổi bật màu amber trên trang chủ)</span>
                         </label>
-                        <label style="margin-top:6px;display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="sepayPkgActive" style="width:auto;" checked>
+                        <label style="margin-top:6px;display:flex;align-items:center;gap:9px;cursor:pointer;">
+                            <span class="tgl-switch"><input type="checkbox" id="sepayPkgActive" checked><span class="tgl-slider"></span></span>
                             <span>Đang hoạt động (hiển thị trên trang chủ & cho khách chọn mua)</span>
                         </label>
 
@@ -2396,8 +2408,8 @@ textarea{resize:vertical;}
                     <div class="settings-form-card">
                         <h3>🏦 Cổng thanh toán SePay (chuyển khoản / thẻ)</h3>
                         <p class="hint">Áp dụng cho MỌI nút "Xác nhận thanh toán" trên trang (gói Pro, tài liệu, sản phẩm, khoá học, nạp tiền vào ví). Khi tắt, nút sẽ bị khoá và hiện thông báo bạn cấu hình bên dưới — chặn cả ở phía máy chủ, không thể lách qua giao diện.</p>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="paySepayEnabled" style="width:auto;" checked>
+                        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;">
+                            <span class="tgl-switch"><input type="checkbox" id="paySepayEnabled" checked><span class="tgl-slider"></span></span>
                             <span>Đang bật cổng thanh toán SePay</span>
                         </label>
                         <label style="margin-top:12px;">Thông báo hiện khi tắt</label>
@@ -2411,12 +2423,12 @@ textarea{resize:vertical;}
                     <div class="settings-form-card" style="margin-top:16px;">
                         <h3>👛 Thanh toán bằng số dư ví</h3>
                         <p class="hint">Tuỳ chọn "Thanh toán bằng số dư ví" hiện cạnh nút SePay ở các popup xác nhận mua. Tắt để buộc mọi giao dịch phải đi qua cổng SePay.</p>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="payBalanceEnabled" style="width:auto;" checked>
+                        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;">
+                            <span class="tgl-switch"><input type="checkbox" id="payBalanceEnabled" checked><span class="tgl-slider"></span></span>
                             <span>Cho phép thanh toán bằng số dư ví</span>
                         </label>
-                        <label style="margin-top:14px;display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="payTopupEnabled" style="width:auto;" checked>
+                        <label style="margin-top:14px;display:flex;align-items:center;gap:9px;cursor:pointer;">
+                            <span class="tgl-switch"><input type="checkbox" id="payTopupEnabled" checked><span class="tgl-slider"></span></span>
                             <span>Cho phép nạp thêm tiền vào ví</span>
                         </label>
                         <p class="hint" style="margin-top:6px;">Mục này độc lập với cổng SePay ở trên — tắt riêng mục này chỉ ẩn/khoá việc nạp tiền, không ảnh hưởng tới thanh toán khoá học, gói Pro, tài liệu, sản phẩm...</p>
@@ -2443,8 +2455,8 @@ textarea{resize:vertical;}
                     <div class="settings-form-card">
                         <h3>🎉 Email chào mừng khi đăng ký</h3>
                         <p class="hint">Gửi ngay sau khi học viên đăng ký/đăng nhập lần đầu thành công. Mỗi tài khoản chỉ nhận đúng 1 lần.</p>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="emlWelcomeEnabled" style="width:auto;" checked>
+                        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;">
+                            <span class="tgl-switch"><input type="checkbox" id="emlWelcomeEnabled" checked><span class="tgl-slider"></span></span>
                             <span>Đang bật email chào mừng</span>
                         </label>
                     </div>
@@ -2452,8 +2464,8 @@ textarea{resize:vertical;}
                     <div class="settings-form-card" style="margin-top:16px;">
                         <h3>🔑 Mã xác nhận "Quên mật khẩu"</h3>
                         <p class="hint">Gửi mã OTP 6 số khi học viên bấm "Quên mật khẩu" ở trang đăng nhập. <b>Lưu ý:</b> tắt mục này đồng nghĩa học viên sẽ KHÔNG thể tự đặt lại mật khẩu qua email nữa (trang sẽ báo lỗi rõ cho học viên) — chỉ tắt khi thật sự cần thiết (vd đang gặp sự cố với Resend).</p>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="emlResetCodeEnabled" style="width:auto;" checked>
+                        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;">
+                            <span class="tgl-switch"><input type="checkbox" id="emlResetCodeEnabled" checked><span class="tgl-slider"></span></span>
                             <span>Đang bật gửi mã quên mật khẩu qua email</span>
                         </label>
                     </div>
@@ -2461,8 +2473,8 @@ textarea{resize:vertical;}
                     <div class="settings-form-card" style="margin-top:16px;">
                         <h3>🛡️ Cảnh báo đổi mật khẩu thành công</h3>
                         <p class="hint">Gửi cho học viên ngay sau khi họ tự đổi mật khẩu ở trang Tài khoản, để cảnh báo nếu không phải chính họ thực hiện.</p>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" id="emlPasswordChangedEnabled" style="width:auto;" checked>
+                        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;">
+                            <span class="tgl-switch"><input type="checkbox" id="emlPasswordChangedEnabled" checked><span class="tgl-slider"></span></span>
                             <span>Đang bật email cảnh báo đổi mật khẩu</span>
                         </label>
                     </div>
@@ -2738,8 +2750,8 @@ textarea{resize:vertical;}
                         </div>
                     </div>
                     <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:14px;">
-                        <label style="display:flex; align-items:center; gap:8px; font-weight:600;">
-                            <input type="checkbox" id="setThemeShowIllustration" style="width:auto;" checked> Hiện hình minh hoạ SVG trong khối hero
+                        <label style="display:flex; align-items:center; gap:9px; font-weight:600;">
+                            <span class="tgl-switch"><input type="checkbox" id="setThemeShowIllustration" checked><span class="tgl-slider"></span></span> Hiện hình minh hoạ SVG trong khối hero
                         </label>
                     </div>
 
@@ -2905,8 +2917,8 @@ textarea{resize:vertical;}
                 </div>
 
                 <div id="setFieldsPromo" class="hidden">
-                    <label style="display:flex;align-items:center;gap:8px;">
-                        <input type="checkbox" id="setPromoEnabled" style="width:auto;" onchange="updatePromoPreview()"> Bật hiển thị banner
+                    <label style="display:flex;align-items:center;gap:9px;">
+                        <span class="tgl-switch"><input type="checkbox" id="setPromoEnabled" onchange="updatePromoPreview()"><span class="tgl-slider"></span></span> Bật hiển thị banner
                     </label>
                     <label>Nội dung banner</label>
                     <textarea id="setPromoMessage" rows="3" placeholder="Người dùng Premium ghi nhớ hiệu quả hơn gấp 3 lần. Ưu đãi gói năm chỉ còn 790.000đ sẽ sớm kết thúc." oninput="updatePromoPreview()"></textarea>
@@ -2948,8 +2960,8 @@ textarea{resize:vertical;}
                 </div>
 
                 <div id="setFieldsAnnounce" class="hidden">
-                    <label style="display:flex;align-items:center;gap:8px;">
-                        <input type="checkbox" id="setAnnounceEnabled" style="width:auto;" onchange="updateAnnouncePreview()"> Bật hiển thị thông báo
+                    <label style="display:flex;align-items:center;gap:9px;">
+                        <span class="tgl-switch"><input type="checkbox" id="setAnnounceEnabled" onchange="updateAnnouncePreview()"><span class="tgl-slider"></span></span> Bật hiển thị thông báo
                     </label>
                     <div class="hint" style="margin:2px 0 10px;">Popup hiện giữa màn hình ngay khi người dùng vào trang chủ (mỗi khi tải lại trang, trừ khi họ đang trong thời gian bấm "Ẩn tạm").</div>
 
@@ -3275,7 +3287,7 @@ Gt: Hà Nội là thủ đô của Việt Nam."></textarea>
         </div>
         <div class="merge-source-list" id="mergeSourceList"></div>
         <label class="merge-clear-row">
-            <input type="checkbox" id="mergeClearFirst">
+            <span class="tgl-switch"><input type="checkbox" id="mergeClearFirst"><span class="tgl-slider"></span></span>
             Xóa câu hỏi hiện có trong đề này trước khi tổng hợp (tránh trùng/cộng dồn)
         </label>
         <div class="merge-actions">
@@ -5898,6 +5910,7 @@ function enableDragReorder(containerId, itemSelector, getId, isBlocked, onDrop){
 enableDragReorder('subjectList', '.side-item', el => el.dataset.id, null, reorderSubjects);
 enableDragReorder('chapterList', '.side-item', el => el.dataset.chapter, () => chapterSelectMode, reorderChapters);
 enableDragReorder('qList', '.q-item', el => Number(el.dataset.id), null, reorderQuestions);
+enableDragReorder('sepayPkgList', '.side-item', el => el.dataset.id, null, reorderSepayPackages);
 enableDragReorder('quickLinkList', '.side-item', el => el.dataset.id, null, reorderQuickLinks);
 enableDragReorder('sepayPkgList', '.side-item', el => el.dataset.id, null, reorderSepayPackages);
 
@@ -6041,16 +6054,16 @@ function contentBlockHtml(subKey){
                     ${meta.extraField.hint ? `<div class="hint" style="margin-top:4px;">${meta.extraField.hint}</div>` : ''}` : ''}
                     ${meta.stockManagedField ? `
                     <div class="cm-section"><i class="fa-solid fa-key"></i> Giao hàng</div>
-                    <label class="cm-visibility-toggle" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                        <input type="checkbox" id="cmStockManaged_${subKey}" style="width:16px;height:16px;flex-shrink:0;">
-                        <span>🔑 Giao hàng tự động qua <b>Kho tài khoản</b> — nếu tick, sản phẩm bắt buộc phải có tài khoản trong kho mới bán được; hết tài khoản sẽ tự hiện "Hết hàng" và khoá nút mua (tránh khách trả tiền mà không có gì để giao).</span>
+                    <label class="cm-visibility-toggle" style="display:flex;align-items:center;gap:9px;cursor:pointer;margin-bottom:10px;">
+                        <span class="tgl-switch"><input type="checkbox" id="cmStockManaged_${subKey}"><span class="tgl-slider"></span></span>
+                        <span>🔑 Giao hàng tự động qua <b>Kho tài khoản</b> — nếu bật, sản phẩm bắt buộc phải có tài khoản trong kho mới bán được; hết tài khoản sẽ tự hiện "Hết hàng" và khoá nút mua (tránh khách trả tiền mà không có gì để giao).</span>
                     </label>
                     ` : ''}
                     ${meta.priceField && !meta.docTypeField ? `
                     <div class="cm-section"><i class="fa-solid fa-tags"></i> Giá</div>
                     ${meta.variantsField ? `
-                    <label class="cm-visibility-toggle" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                        <input type="checkbox" id="cmVariantToggle_${subKey}" style="width:16px;height:16px;" onchange="onVariantToggleChanged('${subKey}')">
+                    <label class="cm-visibility-toggle" style="display:flex;align-items:center;gap:9px;cursor:pointer;margin-bottom:10px;">
+                        <span class="tgl-switch"><input type="checkbox" id="cmVariantToggle_${subKey}" onchange="onVariantToggleChanged('${subKey}')"><span class="tgl-slider"></span></span>
                         <span>Sản phẩm có nhiều phiên bản (VD: 1 tháng / 3 tháng / 6 tháng — mỗi phiên bản giá và kho tài khoản riêng)</span>
                     </label>
                     ` : ''}
@@ -6128,8 +6141,8 @@ function contentBlockHtml(subKey){
                     ` : ''}
                     ${meta.visibilityField ? `
                     <div class="cm-section"><i class="fa-solid fa-eye"></i> Hiển thị</div>
-                    <label class="cm-visibility-toggle" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                        <input type="checkbox" id="cmVisible_${subKey}" checked style="width:16px;height:16px;" onchange="updateContentPreview('${subKey}')">
+                    <label class="cm-visibility-toggle" style="display:flex;align-items:center;gap:9px;cursor:pointer;">
+                        <span class="tgl-switch"><input type="checkbox" id="cmVisible_${subKey}" checked onchange="updateContentPreview('${subKey}')"><span class="tgl-slider"></span></span>
                         <span>Hiển thị trên trang chủ</span>
                     </label>
                     <div class="hint" style="margin-top:2px;">Bỏ chọn để ẩn tạm — mục vẫn được lưu, khách đã mua vẫn tải được bình thường, chỉ không hiện trong danh sách công khai nữa.</div>
@@ -8935,8 +8948,8 @@ async function openProModal(userId){
             <input id="proDateInput" type="date">
         </div>
 
-        <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-weight:600;color:var(--text);margin-top:14px;">
-            <input type="checkbox" id="proResetFromNow" style="width:auto;">
+        <label style="display:flex;align-items:center;gap:9px;text-transform:none;font-weight:600;color:var(--text);margin-top:14px;">
+            <span class="tgl-switch"><input type="checkbox" id="proResetFromNow"><span class="tgl-slider"></span></span>
             Tính lại từ hôm nay (bỏ qua hạn Pro hiện có, mặc định là cộng dồn thêm)
         </label>
 

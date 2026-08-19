@@ -458,6 +458,12 @@ aside{
     font-weight:700; border-radius:10px;
 }
 #subjectManagerPanel .side-add:hover{border-style:solid; background:var(--accent-soft); color:var(--accent-dark);}
+/* Nút "+ Thêm" của Môn học: dùng pill đặc giống nút Tài liệu, không viền đứt */
+#subjectManagerPanel #subjectAddBtn{
+    background:rgba(79,107,255,.14); border:1px solid rgba(79,107,255,.3); color:var(--accent-dark);
+    font-weight:700; border-radius:99px;
+}
+#subjectManagerPanel #subjectAddBtn:hover{border-color:var(--accent); color:#ffffff; background:rgba(79,107,255,.28);}
 #subjectManagerPanel .side-toolbar .side-add:nth-child(2){background:transparent; color:var(--gray); border-color:var(--border);}
 #subjectManagerPanel .side-toolbar .side-add:nth-child(2):hover{background:var(--bg); color:var(--text); border-color:var(--gray);}
 
@@ -2020,7 +2026,7 @@ textarea{resize:vertical;}
                 <div class="subj-mgr-col">
                     <div class="subj-mgr-col-head">
                         <h4>Môn học</h4>
-                        <button class="side-add" onclick="openSubjectForm()">+ Thêm</button>
+                        <button class="side-add" id="subjectAddBtn" onclick="openSubjectForm()">+ Thêm</button>
                     </div>
                     <div id="subjectList" class="side-list subj-mgr-list"></div>
                     <div id="subjectForm" class="mini-form">
@@ -4640,28 +4646,17 @@ document.addEventListener('click', (e) => {
     const wrap = document.getElementById('folderSelectWrap');
     if (wrap && !wrap.contains(e.target)) closeFolderDropdown();
 });
-const SUBJECT_ICON_COLORS = ['indigo','purple','green','amber','blue','red'];
-function subjectIconColor(id){
-    let h = 0;
-    const str = String(id || '');
-    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
-    return SUBJECT_ICON_COLORS[h % SUBJECT_ICON_COLORS.length];
-}
 function subjectItemHtml(s){
     const meta = STATUS_META[s.status || 'ready'] || STATUS_META.ready;
     const isActive = currentSubject && currentSubject.id === s.id;
-    const isHidden = s.status === 'hidden';
-    const color = subjectIconColor(s.id);
-    const thumbHtml = `<span class="prev-ico color-swatch ${color}" style="width:38px;height:38px;min-width:38px;font-size:.78rem;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;color:#fff;font-weight:800;">${escapeHtml(s.id).slice(0,3)}</span>`;
     return `
-        <div class="side-item ${isActive ? 'active' : ''}" data-id="${s.id}" style="${isHidden ? 'opacity:.55;' : ''}"
+        <div class="side-item ${isActive ? 'active' : ''}" data-id="${s.id}"
              onclick="selectSubject('${s.id}')">
             <span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span>
-            ${thumbHtml}
-            <span class="status-badge ${meta.cls}" style="margin-right:6px;">${meta.label}</span>
             <span class="name">${escapeHtml(s.name)}</span>
             <span class="right-cluster">
-                <button class="icon-edit" title="${isHidden ? 'Hiện lại (Sẵn sàng)' : 'Ẩn môn học này'}" onclick="event.stopPropagation(); toggleSubjectHidden('${s.id}')"><i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'}"></i></button>
+                <span class="status-dot ${meta.cls}" title="${meta.label.replace(/^[^\s]+\s/,'')}"></span>
+                <span class="code">${escapeHtml(s.id)}</span>
                 <span class="menu-wrap">
                     <button class="icon-edit" title="Tùy chọn" onclick="event.stopPropagation(); toggleSubjectMenu('${s.id}', this)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg></button>
                     <div class="menu-drop hidden" id="menu-${s.id}">
@@ -4671,17 +4666,6 @@ function subjectItemHtml(s){
                 </span>
             </span>
         </div>`;
-}
-async function toggleSubjectHidden(id){
-    const s = subjects.find(x => x.id === id);
-    if (!s) return;
-    const wasHidden = s.status === 'hidden';
-    const newStatus = wasHidden ? 'ready' : 'hidden';
-    const { error } = await sb.from('subjects').update({ status: newStatus }).eq('id', id);
-    if (error){ showMsg('Lỗi cập nhật: ' + error.message, 'err'); return; }
-    s.status = newStatus;
-    renderSubjectList();
-    showMsg(wasHidden ? 'Đã hiện lại môn học.' : 'Đã ẩn môn học khỏi trang chủ.', 'ok');
 }
 function renderSubjectList(){
     const box = document.getElementById('subjectList');

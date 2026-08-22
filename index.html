@@ -1489,9 +1489,12 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             </div>
         </nav>
         <div class="side-foot">
-            <button type="button" id="sideProBtn" onclick="openProUpgradeModal(); closeMobileMenu();" title="Nâng cấp Pro" style="display:none; width:100%; margin-bottom:12px; border:none; border-radius:99px; padding:11px; background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff; font-weight:800; font-size:.86rem; cursor:pointer; align-items:center; justify-content:center; gap:8px;">
+            <button type="button" id="sideProBtn" onclick="openProUpgradeModal(); closeMobileMenu();" title="Nâng cấp Pro" style="display:none; width:100%; margin-bottom:8px; border:none; border-radius:99px; padding:11px; background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff; font-weight:800; font-size:.86rem; cursor:pointer; align-items:center; justify-content:center; gap:8px;">
                 <i class="fa-solid fa-crown"></i> <span class="lbl">Nâng cấp Pro</span>
             </button>
+            <a href="nhan-pro.html" style="display:flex; width:100%; margin-bottom:12px; border-radius:99px; padding:9px; background:var(--amber-bg); color:var(--amber); font-weight:700; font-size:.8rem; text-decoration:none; align-items:center; justify-content:center; gap:7px;">
+                <i class="fa-solid fa-gift"></i> Nhận Pro miễn phí
+            </a>
             <div class="side-user">
                 <div class="side-avatar is-guest"><span class="avt-content"><i class="fa-solid fa-user"></i></span><span class="online-dot"></span><span class="pro-badge"><i class="fa-solid fa-crown"></i></span></div>
                 <div class="u-info">
@@ -1890,6 +1893,7 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         <div class="pro-upg-features" id="proUpgradeFeatures"></div>
         <button class="pro-upg-cta" id="proUpgradeCta" onclick="submitProUpgrade()">Thanh toán</button>
         <div class="pro-upg-note">Hệ thống chuyển sang cổng thanh toán SePay. Sau khi thanh toán thành công, quay lại web để tự động kích hoạt Premium.</div>
+        <div class="pro-upg-note" style="margin-top:6px;">🎁 Chưa muốn trả phí? <a href="nhan-pro.html" style="color:var(--brand); font-weight:700; text-decoration:none;">Nhận Pro miễn phí tại đây</a></div>
     </div>
 </div>
 
@@ -3563,7 +3567,8 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         intro_desc: 'Câu hỏi sai, đáp án chưa rõ, hay muốn góp ý thêm tính năng — cứ nhắn. Đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.',
         contacts: [
             { id:'c1', icon:'fa-solid fa-comment-dots', color:'blue',  title:'Nhắn Zalo',            desc:'Mở Zalo, nhắn thẳng cho admin', status_label:'Phản hồi trong ngày', link:'https://zalo.me/0825160035' },
-            { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi form góp ý',   desc:'Điền ngay trên web, không cần rời trang',           status_label:'Kèm ảnh, chọn đúng môn & câu',    link:'gop-y.html' }
+            { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi form góp ý',   desc:'Điền ngay trên web, không cần rời trang',           status_label:'Kèm ảnh, chọn đúng môn & câu',    link:'gop-y.html' },
+            { id:'c3', icon:'fa-solid fa-gift', color:'amber', title:'Nhận Pro miễn phí', desc:'Đổi tài liệu, báo lỗi hoặc giới thiệu bạn bè để nhận Premium', status_label:'Không cần thanh toán', link:'nhan-pro.html' }
         ],
         faq: [
             { id:'f1', title:'Tài liệu và trắc nghiệm trên SNG EDU có mất phí không?', desc:'Toàn bộ học phần đang mở đều miễn phí 100%. Nếu SNG EDU ra thêm gói nâng cao, bạn sẽ được báo trước — không có chuyện tự động trừ phí.' },

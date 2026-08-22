@@ -1798,6 +1798,9 @@ textarea{resize:vertical;}
                         <div class="side-item settings-item" id="nav_support" onclick="showContentManager('support')">
                             <span class="set-ico">🆘</span><span class="name">Hỗ trợ</span>
                         </div>
+                        <div class="side-item settings-item" id="nav_earn_pro" onclick="showContentManager('earn_pro')">
+                            <span class="set-ico">🎁</span><span class="name">Nhận Pro miễn phí</span>
+                        </div>
                     </div>
                 </div>
 
@@ -2272,6 +2275,22 @@ textarea{resize:vertical;}
                     <button class="btn-mini-save" onclick="saveSupportIntro()">Lưu</button>
                 </div>
                 <div id="supportIntroMsg" class="hint" style="margin-top:6px;"></div>
+            </div>
+            <div id="earnProIntroBlock" class="mini-form show hidden" style="max-width:620px; margin-bottom:26px; display:flex;">
+                <div class="mini-form-title">Khối giới thiệu đầu trang &amp; liên hệ Zalo</div>
+                <label>Tiêu đề</label>
+                <input id="earnProIntroTitleInput" placeholder="VD: Nhận Pro miễn phí">
+                <label>Mô tả</label>
+                <textarea id="earnProIntroDescInput" rows="3" placeholder="Mô tả ngắn hiển thị dưới tiêu đề"></textarea>
+                <div class="cm-section"><i class="fa-brands fa-facebook-messenger"></i> Liên hệ Zalo xác nhận</div>
+                <label>Số điện thoại Zalo (hiện dạng chữ, khách bấm sao chép/gọi)</label>
+                <input id="earnProZaloPhoneInput" placeholder="VD: 0825160035">
+                <label>Link Zalo (mở thẳng ứng dụng Zalo)</label>
+                <input id="earnProZaloLinkInput" placeholder="VD: https://zalo.me/0825160035">
+                <div class="mini-actions">
+                    <button class="btn-mini-save" onclick="saveEarnProIntro()">Lưu</button>
+                </div>
+                <div id="earnProIntroMsg" class="hint" style="margin-top:6px;"></div>
             </div>
             <div id="cmListsWrap"></div>
         </div>
@@ -5939,12 +5958,24 @@ const CONTENT_DEFAULTS = {
     ]},
     product_content: { items: [] },
     pro_content: { items: [] },
+    earn_pro_content: {
+        intro_title: 'Nhận Pro miễn phí',
+        intro_desc: 'Không cần trả phí — tham gia một trong các chương trình dưới đây, được duyệt là nhận Premium ngay.',
+        zalo_phone: '0825160035',
+        zalo_link: 'https://zalo.me/0825160035',
+        items: [
+            { id:'ep1', icon:'fa-solid fa-file-arrow-up', color:'green',  title:'Đổi tài liệu lấy Pro', desc:'Gửi tài liệu học tập chất lượng (đề thi, tóm tắt, slide bài giảng...) mà hệ thống chưa có. Nhắn Zalo kèm file để được duyệt.', reward:'+15 ngày Pro / tài liệu', link:'' },
+            { id:'ep2', icon:'fa-solid fa-bug',            color:'red',    title:'Tìm lỗi lấy Pro',     desc:'Phát hiện câu hỏi sai, đáp án sai, lỗi giao diện hoặc lỗi chức năng trên web. Chụp ảnh màn hình và nhắn Zalo mô tả lỗi.', reward:'+7 ngày Pro / lỗi hợp lệ', link:'' },
+            { id:'ep3', icon:'fa-solid fa-user-plus',      color:'indigo', title:'Giới thiệu nhận Pro', desc:'Giới thiệu bạn bè tạo tài khoản và sử dụng SNG EDU. Nhắn Zalo kèm tên tài khoản của bạn và của người được giới thiệu.', reward:'+10 ngày Pro / lượt giới thiệu', link:'' }
+        ]
+    },
     support_content: {
         intro_title: 'Kẹt chỗ nào, nhắn liền chỗ đó 👋',
         intro_desc: 'Báo lỗi câu hỏi, góp ý tính năng, hay chỉ đơn giản chưa hiểu một đáp án nào đó trong đề — đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.',
         contacts: [
             { id:'c1', icon:'fa-solid fa-comment-dots', color:'blue',  title:'Nhắn Zalo',          desc:'Nhấn để mở Zalo chat', status_label:'Phản hồi trong ngày', link:'https://zalo.me/0825160035' },
-            { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi form góp ý', desc:'Điền ngay trên web, không cần rời trang',          status_label:'Kèm ảnh, chọn đúng môn & câu',    link:'gop-y.html' }
+            { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi form góp ý', desc:'Điền ngay trên web, không cần rời trang',          status_label:'Kèm ảnh, chọn đúng môn & câu',    link:'gop-y.html' },
+            { id:'c3', icon:'fa-solid fa-gift', color:'amber', title:'Nhận Pro miễn phí', desc:'Đổi tài liệu, báo lỗi hoặc giới thiệu bạn bè để nhận Premium', status_label:'Không cần thanh toán', link:'nhan-pro.html' }
         ],
         faq: [
             { id:'f1', title:'Tài liệu và trắc nghiệm trên SNG EDU có mất phí không?', desc:'Toàn bộ học phần đang mở đều miễn phí 100%. Các gói nâng cao (nếu có trong tương lai) sẽ được thông báo rõ trước khi ra mắt, không tự động trừ phí.' },
@@ -5985,6 +6016,13 @@ registerContentList('product_items', 'product_content', 'items', {
     imageRatioHint:'Khung hiển thị ở thẻ trang chủ dùng tỉ lệ <b>ngang 2:1</b> (giống khối Tài liệu), khung ở trang chi tiết hiển thị nguyên ảnh không crop — nên dùng ảnh <b>ngang, tỉ lệ ~2:1</b> (VD 1000×500px, 1200×600px), đặt chủ thể chính (sản phẩm, logo) ở giữa để không bị cắt mất 2 bên khi hiện ở thẻ trang chủ.',
     linkLabel:'Đường dẫn tải xuống / truy cập sản phẩm (chỉ lộ ra cho khách sau khi thanh toán thành công qua SePay)', linkPlaceholder:'https://...'
 });
+registerContentList('earn_pro_items', 'earn_pro_content', 'items', {
+    label:'Chương trình nhận Pro', icon:'fa-solid fa-gift', color:'green', defaultIcon:'fa-solid fa-gift',
+    descTextarea:true, descLabel:'Hướng dẫn thực hiện (cách gửi, điều kiện...)',
+    extraField:{ key:'reward', label:'Phần thưởng nhận được', placeholder:'VD: +15 ngày Pro' },
+    linkLabel:'Đường dẫn hướng dẫn thêm (không bắt buộc)', linkPlaceholder:'https://... (để trống nếu không có)',
+    visibilityField:true
+});
 registerContentList('support_contacts', 'support_content', 'contacts', {
     label:'Kênh liên hệ', icon:'fa-solid fa-headset', color:'indigo', defaultIcon:'fa-solid fa-comment-dots',
     extraField:{ key:'status_label', label:'Dòng trạng thái (chữ màu, hiện dưới cùng thẻ)', placeholder:'VD: Phản hồi trong ngày' },
@@ -6007,7 +6045,8 @@ const CONTENT_MANAGER_GROUPS = {
     tool:    { title:'Công cụ',   icon:'🧰',  hint:'Quản lý các thẻ công cụ hiển thị ở tab "Công cụ" trên trang chủ.', subKeys:['tool_items'] },
     product: { title:'Sản phẩm',  icon:'🛍️', hint:'Quản lý các thẻ sản phẩm hiển thị ở tab "Sản phẩm" trên trang chủ. Bắt buộc nhập "Giá bán" — khách phải thanh toán qua SePay thì nút mới đổi thành "Mở/Tải sản phẩm" và link mới lộ ra, trước đó link không công khai. Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện tạm thời mà không cần xoá — khách đã mua vẫn xem/tải được bình thường khi bị ẩn. Sản phẩm có thể chia thành nhiều <b>phiên bản</b> (VD: "1 tháng"/"3 tháng"/"6 tháng"), mỗi phiên bản giá và kho tài khoản riêng — bật ở mục "Giá" trong form. Với sản phẩm dạng bán tài khoản (VD: YouTube Premium), tick <b>"Giao hàng tự động qua Kho tài khoản"</b> rồi vào tab <b>🔑 Kho tài khoản</b> ở sidebar bên trái để nhập sẵn danh sách tài khoản (chọn đúng tab phiên bản nếu có) — khi khách thanh toán thành công, hệ thống tự động lấy 1 tài khoản còn trống và đánh dấu đã bán, khách xem được ngay ở trang chi tiết sản phẩm. <b>Lưu ý:</b> nếu đã tick ô này mà kho chưa có tài khoản nào, trang sản phẩm sẽ tự hiện "Hết hàng" và khoá nút mua — tránh trường hợp khách thanh toán xong mà không có gì để giao.', subKeys:['product_items'], stockManagedField:true },
     pro:     { title:'Gói Pro',   icon:'👑',  hint:'Quản lý các gói Pro hiển thị ở tab "Tài khoản & Gói Pro" trên trang chủ. Chọn màu "amber" để đánh dấu gói "Phổ biến nhất". Mục "Gói thanh toán tự động (SePay)" cho phép chọn gói tương ứng trong bảng giá tự động — khi đã chọn, thẻ sẽ hiện nút "Mua ngay" mở thẳng cổng SePay thay vì link ngoài. Nếu để trống, thẻ vẫn hoạt động theo kiểu cũ: trỏ ra Zalo/Momo, sau khi khách chuyển khoản bạn vào mục "Tài khoản" bên dưới để gán Premium thủ công.', subKeys:['pro_items'] },
-    support: { title:'Hỗ trợ',    icon:'🆘',  hint:'Quản lý nội dung tab "Hỗ trợ" trên trang chủ: khối giới thiệu đầu trang, các kênh liên hệ (Zalo, Form...) và danh sách câu hỏi thường gặp.', subKeys:['support_contacts','support_faq'], intro:true }
+    support: { title:'Hỗ trợ',    icon:'🆘',  hint:'Quản lý nội dung tab "Hỗ trợ" trên trang chủ: khối giới thiệu đầu trang, các kênh liên hệ (Zalo, Form...) và danh sách câu hỏi thường gặp.', subKeys:['support_contacts','support_faq'], intro:true },
+    earn_pro: { title:'Nhận Pro miễn phí', icon:'🎁', hint:'Quản lý trang "Nhận Pro miễn phí" (nhan-pro.html): khối giới thiệu, số Zalo liên hệ xác nhận, và danh sách các chương trình đổi lấy Pro (đổi tài liệu, báo lỗi, giới thiệu bạn bè...). Bấm biểu tượng mắt 👁️ ở mỗi dòng để ẩn/hiện chương trình mà không cần xoá.', subKeys:['earn_pro_items'], earnPro:true }
 };
 
 function contentColorSwatchesHtml(subKey){
@@ -6195,6 +6234,8 @@ async function showContentManager(type){
 
     document.getElementById('supportIntroBlock').classList.toggle('hidden', !group.intro);
     if (group.intro) await loadSupportIntro();
+    document.getElementById('earnProIntroBlock').classList.toggle('hidden', !group.earnPro);
+    if (group.earnPro) await loadEarnProIntro();
 
     const planSubKeys = group.subKeys.filter(k => contentLists[k].meta.planField);
     if (planSubKeys.length){
@@ -7632,6 +7673,41 @@ async function saveSupportIntro(){
         msgEl.style.color = 'var(--green)';
         msgEl.innerText = '✔ Đã lưu.';
         showMsg('Đã cập nhật khối giới thiệu tab Hỗ trợ.', 'ok');
+    }
+}
+
+// ---------- KHỐI GIỚI THIỆU + LIÊN HỆ ZALO TRANG "NHẬN PRO MIỄN PHÍ" (site_settings key 'earn_pro_content') ----------
+async function loadEarnProIntro(){
+    const { data } = await sb.from('site_settings').select('*').eq('key', 'earn_pro_content').single();
+    const payload = (data && data.payload) ? data.payload : CONTENT_DEFAULTS.earn_pro_content;
+    document.getElementById('earnProIntroTitleInput').value = payload.intro_title || '';
+    document.getElementById('earnProIntroDescInput').value = payload.intro_desc || '';
+    document.getElementById('earnProZaloPhoneInput').value = payload.zalo_phone || '';
+    document.getElementById('earnProZaloLinkInput').value = payload.zalo_link || '';
+    document.getElementById('earnProIntroMsg').innerText = '';
+}
+async function saveEarnProIntro(){
+    const intro_title = document.getElementById('earnProIntroTitleInput').value.trim();
+    const intro_desc = document.getElementById('earnProIntroDescInput').value.trim();
+    const zalo_phone = document.getElementById('earnProZaloPhoneInput').value.trim();
+    const zalo_link = document.getElementById('earnProZaloLinkInput').value.trim();
+    const msgEl = document.getElementById('earnProIntroMsg');
+    const { data } = await sb.from('site_settings').select('*').eq('key', 'earn_pro_content').single();
+    const payload = (data && data.payload) ? data.payload : Object.assign({}, CONTENT_DEFAULTS.earn_pro_content);
+    payload.intro_title = intro_title;
+    payload.intro_desc = intro_desc;
+    payload.zalo_phone = zalo_phone;
+    payload.zalo_link = zalo_link;
+    const { error } = await sb.from('site_settings')
+        .upsert({ key: 'earn_pro_content', payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error){
+        msgEl.style.color = '#e5484d';
+        msgEl.innerText = 'Lỗi lưu: ' + error.message;
+        showMsg('Lỗi lưu khối giới thiệu Nhận Pro: ' + error.message, 'err');
+    } else {
+        msgEl.style.color = 'var(--green)';
+        msgEl.innerText = '✔ Đã lưu.';
+        showMsg('Đã cập nhật khối giới thiệu trang Nhận Pro miễn phí.', 'ok');
     }
 }
 

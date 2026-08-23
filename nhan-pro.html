@@ -2,9 +2,11 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<!-- Kiểm tra chế độ bảo trì (Admin > Bảo trì) trước khi hiện trang -->
+<script src="frontend/maintenance-check.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#f6f3ea" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0f1117" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5f7fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f111a" media="(prefers-color-scheme: dark)">
 <script>
     try{
         var savedTheme = localStorage.getItem('sng-theme');
@@ -17,205 +19,188 @@
 </script>
 <title>Nhận Pro miễn phí · SNG EDU</title>
 <meta name="description" content="Không cần trả phí — đổi tài liệu, báo lỗi hoặc giới thiệu bạn bè để nhận Premium miễn phí trên SNG EDU.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://sngedu.site/nhan-pro.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SNG EDU">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:title" content="Nhận Pro miễn phí · SNG EDU">
+<meta property="og:description" content="Không cần trả phí — đổi tài liệu, báo lỗi hoặc giới thiệu bạn bè để nhận Premium miễn phí trên SNG EDU.">
+<meta property="og:url" content="https://sngedu.site/nhan-pro.html">
+<meta property="og:image" content="https://sngedu.site/assets/og-image.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,500;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://sakombvgdobdehbvsfjw.supabase.co">
+<script src="frontend/pwa-register.js" defer></script>
 
 <style>
     :root{
-        --bg:        #f6f3ea;
-        --card:      #fffdf8;
-        --stub:      #fbf6ea;
-        --line:      rgba(28,31,43,.14);
-        --dot:       rgba(28,31,43,.07);
-        --ink:       #1c1f2b;
-        --ink-soft:  #6b6f80;
-        --ink-mute:  #9a9db0;
-        --gold:      #a8681a;
-        --gold-bg:   #f4e2c1;
-        --green:     #0f8f60;
-        --green-bg:  #d7f1e4;
-        --amber:     #b8691a;
-        --amber-bg:  #f6e6cf;
-        --red:       #c23b3b;
-        --red-bg:    #f7e0e0;
-        --indigo:    #4f5fd6;
-        --indigo-bg: #e5e7fb;
+        --bg:        #f5f7fb;
+        --panel:     #eef1f8;
+        --line:      #e1e5f0;
+        --ink:       #1c2033;
+        --ink-soft:  #5c6272;
+        --ink-mute:  #8790a6;
+        --brand:     #4f6bff;
+        --brand2:    #8b5cf6;
+        --brand-bg:  #eaedff;
+        --green:     #17b26a;
+        --amber:     #d78a11;
+        --red:       #e5484d;
+        --indigo:    #6a5cd6;
         --blue:      #0068ff;
-        --blue-bg:   #e2edff;
-        --purple:    #7c4fd6;
-        --purple-bg: #ece4fb;
-        --shadow:    0 1px 2px rgba(28,20,10,.05), 0 26px 50px -24px rgba(28,20,10,.22);
+        --purple:    #a233c9;
     }
     html[data-theme="dark"]{
-        --bg:        #0f1117;
-        --card:      #191c26;
-        --stub:      #12141d;
-        --line:      rgba(255,255,255,.13);
-        --dot:       rgba(255,255,255,.05);
-        --ink:       #f3f1e7;
-        --ink-soft:  #a2a6ba;
-        --ink-mute:  #5d6178;
-        --gold:      #eab655;
-        --gold-bg:   rgba(234,182,85,.14);
-        --green:     #3ddb9a;
-        --green-bg:  rgba(61,219,154,.14);
-        --amber:     #eab655;
-        --amber-bg:  rgba(234,182,85,.12);
-        --red:       #ef6a6a;
-        --red-bg:    rgba(239,106,106,.14);
-        --indigo:    #8b93ff;
-        --indigo-bg: rgba(139,147,255,.14);
+        --bg:        #0f111a;
+        --panel:     #171a26;
+        --line:      #262a3a;
+        --ink:       #f1f2f8;
+        --ink-soft:  #9ba1b8;
+        --ink-mute:  #676d84;
+        --brand:     #7b93ff;
+        --brand2:    #a78bfa;
+        --brand-bg:  #202748;
+        --green:     #2ed392;
+        --amber:     #ffbd4a;
+        --red:       #ff7875;
+        --indigo:    #9a90ff;
         --blue:      #5aa9ff;
-        --blue-bg:   rgba(90,169,255,.14);
-        --purple:    #b58aff;
-        --purple-bg: rgba(181,138,255,.14);
-        --shadow:    0 1px 2px rgba(0,0,0,.3), 0 30px 60px -24px rgba(0,0,0,.65);
+        --purple:    #d68cff;
     }
     html{ transition: background 0.38s ease; width:100%; overflow-x:hidden; }
     *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
     body, header{ transition: background 0.38s ease, border-color 0.38s ease, color 0.38s ease; }
     body{
-        background-color: var(--bg);
-        background-image: radial-gradient(var(--dot) 1.4px, transparent 1.4px);
-        background-size: 22px 22px;
-        color: var(--ink);
-        font-family:'Be Vietnam Pro', sans-serif; min-height:100vh; line-height:1.6;
-        width:100%; overflow-x:hidden; position:relative;
+        background: var(--bg); color: var(--ink);
+        font-family:'Be Vietnam Pro', sans-serif; min-height:100vh; line-height:1.65;
+        width:100%; overflow-x:hidden;
     }
     @media (prefers-reduced-motion: reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
     a{ color:inherit; }
 
     /* ---------------- header ---------------- */
     header{
-        background:color-mix(in srgb, var(--card) 82%, transparent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-        height:64px; display:flex; align-items:center; gap:10px;
-        padding:0 clamp(14px, 4vw, 24px); border-bottom:1px solid var(--line);
-        padding-left:max(14px, env(safe-area-inset-left)); padding-right:max(14px, env(safe-area-inset-right));
-        position:fixed; top:0; width:100%; z-index:1000;
+        background:transparent; height:60px; display:flex; align-items:center; gap:10px;
+        padding:0 clamp(16px, 4vw, 28px);
+        padding-left:max(16px, env(safe-area-inset-left));
+        padding-right:max(16px, env(safe-area-inset-right));
+        max-width:640px; width:100%; margin:0 auto; position:relative; z-index:2;
     }
-    .back-btn, .theme-toggle{
-        width:40px; height:40px; min-width:40px; min-height:40px; aspect-ratio:1/1;
-        border-radius:50%; border:1px solid var(--line); background:var(--card);
-        display:flex; align-items:center; justify-content:center;
-        cursor:pointer; flex-shrink:0; text-decoration:none; padding:0; line-height:0;
-        transition:background .25s ease, transform .2s ease, color .25s ease, border-color .25s ease;
+    .back-btn{
+        display:inline-flex; align-items:center; gap:7px; color:var(--ink-soft);
+        text-decoration:none; font-size:.88rem; font-weight:600; cursor:pointer;
+        padding:6px 4px; margin-left:-4px; transition:color .2s ease;
     }
-    .back-btn{ color:var(--ink); }
-    .back-btn svg{ width:19px; height:19px; display:block; }
-    .theme-toggle{ color:var(--ink-soft); }
-    .theme-toggle svg{ width:19px; height:19px; display:block; }
-    @media (hover:hover){
-        .back-btn:hover{ background:var(--gold-bg); color:var(--gold); border-color:var(--gold-bg); }
-        .theme-toggle:hover{ background:var(--gold-bg); color:var(--gold); border-color:var(--gold-bg); }
+    .back-btn svg{ width:16px; height:16px; display:block; }
+    .back-btn:hover{ color:var(--brand); }
+    .theme-toggle{
+        margin-left:auto; width:36px; height:36px; min-width:36px; border-radius:50%;
+        border:1px solid var(--line); background:var(--panel); color:var(--ink-soft);
+        display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+        transition:background .25s ease, color .25s ease, border-color .25s ease;
     }
-    .back-btn:active, .theme-toggle:active{ transform:scale(.9); }
-    .header-title{
-        font-weight:700; color:var(--ink); font-size:.98rem; flex:1; min-width:0;
-        overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    }
+    .theme-toggle svg{ width:16px; height:16px; display:block; }
+    .theme-toggle:hover{ background:var(--brand-bg); color:var(--brand); border-color:var(--brand-bg); }
+    .theme-toggle:active{ transform:scale(.92); }
     .theme-toggle .ic-sun{ display:none; }
     html[data-theme="dark"] .theme-toggle .ic-sun{ display:block; }
     html[data-theme="dark"] .theme-toggle .ic-moon{ display:none; }
 
     /* ---------------- wrap ---------------- */
     .ep-screen{
-        max-width:640px; width:100%; margin:0 auto; position:relative; z-index:1;
-        padding:100px clamp(16px, 4vw, 28px) 60px;
+        max-width:640px; width:100%; margin:0 auto;
+        padding:8px clamp(16px, 4vw, 28px) 60px;
         padding-left:max(clamp(16px, 4vw, 28px), env(safe-area-inset-left));
         padding-right:max(clamp(16px, 4vw, 28px), env(safe-area-inset-right));
         padding-bottom:max(60px, env(safe-area-inset-bottom));
     }
 
     .state-card{
-        background:var(--card); border:1px solid var(--line); border-radius:20px;
-        padding:60px 24px; text-align:center; color:var(--ink-soft); font-size:.92rem;
+        padding:60px 4px; text-align:center; color:var(--ink-soft); font-size:.92rem;
     }
-    .state-card i{ font-size:1.8rem; color:var(--ink-mute); margin-bottom:14px; display:block; }
+    .state-card i{ font-size:1.6rem; color:var(--ink-mute); margin-bottom:14px; display:block; }
     .state-card.is-error i{ color:var(--amber); }
 
-    @keyframes epFadeUp{ from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:translateY(0); } }
+    @keyframes epFadeUp{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
 
     /* ---------------- hero ---------------- */
-    .ep-hero{ text-align:center; margin-bottom:30px; animation:epFadeUp .5s cubic-bezier(.2,.8,.2,1) both; }
+    .ep-hero{ margin:22px 0 34px; animation:epFadeUp .45s ease both; }
     .ep-hero-badge{
-        display:inline-flex; align-items:center; gap:8px; padding:7px 16px; border-radius:99px;
-        background:var(--gold-bg); color:var(--gold); font-size:.72rem; font-weight:700;
-        letter-spacing:.08em; text-transform:uppercase; margin-bottom:16px;
+        display:inline-flex; align-items:center; gap:6px; color:var(--brand); font-size:.78rem; font-weight:700;
+        margin-bottom:12px;
     }
     .ep-hero h1{
-        font-family:'Fraunces', serif; font-style:italic; font-weight:600;
-        font-size:clamp(1.6rem, 5vw, 2.1rem); letter-spacing:-.01em; color:var(--ink); line-height:1.2; margin-bottom:12px;
+        font-weight:800; font-size:clamp(1.5rem, 5.5vw, 1.95rem); letter-spacing:-.01em;
+        color:var(--ink); line-height:1.28; margin-bottom:10px;
     }
-    .ep-hero p{ color:var(--ink-soft); font-size:.95rem; line-height:1.7; max-width:480px; margin:0 auto; }
+    .ep-hero p{ color:var(--ink-mute); font-size:.92rem; font-style:italic; line-height:1.65; }
 
-    /* ---------------- program cards ---------------- */
-    .ep-programs{ display:flex; flex-direction:column; gap:14px; margin-bottom:30px; }
-    .ep-card{
-        background:var(--card); border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow);
-        padding:22px; opacity:0; animation:epFadeUp .5s cubic-bezier(.2,.8,.2,1) both;
+    /* ---------------- program sections ---------------- */
+    .ep-programs{ display:flex; flex-direction:column; }
+    .ep-sec{
+        padding:22px 0; border-top:1px solid var(--line);
+        opacity:0; animation:epFadeUp .45s ease both;
     }
-    .ep-card-top{ display:flex; align-items:flex-start; gap:14px; margin-bottom:12px; }
-    .ep-ico{
-        width:46px; height:46px; min-width:46px; border-radius:14px;
-        display:flex; align-items:center; justify-content:center; font-size:1.15rem; flex-shrink:0;
+    .ep-sec:first-child{ border-top:1px solid var(--line); }
+    .ep-sec-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+    .ep-sec-head i{ font-size:.92rem; width:20px; text-align:center; flex-shrink:0; }
+    .ep-sec-head h2{ font-size:1.04rem; font-weight:800; color:var(--ink); }
+    .ep-bullets{ list-style:none; display:flex; flex-direction:column; gap:9px; }
+    .ep-bullets li{
+        position:relative; padding-left:20px; color:var(--ink-soft); font-size:.92rem; line-height:1.65;
     }
-    .ep-card-head{ min-width:0; flex:1; padding-top:3px; }
-    .ep-card-title{ font-weight:800; font-size:1.02rem; color:var(--ink); margin-bottom:4px; }
-    .ep-reward{
-        display:inline-flex; align-items:center; gap:6px; font-size:.74rem; font-weight:700;
-        padding:3px 10px; border-radius:99px;
+    .ep-bullets li::before{
+        content:''; position:absolute; left:2px; top:.65em; width:5px; height:5px; border-radius:50%;
+        background:var(--ink-mute);
     }
-    .ep-card-desc{ color:var(--ink-soft); font-size:.87rem; line-height:1.7; white-space:pre-line; }
-    .ep-card-more{
-        display:inline-flex; align-items:center; gap:6px; margin-top:12px; font-size:.82rem; font-weight:700;
-        color:var(--gold); text-decoration:none;
+    .ep-bullets li.is-reward{ color:var(--ink); font-weight:700; }
+    .ep-bullets li.is-reward::before{ display:none; }
+    .ep-bullets li.is-reward i{ margin-right:7px; font-size:.82rem; }
+    .ep-sec-link{
+        display:inline-flex; align-items:center; gap:6px; margin-top:12px; margin-left:20px;
+        font-size:.85rem; font-weight:700; color:var(--brand); text-decoration:none;
     }
-    .ep-card-more i{ font-size:.72rem; }
+    .ep-sec-link:hover{ text-decoration:underline; }
+    .ep-sec-link i{ font-size:.7rem; }
 
-    .ep-ico.c-green{ background:var(--green-bg); color:var(--green); }
-    .ep-reward.c-green{ background:var(--green-bg); color:var(--green); }
-    .ep-ico.c-red{ background:var(--red-bg); color:var(--red); }
-    .ep-reward.c-red{ background:var(--red-bg); color:var(--red); }
-    .ep-ico.c-indigo{ background:var(--indigo-bg); color:var(--indigo); }
-    .ep-reward.c-indigo{ background:var(--indigo-bg); color:var(--indigo); }
-    .ep-ico.c-amber{ background:var(--amber-bg); color:var(--amber); }
-    .ep-reward.c-amber{ background:var(--amber-bg); color:var(--amber); }
-    .ep-ico.c-blue{ background:var(--blue-bg); color:var(--blue); }
-    .ep-reward.c-blue{ background:var(--blue-bg); color:var(--blue); }
-    .ep-ico.c-purple{ background:var(--purple-bg); color:var(--purple); }
-    .ep-reward.c-purple{ background:var(--purple-bg); color:var(--purple); }
+    .ep-ic-green{ color:var(--green); }
+    .ep-ic-red{ color:var(--red); }
+    .ep-ic-indigo{ color:var(--indigo); }
+    .ep-ic-amber{ color:var(--amber); }
+    .ep-ic-blue{ color:var(--blue); }
+    .ep-ic-purple{ color:var(--purple); }
 
-    /* ---------------- zalo contact block ---------------- */
+    /* ---------------- zalo contact box ---------------- */
     .ep-zalo{
-        background:var(--stub); border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow);
-        padding:26px 24px; text-align:center; opacity:0; animation:epFadeUp .5s cubic-bezier(.2,.8,.2,1) both;
+        margin-top:26px; background:var(--panel); border:1px solid var(--line); border-radius:16px;
+        padding:22px 22px 24px; opacity:0; animation:epFadeUp .45s ease both;
     }
-    .ep-zalo-ico{
-        width:54px; height:54px; margin:0 auto 14px; border-radius:50%; background:var(--blue-bg); color:var(--blue);
-        display:flex; align-items:center; justify-content:center; font-size:1.4rem;
-    }
-    .ep-zalo h2{ font-size:1.02rem; font-weight:800; color:var(--ink); margin-bottom:6px; }
-    .ep-zalo p{ color:var(--ink-soft); font-size:.86rem; line-height:1.65; margin-bottom:18px; }
+    .ep-zalo p{ color:var(--ink-soft); font-size:.9rem; line-height:1.6; margin-bottom:16px; }
     .ep-zalo-phone{
-        display:inline-flex; align-items:center; gap:9px; font-family:'Be Vietnam Pro', monospace;
-        font-size:1.15rem; font-weight:800; color:var(--ink); background:var(--card);
-        border:1px solid var(--line); border-radius:14px; padding:10px 18px; margin-bottom:16px;
+        display:inline-flex; align-items:center; gap:8px; font-family:'Be Vietnam Pro', monospace;
+        font-size:1.05rem; font-weight:800; color:var(--ink); background:var(--bg);
+        border:1px solid var(--line); border-radius:10px; padding:8px 14px; margin-bottom:14px;
         letter-spacing:.02em;
     }
-    .ep-zalo-actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+    .ep-zalo-actions{ display:flex; gap:10px; flex-wrap:wrap; }
     .ep-zalo-btn{
         display:inline-flex; align-items:center; gap:9px; text-decoration:none;
-        padding:12px 22px; border-radius:99px; font-weight:800; font-size:.88rem;
-        background:var(--blue); color:#fff; border:none; cursor:pointer;
+        padding:11px 20px; border-radius:99px; font-weight:700; font-size:.86rem;
+        background:var(--brand); color:#fff; border:none; cursor:pointer;
         transition:transform .2s ease, opacity .2s ease;
     }
-    .ep-zalo-btn.secondary{
-        background:var(--card); color:var(--ink); border:1px solid var(--line);
-    }
-    @media (hover:hover){ .ep-zalo-btn:hover{ opacity:.9; transform:translateY(-1px); } }
+    .ep-zalo-btn:hover{ opacity:.92; }
     .ep-zalo-btn:active{ transform:scale(.97); }
+    .ep-zalo-btn.secondary{ background:var(--bg); color:var(--ink); border:1px solid var(--line); }
+    .ep-zalo-btn.secondary:hover{ border-color:var(--brand); color:var(--brand); opacity:1; }
     .ep-zalo-copied{ font-size:.76rem; color:var(--green); font-weight:700; margin-top:10px; opacity:0; transition:opacity .2s ease; height:14px; }
     .ep-zalo-copied.show{ opacity:1; }
 
@@ -227,10 +212,10 @@
 <script src="frontend/track-visit.js"></script>
 
 <header>
-    <a href="javascript:void(0)" class="back-btn" id="backBtn" aria-label="Quay lại">
+    <a href="javascript:void(0)" class="back-btn" id="backBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        Quay lại
     </a>
-    <div class="header-title">Nhận Pro miễn phí</div>
     <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
         <svg class="ic-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.4 14.7A8.5 8.5 0 1 1 9.3 3.6a7 7 0 0 0 11.1 11.1Z"/></svg>
         <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"/></svg>
@@ -297,16 +282,16 @@ function epCardHtml(item, idx){
     const reward = (item.reward || '').trim();
     const link = (item.link || '').trim();
     return `
-        <div class="ep-card" style="animation-delay:${.06 + idx * .07}s">
-            <div class="ep-card-top">
-                <div class="ep-ico c-${color}"><i class="${escapeHtml(icon)}"></i></div>
-                <div class="ep-card-head">
-                    <div class="ep-card-title">${escapeHtml(item.title || '')}</div>
-                    ${reward ? `<span class="ep-reward c-${color}"><i class="fa-solid fa-crown"></i> ${escapeHtml(reward)}</span>` : ''}
-                </div>
+        <div class="ep-sec" style="animation-delay:${.05 + idx * .06}s">
+            <div class="ep-sec-head">
+                <i class="${escapeHtml(icon)} ep-ic-${color}"></i>
+                <h2>${escapeHtml(item.title || '')}</h2>
             </div>
-            ${item.desc ? `<div class="ep-card-desc">${escapeHtml(item.desc)}</div>` : ''}
-            ${link ? `<a class="ep-card-more" href="${escapeHtml(link)}" target="_blank" rel="noopener">Tìm hiểu thêm <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+            <ul class="ep-bullets">
+                ${item.desc ? `<li>${escapeHtml(item.desc)}</li>` : ''}
+                ${reward ? `<li class="is-reward"><i class="fa-solid fa-crown ep-ic-${color}"></i>${escapeHtml(reward)}</li>` : ''}
+            </ul>
+            ${link ? `<a class="ep-sec-link" href="${escapeHtml(link)}" target="_blank" rel="noopener">Tìm hiểu thêm <i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
         </div>`;
 }
 
@@ -328,13 +313,11 @@ async function loadEarnProPage(){
 
         const programsHtml = items.length
             ? `<div class="ep-programs">${items.map(epCardHtml).join('')}</div>`
-            : `<div class="state-card" style="margin-bottom:30px;"><i class="fa-solid fa-circle-info"></i>Hiện chưa có chương trình nào đang mở. Quay lại sau nhé.</div>`;
+            : `<div class="state-card"><i class="fa-solid fa-circle-info"></i>Hiện chưa có chương trình nào đang mở. Quay lại sau nhé.</div>`;
 
         const zaloHtml = (zaloPhone || zaloLink) ? `
-            <div class="ep-zalo" style="animation-delay:${.06 + items.length * .07 + .06}s">
-                <div class="ep-zalo-ico"><i class="fa-solid fa-comment-dots"></i></div>
-                <h2>Nhắn Zalo để được xác nhận</h2>
-                <p>Gửi tài liệu, ảnh lỗi hoặc thông tin giới thiệu qua Zalo — đội SNG EDU kiểm tra và cộng Pro trực tiếp vào tài khoản của bạn.</p>
+            <div class="ep-zalo" style="animation-delay:${.05 + items.length * .06 + .05}s">
+                <p>Để tham gia chương trình, nhắn tin với đội ngũ SNG EDU qua Zalo để được xác nhận và cộng Pro trực tiếp vào tài khoản của bạn.</p>
                 ${zaloPhone ? `<div class="ep-zalo-phone"><i class="fa-solid fa-phone"></i> ${escapeHtml(zaloPhone)}</div>` : ''}
                 <div class="ep-zalo-actions">
                     ${zaloLink ? `<a class="ep-zalo-btn" href="${escapeHtml(zaloLink)}" target="_blank" rel="noopener"><i class="fa-solid fa-comment-dots"></i> Nhắn Zalo ngay</a>` : ''}

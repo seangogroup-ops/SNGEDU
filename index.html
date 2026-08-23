@@ -160,6 +160,11 @@
         border-radius:50%; justify-content:center;
     }
     .sidebar.collapsed #sideProBtn .lbl{ display:none; }
+    .sidebar.collapsed #sideEarnProBtn{
+        width:44px; height:44px; padding:0; margin:0 auto 12px;
+        border-radius:50%; justify-content:center;
+    }
+    .sidebar.collapsed #sideEarnProBtn .lbl{ display:none; }
     .sidebar.collapsed .side-user{ justify-content:center; padding:10px 0; }
     .sidebar.collapsed .side-user .u-info{ display:none; }
     .sidebar.collapsed .side-collapse-btn i{ transform:rotate(180deg); }
@@ -1125,6 +1130,8 @@
         .sidebar.collapsed .side-link .lbl{ display:inline; }
         .sidebar.collapsed #sideProBtn{ width:100%; height:auto; padding:11px; margin:0 0 12px; border-radius:99px; justify-content:center; }
         .sidebar.collapsed #sideProBtn .lbl{ display:inline; }
+        .sidebar.collapsed #sideEarnProBtn{ width:100%; height:auto; padding:9px; margin:0 0 12px; border-radius:99px; justify-content:center; }
+        .sidebar.collapsed #sideEarnProBtn .lbl{ display:inline; }
         .sidebar.collapsed .side-user{ justify-content:flex-start; padding:10px 10px; }
         .sidebar.collapsed .side-user .u-info{ display:block; }
         .side-collapse-wrap{ display:none; }
@@ -1492,8 +1499,8 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
             <button type="button" id="sideProBtn" onclick="openProUpgradeModal(); closeMobileMenu();" title="Nâng cấp Pro" style="display:none; width:100%; margin-bottom:8px; border:none; border-radius:99px; padding:11px; background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff; font-weight:800; font-size:.86rem; cursor:pointer; align-items:center; justify-content:center; gap:8px;">
                 <i class="fa-solid fa-crown"></i> <span class="lbl">Nâng cấp Pro</span>
             </button>
-            <a href="nhan-pro.html" style="display:flex; width:100%; margin-bottom:12px; border-radius:99px; padding:9px; background:var(--amber-bg); color:var(--amber); font-weight:700; font-size:.8rem; text-decoration:none; align-items:center; justify-content:center; gap:7px;">
-                <i class="fa-solid fa-gift"></i> Nhận Pro miễn phí
+            <a href="nhan-pro.html" id="sideEarnProBtn" style="display:flex; width:100%; margin-bottom:12px; border-radius:99px; padding:9px; background:var(--amber-bg); color:var(--amber); font-weight:700; font-size:.8rem; text-decoration:none; align-items:center; justify-content:center; gap:7px;">
+                <i class="fa-solid fa-gift"></i> <span class="lbl">Nhận Pro miễn phí</span>
             </a>
             <div class="side-user">
                 <div class="side-avatar is-guest"><span class="avt-content"><i class="fa-solid fa-user"></i></span><span class="online-dot"></span><span class="pro-badge"><i class="fa-solid fa-crown"></i></span></div>

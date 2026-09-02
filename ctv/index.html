@@ -239,7 +239,7 @@
     </div>
 
     <div class="section-title"><i class="fa-solid fa-file-arrow-up" style="color:var(--brand);"></i> Đăng tài liệu để bán</div>
-    <p class="sub" style="margin-top:-6px;">Upload tài liệu của bạn (PDF, đề thi, tổng hợp kiến thức...). Admin sẽ xem, chốt giá bán và % hoa hồng bạn nhận mỗi lượt bán, rồi mới đăng công khai — tài liệu chưa duyệt sẽ không hiển thị cho ai khác.</p>
+    <p class="sub" style="margin-top:-6px;">Dán link tài liệu của bạn (Google Drive, Dropbox...). Admin sẽ xem, chốt giá bán và % hoa hồng bạn nhận mỗi lượt bán, rồi mới đăng công khai — tài liệu chưa duyệt sẽ không hiển thị cho ai khác.</p>
     <div class="card link-card" style="margin-bottom:20px;">
         <div id="docUploadMsg" class="msg" style="display:none;"></div>
         <div style="display:grid; gap:14px;">
@@ -264,17 +264,6 @@
                 <input type="text" id="docDesc" class="link-input" placeholder="Nội dung, số trang, phù hợp với ai...">
             </div>
             <div>
-                <div class="lbl">Nguồn tài liệu</div>
-                <div class="seg-toggle" id="docSourceToggle">
-                    <div class="seg-opt active" data-src="upload" onclick="pickDocSource('upload')"><i class="fa-solid fa-upload"></i> Tải file lên</div>
-                    <div class="seg-opt" data-src="link" onclick="pickDocSource('link')"><i class="fa-solid fa-link"></i> Dùng link ngoài</div>
-                </div>
-            </div>
-            <div id="docFileWrap">
-                <div class="lbl">File tài liệu (PDF/Word/ảnh, tối đa 20MB)</div>
-                <input type="file" id="docFile" class="link-input" style="padding:7px;">
-            </div>
-            <div id="docLinkWrap" class="hidden">
                 <div class="lbl">Link tài liệu (Google Drive, Dropbox...)</div>
                 <input type="text" id="docLink" class="link-input" placeholder="https://drive.google.com/...">
                 <div style="color:var(--ink-mute); font-size:.78rem; margin-top:5px;">Bạn tự đảm bảo link luôn còn hoạt động và đúng quyền chia sẻ (ai có link đều xem/tải được).</div>
@@ -478,7 +467,6 @@ async function refreshWalletAndWithdrawals(){
 // ==================== ĐĂNG TÀI LIỆU BÁN ====================
 const DOC_STATUS_LABEL = { pending:'Chờ duyệt', approved:'Đã duyệt · Đang bán', rejected:'Bị từ chối' };
 let docTypeSelected = 'paid';   // 'free' | 'paid'
-let docSourceSelected = 'upload'; // 'upload' | 'link'
 
 function pickDocType(type){
     docTypeSelected = type;
@@ -490,44 +478,24 @@ function pickDocType(type){
     document.getElementById('docPriceWrap').classList.toggle('hidden', type === 'free');
 }
 
-function pickDocSource(src){
-    docSourceSelected = src;
-    document.querySelectorAll('#docSourceToggle .seg-opt').forEach(el => el.classList.toggle('active', el.dataset.src === src));
-    document.getElementById('docFileWrap').classList.toggle('hidden', src !== 'upload');
-    document.getElementById('docLinkWrap').classList.toggle('hidden', src !== 'link');
-}
-
 async function submitDocument(){
     const title = document.getElementById('docTitle').value.trim();
     const description = document.getElementById('docDesc').value.trim();
     const suggested_price = docTypeSelected === 'free' ? 0 : document.getElementById('docPrice').value;
-    const fileInput = document.getElementById('docFile');
+    const external_link = document.getElementById('docLink').value.trim();
     const imageInput = document.getElementById('docImage');
-    const file = docSourceSelected === 'upload' ? fileInput.files[0] : null;
-    const external_link = docSourceSelected === 'link' ? document.getElementById('docLink').value.trim() : '';
     const image = imageInput.files[0];
     const msgEl = document.getElementById('docUploadMsg');
     const btn = document.getElementById('docSubmitBtn');
     msgEl.style.display = 'none';
 
     if (!title){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Vui lòng nhập tên tài liệu.'; return; }
-    if (docSourceSelected === 'upload' && !file){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Vui lòng chọn file tài liệu.'; return; }
-    if (docSourceSelected === 'upload' && file.size > 20 * 1024 * 1024){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'File tối đa 20MB.'; return; }
-    if (docSourceSelected === 'link' && !/^https?:\/\//i.test(external_link)){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Link tài liệu phải bắt đầu bằng http:// hoặc https://.'; return; }
+    if (!/^https?:\/\//i.test(external_link)){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Vui lòng dán link tài liệu, bắt đầu bằng http:// hoặc https://.'; return; }
     if (image && image.size > 5 * 1024 * 1024){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Ảnh bìa tối đa 5MB.'; return; }
 
-    btn.disabled = true; const original = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải lên...';
+    btn.disabled = true; const original = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang nộp...';
     try{
         const { data: { session } } = await sb.auth.getSession();
-        let filePath = '';
-        let fileName = '';
-        if (file){
-            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-            filePath = `${session.user.id}/${Date.now()}_${safeName}`;
-            const { error: uploadErr } = await sb.storage.from('ctv-documents').upload(filePath, file, { upsert: false });
-            if (uploadErr) throw new Error('Không tải file lên được: ' + uploadErr.message);
-            fileName = file.name;
-        }
 
         let imagePath = '';
         if (image){
@@ -543,8 +511,7 @@ async function submitDocument(){
             body: JSON.stringify({
                 action: 'submit_document', title, description, suggested_price,
                 doc_type: docTypeSelected,
-                file_path: filePath || undefined, file_name: fileName || undefined,
-                external_link: external_link || undefined,
+                external_link,
                 image_path: imagePath || undefined,
             }),
         });
@@ -556,10 +523,8 @@ async function submitDocument(){
         document.getElementById('docDesc').value = '';
         document.getElementById('docPrice').value = '';
         document.getElementById('docLink').value = '';
-        fileInput.value = '';
         imageInput.value = '';
         pickDocType('paid');
-        pickDocSource('upload');
         loadMyDocuments();
     }catch(e){
         msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = e.message;
@@ -584,7 +549,7 @@ async function loadMyDocuments(){
                     <div>
                         <div class="title">${escapeHtml(d.title)} <span class="badge ${d.doc_type}">${typeLabel}</span></div>
                         <div class="meta">${new Date(d.created_at).toLocaleString('vi-VN')}${d.doc_type === 'paid' ? ` · Giá đề xuất ${fmtVND(d.suggested_price)}` : ''}${d.status==='approved' ? ` · Giá bán ${fmtVND(d.approved_price)}${d.doc_type === 'paid' ? ` · Bạn nhận ${d.revenue_share_percent}%/đơn` : ''}` : ''}</div>
-                        <div class="meta">${d.external_link ? `Nguồn: <a href="${d.external_link}" target="_blank" rel="noopener">Link ngoài</a>` : (d.file_name || 'File đã tải lên')}</div>
+                        <div class="meta">Nguồn: <a href="${d.external_link}" target="_blank" rel="noopener">Link ngoài</a></div>
                         ${d.status === 'rejected' && d.reject_reason ? `<div class="meta" style="color:var(--red);">Lý do: ${escapeHtml(d.reject_reason)}</div>` : ''}
                     </div>
                 </div>

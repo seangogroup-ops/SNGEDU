@@ -261,7 +261,12 @@ let sngUsageChecked = false; // đã kiểm tra & (nếu hợp lệ) sẵn sàng
     }
 
     // ---------------- Giới hạn số lần làm trắc nghiệm/ngày (tài khoản Free) ----------------
-    const usageCheck = await SNG_USAGE.checkLimit(session.user, 'quiz_attempt');
+    // Lưu ý: session.user lấy từ getSession() có thể là dữ liệu CŨ được cache trong máy
+    // (token chỉ tự làm mới sau ~1 tiếng), nên sau khi nâng cấp Pro, nếu chưa hết hạn token
+    // thì user_metadata.plan vẫn là giá trị cũ dù DB đã ghi Pro -> bị chặn nhầm.
+    // Gọi getUser() để lấy dữ liệu user mới nhất trực tiếp từ server, đảm bảo Pro có hiệu lực ngay.
+    const { data: { user: freshUser } } = await sb.auth.getUser();
+    const usageCheck = await SNG_USAGE.checkLimit(freshUser || session.user, 'quiz_attempt');
     if (!usageCheck.allowed){
         document.body.innerHTML = `<div class="state-msg" style="max-width:520px;margin:120px auto;text-align:center;">
             <i class="fa-solid fa-lock" style="font-size:2rem;color:#f5a524;"></i>

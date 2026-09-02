@@ -2962,7 +2962,9 @@ html[data-theme="dark"] .promo-pill-timer{ color:#ffbd4a; }
         freeDocCheckBusy = true;
         const href = linkEl.getAttribute('href');
 
-        SNG_USAGE.checkLimit(currentSession.user, 'doc_download').then(result => {
+        // Lấy user mới nhất từ server (getUser()) thay vì currentSession.user đã cache trong máy,
+        // để nếu vừa nâng cấp Pro thì được nhận diện ngay, không phải chờ token tự làm mới.
+        sb.auth.getUser().then(({ data }) => SNG_USAGE.checkLimit(data.user || currentSession.user, 'doc_download')).then(result => {
             freeDocCheckBusy = false;
             if (!result.allowed){
                 alert(`Bạn đã hết ${result.limit} lượt tải tài liệu miễn phí hôm nay.\nNâng cấp Pro để tải không giới hạn.`);

@@ -84,6 +84,14 @@ tr:last-child td{ border-bottom:none; }
 .badge.pending{ background:var(--amber-bg); color:var(--amber); }
 .badge.approved,.badge.paid{ background:var(--green-bg); color:var(--green); }
 .badge.rejected{ background:var(--red-bg); color:var(--red); }
+.badge.doctype-free{ background:var(--green-bg); color:var(--green); }
+.badge.doctype-paid{ background:var(--accent-soft); color:var(--accent); }
+.li-thumb{ width:52px; height:52px; border-radius:9px; object-fit:cover; border:1px solid var(--border); flex-shrink:0; }
+.li-head-left{ display:flex; gap:12px; align-items:flex-start; }
+.doc-type-toggle-sm{ display:flex; gap:6px; }
+.doc-type-toggle-sm .opt{ padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:.78rem; font-weight:700; cursor:pointer; color:var(--gray); }
+.doc-type-toggle-sm .opt.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+.doc-type-toggle-sm .opt.active.is-free{ border-color:var(--green); color:var(--green); background:var(--green-bg); }
 .wd-tab-active{ background:var(--accent) !important; color:#fff !important; }
 .review-row{ display:flex; gap:8px; align-items:end; flex-wrap:wrap; margin-top:8px; }
 .review-row div{ display:flex; flex-direction:column; gap:4px; }
@@ -343,23 +351,35 @@ async function loadDocSubmissions(status){
         box.innerHTML = submissions.map(s => `
             <div class="list-item">
                 <div class="li-head">
-                    <div>
-                        <div class="li-title">${escapeHtml(s.title)}</div>
-                        <div class="li-sub">${escapeHtml(s.ctv_label)} · ${new Date(s.created_at).toLocaleString('vi-VN')}</div>
+                    <div class="li-head-left">
+                        ${s.image_url ? `<img class="li-thumb" src="${s.image_url}" alt="">` : ''}
+                        <div>
+                            <div class="li-title">${escapeHtml(s.title)} <span class="badge doctype-${s.doc_type}">${s.doc_type === 'free' ? 'Miễn phí' : 'Trả phí'}</span></div>
+                            <div class="li-sub">${escapeHtml(s.ctv_label)} · ${new Date(s.created_at).toLocaleString('vi-VN')}</div>
+                        </div>
                     </div>
                     <span class="badge ${s.status}">${s.status === 'pending' ? 'Chờ duyệt' : s.status === 'approved' ? 'Đã duyệt' : 'Đã từ chối'}</span>
                 </div>
                 ${s.description ? `<div class="li-sub" style="margin-bottom:6px;">${escapeHtml(s.description)}</div>` : ''}
                 <div class="li-meta">
-                    <span><b>Giá đề xuất</b>${fmtVND(s.suggested_price)}</span>
-                    ${s.status === 'approved' ? `<span><b>Giá duyệt</b>${fmtVND(s.approved_price)}</span><span><b>% hoa hồng tác giả</b>${s.revenue_share_percent}%</span>` : ''}
-                    <span><b>File</b><a href="${s.file_url}" target="_blank" rel="noopener">Xem / tải file</a></span>
+                    ${s.doc_type === 'paid' ? `<span><b>Giá đề xuất</b>${fmtVND(s.suggested_price)}</span>` : ''}
+                    ${s.status === 'approved' ? `<span><b>Giá duyệt</b>${fmtVND(s.approved_price)}</span>${s.doc_type === 'paid' ? `<span><b>% hoa hồng tác giả</b>${s.revenue_share_percent}%</span>` : ''}` : ''}
+                    <span><b>Nguồn</b>${s.external_link ? `<a href="${s.external_link}" target="_blank" rel="noopener">Link ngoài</a>` : `<a href="${s.file_url}" target="_blank" rel="noopener">Xem / tải file</a>`}</span>
                 </div>
                 ${s.status === 'rejected' && s.reject_reason ? `<div class="li-sub" style="color:var(--red);">Lý do từ chối: ${escapeHtml(s.reject_reason)}</div>` : ''}
                 ${s.status === 'pending' ? `
-                <div class="review-row">
+                <div style="margin-top:8px;">
+                    <label style="font-size:.72rem;font-weight:700;color:var(--gray);display:block;margin-bottom:5px;">Loại khi đăng (có thể đổi lại)</label>
+                    <div class="doc-type-toggle-sm" id="doctype-${s.id}">
+                        <div class="opt ${s.doc_type === 'free' ? 'active is-free' : ''}" data-v="free" onclick="pickReviewDocType('${s.id}','free')"><i class="fa-solid fa-gift"></i> Miễn phí</div>
+                        <div class="opt ${s.doc_type === 'paid' ? 'active' : ''}" data-v="paid" onclick="pickReviewDocType('${s.id}','paid')"><i class="fa-solid fa-lock"></i> Trả phí</div>
+                    </div>
+                </div>
+                <div class="review-row" id="reviewFields-${s.id}" style="${s.doc_type === 'free' ? 'display:none;' : ''}">
                     <div><label>Giá bán (đ)</label><input type="number" id="price-${s.id}" value="${s.suggested_price}" min="0"></div>
                     <div><label>% hoa hồng tác giả</label><input type="number" id="pct-${s.id}" value="50" min="0" max="100"></div>
+                </div>
+                <div class="li-actions">
                     <button class="btn btn-primary btn-sm" onclick="approveDoc('${s.id}')"><i class="fa-solid fa-check"></i> Duyệt & đăng bán</button>
                     <button class="btn btn-danger-ghost btn-sm" onclick="rejectDoc('${s.id}')"><i class="fa-solid fa-xmark"></i> Từ chối</button>
                 </div>` : ''}
@@ -370,11 +390,28 @@ async function loadDocSubmissions(status){
     }
 }
 
+const reviewDocTypeById = {};
+
+function pickReviewDocType(id, type){
+    reviewDocTypeById[id] = type;
+    const toggle = document.getElementById('doctype-' + id);
+    toggle.querySelectorAll('.opt').forEach(el => {
+        const active = el.dataset.v === type;
+        el.classList.toggle('active', active);
+        el.classList.toggle('is-free', active && type === 'free');
+    });
+    document.getElementById('reviewFields-' + id).style.display = type === 'free' ? 'none' : '';
+}
+
 async function approveDoc(id){
-    const approved_price = document.getElementById('price-' + id).value;
-    const revenue_share_percent = document.getElementById('pct-' + id).value;
+    const doc_type = reviewDocTypeById[id]; // undefined = giữ nguyên loại CTV đã đề xuất
+    const body = { id, decision: 'approve', doc_type };
+    if (doc_type !== 'free'){
+        body.approved_price = document.getElementById('price-' + id).value;
+        body.revenue_share_percent = document.getElementById('pct-' + id).value;
+    }
     try{
-        await callAdminCtv('review_document', { id, decision: 'approve', approved_price, revenue_share_percent });
+        await callAdminCtv('review_document', body);
         loadDocSubmissions('pending');
         loadCtvs();
     }catch(e){ alert(e.message); }

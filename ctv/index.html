@@ -135,8 +135,20 @@
     .doc-item{ border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
     .doc-item:last-child{ margin-bottom:0; }
     .doc-item .row{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; }
+    .doc-item .row-left{ display:flex; gap:12px; align-items:flex-start; }
+    .doc-item .thumb{ width:52px; height:52px; border-radius:9px; object-fit:cover; border:1px solid var(--line); flex-shrink:0; }
     .doc-item .title{ font-weight:700; font-size:.9rem; }
     .doc-item .meta{ color:var(--ink-mute); font-size:.78rem; margin-top:3px; }
+    .badge.pending{ background:var(--amber-bg); color:var(--amber); }
+    .badge.approved{ background:var(--green-bg); color:var(--green); }
+    .badge.rejected{ background:var(--red-bg); color:var(--red); }
+    .badge.free{ background:var(--green-bg); color:var(--green); }
+    .badge.paid{ background:var(--brand-bg); color:var(--brand); }
+
+    .seg-toggle{ display:flex; gap:8px; }
+    .seg-opt{ flex:1; padding:9px 12px; border:1px solid var(--line); border-radius:10px; text-align:center; font-size:.84rem; font-weight:700; cursor:pointer; color:var(--ink-soft); background:var(--bg); display:flex; align-items:center; justify-content:center; gap:6px; transition:border-color .15s ease, color .15s ease, background .15s ease; }
+    .seg-opt.active{ border-color:var(--brand); color:var(--brand); background:var(--brand-bg); }
+    .seg-opt.active.free-active{ border-color:var(--green); color:var(--green); background:var(--green-bg); }
 </style>
 </head>
 <body data-page="ctv-dashboard" data-page-label="Kênh cộng tác viên">
@@ -230,7 +242,19 @@
     <p class="sub" style="margin-top:-6px;">Upload tài liệu của bạn (PDF, đề thi, tổng hợp kiến thức...). Admin sẽ xem, chốt giá bán và % hoa hồng bạn nhận mỗi lượt bán, rồi mới đăng công khai — tài liệu chưa duyệt sẽ không hiển thị cho ai khác.</p>
     <div class="card link-card" style="margin-bottom:20px;">
         <div id="docUploadMsg" class="msg" style="display:none;"></div>
-        <div style="display:grid; gap:10px;">
+        <div style="display:grid; gap:14px;">
+            <div>
+                <div class="lbl">Loại tài liệu</div>
+                <div class="seg-toggle" id="docTypeToggle">
+                    <div class="seg-opt" data-type="free" onclick="pickDocType('free')"><i class="fa-solid fa-gift"></i> Miễn phí</div>
+                    <div class="seg-opt active" data-type="paid" onclick="pickDocType('paid')"><i class="fa-solid fa-lock"></i> Trả phí</div>
+                </div>
+            </div>
+            <div id="docPriceWrap">
+                <div class="lbl">Giá đề xuất (đ)</div>
+                <input type="number" id="docPrice" class="link-input" min="0" placeholder="VD: 20000">
+                <div style="color:var(--ink-mute); font-size:.78rem; margin-top:5px;">Admin sẽ chốt lại giá bán cuối cùng khi duyệt, có thể khác giá bạn đề xuất.</div>
+            </div>
             <div>
                 <div class="lbl">Tên tài liệu</div>
                 <input type="text" id="docTitle" class="link-input" placeholder="VD: Bộ đề ôn thi HK1 Toán 12">
@@ -239,15 +263,25 @@
                 <div class="lbl">Mô tả ngắn</div>
                 <input type="text" id="docDesc" class="link-input" placeholder="Nội dung, số trang, phù hợp với ai...">
             </div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <div style="flex:1; min-width:160px;">
-                    <div class="lbl">Giá đề xuất (đ)</div>
-                    <input type="number" id="docPrice" class="link-input" min="0" placeholder="VD: 20000">
+            <div>
+                <div class="lbl">Nguồn tài liệu</div>
+                <div class="seg-toggle" id="docSourceToggle">
+                    <div class="seg-opt active" data-src="upload" onclick="pickDocSource('upload')"><i class="fa-solid fa-upload"></i> Tải file lên</div>
+                    <div class="seg-opt" data-src="link" onclick="pickDocSource('link')"><i class="fa-solid fa-link"></i> Dùng link ngoài</div>
                 </div>
-                <div style="flex:2; min-width:220px;">
-                    <div class="lbl">File tài liệu (PDF/Word/ảnh, tối đa 20MB)</div>
-                    <input type="file" id="docFile" class="link-input" style="padding:7px;">
-                </div>
+            </div>
+            <div id="docFileWrap">
+                <div class="lbl">File tài liệu (PDF/Word/ảnh, tối đa 20MB)</div>
+                <input type="file" id="docFile" class="link-input" style="padding:7px;">
+            </div>
+            <div id="docLinkWrap" class="hidden">
+                <div class="lbl">Link tài liệu (Google Drive, Dropbox...)</div>
+                <input type="text" id="docLink" class="link-input" placeholder="https://drive.google.com/...">
+                <div style="color:var(--ink-mute); font-size:.78rem; margin-top:5px;">Bạn tự đảm bảo link luôn còn hoạt động và đúng quyền chia sẻ (ai có link đều xem/tải được).</div>
+            </div>
+            <div>
+                <div class="lbl">Ảnh bìa (không bắt buộc, tối đa 5MB)</div>
+                <input type="file" id="docImage" class="link-input" accept="image/*" style="padding:7px;">
             </div>
             <button class="btn btn-primary" style="justify-self:start;" onclick="submitDocument()" id="docSubmitBtn"><i class="fa-solid fa-upload"></i> Nộp tài liệu chờ duyệt</button>
         </div>
@@ -443,34 +477,76 @@ async function refreshWalletAndWithdrawals(){
 
 // ==================== ĐĂNG TÀI LIỆU BÁN ====================
 const DOC_STATUS_LABEL = { pending:'Chờ duyệt', approved:'Đã duyệt · Đang bán', rejected:'Bị từ chối' };
+let docTypeSelected = 'paid';   // 'free' | 'paid'
+let docSourceSelected = 'upload'; // 'upload' | 'link'
+
+function pickDocType(type){
+    docTypeSelected = type;
+    document.querySelectorAll('#docTypeToggle .seg-opt').forEach(el => {
+        const active = el.dataset.type === type;
+        el.classList.toggle('active', active);
+        el.classList.toggle('free-active', active && type === 'free');
+    });
+    document.getElementById('docPriceWrap').classList.toggle('hidden', type === 'free');
+}
+
+function pickDocSource(src){
+    docSourceSelected = src;
+    document.querySelectorAll('#docSourceToggle .seg-opt').forEach(el => el.classList.toggle('active', el.dataset.src === src));
+    document.getElementById('docFileWrap').classList.toggle('hidden', src !== 'upload');
+    document.getElementById('docLinkWrap').classList.toggle('hidden', src !== 'link');
+}
 
 async function submitDocument(){
     const title = document.getElementById('docTitle').value.trim();
     const description = document.getElementById('docDesc').value.trim();
-    const suggested_price = document.getElementById('docPrice').value;
+    const suggested_price = docTypeSelected === 'free' ? 0 : document.getElementById('docPrice').value;
     const fileInput = document.getElementById('docFile');
-    const file = fileInput.files[0];
+    const imageInput = document.getElementById('docImage');
+    const file = docSourceSelected === 'upload' ? fileInput.files[0] : null;
+    const external_link = docSourceSelected === 'link' ? document.getElementById('docLink').value.trim() : '';
+    const image = imageInput.files[0];
     const msgEl = document.getElementById('docUploadMsg');
     const btn = document.getElementById('docSubmitBtn');
     msgEl.style.display = 'none';
 
     if (!title){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Vui lòng nhập tên tài liệu.'; return; }
-    if (!file){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Vui lòng chọn file tài liệu.'; return; }
-    if (file.size > 20 * 1024 * 1024){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'File tối đa 20MB.'; return; }
+    if (docSourceSelected === 'upload' && !file){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Vui lòng chọn file tài liệu.'; return; }
+    if (docSourceSelected === 'upload' && file.size > 20 * 1024 * 1024){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'File tối đa 20MB.'; return; }
+    if (docSourceSelected === 'link' && !/^https?:\/\//i.test(external_link)){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Link tài liệu phải bắt đầu bằng http:// hoặc https://.'; return; }
+    if (image && image.size > 5 * 1024 * 1024){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Ảnh bìa tối đa 5MB.'; return; }
 
     btn.disabled = true; const original = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải lên...';
     try{
         const { data: { session } } = await sb.auth.getSession();
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const filePath = `${session.user.id}/${Date.now()}_${safeName}`;
+        let filePath = '';
+        let fileName = '';
+        if (file){
+            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            filePath = `${session.user.id}/${Date.now()}_${safeName}`;
+            const { error: uploadErr } = await sb.storage.from('ctv-documents').upload(filePath, file, { upsert: false });
+            if (uploadErr) throw new Error('Không tải file lên được: ' + uploadErr.message);
+            fileName = file.name;
+        }
 
-        const { error: uploadErr } = await sb.storage.from('ctv-documents').upload(filePath, file, { upsert: false });
-        if (uploadErr) throw new Error('Không tải file lên được: ' + uploadErr.message);
+        let imagePath = '';
+        if (image){
+            const safeImgName = image.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            imagePath = `${session.user.id}/cover_${Date.now()}_${safeImgName}`;
+            const { error: imgErr } = await sb.storage.from('ctv-documents').upload(imagePath, image, { upsert: false });
+            if (imgErr) throw new Error('Không tải ảnh bìa lên được: ' + imgErr.message);
+        }
 
         const res = await fetch(CTV_PORTAL_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-            body: JSON.stringify({ action: 'submit_document', title, description, suggested_price, file_path: filePath, file_name: file.name }),
+            body: JSON.stringify({
+                action: 'submit_document', title, description, suggested_price,
+                doc_type: docTypeSelected,
+                file_path: filePath || undefined, file_name: fileName || undefined,
+                external_link: external_link || undefined,
+                image_path: imagePath || undefined,
+            }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Có lỗi xảy ra');
@@ -479,7 +555,11 @@ async function submitDocument(){
         document.getElementById('docTitle').value = '';
         document.getElementById('docDesc').value = '';
         document.getElementById('docPrice').value = '';
+        document.getElementById('docLink').value = '';
         fileInput.value = '';
+        imageInput.value = '';
+        pickDocType('paid');
+        pickDocSource('upload');
         loadMyDocuments();
     }catch(e){
         msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = e.message;
@@ -493,17 +573,25 @@ async function loadMyDocuments(){
     const { data } = await sb.from('ctv_document_submissions').select('*').order('created_at', { ascending: false }).limit(50);
     const list = data || [];
     if (!list.length){ box.innerHTML = '<div class="empty-state">Bạn chưa nộp tài liệu nào.</div>'; return; }
-    box.innerHTML = list.map(d => `
+    box.innerHTML = list.map(d => {
+        const imgUrl = d.image_path ? `${SUPABASE_URL}/storage/v1/object/public/ctv-documents/${d.image_path}` : null;
+        const typeLabel = d.doc_type === 'free' ? 'Miễn phí' : 'Trả phí';
+        return `
         <div class="doc-item">
             <div class="row">
-                <div>
-                    <div class="title">${escapeHtml(d.title)}</div>
-                    <div class="meta">${new Date(d.created_at).toLocaleString('vi-VN')} · Giá đề xuất ${fmtVND(d.suggested_price)}${d.status==='approved' ? ` · Giá bán ${fmtVND(d.approved_price)} · Bạn nhận ${d.revenue_share_percent}%/đơn` : ''}</div>
-                    ${d.status === 'rejected' && d.reject_reason ? `<div class="meta" style="color:var(--red);">Lý do: ${escapeHtml(d.reject_reason)}</div>` : ''}
+                <div class="row-left">
+                    ${imgUrl ? `<img class="thumb" src="${imgUrl}" alt="">` : ''}
+                    <div>
+                        <div class="title">${escapeHtml(d.title)} <span class="badge ${d.doc_type}">${typeLabel}</span></div>
+                        <div class="meta">${new Date(d.created_at).toLocaleString('vi-VN')}${d.doc_type === 'paid' ? ` · Giá đề xuất ${fmtVND(d.suggested_price)}` : ''}${d.status==='approved' ? ` · Giá bán ${fmtVND(d.approved_price)}${d.doc_type === 'paid' ? ` · Bạn nhận ${d.revenue_share_percent}%/đơn` : ''}` : ''}</div>
+                        <div class="meta">${d.external_link ? `Nguồn: <a href="${d.external_link}" target="_blank" rel="noopener">Link ngoài</a>` : (d.file_name || 'File đã tải lên')}</div>
+                        ${d.status === 'rejected' && d.reject_reason ? `<div class="meta" style="color:var(--red);">Lý do: ${escapeHtml(d.reject_reason)}</div>` : ''}
+                    </div>
                 </div>
                 <span class="badge ${d.status}">${DOC_STATUS_LABEL[d.status] || d.status}</span>
             </div>
-        </div>`).join('');
+        </div>`;
+    }).join('');
 }
 
 async function loadDashboard(ctv){

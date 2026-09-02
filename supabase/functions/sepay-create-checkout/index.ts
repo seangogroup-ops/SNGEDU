@@ -38,6 +38,10 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const { order_type, course_id, plan_id, document_id, product_id } = body;
+    // Mã CTV (cộng tác viên) đính kèm từ link giới thiệu (?ctv=...), nếu có — xem frontend/ctv-track.js.
+    // Không tin để tính hoa hồng ngay tại đây (ctv_credit_commission sẽ tự kiểm tra code có hợp lệ/active không),
+    // chỉ lưu thô vào đơn hàng để đối soát.
+    const ctvCode: string = typeof body.ctv_code === "string" ? body.ctv_code.trim().slice(0, 32) : "";
     // Biến thể sản phẩm (vd "1 tháng" / "3 tháng"...) — rỗng '' nếu sản phẩm không chia biến thể.
     const requestedVariantId: string = typeof body.variant_id === "string" ? body.variant_id : "";
     let productVariantId = ""; // giá trị THẬT SỰ dùng để tạo đơn, do server tự xác định lại (không tin client)
@@ -178,6 +182,7 @@ Deno.serve(async (req) => {
         currency: "VND",
         status: "pending",
         payment_method,
+        ctv_code: ctvCode || null,
       })
       .select("id")
       .single();
@@ -223,6 +228,28 @@ Deno.serve(async (req) => {
         variant_id: order_type === "product" ? productVariantId : "",
         user_id: user.id,
       });
+
+      // Cộng hoa hồng cho CTV (nếu đơn có ctv_code hợp lệ) — không chặn phản hồi cho khách nếu lỗi.
+      if (ctvCode) {
+        const { error: ctvErr } = await db.rpc("ctv_credit_commission", {
+          p_order_id: insertedOrder.id,
+          p_ctv_code: ctvCode,
+          p_buyer_id: user.id,
+          p_order_amount: amount,
+        });
+        if (ctvErr) console.error("sepay-create-checkout: lỗi cộng hoa hồng CTV:", ctvErr);
+      }
+
+      // Nếu là mua tài liệu do 1 CTV đăng bán (đã được admin duyệt) -> cộng hoa hồng tác giả.
+      if (order_type === "document" && document_id) {
+        const { error: royaltyErr } = await db.rpc("ctv_credit_document_royalty", {
+          p_order_id: insertedOrder.id,
+          p_document_id: String(document_id),
+          p_buyer_id: user.id,
+          p_order_amount: amount,
+        });
+        if (royaltyErr) console.error("sepay-create-checkout: lỗi cộng hoa hồng tác giả tài liệu:", royaltyErr);
+      }
 
       return new Response(
         JSON.stringify({ paid: true, invoiceNumber, balance: newBalance }),

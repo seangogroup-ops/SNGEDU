@@ -48,6 +48,10 @@ async function batDauThanhToan(orderPayload) {
       return;
     }
 
+    // Nếu khách vào site qua link giới thiệu của 1 CTV (?ctv=MA, xem frontend/ctv-track.js)
+    // thì đính kèm mã đó vào đơn hàng để tính hoa hồng cho đúng người giới thiệu.
+    const ctvCode = (typeof window.sngGetCtvCode === 'function') ? window.sngGetCtvCode() : '';
+
     const res = await fetch(`${SEPAY_FUNCTIONS_BASE}/sepay-create-checkout`, {
       method: 'POST',
       headers: {
@@ -56,6 +60,7 @@ async function batDauThanhToan(orderPayload) {
       },
       body: JSON.stringify({
         payment_method: 'BANK_TRANSFER', // hoặc 'CARD' / 'NAPAS_BANK_TRANSFER'
+        ...(ctvCode ? { ctv_code: ctvCode } : {}),
         ...orderPayload,
       }),
     });
@@ -117,13 +122,15 @@ async function thanhToanBangSoDu(orderPayload) {
       return { ok: false, error: 'Chưa đăng nhập' };
     }
 
+    const ctvCode = (typeof window.sngGetCtvCode === 'function') ? window.sngGetCtvCode() : '';
+
     const res = await fetch(`${SEPAY_FUNCTIONS_BASE}/sepay-create-checkout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ ...orderPayload, use_balance: true }),
+      body: JSON.stringify({ ...orderPayload, ...(ctvCode ? { ctv_code: ctvCode } : {}), use_balance: true }),
     });
 
     const data = await res.json();

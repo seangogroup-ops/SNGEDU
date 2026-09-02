@@ -72,66 +72,125 @@
         var st = document.createElement('style');
         st.id = 'pwaAutoBannerStyle';
         st.textContent =
-            '#pwaAutoBanner{position:fixed;left:12px;right:12px;bottom:14px;z-index:99999;' +
-            'background:#1b1c26;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:16px;' +
-            'padding:14px 14px 14px 16px;box-shadow:0 12px 32px -8px rgba(0,0,0,.45);' +
-            'display:flex;align-items:center;gap:12px;font-family:inherit;' +
-            'animation:pwaAutoBannerIn .28s ease;max-width:420px;margin:0 auto;}' +
-            '@keyframes pwaAutoBannerIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}' +
-            '#pwaAutoBanner .pab-ico{width:40px;height:40px;border-radius:11px;flex-shrink:0;' +
-            'background:linear-gradient(135deg,#6c5cf6,#4f6bff);display:flex;align-items:center;justify-content:center;font-size:1.15rem;}' +
-            '#pwaAutoBanner .pab-text{flex:1;min-width:0;font-size:.82rem;line-height:1.45;color:#e6e6ef;}' +
-            '#pwaAutoBanner .pab-text b{color:#fff;display:block;font-size:.86rem;margin-bottom:2px;}' +
-            '#pwaAutoBanner .pab-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}' +
-            '#pwaAutoBanner button{border:none;border-radius:9px;padding:8px 12px;font-weight:700;font-size:.76rem;' +
-            'cursor:pointer;font-family:inherit;white-space:nowrap;}' +
-            '#pwaAutoBanner .pab-ok{background:linear-gradient(135deg,#6c5cf6,#4f6bff);color:#fff;}' +
-            '#pwaAutoBanner .pab-close{background:transparent;color:#9a9bb0;padding:8px 6px;}';
+            '#pwaAutoBackdrop{position:fixed;inset:0;z-index:99998;background:rgba(8,9,16,.55);' +
+            'opacity:0;animation:pwaBackdropIn .25s ease forwards;}' +
+            '@keyframes pwaBackdropIn{to{opacity:1}}' +
+
+            '#pwaAutoBanner{position:fixed;left:0;right:0;bottom:0;z-index:99999;' +
+            'background:#181926;color:#fff;border:1px solid rgba(255,255,255,.08);border-bottom:none;' +
+            'border-radius:22px 22px 0 0;padding:10px 20px calc(env(safe-area-inset-bottom,0px) + 18px);' +
+            'box-shadow:0 -16px 48px -8px rgba(0,0,0,.55);' +
+            'font-family:inherit;max-width:460px;margin:0 auto;' +
+            'animation:pwaAutoBannerIn .3s cubic-bezier(.2,.9,.3,1);}' +
+            '@keyframes pwaAutoBannerIn{from{transform:translateY(100%)}to{transform:translateY(0)}}' +
+
+            '#pwaAutoBanner .pab-handle{width:36px;height:4px;border-radius:99px;background:rgba(255,255,255,.16);' +
+            'margin:0 auto 16px;}' +
+
+            '#pwaAutoBanner .pab-close-x{position:absolute;top:14px;right:14px;width:28px;height:28px;' +
+            'border-radius:50%;background:rgba(255,255,255,.08);border:none;color:#9a9bb0;' +
+            'display:flex;align-items:center;justify-content:center;font-size:.85rem;cursor:pointer;padding:0;}' +
+            '#pwaAutoBanner .pab-close-x:hover{background:rgba(255,255,255,.14);color:#fff;}' +
+
+            '#pwaAutoBanner .pab-top{display:flex;align-items:center;gap:13px;margin-bottom:4px;}' +
+            '#pwaAutoBanner .pab-ico{width:46px;height:46px;border-radius:14px;flex-shrink:0;' +
+            'background:linear-gradient(135deg,#6c5cf6,#4f6bff);display:flex;align-items:center;' +
+            'justify-content:center;font-size:1.35rem;box-shadow:0 6px 16px -4px rgba(79,107,255,.5);}' +
+            '#pwaAutoBanner .pab-title{font-weight:800;font-size:1.02rem;line-height:1.3;margin:0;}' +
+            '#pwaAutoBanner .pab-desc{font-size:.82rem;color:#9a9bb0;line-height:1.4;margin-top:3px;}' +
+
+            '#pwaAutoBanner .pab-steps{margin:16px 0 4px;display:flex;flex-direction:column;gap:10px;}' +
+            '#pwaAutoBanner .pab-step{display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.05);' +
+            'border-radius:12px;padding:10px 12px;}' +
+            '#pwaAutoBanner .pab-step-num{width:22px;height:22px;border-radius:50%;background:rgba(108,92,246,.25);' +
+            'color:#b9aeff;font-size:.74rem;font-weight:800;display:flex;align-items:center;justify-content:center;' +
+            'flex-shrink:0;}' +
+            '#pwaAutoBanner .pab-step-text{font-size:.82rem;color:#dcdcea;line-height:1.4;}' +
+            '#pwaAutoBanner .pab-step-text b{color:#fff;}' +
+            '#pwaAutoBanner .pab-step-ico{flex-shrink:0;font-size:1rem;}' +
+
+            '#pwaAutoBanner .pab-actions{display:flex;gap:10px;margin-top:18px;}' +
+            '#pwaAutoBanner button.pab-btn{flex:1;border:none;border-radius:13px;padding:13px 14px;' +
+            'font-weight:700;font-size:.86rem;cursor:pointer;font-family:inherit;}' +
+            '#pwaAutoBanner .pab-ok{background:linear-gradient(135deg,#6c5cf6,#4f6bff);color:#fff;' +
+            'box-shadow:0 8px 20px -6px rgba(79,107,255,.55);}' +
+            '#pwaAutoBanner .pab-close{background:rgba(255,255,255,.06);color:#c7c9da;}' +
+            '#pwaAutoBanner .pab-single .pab-close{flex:none;width:100%;}';
         document.head.appendChild(st);
     }
 
     function removeBanner(){
         var el = document.getElementById('pwaAutoBanner');
+        var bg = document.getElementById('pwaAutoBackdrop');
         if (el) el.remove();
+        if (bg) bg.remove();
+    }
+
+    function addBackdrop(onDismiss){
+        if (document.getElementById('pwaAutoBackdrop')) return;
+        var bg = document.createElement('div');
+        bg.id = 'pwaAutoBackdrop';
+        bg.addEventListener('click', onDismiss);
+        document.body.appendChild(bg);
     }
 
     // Banner cho iOS: chỉ hướng dẫn thao tác thủ công (Apple không cho web tự bật hộp thoại cài đặt).
     function showIOSInstallBanner(){
         injectBannerStyle();
         if (document.getElementById('pwaAutoBanner')) return;
+
+        function dismiss(){ removeBanner(); snooze(SNOOZE_DAYS_AFTER_DISMISS); }
+        addBackdrop(dismiss);
+
         var el = document.createElement('div');
         el.id = 'pwaAutoBanner';
         el.innerHTML =
-            '<div class="pab-ico">📲</div>' +
-            '<div class="pab-text"><b>Cài SNG EDU vào máy cho tiện</b>Bấm nút <b>Chia sẻ</b> ' +
-            '<span style="opacity:.85">(hình vuông có mũi tên, ở thanh dưới Safari)</span> rồi chọn ' +
-            '<b>"Thêm vào MH chính"</b>.</div>' +
-            '<div class="pab-actions"><button type="button" class="pab-close" id="pwaAutoBannerClose">Để sau</button></div>';
+            '<div class="pab-handle"></div>' +
+            '<button type="button" class="pab-close-x" id="pwaAutoBannerCloseX">&times;</button>' +
+            '<div class="pab-top">' +
+                '<div class="pab-ico">📲</div>' +
+                '<div><p class="pab-title">Cài SNG EDU vào máy</p>' +
+                '<p class="pab-desc">Mở nhanh hơn, học được cả khi mạng chậm</p></div>' +
+            '</div>' +
+            '<div class="pab-steps">' +
+                '<div class="pab-step"><span class="pab-step-num">1</span>' +
+                '<span class="pab-step-text">Bấm biểu tượng <b>Chia sẻ</b> ở thanh dưới Safari</span>' +
+                '<span class="pab-step-ico">⬆️</span></div>' +
+                '<div class="pab-step"><span class="pab-step-num">2</span>' +
+                '<span class="pab-step-text">Chọn <b>"Thêm vào Màn hình chính"</b></span>' +
+                '<span class="pab-step-ico">➕</span></div>' +
+            '</div>' +
+            '<div class="pab-actions pab-single"><button type="button" class="pab-btn pab-close" id="pwaAutoBannerClose">Để sau</button></div>';
         document.body.appendChild(el);
-        document.getElementById('pwaAutoBannerClose').addEventListener('click', function(){
-            removeBanner();
-            snooze(SNOOZE_DAYS_AFTER_DISMISS);
-        });
+        document.getElementById('pwaAutoBannerCloseX').addEventListener('click', dismiss);
+        document.getElementById('pwaAutoBannerClose').addEventListener('click', dismiss);
     }
 
     // Banner cho Android/Chrome: có nút "Cài ngay" bật thẳng hộp thoại cài đặt gốc của trình duyệt.
     function showAndroidInstallBanner(deferredPrompt){
         injectBannerStyle();
         if (document.getElementById('pwaAutoBanner')) return;
+
+        function dismiss(){ removeBanner(); snooze(SNOOZE_DAYS_AFTER_DISMISS); }
+        addBackdrop(dismiss);
+
         var el = document.createElement('div');
         el.id = 'pwaAutoBanner';
         el.innerHTML =
-            '<div class="pab-ico">📲</div>' +
-            '<div class="pab-text"><b>Cài SNG EDU vào máy?</b>Mở nhanh hơn, học được cả khi mạng chậm.</div>' +
+            '<div class="pab-handle"></div>' +
+            '<button type="button" class="pab-close-x" id="pwaAutoBannerCloseX">&times;</button>' +
+            '<div class="pab-top">' +
+                '<div class="pab-ico">📲</div>' +
+                '<div><p class="pab-title">Cài SNG EDU vào máy?</p>' +
+                '<p class="pab-desc">Mở nhanh hơn, học được cả khi mạng chậm</p></div>' +
+            '</div>' +
             '<div class="pab-actions">' +
-                '<button type="button" class="pab-ok" id="pwaAutoBannerOk">Cài ngay</button>' +
-                '<button type="button" class="pab-close" id="pwaAutoBannerClose">Để sau</button>' +
+                '<button type="button" class="pab-btn pab-close" id="pwaAutoBannerClose">Để sau</button>' +
+                '<button type="button" class="pab-btn pab-ok" id="pwaAutoBannerOk">Cài ngay</button>' +
             '</div>';
         document.body.appendChild(el);
-        document.getElementById('pwaAutoBannerClose').addEventListener('click', function(){
-            removeBanner();
-            snooze(SNOOZE_DAYS_AFTER_DISMISS);
-        });
+        document.getElementById('pwaAutoBannerCloseX').addEventListener('click', dismiss);
+        document.getElementById('pwaAutoBannerClose').addEventListener('click', dismiss);
         document.getElementById('pwaAutoBannerOk').addEventListener('click', function(){
             removeBanner();
             if (!deferredPrompt) return;

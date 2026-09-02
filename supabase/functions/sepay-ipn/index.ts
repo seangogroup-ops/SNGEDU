@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
     // --- 3. Lấy đơn hàng tương ứng trong DB ---
     const { data: existingOrder, error: findErr } = await db
       .from("sepay_orders")
-      .select("id, status, amount, order_type, plan_id, course_id, document_id, product_id, variant_id, user_id, sepay_transaction_id")
+      .select("id, status, amount, order_type, plan_id, course_id, document_id, product_id, variant_id, user_id, sepay_transaction_id, ctv_code")
       .eq("invoice_number", invoiceNumber)
       .single();
 
@@ -149,6 +149,28 @@ Deno.serve(async (req) => {
         variant_id: existingOrder.variant_id,
         user_id: existingOrder.user_id,
       });
+    }
+
+    // --- 9. Cộng hoa hồng cho CTV (nếu đơn có ctv_code hợp lệ) — không tính cho nạp tiền vào ví ---
+    if (existingOrder.ctv_code && existingOrder.order_type !== "wallet_topup") {
+      const { error: ctvErr } = await db.rpc("ctv_credit_commission", {
+        p_order_id: existingOrder.id,
+        p_ctv_code: existingOrder.ctv_code,
+        p_buyer_id: existingOrder.user_id,
+        p_order_amount: Number(existingOrder.amount),
+      });
+      if (ctvErr) console.error("sepay-ipn: lỗi cộng hoa hồng CTV:", ctvErr);
+    }
+
+    // --- 9b. Nếu là mua tài liệu do 1 CTV đăng bán (đã được admin duyệt) -> cộng hoa hồng tác giả ---
+    if (existingOrder.order_type === "document" && existingOrder.document_id) {
+      const { error: royaltyErr } = await db.rpc("ctv_credit_document_royalty", {
+        p_order_id: existingOrder.id,
+        p_document_id: String(existingOrder.document_id),
+        p_buyer_id: existingOrder.user_id,
+        p_order_amount: Number(existingOrder.amount),
+      });
+      if (royaltyErr) console.error("sepay-ipn: lỗi cộng hoa hồng tác giả tài liệu:", royaltyErr);
     }
 
     return new Response(JSON.stringify({ received: true, processed: true }), {

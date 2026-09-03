@@ -781,7 +781,8 @@ main{flex:1;padding:30px 36px 60px;max-width:1020px;}
 .btn-edit:hover{background:#fbf2e1;}
 
 .q-item{border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:11px;cursor:default;transition:opacity 0.24s ease,box-shadow 0.2s ease,background 0.2s ease,border-color 0.2s ease;}
-.q-item-highlight{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);background:var(--accent-soft);}
+.q-jump-highlight{border-color:var(--amber,#b8720a) !important;box-shadow:0 0 0 3px var(--amber-bg,#fef3e0);animation:qJumpPulse 1.1s ease-in-out 2;}
+@keyframes qJumpPulse{0%,100%{background:var(--white);}50%{background:var(--amber-bg,#fef3e0);}}
 .q-item:hover{border-color:#e7e1d4;box-shadow:var(--shadow-xs);}
 .q-item.dragging{opacity:.4;}
 .q-item.drag-over{box-shadow:inset 0 0 0 2px var(--accent);background:var(--bg);}
@@ -1297,6 +1298,13 @@ textarea{resize:vertical;}
 
 .fb-detail-msg{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;
     font-size:.9rem;line-height:1.65;color:var(--text);white-space:pre-wrap;word-break:break-word;}
+
+.fb-jump-btn{
+    width:100%;margin-top:14px;background:var(--amber-bg,#fef3e0);color:var(--amber,#b8720a);font-weight:700;
+    font-size:.84rem;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--amber,#b8720a);
+    display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s ease;
+}
+.fb-jump-btn:hover{background:var(--amber,#b8720a);color:#ffffff;}
 
 .fb-status-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
 .fb-status-btn{
@@ -3128,10 +3136,6 @@ textarea{resize:vertical;}
                         <button class="btn-primary hidden" id="mergeQBtn" onclick="openMergeModal()" style="padding:6px 12px;font-size:.8rem;">🔀 Tổng hợp câu hỏi</button>
                         <button class="btn-danger" id="deleteAllQBtn" onclick="deleteAllQuestions()">🗑️ Xóa tất cả câu hỏi trong đề này</button>
                     </div>
-                </div>
-                <div style="position:relative;margin-bottom:12px;">
-                    <input type="text" id="qSearchInput" placeholder="🔍 Tìm câu hỏi theo nội dung hoặc số thứ tự..." oninput="renderQuestionList()" style="width:100%;padding:9px 34px 9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.86rem;box-sizing:border-box;">
-                    <span id="qSearchClearBtn" onclick="clearQSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--gray);font-size:.9rem;" title="Xoá tìm kiếm">✕</span>
                 </div>
                 <div id="qList"><div class="empty-state">Chọn một môn học và một chương/đề ở thanh bên trái để xem câu hỏi.</div></div>
             </div>
@@ -5292,30 +5296,10 @@ async function loadQuestions(){
     if (!currentQuestions.length){ box.innerHTML = `<div class="empty-state">Chưa có câu hỏi nào trong đề này. Dùng tab "Thêm câu hỏi" hoặc "Dán nhiều câu hỏi" để bắt đầu.</div>`; return; }
     renderQuestionList();
 }
-function clearQSearch(){
-    const input = document.getElementById('qSearchInput');
-    if (input) input.value = '';
-    window.__jumpHighlightId = null;
-    renderQuestionList();
-}
 function renderQuestionList(){
     const box = document.getElementById('qList');
-    const searchInput = document.getElementById('qSearchInput');
-    const rawQ = searchInput ? searchInput.value.trim() : '';
-    const q = rawQ.toLowerCase();
-    const clearBtn = document.getElementById('qSearchClearBtn');
-    if (clearBtn) clearBtn.style.display = rawQ ? 'block' : 'none';
-
-    const list = q
-        ? currentQuestions.filter(qq => (qq.content || '').toLowerCase().includes(q) || String(qq.order_no) === rawQ)
-        : currentQuestions;
-
-    if (q && !list.length){
-        box.innerHTML = `<div class="empty-state">Không tìm thấy câu hỏi nào khớp với "${escapeHtml(rawQ)}". <br>Thử rút ngắn từ khoá hoặc kiểm tra lại đúng môn/chương.</div>`;
-        return;
-    }
-    box.innerHTML = (q ? `<div class="hint" style="margin-bottom:8px;">🔎 Tìm thấy ${list.length} câu khớp với "${escapeHtml(rawQ)}"</div>` : '') + list.map(q => `
-        <div class="q-item ${window.__jumpHighlightId === q.id ? 'q-item-highlight' : ''}" data-id="${q.id}" id="qitem-${q.id}">
+    box.innerHTML = currentQuestions.map(q => `
+        <div class="q-item" data-id="${q.id}">
             <div class="q-head"><div><span class="drag-handle" title="Kéo để đổi thứ tự">⋮⋮</span> <b class="qnum">Câu ${q.order_no}.</b> ${escapeHtml(q.content)}</div></div>
             ${q.options.map((o,i)=>`<div class="opt ${i===q.correct_idx?'correct':''}">${String.fromCharCode(65+i)}. ${escapeHtml(o)}</div>`).join('')}
             ${q.explanation ? `<div class="expl">💡 ${escapeHtml(q.explanation)}</div>` : ''}
@@ -5325,11 +5309,6 @@ function renderQuestionList(){
             </div>
         </div>
     `).join('');
-
-    if (window.__jumpHighlightId){
-        const el = document.getElementById('qitem-' + window.__jumpHighlightId);
-        if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
-    }
 }
 async function reorderQuestions(fromId, toId){
     if (!fromId || !toId || fromId === toId) return;
@@ -5639,60 +5618,6 @@ function renderOptionForm(){
         </div>
     `).join('');
 }
-// ---------- Nhảy thẳng từ "Góp ý học viên" (câu hỏi sai) sang đúng câu hỏi cần sửa ----------
-// Dùng subject_id + chapter (khoá chính xác, không phụ thuộc tên hiển thị) lưu kèm trong feedback
-// để tự chọn đúng môn + đúng chương, sau đó lọc theo đoạn trích câu hỏi (question_ref) để khoanh vùng
-// ngay câu bị báo lỗi, tránh phải dò tay từng câu trong danh sách dài.
-async function jumpToFeedbackQuestion(subjectId, chapterCode, questionRef){
-    if (!subjectId || !chapterCode){
-        showMsg('Góp ý này thiếu thông tin môn học/chương nên không thể tự nhảy tới câu hỏi, vui lòng tìm thủ công.', 'err');
-        return;
-    }
-    if (!subjects.length) await loadSubjects();
-    const s = subjects.find(x => x.id === subjectId);
-    if (!s){
-        showMsg('Không tìm thấy môn học này (có thể đã bị xoá/đổi mã).', 'err');
-        return;
-    }
-    currentSubject = s;
-    renderSubjectList();
-    updateContextBar();
-    await loadChapters();
-
-    const ch = chapters.find(c => c.chapter === chapterCode);
-    showSubjectManager();
-    if (!ch){
-        showMsg('Đã chuyển tới môn "' + s.name + '" nhưng không tìm thấy chương/đề cũ (có thể đã đổi mã/bị xoá). Hãy tìm câu hỏi thủ công.', 'err');
-        return;
-    }
-    currentChapter = ch;
-    document.getElementById('chapterList').querySelectorAll('.side-item').forEach(el=>{
-        el.classList.toggle('active', el.querySelector('.code') && el.querySelector('.code').textContent === chapterCode);
-    });
-    updateContextBar();
-    showQuestionsPanel();
-    switchTab('list');
-    await loadQuestions();
-
-    // question_ref có dạng "Câu 13 — <trích đoạn nội dung câu hỏi>" -> tách lấy phần trích đoạn để tìm.
-    const excerpt = (questionRef || '').split('—').slice(1).join('—').trim() || (questionRef || '').trim();
-    const input = document.getElementById('qSearchInput');
-    window.__jumpHighlightId = null;
-
-    if (excerpt && input){
-        input.value = excerpt;
-        const matches = currentQuestions.filter(qq => (qq.content || '').toLowerCase().includes(excerpt.toLowerCase()));
-        if (matches.length === 1) window.__jumpHighlightId = matches[0].id;
-        renderQuestionList();
-        if (!matches.length){
-            showMsg('Đã vào đúng đề nhưng không tìm thấy câu khớp với nội dung góp ý (câu có thể đã được sửa/xoá trước đó). Hãy xem lại danh sách bên dưới.', 'err');
-        }
-    } else if (input){
-        input.value = '';
-        renderQuestionList();
-    }
-}
-
 function startEdit(q){
     if (!currentSubject || currentSubject.id !== q.subject_id){
         const s = subjects.find(s=>s.id===q.subject_id);
@@ -8816,12 +8741,10 @@ async function openFeedbackDetail(id){
                         ${f.page_url ? `<div class="kv-row"><span class="kv-label">Trang gốc</span><span class="kv-val"><a href="${escapeHtml(f.page_url)}" target="_blank" rel="noopener">${escapeHtml(f.page_url)}</a></span></div>` : ''}
                         ${f.email_sent ? `<div class="kv-row"><span class="kv-label">Email phản hồi</span><span class="kv-val"><span class="fb-sent-chip">✉️ Đã gửi lúc ${fmtDate(f.email_sent_at)}</span></span></div>` : ''}
                     </div>
-                    ${(f.type === 'wrong_question' && f.subject_id && f.chapter) ? `
-                    <button class="btn-primary" style="width:100%;margin-top:12px;padding:10px 12px;" onclick="jumpToFeedbackQuestion('${escapeHtml(f.subject_id)}','${escapeHtml(f.chapter)}',${JSON.stringify(f.question_ref || '')})">
-                        🔎 Tìm &amp; sửa câu hỏi này
-                    </button>
-                    <div class="hint" style="margin-top:6px;">Tự động mở đúng môn/chương và lọc sẵn theo nội dung câu học viên báo lỗi.</div>
-                    ` : ''}
+                    ${(f.subject_id && f.chapter) ? `
+                    <button class="fb-jump-btn" onclick="jumpToFeedbackQuestion('${f.id}')">
+                        🔧 Sửa câu hỏi này ${f.question_id ? '(nhảy thẳng, chính xác)' : '(tự dò theo nội dung)'}
+                    </button>` : ''}
                 </div>
 
                 <div class="fb-card">
@@ -8945,6 +8868,76 @@ async function setFeedbackStatus(id, status, silent){
         document.getElementById('fbListView').classList.add('hidden');
         document.getElementById('fbDetailView').classList.remove('hidden');
     }
+}
+
+// Nhảy từ 1 góp ý "câu hỏi sai" thẳng tới đúng môn/chương/câu hỏi trong Quản lý nội dung
+// và mở sẵn form sửa, thay vì bắt admin tự dò tìm thủ công.
+// - Góp ý mới (sau khi có cột question_id): khớp chính xác 100% theo ID thật của câu hỏi.
+// - Góp ý cũ (chưa có question_id, gửi trước khi tính năng này ra mắt): tự dò theo đoạn
+//   trích văn bản lưu trong question_ref, làm phương án dự phòng (có thể không tuyệt đối chính xác).
+async function jumpToFeedbackQuestion(fbId){
+    const f = feedbackCache.find(x => x.id === fbId);
+    if (!f) return;
+    if (!f.subject_id || !f.chapter){
+        showMsg('Góp ý này không có đủ thông tin môn học/chương để nhảy tới câu hỏi.', 'err');
+        return;
+    }
+
+    if (!subjects.length) await loadSubjects();
+    const s = subjects.find(x => x.id === f.subject_id);
+    if (!s){
+        showMsg('Không tìm thấy môn học tương ứng (có thể đã bị xoá).', 'err');
+        return;
+    }
+    currentSubject = s;
+    currentChapter = null;
+    renderSubjectList();
+    updateContextBar();
+
+    await loadChapters();
+    currentChapter = chapters.find(c => c.chapter === f.chapter) || null;
+    if (!currentChapter){
+        showMsg('Không tìm thấy chương/đề tương ứng (có thể đã bị xoá hoặc đổi tên).', 'err');
+        return;
+    }
+    renderChapterList();
+    updateContextBar();
+    showQuestionsPanel();
+    await loadQuestions(); // nạp currentQuestions cho đúng chương này
+
+    let target = null;
+    let approximate = false;
+    if (f.question_id){
+        target = currentQuestions.find(q => q.id === f.question_id);
+    }
+    if (!target){
+        // Dự phòng cho góp ý cũ: dò theo đoạn trích văn bản sau dấu " — " trong question_ref
+        const excerpt = (f.question_ref || '').split(' — ').slice(1).join(' — ').trim().toLowerCase();
+        if (excerpt){
+            const key = excerpt.slice(0, 40);
+            const candidates = currentQuestions.filter(q => (q.content || '').toLowerCase().includes(key));
+            if (candidates.length){ target = candidates[0]; approximate = true; }
+        }
+    }
+
+    if (!target){
+        showMsg('Đã mở đúng môn & chương, nhưng không tự tìm được chính xác câu hỏi — bạn tìm giúp trong danh sách bên dưới.', 'err');
+        return;
+    }
+
+    startEdit(target);
+    setTimeout(() => {
+        const el = document.querySelector(`#qList .q-item[data-id="${target.id}"]`);
+        if (el){
+            el.scrollIntoView({ behavior:'smooth', block:'center' });
+            el.classList.add('q-jump-highlight');
+            setTimeout(() => el.classList.remove('q-jump-highlight'), 2300);
+        }
+    }, 200);
+
+    showMsg(approximate
+        ? 'Đã tự tìm câu gần đúng theo nội dung góp ý (góp ý cũ chưa lưu ID chính xác) — kiểm tra kỹ trước khi lưu.'
+        : 'Đã mở đúng câu hỏi học viên báo lỗi.', approximate ? 'err' : 'ok');
 }
 
 async function saveFeedbackNote(id){

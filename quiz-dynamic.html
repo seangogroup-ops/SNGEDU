@@ -426,6 +426,7 @@
         }
 
         questions = data.map(row => ({
+            id: row.id,
             label: `Câu ${row.order_no}`,
             content: row.content,
             options: row.options,
@@ -473,6 +474,7 @@
             question: `${q.label}${excerpt ? ' — ' + excerpt : ''}`,
             origin: originUrl
         });
+        if (q.id) params.set('question_id', q.id); // ID thật trong DB, giúp admin nhảy thẳng tới đúng câu
         return 'gop-y.html?' + params.toString();
     }
 

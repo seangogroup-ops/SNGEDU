@@ -378,7 +378,7 @@ async function init(){
     qRows.forEach(r => {
         const bucket = byKey[r.chapter];
         if (!bucket) return;
-        bucket.questions.push({ q: r.content, opts: r.options, ci: r.correct_idx, ex: r.explanation || '' });
+        bucket.questions.push({ q: r.content, opts: r.options, ci: r.correct_idx, ex: r.explanation || '', id: r.id });
     });
     database = database.filter(d => d.questions.length > 0);
 
@@ -429,7 +429,7 @@ function shuffleOptions(q){
     shuffle(idx);
     const opts = idx.map(i=>q.opts[i]);
     const ci = idx.indexOf(q.ci);
-    return { q: q.q, opts, ci, ex: q.ex, src: q.src, srcKey: q.srcKey };
+    return { q: q.q, opts, ci, ex: q.ex, src: q.src, srcKey: q.srcKey, id: q.id };
 }
 
 function generateExam(){
@@ -475,6 +475,7 @@ function reportLinkForExam(i){
         question: `Câu ${i+1}${excerpt ? ' — ' + excerpt : ''}`,
         origin: originUrl
     });
+    if (q.id) params.set('question_id', q.id); // ID thật trong DB, giúp admin nhảy thẳng tới đúng câu
     return 'gop-y.html?' + params.toString();
 }
 

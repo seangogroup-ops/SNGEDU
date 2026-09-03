@@ -384,6 +384,7 @@ const qp = new URLSearchParams(location.search);
 const prefSubject = qp.get('subject') || '';
 const prefChapter = qp.get('chapter') || '';
 const prefQuestion = qp.get('question') || '';
+const prefQuestionId = qp.get('question_id') || '';
 const prefType = qp.get('type') || (prefSubject ? 'wrong_question' : '');
 // URL gốc của đúng câu hỏi trên trang làm đề (để admin bấm "Trang gốc" nhảy thẳng tới câu đó),
 // được nút "Báo lỗi câu này" gắn kèm khi mở trang này. Nếu không có (vào từ banner góp ý chung), dùng location.href như cũ.
@@ -537,6 +538,7 @@ async function submitFeedback(){
         subject_name: subjectName,
         chapter,
         question_ref: questionRef,
+        question_id: prefQuestionId ? Number(prefQuestionId) : null,
         image_url: uploadedImageUrl || null
     });
 

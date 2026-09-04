@@ -356,6 +356,16 @@ const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const IMG_BUCKET = 'feedback-images';
+async function r2Upload(bucket, path, file){
+    const form = new FormData();
+    form.append('bucket', bucket);
+    form.append('path', path);
+    form.append('file', file);
+    const { data, error } = await sb.functions.invoke('r2-storage', { body: form });
+    if (error) throw new Error(error.message || 'Lỗi tải file lên.');
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Lỗi tải file lên.');
+    return data; // { ok:true, publicUrl, path }
+}
 
 const themeBtn = document.getElementById('themeToggle');
 themeBtn.addEventListener('click', ()=>{
@@ -485,17 +495,20 @@ async function handleImageFile(file){
     const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
     const path = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}.${ext}`;
 
-    const { error: upErr } = await sb.storage.from(IMG_BUCKET).upload(path, file, { upsert: false });
-    uploadingImage = false;
-    document.getElementById('imgUploadingBox').classList.add('hidden');
-
-    if (upErr){
+    let pubUrl;
+    try{
+        const res = await r2Upload(IMG_BUCKET, path, file);
+        pubUrl = res.publicUrl;
+    }catch(upErr){
+        uploadingImage = false;
+        document.getElementById('imgUploadingBox').classList.add('hidden');
         msg.className = 'msg err'; msg.innerText = 'Tải ảnh thất bại: ' + upErr.message;
         uploadedImageUrl = '';
         return;
     }
-    const { data: pub } = sb.storage.from(IMG_BUCKET).getPublicUrl(path);
-    uploadedImageUrl = pub ? pub.publicUrl : '';
+    uploadingImage = false;
+    document.getElementById('imgUploadingBox').classList.add('hidden');
+    uploadedImageUrl = pubUrl;
 }
 
 // ---------------- Gửi góp ý ----------------

@@ -95,6 +95,27 @@
 
     .foot-hint{ margin-top:6px; font-size:.78rem; color:var(--ink-mute); }
     .foot-hint a{ color:var(--brand); font-weight:600; text-decoration:none; }
+
+    .refund-box{
+        display:flex; align-items:center; gap:14px; text-align:left;
+        background:var(--bg); border:1px solid var(--line); border-radius:16px;
+        padding:16px; margin-bottom:18px;
+    }
+    .refund-ico{
+        width:44px; height:44px; border-radius:12px; flex:0 0 auto;
+        background:var(--grad-brand); display:flex; align-items:center; justify-content:center;
+        color:#fff; font-size:1.05rem;
+    }
+    .refund-txt{ flex:1; min-width:0; }
+    .refund-txt .rt-title{ font-size:.82rem; font-weight:700; color:var(--ink); margin-bottom:2px; }
+    .refund-txt .rt-sub{ font-size:.76rem; color:var(--ink-mute); line-height:1.4; }
+    .refund-link{
+        flex:0 0 auto; display:inline-flex; align-items:center; gap:6px;
+        background:var(--card); border:1px solid var(--line); color:var(--brand);
+        font-weight:700; font-size:.82rem; text-decoration:none;
+        padding:8px 14px; border-radius:10px; white-space:nowrap;
+    }
+    .refund-link i{ font-size:.78rem; }
 </style>
 </head>
 <body data-page="maintenance" data-page-label="Bảo trì">
@@ -121,7 +142,16 @@
 
         <div class="target-date">Dự kiến hoạt động trở lại: <b>20/09/2026</b></div>
 
-        <div class="foot-hint">Cần hỗ trợ gấp? <a href="lien-he.html">Liên hệ Admin</a></div>
+        <div class="refund-box">
+            <div class="refund-ico"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+            <div class="refund-txt">
+                <div class="rt-title">Cần hoàn tiền trong lúc bảo trì?</div>
+                <div class="rt-sub">Liên hệ Zalo/SĐT Admin: <b>0825 160 035</b></div>
+            </div>
+            <a class="refund-link" href="https://zalo.me/0825160035" target="_blank" rel="noopener">
+                <i class="fa-solid fa-comment-dots"></i> Nhắn Zalo
+            </a>
+        </div>
     </div>
 
     <script>

@@ -6007,6 +6007,34 @@ const DOC_ALLOWED_EXT = ['pdf','doc','docx'];
 const DOC_MAX_SIZE = 100 * 1024 * 1024; // 100MB
 const DOC_IMAGE_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
+// ---------------- Lưu trữ file trên Cloudflare R2 (thay cho Supabase Storage) ----------------
+// Lý do: Supabase Storage tính egress theo GB tải xuống, dễ vượt hạn mức gói Free khi
+// nhiều học viên cùng tải tài liệu. R2 miễn phí hoàn toàn egress, chỉ đổi nơi lưu file,
+// database (bảng questions, feedback, ctv...) vẫn ở Supabase như cũ, không đổi gì khác.
+// Việc upload/xoá thật sự diễn ra ở Edge Function "r2-storage" (giữ khoá bí mật an toàn
+// phía server) — ở đây chỉ là các hàm gọi tới function đó.
+const R2_PUBLIC_URLS = {
+    'tai-lieu': 'https://pub-1d650009eedc4c9bb38c2a0a5713407f.r2.dev',
+    'feedback-images': 'https://pub-b6c3ac33d32c483d9532578f9ed21303.r2.dev',
+    'ctv-documents': 'https://pub-04d67e116ce44411888b66104e6c614e.r2.dev'
+};
+async function r2Upload(bucket, path, file){
+    const form = new FormData();
+    form.append('bucket', bucket);
+    form.append('path', path);
+    form.append('file', file);
+    const { data, error } = await sb.functions.invoke('r2-storage', { body: form });
+    if (error) throw new Error(error.message || 'Lỗi tải file lên.');
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Lỗi tải file lên.');
+    return data; // { ok:true, publicUrl, path }
+}
+async function r2Delete(bucket, path){
+    if (!path) return;
+    try{
+        await sb.functions.invoke('r2-storage', { body: { action:'delete', bucket, path } });
+    }catch(e){ /* best-effort — không chặn thao tác của admin nếu xoá file cũ lỗi */ }
+}
+
 registerContentList('doc', 'doc_content', null, {
     label:'Tài liệu', icon:'fa-solid fa-file-lines', color:'green', defaultIcon:'fa-solid fa-file-lines',
     hideIconColor:true, // icon/màu không được dùng ở thẻ tài liệu ngoài trang chủ -> ẩn để đỡ rối
@@ -6784,10 +6812,9 @@ function fileNameFromUrl(url){
 }
 function storagePathFromPublicUrl(url, bucket){
     if (!url) return null;
-    const marker = '/object/public/' + bucket + '/';
-    const idx = url.indexOf(marker);
-    if (idx === -1) return null;
-    try{ return decodeURIComponent(url.slice(idx + marker.length)); }catch(e){ return url.slice(idx + marker.length); }
+    const base = R2_PUBLIC_URLS[bucket];
+    if (!base || !url.startsWith(base + '/')) return null;
+    try{ return decodeURIComponent(url.slice(base.length + 1)); }catch(e){ return url.slice(base.length + 1); }
 }
 function resetContentUploadUI(subKey, existingLink, existingImage){
     const fileInput = document.getElementById('cmFile_' + subKey);
@@ -6834,23 +6861,25 @@ async function onContentImageSelected(subKey){
     const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const path = subKey + '-covers/' + Date.now() + '-' + safeName;
 
-    const { error: upErr } = await sb.storage.from(DOC_BUCKET).upload(path, file, { upsert: false });
-    if (upErr){
+    let pubUrl;
+    try{
+        const res = await r2Upload(DOC_BUCKET, path, file);
+        pubUrl = res.publicUrl;
+    }catch(upErr){
         if (nameEl) nameEl.textContent = '';
         showMsg('Lỗi tải ảnh lên: ' + upErr.message, 'err');
         imgInput.value = '';
         return;
     }
 
-    const { data: pub } = sb.storage.from(DOC_BUCKET).getPublicUrl(path);
-    document.getElementById('cmImageUrl_' + subKey).value = pub.publicUrl;
+    document.getElementById('cmImageUrl_' + subKey).value = pubUrl;
     if (nameEl) nameEl.textContent = '🖼️ ' + file.name;
     const removeBtn = document.getElementById('cmImageRemoveBtn_' + subKey);
     if (removeBtn) removeBtn.style.display = '';
 
     if (oldImage){
         const oldPath = storagePathFromPublicUrl(oldImage, DOC_BUCKET);
-        if (oldPath) sb.storage.from(DOC_BUCKET).remove([oldPath]).catch(()=>{});
+        if (oldPath) r2Delete(DOC_BUCKET, oldPath);
     }
 }
 function removeContentImage(subKey){
@@ -6865,7 +6894,7 @@ function removeContentImage(subKey){
     if (removeBtn) removeBtn.style.display = 'none';
     if (oldImage){
         const oldPath = storagePathFromPublicUrl(oldImage, DOC_BUCKET);
-        if (oldPath) sb.storage.from(DOC_BUCKET).remove([oldPath]).catch(()=>{});
+        if (oldPath) r2Delete(DOC_BUCKET, oldPath);
     }
 }
 async function onContentFileSelected(subKey){
@@ -6896,16 +6925,18 @@ async function onContentFileSelected(subKey){
     const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const path = subKey + '/' + Date.now() + '-' + safeName;
 
-    const { error: upErr } = await sb.storage.from(DOC_BUCKET).upload(path, file, { upsert: false });
-    if (upErr){
+    let pubUrl2;
+    try{
+        const res = await r2Upload(DOC_BUCKET, path, file);
+        pubUrl2 = res.publicUrl;
+    }catch(upErr){
         if (nameEl) nameEl.textContent = '';
         showMsg('Lỗi tải file lên: ' + upErr.message, 'err');
         fileInput.value = '';
         return;
     }
 
-    const { data: pub } = sb.storage.from(DOC_BUCKET).getPublicUrl(path);
-    document.getElementById('cmLink_' + subKey).value = pub.publicUrl;
+    document.getElementById('cmLink_' + subKey).value = pubUrl2;
     if (nameEl) nameEl.textContent = '📄 ' + file.name;
     if (hintEl){ hintEl.style.color = 'var(--green)'; hintEl.textContent = '✔ Đã tải lên. Bấm "Lưu" để hoàn tất.'; }
     updateContentPreview(subKey);
@@ -6913,7 +6944,7 @@ async function onContentFileSelected(subKey){
     // Xóa file cũ trên storage nếu đang thay thế (best-effort, không chặn UI)
     if (oldLink){
         const oldPath = storagePathFromPublicUrl(oldLink, DOC_BUCKET);
-        if (oldPath) sb.storage.from(DOC_BUCKET).remove([oldPath]).catch(()=>{});
+        if (oldPath) r2Delete(DOC_BUCKET, oldPath);
     }
 }
 
@@ -7440,11 +7471,11 @@ function deleteContentItem(subKey, id){
         async () => {
             if (cfg.meta.upload && item && item.link){
                 const path = storagePathFromPublicUrl(item.link, DOC_BUCKET);
-                if (path) sb.storage.from(DOC_BUCKET).remove([path]).catch(()=>{});
+                if (path) r2Delete(DOC_BUCKET, path);
             }
             if ((cfg.meta.upload || cfg.meta.imageField) && item && item.image){
                 const imgPath = storagePathFromPublicUrl(item.image, DOC_BUCKET);
-                if (imgPath) sb.storage.from(DOC_BUCKET).remove([imgPath]).catch(()=>{});
+                if (imgPath) r2Delete(DOC_BUCKET, imgPath);
             }
             cfg.items = cfg.items.filter(x => String(x.id) !== String(id));
             renderContentList(subKey);
@@ -8014,20 +8045,24 @@ async function onAdminContactAvatarSelected(){
     const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const path = 'admin-contact/' + Date.now() + '-' + safeName;
 
-    const { error: upErr } = await sb.storage.from(DOC_BUCKET).upload(path, file, { upsert:false });
-    if (upErr){ nameEl.textContent = ''; showMsg('Lỗi tải ảnh lên: ' + upErr.message, 'err'); input.value=''; return; }
+    let pubUrl3;
+    try{
+        const res = await r2Upload(DOC_BUCKET, path, file);
+        pubUrl3 = res.publicUrl;
+    }catch(upErr){
+        nameEl.textContent = ''; showMsg('Lỗi tải ảnh lên: ' + upErr.message, 'err'); input.value=''; return;
+    }
 
-    const { data: pub } = sb.storage.from(DOC_BUCKET).getPublicUrl(path);
-    document.getElementById('acAvatarUrl').value = pub.publicUrl;
+    document.getElementById('acAvatarUrl').value = pubUrl3;
     const avatarImg = document.getElementById('acAvatarPreviewImg');
-    avatarImg.src = pub.publicUrl; avatarImg.classList.remove('hidden');
+    avatarImg.src = pubUrl3; avatarImg.classList.remove('hidden');
     document.getElementById('acAvatarPreviewIcon').classList.add('hidden');
     nameEl.textContent = '🖼️ ' + file.name;
     document.getElementById('acAvatarRemoveBtn').style.display = '';
 
     if (oldAvatar){
         const oldPath = storagePathFromPublicUrl(oldAvatar, DOC_BUCKET);
-        if (oldPath) sb.storage.from(DOC_BUCKET).remove([oldPath]).catch(()=>{});
+        if (oldPath) r2Delete(DOC_BUCKET, oldPath);
     }
 }
 function removeAdminContactAvatar(){
@@ -8040,7 +8075,7 @@ function removeAdminContactAvatar(){
     document.getElementById('acAvatarPreviewIcon').classList.remove('hidden');
     if (oldAvatar){
         const oldPath = storagePathFromPublicUrl(oldAvatar, DOC_BUCKET);
-        if (oldPath) sb.storage.from(DOC_BUCKET).remove([oldPath]).catch(()=>{});
+        if (oldPath) r2Delete(DOC_BUCKET, oldPath);
     }
 }
 async function saveAdminContact(){

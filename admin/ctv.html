@@ -2,504 +2,630 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<!-- Kiểm tra chế độ bảo trì (Admin > Bảo trì) trước khi hiện trang -->
+<script src="../frontend/maintenance-check.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quản lý CTV · SNG EDU Admin</title>
-<meta name="robots" content="noindex, nofollow, noarchive">
-<link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link rel="preconnect" href="https://sakombvgdobdehbvsfjw.supabase.co">
+<script>
+    try{
+        var savedTheme = localStorage.getItem('sng-theme');
+        if(savedTheme === 'dark' || savedTheme === 'light'){
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }else{
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    }catch(e){}
+</script>
+<title>Kênh Cộng tác viên · SNG EDU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<script src="../frontend/pwa-register.js" defer></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
-:root{
-    --bg:#f3f4fa; --white:#ffffff; --border:#e4e6f1; --text:#181c30; --gray:#6d7286;
-    --accent:#4f6bff; --accent-dark:#3c56e6; --accent-soft:#e7eaff;
-    --green:#21983f; --green-bg:#eff9f1; --red:#dc3e26; --red-bg:#fef4f2; --amber:#b46a09; --amber-bg:#fff8ec;
-    --radius:12px; --radius-sm:10px;
-    --shadow-sm:0 2px 8px rgba(38,30,14,.06); --shadow-md:0 10px 28px rgba(38,30,14,.10);
-}
-*{ box-sizing:border-box; }
-body{ margin:0; font-family:'Be Vietnam Pro',-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
-button{ cursor:pointer; border:none; border-radius:var(--radius-sm); font-weight:600; font-family:inherit; }
-input,select,textarea{ width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.88rem; font-family:inherit; background:var(--white); color:var(--text); }
-input:focus,select:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
-.hidden{ display:none !important; }
-.wrap{ max-width:1180px; margin:0 auto; padding:22px 18px 60px; }
-.topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; gap:12px; flex-wrap:wrap; }
-.topbar a.back{ display:inline-flex; align-items:center; gap:8px; color:var(--gray); text-decoration:none; font-weight:700; font-size:.85rem; }
-.topbar a.back:hover{ color:var(--accent); }
-h1{ font-size:1.3rem; margin:0 0 4px; font-weight:800; }
-p.sub{ color:var(--gray); font-size:.85rem; margin:0 0 20px; }
-.card{ background:var(--white); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); }
+    :root{
+        --bg:        #eef2f9;
+        --card:      #ffffff;
+        --line:      #dde3ef;
+        --ink:       #131b2e;
+        --ink-soft:  #4d5673;
+        --ink-mute:  #8791a8;
+        --green:     #17b26a;
+        --green-bg:  #e7f9f0;
+        --red:       #e5484d;
+        --red-bg:    #fdeeee;
+        --amber:     #b3760a;
+        --amber-bg:  #fdf3e0;
+        --brand:     #0b2e6b;
+        --brand2:    #14509e;
+        --brand-bg:  #e6edfb;
+        --shadow:    0 1px 2px rgba(20,30,60,.05), 0 8px 24px -12px rgba(20,30,60,.12);
+    }
+    html[data-theme="dark"]{
+        --bg:        #14151c;
+        --card:      #1c1e28;
+        --line:      #2c2f3c;
+        --ink:       #f0f1f6;
+        --ink-soft:  #a2a7ba;
+        --ink-mute:  #6f7488;
+        --green:     #2ed392;
+        --green-bg:  #163a2c;
+        --red:       #ff7875;
+        --red-bg:    #3a2020;
+        --amber:     #e0aa3e;
+        --amber-bg:  #3a2f16;
+        --brand:     #2c62b0;
+        --brand2:    #4a86d6;
+        --brand-bg:  #17263f;
+        --shadow:    0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+    *{ box-sizing:border-box; }
+    body{
+        margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+        font-family:'Be Vietnam Pro', sans-serif;
+        transition:background .3s ease, color .3s ease;
+    }
+    .wrap{ max-width:1080px; margin:0 auto; padding:22px 18px 60px; }
+    .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:22px; }
+    .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-weight:800; }
+    .brand-badge{ width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,var(--brand),var(--brand2)); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; }
+    .top-actions{ display:flex; gap:10px; align-items:center; }
+    .icon-btn{ width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:var(--card); color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .icon-btn:hover{ color:var(--brand); background:var(--brand-bg); }
 
-.summary-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
-@media (max-width:800px){ .summary-grid{ grid-template-columns:repeat(2,1fr); } }
-.summary-card{ padding:16px 18px; }
-.summary-card .val{ font-size:1.4rem; font-weight:800; }
-.summary-card .lbl{ font-size:.78rem; color:var(--gray); font-weight:600; margin-top:2px; }
+    h1{ font-size:1.35rem; margin:0 0 4px; font-weight:800; display:flex; align-items:center; gap:10px; }
+    p.sub{ color:var(--ink-mute); font-size:.87rem; margin:0 0 22px; line-height:1.55; max-width:720px; }
 
-.create-card{ padding:18px 20px; margin-bottom:20px; }
-.create-card .t{ font-weight:800; font-size:.98rem; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-.form-row{ display:grid; grid-template-columns:1.4fr 1fr .8fr 1.4fr auto; gap:10px; align-items:end; }
-@media (max-width:900px){ .form-row{ grid-template-columns:1fr 1fr; } }
-.form-row label{ font-weight:700; font-size:.72rem; color:var(--gray); text-transform:uppercase; letter-spacing:.03em; display:block; margin-bottom:5px; }
-.btn{ padding:10px 16px; border-radius:var(--radius-sm); font-weight:700; font-size:.85rem; border:none; display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
-.btn-primary{ background:var(--accent); color:#fff; }
-.btn-primary:hover{ background:var(--accent-dark); }
-.btn-ghost{ background:var(--white); border:1px solid var(--border); color:var(--text); }
-.btn-ghost:hover{ background:var(--accent-soft); color:var(--accent); }
-.btn-sm{ padding:7px 12px; font-size:.78rem; border-radius:8px; }
-.btn-danger-ghost{ background:var(--red-bg); color:var(--red); }
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); }
 
-table{ width:100%; border-collapse:collapse; font-size:.85rem; }
-th{ text-align:left; padding:11px 14px; color:var(--gray); font-weight:700; font-size:.72rem; text-transform:uppercase; letter-spacing:.02em; border-bottom:1px solid var(--border); white-space:nowrap; }
-td{ padding:12px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
-tr:last-child td{ border-bottom:none; }
-.mono{ font-family:ui-monospace,Consolas,monospace; font-size:.82rem; background:var(--bg); padding:3px 8px; border-radius:6px; }
-.badge{ display:inline-flex; padding:3px 10px; border-radius:999px; font-size:.74rem; font-weight:700; }
-.badge.on{ background:var(--green-bg); color:var(--green); }
-.badge.off{ background:var(--red-bg); color:var(--red); }
-.row-actions{ display:flex; gap:6px; flex-wrap:wrap; }
-.empty-state{ padding:30px; text-align:center; color:var(--gray); font-size:.86rem; }
-.msg{ font-size:.82rem; padding:10px 12px; border-radius:10px; margin-bottom:14px; display:none; font-weight:600; }
-.msg.err{ display:block; background:var(--red-bg); color:var(--red); }
-.msg.ok{ display:block; background:var(--green-bg); color:var(--green); }
+    .link-card{ padding:18px 20px; margin-bottom:20px; }
+    .link-card .lbl{ font-size:.78rem; font-weight:700; color:var(--ink-mute); text-transform:uppercase; letter-spacing:.03em; margin-bottom:8px; }
+    .link-row{ display:flex; gap:8px; flex-wrap:wrap; }
+    .link-input{ flex:1; min-width:220px; padding:11px 13px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font-size:.88rem; font-family:inherit; }
+    .btn{ padding:11px 16px; border-radius:10px; border:none; font-weight:700; font-size:.86rem; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
+    .btn-primary{ background:linear-gradient(135deg,var(--brand),var(--brand2)); color:#fff; }
+    .btn-primary:hover{ opacity:.92; }
+    .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); }
+    .btn-ghost:hover{ background:var(--brand-bg); color:var(--brand); }
+    .commission-tag{ display:inline-flex; align-items:center; gap:6px; margin-top:12px; font-size:.82rem; color:var(--ink-soft); background:var(--brand-bg); color:var(--brand); padding:6px 12px; border-radius:999px; font-weight:700; }
 
-#loginScreen{ min-height:100vh; display:flex; align-items:center; justify-content:center; }
-#loginScreen .box{ width:340px; padding:30px; text-align:center; }
-#loginScreen input{ margin-bottom:10px; }
-#authLoading{ min-height:100vh; display:flex; align-items:center; justify-content:center; color:var(--gray); }
+    .cards-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+    @media (max-width:800px){ .cards-grid{ grid-template-columns:repeat(2,1fr); } }
+    .stat-card{ padding:16px 18px; display:flex; flex-direction:column; gap:6px; }
+    .stat-card .top-line{ display:flex; align-items:center; justify-content:space-between; }
+    .stat-card .ico{ width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:.92rem; }
+    .stat-card .val{ font-size:1.5rem; font-weight:800; }
+    .stat-card .lbl{ font-size:.78rem; color:var(--ink-mute); font-weight:600; }
+    .ico.blue{ background:var(--brand-bg); color:var(--brand); }
+    .ico.green{ background:var(--green-bg); color:var(--green); }
+    .ico.amber{ background:var(--amber-bg); color:var(--amber); }
 
-.editable-value{ display:flex; align-items:center; gap:6px; }
-.editable-value input{ width:70px; padding:6px 8px; font-size:.82rem; }
-.editable-value select{ width:auto; padding:6px 8px; font-size:.82rem; }
+    .section-title{ font-size:1rem; font-weight:800; margin:26px 0 12px; display:flex; align-items:center; gap:8px; }
 
-.list-item{ border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:10px; }
-.list-item:last-child{ margin-bottom:0; }
-.li-head{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start; margin-bottom:8px; }
-.li-title{ font-weight:700; font-size:.92rem; }
-.li-sub{ color:var(--gray); font-size:.78rem; margin-top:2px; }
-.li-meta{ display:flex; gap:16px; flex-wrap:wrap; font-size:.82rem; margin:8px 0; }
-.li-meta span b{ display:block; color:var(--gray); font-size:.7rem; font-weight:700; text-transform:uppercase; }
-.li-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
-.badge.pending{ background:var(--amber-bg); color:var(--amber); }
-.badge.approved,.badge.paid{ background:var(--green-bg); color:var(--green); }
-.badge.rejected{ background:var(--red-bg); color:var(--red); }
-.badge.doctype-free{ background:var(--green-bg); color:var(--green); }
-.badge.doctype-paid{ background:var(--accent-soft); color:var(--accent); }
-.li-thumb{ width:52px; height:52px; border-radius:9px; object-fit:cover; border:1px solid var(--border); flex-shrink:0; }
-.li-head-left{ display:flex; gap:12px; align-items:flex-start; }
-.doc-type-toggle-sm{ display:flex; gap:6px; }
-.doc-type-toggle-sm .opt{ padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:.78rem; font-weight:700; cursor:pointer; color:var(--gray); }
-.doc-type-toggle-sm .opt.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
-.doc-type-toggle-sm .opt.active.is-free{ border-color:var(--green); color:var(--green); background:var(--green-bg); }
-.wd-tab-active{ background:var(--accent) !important; color:#fff !important; }
-.review-row{ display:flex; gap:8px; align-items:end; flex-wrap:wrap; margin-top:8px; }
-.review-row div{ display:flex; flex-direction:column; gap:4px; }
-.review-row label{ font-size:.72rem; font-weight:700; color:var(--gray); }
-.review-row input{ width:120px; padding:7px 9px; font-size:.82rem; }
+    .chart-card{ padding:18px 20px 8px; margin-bottom:20px; }
+    .chart-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+    .chart-head .t{ font-weight:700; font-size:.92rem; }
+    .chart-bars{ display:flex; align-items:flex-end; gap:8px; height:160px; }
+    .bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+    .bar{ width:100%; max-width:26px; border-radius:5px 5px 0 0; background:var(--brand-bg); position:relative; min-height:2px; transition:height .3s ease; }
+    .bar.has-data{ background:linear-gradient(180deg,var(--brand2),var(--brand)); }
+    .bar-day{ font-size:.68rem; color:var(--ink-mute); margin-top:6px; }
+
+    table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+    th{ text-align:left; padding:10px 14px; color:var(--ink-mute); font-weight:700; font-size:.76rem; text-transform:uppercase; letter-spacing:.02em; border-bottom:1px solid var(--line); }
+    td{ padding:12px 14px; border-bottom:1px solid var(--line); color:var(--ink); }
+    tr:last-child td{ border-bottom:none; }
+    .badge{ display:inline-flex; padding:3px 10px; border-radius:999px; font-size:.74rem; font-weight:700; }
+    .badge.credited{ background:var(--green-bg); color:var(--green); }
+    .badge.cancelled{ background:var(--red-bg); color:var(--red); }
+    .empty-state{ padding:26px; text-align:center; color:var(--ink-mute); font-size:.86rem; }
+
+    .gate{ max-width:460px; margin:60px auto; text-align:center; padding:34px 26px; }
+    .gate i{ font-size:2rem; color:var(--brand); margin-bottom:14px; }
+    .gate h2{ margin:0 0 8px; font-size:1.15rem; }
+    .gate p{ color:var(--ink-mute); font-size:.88rem; line-height:1.6; margin:0 0 18px; }
+    .hidden{ display:none !important; }
+    .msg-toast{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--card); padding:10px 18px; border-radius:999px; font-size:.84rem; font-weight:600; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease; z-index:50; }
+    .msg-toast.show{ opacity:1; transform:translateX(-50%) translateY(-4px); }
+    .msg{ font-size:.82rem; padding:10px 12px; border-radius:10px; margin-bottom:12px; font-weight:600; }
+    .msg.err{ background:var(--red-bg); color:var(--red); }
+    .msg.ok{ background:var(--green-bg); color:var(--green); }
+    .doc-item{ border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+    .doc-item:last-child{ margin-bottom:0; }
+    .doc-item .row{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; }
+    .doc-item .row-left{ display:flex; gap:12px; align-items:flex-start; }
+    .doc-item .thumb{ width:52px; height:52px; border-radius:9px; object-fit:cover; border:1px solid var(--line); flex-shrink:0; }
+    .doc-item .title{ font-weight:700; font-size:.9rem; }
+    .doc-item .meta{ color:var(--ink-mute); font-size:.78rem; margin-top:3px; }
+    .badge.pending{ background:var(--amber-bg); color:var(--amber); }
+    .badge.approved{ background:var(--green-bg); color:var(--green); }
+    .badge.rejected{ background:var(--red-bg); color:var(--red); }
+    .badge.free{ background:var(--green-bg); color:var(--green); }
+    .badge.paid{ background:var(--brand-bg); color:var(--brand); }
+
+    .seg-toggle{ display:flex; gap:8px; }
+    .seg-opt{ flex:1; padding:9px 12px; border:1px solid var(--line); border-radius:10px; text-align:center; font-size:.84rem; font-weight:700; cursor:pointer; color:var(--ink-soft); background:var(--bg); display:flex; align-items:center; justify-content:center; gap:6px; transition:border-color .15s ease, color .15s ease, background .15s ease; }
+    .seg-opt.active{ border-color:var(--brand); color:var(--brand); background:var(--brand-bg); }
+    .seg-opt.active.free-active{ border-color:var(--green); color:var(--green); background:var(--green-bg); }
 </style>
 </head>
-<body>
+<body data-page="ctv-dashboard" data-page-label="Kênh cộng tác viên">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
-<div id="authLoading"><i class="fa-solid fa-circle-notch fa-spin" style="margin-right:8px;"></i> Đang tải...</div>
+<div id="authLoading" style="min-height:100vh;display:flex;align-items:center;justify-content:center;color:var(--ink-mute);font-size:.9rem;">
+    <i class="fa-solid fa-circle-notch fa-spin" style="margin-right:8px;"></i> Đang tải...
+</div>
 
-<div id="loginScreen" class="hidden">
-    <div class="card box">
-        <h1 style="margin-bottom:14px;"><i class="fa-solid fa-lock"></i> Khu vực Admin</h1>
-        <input type="email" id="loginEmail" placeholder="Email admin">
-        <input type="password" id="loginPass" placeholder="Mật khẩu">
-        <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="doLogin()">Đăng nhập</button>
-        <div id="loginMsg" style="color:var(--red);font-size:.82rem;margin-top:10px;"></div>
+<div id="gateScreen" class="wrap hidden">
+    <div class="card gate">
+        <i class="fa-solid fa-lock"></i>
+        <h2 id="gateTitle">Bạn cần đăng nhập</h2>
+        <p id="gateText">Đăng nhập để xem link giới thiệu và số liệu hoa hồng của bạn.</p>
+        <button class="btn btn-primary" id="gateBtn" style="margin:0 auto;">Đăng nhập ngay</button>
     </div>
 </div>
 
 <div id="shell" class="wrap hidden">
     <div class="topbar">
-        <a href="index.html" class="back"><i class="fa-solid fa-arrow-left"></i> Quay lại trang Admin</a>
-        <button class="btn btn-ghost btn-sm" onclick="sb.auth.signOut().then(()=>location.reload())"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
-    </div>
-
-    <h1><i class="fa-solid fa-handshake" style="color:var(--accent);"></i> Quản lý Cộng tác viên (CTV)</h1>
-    <p class="sub">Cấp quyền CTV cho tài khoản theo email, mỗi CTV có 1 link giới thiệu + mức hoa hồng riêng. Hoa hồng được cộng thẳng vào số dư ví của CTV mỗi khi có đơn hàng thanh toán thành công qua link của họ.</p>
-
-    <div class="summary-grid">
-        <div class="card summary-card"><div class="val" id="sumCtv">0</div><div class="lbl">Tổng số CTV</div></div>
-        <div class="card summary-card"><div class="val" id="sumClicks">0</div><div class="lbl">Tổng lượt click</div></div>
-        <div class="card summary-card"><div class="val" id="sumOrders">0</div><div class="lbl">Đơn hàng qua CTV</div></div>
-        <div class="card summary-card"><div class="val" id="sumCommission">0đ</div><div class="lbl">Tổng hoa hồng đã cộng</div></div>
-    </div>
-
-    <div class="card create-card">
-        <div class="t"><i class="fa-solid fa-user-plus"></i> Thêm CTV mới</div>
-        <div id="createMsg" class="msg"></div>
-        <div class="form-row">
-            <div>
-                <label>Email tài khoản</label>
-                <input type="email" id="newEmail" placeholder="vd: nguoiban@email.com">
-            </div>
-            <div>
-                <label>Mã link (để trống = tự sinh)</label>
-                <input type="text" id="newCode" placeholder="VD: SNG-HAPHONG">
-            </div>
-            <div>
-                <label>Loại hoa hồng</label>
-                <select id="newType"><option value="percent">% / đơn</option><option value="fixed">Cố định / đơn</option></select>
-            </div>
-            <div>
-                <label>Mức hoa hồng</label>
-                <input type="number" id="newValue" placeholder="VD: 10 (=10%) hoặc 20000" min="0" step="any">
-            </div>
-            <button class="btn btn-primary" onclick="createCtv()"><i class="fa-solid fa-plus"></i> Tạo CTV</button>
+        <a href="/index.html" class="brand"><span class="brand-badge">S</span> SNG EDU</a>
+        <div class="top-actions">
+            <button class="icon-btn" onclick="toggleTheme()" title="Đổi giao diện"><i class="fa-solid fa-moon"></i></button>
+            <button class="btn btn-ghost" onclick="signOut()"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
         </div>
     </div>
 
-    <div class="card" style="overflow-x:auto; margin-bottom:24px;">
+    <h1><i class="fa-solid fa-handshake" style="color:var(--brand);"></i> Kênh Cộng tác viên</h1>
+    <p class="sub">Chia sẻ link giới thiệu riêng của bạn cho học sinh/khách hàng. Mỗi lần có người thanh toán qua link này, bạn sẽ tự động được cộng hoa hồng vào số dư ví.</p>
+
+    <div class="card link-card">
+        <div class="lbl">Link giới thiệu của bạn</div>
+        <div class="link-row">
+            <input type="text" id="refLink" class="link-input" readonly>
+            <button class="btn btn-primary" onclick="copyRefLink()"><i class="fa-regular fa-copy"></i> Sao chép</button>
+        </div>
+        <div id="commissionTag" class="commission-tag"><i class="fa-solid fa-percent"></i> <span id="commissionText">—</span></div>
+    </div>
+
+    <div class="cards-grid">
+        <div class="card stat-card">
+            <div class="top-line"><div class="ico blue"><i class="fa-solid fa-mouse-pointer"></i></div></div>
+            <div class="val" id="statClicks">0</div>
+            <div class="lbl">Lượt click vào link</div>
+        </div>
+        <div class="card stat-card">
+            <div class="top-line"><div class="ico blue"><i class="fa-solid fa-user-check"></i></div></div>
+            <div class="val" id="statVisitors">0</div>
+            <div class="lbl">Người click (duy nhất)</div>
+        </div>
+        <div class="card stat-card">
+            <div class="top-line"><div class="ico green"><i class="fa-solid fa-bag-shopping"></i></div></div>
+            <div class="val" id="statOrders">0</div>
+            <div class="lbl">Đơn hàng thành công</div>
+        </div>
+        <div class="card stat-card">
+            <div class="top-line"><div class="ico amber"><i class="fa-solid fa-sack-dollar"></i></div></div>
+            <div class="val" id="statCommission">0đ</div>
+            <div class="lbl">Tổng hoa hồng đã nhận</div>
+        </div>
+    </div>
+
+    <div class="card link-card" style="display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+        <div>
+            <div class="lbl" style="margin-bottom:2px;">Số dư ví hiện tại</div>
+            <div style="font-size:1.4rem; font-weight:800;" id="walletBalance">0đ</div>
+        </div>
+        <button class="btn btn-primary" onclick="openWithdrawModal()"><i class="fa-solid fa-money-bill-transfer"></i> Yêu cầu rút tiền</button>
+    </div>
+
+    <div class="chart-card card" style="padding:18px 20px;">
+        <div class="chart-head"><div class="t">Lịch sử yêu cầu rút tiền</div></div>
+        <div id="withdrawList"></div>
+    </div>
+
+    <div class="card chart-card">
+        <div class="chart-head"><div class="t">Lượt click 14 ngày gần đây</div><div id="chartTotal" style="font-weight:800;"></div></div>
+        <div class="chart-bars" id="chartBars"></div>
+    </div>
+
+    <div class="section-title"><i class="fa-solid fa-list" style="color:var(--brand);"></i> Lịch sử hoa hồng</div>
+    <div class="card" style="overflow-x:auto;">
         <table>
-            <thead>
-                <tr>
-                    <th>CTV</th><th>Link</th><th>Hoa hồng</th><th>Click</th><th>Đơn</th><th>Doanh thu</th><th>Hoa hồng nhận</th><th>Trạng thái</th><th></th>
-                </tr>
-            </thead>
-            <tbody id="ctvRows"></tbody>
+            <thead><tr><th>Ngày</th><th>Mã đơn hàng</th><th>Nguồn</th><th>Giá trị đơn</th><th>Hoa hồng</th><th>Trạng thái</th></tr></thead>
+            <tbody id="commissionRows"></tbody>
         </table>
-        <div id="ctvEmpty" class="empty-state hidden">Chưa có CTV nào. Thêm CTV đầu tiên ở form phía trên.</div>
+        <div id="commissionEmpty" class="empty-state hidden">Chưa có hoa hồng nào. Chia sẻ link giới thiệu để bắt đầu nhận hoa hồng!</div>
     </div>
 
-    <div class="card create-card" style="margin-bottom:24px;">
-        <div class="t"><i class="fa-solid fa-file-import"></i> Tài liệu CTV nộp — chờ duyệt</div>
-        <div id="docTabs" style="display:flex;gap:8px;margin-bottom:14px;">
-            <button class="btn btn-ghost btn-sm" data-status="pending" onclick="loadDocSubmissions('pending')">Chờ duyệt</button>
-            <button class="btn btn-ghost btn-sm" data-status="approved" onclick="loadDocSubmissions('approved')">Đã duyệt</button>
-            <button class="btn btn-ghost btn-sm" data-status="rejected" onclick="loadDocSubmissions('rejected')">Đã từ chối</button>
+    <div class="section-title"><i class="fa-solid fa-file-arrow-up" style="color:var(--brand);"></i> Đăng tài liệu để bán</div>
+    <p class="sub" style="margin-top:-6px;">Dán link tài liệu của bạn (Google Drive, Dropbox...). Admin sẽ xem, chốt giá bán và % hoa hồng bạn nhận mỗi lượt bán, rồi mới đăng công khai — tài liệu chưa duyệt sẽ không hiển thị cho ai khác.</p>
+    <div class="card link-card" style="margin-bottom:20px;">
+        <div id="docUploadMsg" class="msg" style="display:none;"></div>
+        <div style="display:grid; gap:14px;">
+            <div>
+                <div class="lbl">Loại tài liệu</div>
+                <div class="seg-toggle" id="docTypeToggle">
+                    <div class="seg-opt" data-type="free" onclick="pickDocType('free')"><i class="fa-solid fa-gift"></i> Miễn phí</div>
+                    <div class="seg-opt active" data-type="paid" onclick="pickDocType('paid')"><i class="fa-solid fa-lock"></i> Trả phí</div>
+                </div>
+            </div>
+            <div id="docPriceWrap">
+                <div class="lbl">Giá đề xuất (đ)</div>
+                <input type="number" id="docPrice" class="link-input" min="0" placeholder="VD: 20000">
+                <div style="color:var(--ink-mute); font-size:.78rem; margin-top:5px;">Admin sẽ chốt lại giá bán cuối cùng khi duyệt, có thể khác giá bạn đề xuất.</div>
+            </div>
+            <div>
+                <div class="lbl">Tên tài liệu</div>
+                <input type="text" id="docTitle" class="link-input" placeholder="VD: Bộ đề ôn thi HK1 Toán 12">
+            </div>
+            <div>
+                <div class="lbl">Mô tả ngắn</div>
+                <input type="text" id="docDesc" class="link-input" placeholder="Nội dung, số trang, phù hợp với ai...">
+            </div>
+            <div>
+                <div class="lbl">Link tài liệu (Google Drive, Dropbox...)</div>
+                <input type="text" id="docLink" class="link-input" placeholder="https://drive.google.com/...">
+                <div style="color:var(--ink-mute); font-size:.78rem; margin-top:5px;">Bạn tự đảm bảo link luôn còn hoạt động và đúng quyền chia sẻ (ai có link đều xem/tải được).</div>
+            </div>
+            <div>
+                <div class="lbl">Ảnh bìa (không bắt buộc, tối đa 5MB)</div>
+                <input type="file" id="docImage" class="link-input" accept="image/*" style="padding:7px;">
+            </div>
+            <button class="btn btn-primary" style="justify-self:start;" onclick="submitDocument()" id="docSubmitBtn"><i class="fa-solid fa-upload"></i> Nộp tài liệu chờ duyệt</button>
         </div>
-        <div id="docSubList"></div>
     </div>
-
-    <div class="card create-card">
-        <div class="t"><i class="fa-solid fa-money-bill-transfer"></i> Yêu cầu rút tiền hoa hồng</div>
-        <div id="wdTabs" style="display:flex;gap:8px;margin-bottom:14px;">
-            <button class="btn btn-ghost btn-sm" data-status="pending" onclick="loadWithdrawals('pending')">Chờ xử lý</button>
-            <button class="btn btn-ghost btn-sm" data-status="approved" onclick="loadWithdrawals('approved')">Đã duyệt</button>
-            <button class="btn btn-ghost btn-sm" data-status="paid" onclick="loadWithdrawals('paid')">Đã chuyển khoản</button>
-            <button class="btn btn-ghost btn-sm" data-status="rejected" onclick="loadWithdrawals('rejected')">Đã từ chối</button>
-        </div>
-        <div id="wdList"></div>
+    <div class="card" style="padding:6px 0 0;">
+        <div id="myDocList"></div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<div id="withdrawModal" class="hidden" style="position:fixed; inset:0; background:rgba(10,14,26,.5); display:flex; align-items:center; justify-content:center; z-index:60; padding:16px;">
+    <div class="card" style="width:100%; max-width:420px; padding:22px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <div style="font-weight:800; font-size:1.02rem;">Yêu cầu rút tiền</div>
+            <button class="icon-btn" onclick="closeWithdrawModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="withdrawMsg" class="msg" style="display:none;"></div>
+        <div style="display:grid; gap:10px;">
+            <div>
+                <div class="lbl">Số tiền muốn rút (đ)</div>
+                <input type="number" id="wAmount" class="link-input" min="50000" placeholder="Tối thiểu 50.000đ">
+            </div>
+            <div>
+                <div class="lbl">Ngân hàng</div>
+                <input type="text" id="wBank" class="link-input" placeholder="VD: Vietcombank">
+            </div>
+            <div>
+                <div class="lbl">Số tài khoản</div>
+                <input type="text" id="wAccNumber" class="link-input" placeholder="Số tài khoản ngân hàng">
+            </div>
+            <div>
+                <div class="lbl">Chủ tài khoản</div>
+                <input type="text" id="wAccHolder" class="link-input" placeholder="Tên chủ tài khoản (không dấu)">
+            </div>
+            <button class="btn btn-primary" onclick="submitWithdraw()" id="wSubmitBtn"><i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="msg-toast"></div>
+<script src="../frontend/track-visit.js"></script>
+
 <script>
 const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const ADMIN_CTV_URL = SUPABASE_URL + '/functions/v1/admin-ctv';
+const CTV_PORTAL_URL = SUPABASE_URL + '/functions/v1/ctv-portal';
+const CTV_DOCS_R2_PUBLIC_URL = 'https://pub-04d67e116ce44411888b66104e6c614e.r2.dev';
+async function r2Upload(bucket, path, file){
+    const form = new FormData();
+    form.append('bucket', bucket);
+    form.append('path', path);
+    form.append('file', file);
+    const { data, error } = await sb.functions.invoke('r2-storage', { body: form });
+    if (error) throw new Error(error.message || 'Lỗi tải file lên.');
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Lỗi tải file lên.');
+    return data; // { ok:true, publicUrl, path }
+}
 
+function toggleTheme(){
+    const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', cur);
+    try{ localStorage.setItem('sng-theme', cur); }catch(e){}
+}
+function showToast(text){
+    const t = document.getElementById('toast');
+    t.textContent = text;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+}
 function fmtVND(n){ return (Math.round(Number(n)||0)).toLocaleString('vi-VN') + 'đ'; }
 function escapeHtml(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-async function isAdminUser(knownUser){
-    let user = knownUser;
-    if (!user){ const { data } = await sb.auth.getUser(); user = data?.user; }
-    if (!user) return false;
-    const { data: profile, error } = await sb.from('profiles').select('role').eq('id', user.id).maybeSingle();
-    if (error || !profile) return false;
-    return profile.role === 'admin';
-}
-
-async function doLogin(){
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPass').value;
-    const msgEl = document.getElementById('loginMsg');
-    msgEl.textContent = '';
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error){ msgEl.textContent = 'Sai email hoặc mật khẩu.'; return; }
-    const ok = await isAdminUser(data.user);
-    if (!ok){ msgEl.textContent = 'Tài khoản này không có quyền admin.'; await sb.auth.signOut(); return; }
-    boot();
-}
-
-async function callAdminCtv(action, payload){
-    const { data: { session } } = await sb.auth.getSession();
-    const res = await fetch(ADMIN_CTV_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-        body: JSON.stringify({ action, ...payload }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Có lỗi xảy ra');
-    return data;
-}
-
-async function createCtv(){
-    const email = document.getElementById('newEmail').value.trim();
-    const code = document.getElementById('newCode').value.trim();
-    const commission_type = document.getElementById('newType').value;
-    const commission_value = document.getElementById('newValue').value;
-    const msgEl = document.getElementById('createMsg');
-    msgEl.className = 'msg';
-    if (!email){ msgEl.className = 'msg err'; msgEl.textContent = 'Nhập email tài khoản cần cấp quyền CTV.'; return; }
-    try{
-        const res = await callAdminCtv('create', { email, code, commission_type, commission_value });
-        msgEl.className = 'msg ok';
-        msgEl.textContent = `Đã tạo CTV với mã ${res.code}.`;
-        document.getElementById('newEmail').value = '';
-        document.getElementById('newCode').value = '';
-        document.getElementById('newValue').value = '';
-        loadCtvs();
-    }catch(e){
-        msgEl.className = 'msg err';
-        msgEl.textContent = e.message;
-    }
-}
-
-async function toggleActive(id, active){
-    try{ await callAdminCtv('update', { id, active }); loadCtvs(); }
-    catch(e){ alert(e.message); }
-}
-
-async function saveCommission(id){
-    const type = document.getElementById('type-' + id).value;
-    const value = document.getElementById('value-' + id).value;
-    try{
-        await callAdminCtv('update', { id, commission_type: type, commission_value: value });
-        loadCtvs();
-    }catch(e){ alert(e.message); }
-}
-
-async function deleteCtv(id, label){
-    if (!confirm(`Gỡ quyền CTV của "${label}"? Lịch sử hoa hồng đã cộng sẽ được giữ nguyên, chỉ link giới thiệu sẽ ngừng hoạt động.`)) return;
-    try{ await callAdminCtv('delete', { id }); loadCtvs(); }
-    catch(e){ alert(e.message); }
-}
-
-function copyLink(link){
-    navigator.clipboard?.writeText(link);
-    alert('Đã sao chép: ' + link);
-}
-
-async function loadCtvs(){
-    const tbody = document.getElementById('ctvRows');
-    const empty = document.getElementById('ctvEmpty');
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:20px;">Đang tải...</td></tr>`;
-    try{
-        const { ctvs } = await callAdminCtv('list', {});
-        if (!ctvs.length){ tbody.innerHTML = ''; empty.classList.remove('hidden'); resetSummary(); return; }
-        empty.classList.add('hidden');
-
-        let totalClicks = 0, totalOrders = 0, totalCommission = 0;
-        tbody.innerHTML = ctvs.map(c => {
-            totalClicks += c.clicks; totalOrders += c.orders; totalCommission += c.commission_total;
-            const link = location.origin.replace('/admin','') + '/?ctv=' + encodeURIComponent(c.code);
-            return `
-            <tr>
-                <td><div style="font-weight:700;">${escapeHtml(c.email)}</div><div style="color:var(--gray);font-size:.76rem;">${new Date(c.created_at).toLocaleDateString('vi-VN')}</div></td>
-                <td><span class="mono">${escapeHtml(c.code)}</span><br><button class="btn btn-ghost btn-sm" style="margin-top:6px;" onclick="copyLink('${link.replace(/'/g,"\\'")}')"><i class="fa-regular fa-copy"></i> Copy link</button></td>
-                <td>
-                    <div class="editable-value">
-                        <select id="type-${c.id}">
-                            <option value="percent" ${c.commission_type==='percent'?'selected':''}>%</option>
-                            <option value="fixed" ${c.commission_type==='fixed'?'selected':''}>đ cố định</option>
-                        </select>
-                        <input type="number" id="value-${c.id}" value="${c.commission_value}" min="0" step="any">
-                        <button class="btn btn-ghost btn-sm" onclick="saveCommission('${c.id}')"><i class="fa-solid fa-check"></i></button>
-                    </div>
-                </td>
-                <td>${c.clicks.toLocaleString('vi-VN')}</td>
-                <td>${c.orders.toLocaleString('vi-VN')}</td>
-                <td>${fmtVND(c.revenue)}</td>
-                <td style="color:var(--green);font-weight:700;">${fmtVND(c.commission_total)}</td>
-                <td><span class="badge ${c.active?'on':'off'}">${c.active?'Đang hoạt động':'Đã khoá'}</span></td>
-                <td>
-                    <div class="row-actions">
-                        <button class="btn btn-ghost btn-sm" onclick="toggleActive('${c.id}', ${!c.active})">${c.active?'Khoá':'Mở lại'}</button>
-                        <button class="btn btn-danger-ghost btn-sm" onclick="deleteCtv('${c.id}', '${escapeHtml(c.email).replace(/'/g,"\\'")}')"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                </td>
-            </tr>`;
-        }).join('');
-
-        document.getElementById('sumCtv').textContent = ctvs.length.toLocaleString('vi-VN');
-        document.getElementById('sumClicks').textContent = totalClicks.toLocaleString('vi-VN');
-        document.getElementById('sumOrders').textContent = totalOrders.toLocaleString('vi-VN');
-        document.getElementById('sumCommission').textContent = fmtVND(totalCommission);
-    }catch(e){
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--red);padding:20px;">${escapeHtml(e.message)}</td></tr>`;
-    }
-}
-
-function resetSummary(){
-    document.getElementById('sumCtv').textContent = '0';
-    document.getElementById('sumClicks').textContent = '0';
-    document.getElementById('sumOrders').textContent = '0';
-    document.getElementById('sumCommission').textContent = '0đ';
-}
-
-// ==================== TÀI LIỆU CTV NỘP ====================
-function setActiveTab(containerId, status){
-    document.querySelectorAll('#' + containerId + ' button').forEach(b => {
-        b.classList.toggle('wd-tab-active', b.dataset.status === status);
-    });
-}
-
-async function loadDocSubmissions(status){
-    setActiveTab('docTabs', status);
-    const box = document.getElementById('docSubList');
-    box.innerHTML = '<div style="text-align:center;color:var(--gray);padding:14px;">Đang tải...</div>';
-    try{
-        const { submissions } = await callAdminCtv('document_submissions', { status });
-        if (!submissions.length){ box.innerHTML = '<div class="empty-state">Không có tài liệu nào.</div>'; return; }
-        box.innerHTML = submissions.map(s => `
-            <div class="list-item">
-                <div class="li-head">
-                    <div class="li-head-left">
-                        ${s.image_url ? `<img class="li-thumb" src="${s.image_url}" alt="">` : ''}
-                        <div>
-                            <div class="li-title">${escapeHtml(s.title)} <span class="badge doctype-${s.doc_type}">${s.doc_type === 'free' ? 'Miễn phí' : 'Trả phí'}</span></div>
-                            <div class="li-sub">${escapeHtml(s.ctv_label)} · ${new Date(s.created_at).toLocaleString('vi-VN')}</div>
-                        </div>
-                    </div>
-                    <span class="badge ${s.status}">${s.status === 'pending' ? 'Chờ duyệt' : s.status === 'approved' ? 'Đã duyệt' : 'Đã từ chối'}</span>
-                </div>
-                ${s.description ? `<div class="li-sub" style="margin-bottom:6px;">${escapeHtml(s.description)}</div>` : ''}
-                <div class="li-meta">
-                    ${s.doc_type === 'paid' ? `<span><b>Giá đề xuất</b>${fmtVND(s.suggested_price)}</span>` : ''}
-                    ${s.status === 'approved' ? `<span><b>Giá duyệt</b>${fmtVND(s.approved_price)}</span>${s.doc_type === 'paid' ? `<span><b>% hoa hồng tác giả</b>${s.revenue_share_percent}%</span>` : ''}` : ''}
-                    <span><b>Nguồn</b>${s.external_link ? `<a href="${s.external_link}" target="_blank" rel="noopener">Link ngoài</a>` : `<a href="${s.file_url}" target="_blank" rel="noopener">Xem / tải file</a>`}</span>
-                </div>
-                ${s.status === 'rejected' && s.reject_reason ? `<div class="li-sub" style="color:var(--red);">Lý do từ chối: ${escapeHtml(s.reject_reason)}</div>` : ''}
-                ${s.status === 'pending' ? `
-                <div style="margin-top:8px;">
-                    <label style="font-size:.72rem;font-weight:700;color:var(--gray);display:block;margin-bottom:5px;">Loại khi đăng (có thể đổi lại)</label>
-                    <div class="doc-type-toggle-sm" id="doctype-${s.id}">
-                        <div class="opt ${s.doc_type === 'free' ? 'active is-free' : ''}" data-v="free" onclick="pickReviewDocType('${s.id}','free')"><i class="fa-solid fa-gift"></i> Miễn phí</div>
-                        <div class="opt ${s.doc_type === 'paid' ? 'active' : ''}" data-v="paid" onclick="pickReviewDocType('${s.id}','paid')"><i class="fa-solid fa-lock"></i> Trả phí</div>
-                    </div>
-                </div>
-                <div class="review-row" id="reviewFields-${s.id}" style="${s.doc_type === 'free' ? 'display:none;' : ''}">
-                    <div><label>Giá bán (đ)</label><input type="number" id="price-${s.id}" value="${s.suggested_price}" min="0"></div>
-                    <div><label>% hoa hồng tác giả</label><input type="number" id="pct-${s.id}" value="50" min="0" max="100"></div>
-                </div>
-                <div class="li-actions">
-                    <button class="btn btn-primary btn-sm" onclick="approveDoc('${s.id}')"><i class="fa-solid fa-check"></i> Duyệt & đăng bán</button>
-                    <button class="btn btn-danger-ghost btn-sm" onclick="rejectDoc('${s.id}')"><i class="fa-solid fa-xmark"></i> Từ chối</button>
-                </div>` : ''}
-            </div>
-        `).join('');
-    }catch(e){
-        box.innerHTML = `<div class="empty-state" style="color:var(--red);">${escapeHtml(e.message)}</div>`;
-    }
-}
-
-const reviewDocTypeById = {};
-
-function pickReviewDocType(id, type){
-    reviewDocTypeById[id] = type;
-    const toggle = document.getElementById('doctype-' + id);
-    toggle.querySelectorAll('.opt').forEach(el => {
-        const active = el.dataset.v === type;
-        el.classList.toggle('active', active);
-        el.classList.toggle('is-free', active && type === 'free');
-    });
-    document.getElementById('reviewFields-' + id).style.display = type === 'free' ? 'none' : '';
-}
-
-async function approveDoc(id){
-    const doc_type = reviewDocTypeById[id]; // undefined = giữ nguyên loại CTV đã đề xuất
-    const body = { id, decision: 'approve', doc_type };
-    if (doc_type !== 'free'){
-        body.approved_price = document.getElementById('price-' + id).value;
-        body.revenue_share_percent = document.getElementById('pct-' + id).value;
-    }
-    try{
-        await callAdminCtv('review_document', body);
-        loadDocSubmissions('pending');
-        loadCtvs();
-    }catch(e){ alert(e.message); }
-}
-
-async function rejectDoc(id){
-    const reject_reason = prompt('Lý do từ chối (sẽ hiện cho CTV):', 'Nội dung chưa phù hợp');
-    if (reject_reason === null) return;
-    try{
-        await callAdminCtv('review_document', { id, decision: 'reject', reject_reason });
-        loadDocSubmissions('pending');
-    }catch(e){ alert(e.message); }
-}
-
-// ==================== YÊU CẦU RÚT TIỀN ====================
-async function loadWithdrawals(status){
-    setActiveTab('wdTabs', status);
-    const box = document.getElementById('wdList');
-    box.innerHTML = '<div style="text-align:center;color:var(--gray);padding:14px;">Đang tải...</div>';
-    try{
-        const { withdrawals } = await callAdminCtv('withdrawals', { status });
-        if (!withdrawals.length){ box.innerHTML = '<div class="empty-state">Không có yêu cầu nào.</div>'; return; }
-        box.innerHTML = withdrawals.map(w => `
-            <div class="list-item">
-                <div class="li-head">
-                    <div>
-                        <div class="li-title">${fmtVND(w.amount)}</div>
-                        <div class="li-sub">${escapeHtml(w.ctv_label)} · ${new Date(w.created_at).toLocaleString('vi-VN')}</div>
-                    </div>
-                    <span class="badge ${w.status}">${{pending:'Chờ xử lý',approved:'Đã duyệt',paid:'Đã chuyển khoản',rejected:'Đã từ chối'}[w.status]}</span>
-                </div>
-                <div class="li-meta">
-                    <span><b>Ngân hàng</b>${escapeHtml(w.bank_name)}</span>
-                    <span><b>Số tài khoản</b>${escapeHtml(w.bank_account_number)}</span>
-                    <span><b>Chủ tài khoản</b>${escapeHtml(w.bank_account_holder)}</span>
-                </div>
-                ${w.admin_note ? `<div class="li-sub">Ghi chú: ${escapeHtml(w.admin_note)}</div>` : ''}
-                ${w.status === 'pending' ? `
-                <div class="li-actions">
-                    <button class="btn btn-primary btn-sm" onclick="processWd('${w.id}','approved')"><i class="fa-solid fa-check"></i> Duyệt</button>
-                    <button class="btn btn-danger-ghost btn-sm" onclick="processWd('${w.id}','rejected')"><i class="fa-solid fa-xmark"></i> Từ chối (hoàn tiền)</button>
-                </div>` : ''}
-                ${w.status === 'approved' ? `
-                <div class="li-actions">
-                    <button class="btn btn-primary btn-sm" onclick="processWd('${w.id}','paid')"><i class="fa-solid fa-money-bill-transfer"></i> Đánh dấu đã chuyển khoản</button>
-                </div>` : ''}
-            </div>
-        `).join('');
-    }catch(e){
-        box.innerHTML = `<div class="empty-state" style="color:var(--red);">${escapeHtml(e.message)}</div>`;
-    }
-}
-
-async function processWd(id, status){
-    let admin_note = null;
-    if (status === 'rejected') admin_note = prompt('Lý do từ chối (sẽ hoàn tiền về ví CTV):', '');
-    if (status === 'paid') admin_note = prompt('Ghi chú giao dịch (mã chuyển khoản...) — không bắt buộc:', '') || null;
-    try{
-        await callAdminCtv('process_withdrawal', { id, status, admin_note });
-        loadWithdrawals(status === 'rejected' ? 'pending' : (status === 'paid' ? 'approved' : 'pending'));
-    }catch(e){ alert(e.message); }
-}
-
-async function boot(){
+function showGate(title, text, btnLabel, btnAction){
     document.getElementById('authLoading').classList.add('hidden');
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('shell').classList.remove('hidden');
-    loadCtvs();
-    loadDocSubmissions('pending');
-    loadWithdrawals('pending');
+    document.getElementById('shell').classList.add('hidden');
+    document.getElementById('gateScreen').classList.remove('hidden');
+    document.getElementById('gateTitle').textContent = title;
+    document.getElementById('gateText').textContent = text;
+    const btn = document.getElementById('gateBtn');
+    btn.textContent = btnLabel;
+    btn.onclick = btnAction;
 }
 
-(async function init(){
+function copyRefLink(){
+    const input = document.getElementById('refLink');
+    input.select();
+    navigator.clipboard?.writeText(input.value).then(() => showToast('Đã sao chép link!'))
+        .catch(() => { document.execCommand('copy'); showToast('Đã sao chép link!'); });
+}
+
+async function signOut(){
+    await sb.auth.signOut();
+    window.location.href = '../account/login.html?next=' + encodeURIComponent(location.pathname);
+}
+
+function renderClicksChart(clicks){
+    const days = [];
+    const now = new Date();
+    for (let i = 13; i >= 0; i--){
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        days.push({ key: d.toISOString().slice(0,10), label: (d.getDate()+'/'+(d.getMonth()+1)), count: 0 });
+    }
+    const map = {};
+    days.forEach(d => map[d.key] = d);
+    clicks.forEach(c => {
+        const key = String(c.created_at).slice(0,10);
+        if (map[key]) map[key].count++;
+    });
+    const max = Math.max(1, ...days.map(d => d.count));
+    document.getElementById('chartTotal').textContent = days.reduce((s,d)=>s+d.count,0).toLocaleString('vi-VN');
+    document.getElementById('chartBars').innerHTML = days.map(d => {
+        const h = d.count > 0 ? Math.max(6, Math.round((d.count / max) * 140)) : 2;
+        return `<div class="bar-col"><div class="bar ${d.count>0?'has-data':''}" style="height:${h}px;" title="${d.count} lượt · ${d.label}"></div><div class="bar-day">${d.label}</div></div>`;
+    }).join('');
+}
+
+function renderCommissions(rows){
+    const tbody = document.getElementById('commissionRows');
+    const empty = document.getElementById('commissionEmpty');
+    if (!rows.length){
+        tbody.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+    }
+    empty.classList.add('hidden');
+    tbody.innerHTML = rows.map(r => `
+        <tr>
+            <td>${new Date(r.created_at).toLocaleString('vi-VN')}</td>
+            <td>#${escapeHtml(String(r.order_id).slice(0,8))}</td>
+            <td>${r.source === 'document_sale' ? 'Tài liệu' : 'Giới thiệu'}</td>
+            <td>${fmtVND(r.order_amount)}</td>
+            <td style="color:var(--green);font-weight:700;">+${fmtVND(r.commission_amount)}</td>
+            <td><span class="badge ${r.status}">${r.status === 'credited' ? 'Đã cộng' : 'Đã huỷ'}</span></td>
+        </tr>`).join('');
+}
+
+// ==================== RÚT TIỀN ====================
+const WITHDRAW_STATUS_LABEL = { pending:'Chờ xử lý', approved:'Đã duyệt', paid:'Đã chuyển khoản', rejected:'Đã từ chối' };
+
+function openWithdrawModal(){
+    document.getElementById('withdrawModal').classList.remove('hidden');
+}
+function closeWithdrawModal(){
+    document.getElementById('withdrawModal').classList.add('hidden');
+    document.getElementById('withdrawMsg').style.display = 'none';
+}
+
+async function submitWithdraw(){
+    const amount = document.getElementById('wAmount').value;
+    const bank_name = document.getElementById('wBank').value.trim();
+    const bank_account_number = document.getElementById('wAccNumber').value.trim();
+    const bank_account_holder = document.getElementById('wAccHolder').value.trim();
+    const msgEl = document.getElementById('withdrawMsg');
+    const btn = document.getElementById('wSubmitBtn');
+    msgEl.style.display = 'none';
+
+    btn.disabled = true; const original = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
+    try{
+        const { data: { session } } = await sb.auth.getSession();
+        const res = await fetch(CTV_PORTAL_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+            body: JSON.stringify({ action: 'request_withdrawal', amount, bank_name, bank_account_number, bank_account_holder }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Có lỗi xảy ra');
+        showToast('Đã gửi yêu cầu rút tiền!');
+        closeWithdrawModal();
+        document.getElementById('wAmount').value = '';
+        document.getElementById('wBank').value = '';
+        document.getElementById('wAccNumber').value = '';
+        document.getElementById('wAccHolder').value = '';
+        refreshWalletAndWithdrawals();
+    }catch(e){
+        msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = e.message;
+    }finally{
+        btn.disabled = false; btn.innerHTML = original;
+    }
+}
+
+async function refreshWalletAndWithdrawals(){
+    const { data: { session } } = await sb.auth.getSession();
+    const [{ data: profile }, { data: withdrawals }] = await Promise.all([
+        sb.from('profiles').select('balance').eq('id', session.user.id).maybeSingle(),
+        sb.from('ctv_withdrawals').select('*').order('created_at', { ascending: false }).limit(50),
+    ]);
+    document.getElementById('walletBalance').textContent = fmtVND(profile?.balance || 0);
+
+    const box = document.getElementById('withdrawList');
+    const list = withdrawals || [];
+    if (!list.length){ box.innerHTML = '<div class="empty-state">Chưa có yêu cầu rút tiền nào.</div>'; return; }
+    box.innerHTML = list.map(w => `
+        <div class="doc-item">
+            <div class="row">
+                <div>
+                    <div class="title">${fmtVND(w.amount)}</div>
+                    <div class="meta">${escapeHtml(w.bank_name)} · ${escapeHtml(w.bank_account_number)} · ${new Date(w.created_at).toLocaleString('vi-VN')}</div>
+                    ${w.admin_note ? `<div class="meta">Ghi chú: ${escapeHtml(w.admin_note)}</div>` : ''}
+                </div>
+                <span class="badge ${w.status}">${WITHDRAW_STATUS_LABEL[w.status] || w.status}</span>
+            </div>
+        </div>`).join('');
+}
+
+// ==================== ĐĂNG TÀI LIỆU BÁN ====================
+const DOC_STATUS_LABEL = { pending:'Chờ duyệt', approved:'Đã duyệt · Đang bán', rejected:'Bị từ chối' };
+let docTypeSelected = 'paid';   // 'free' | 'paid'
+
+function pickDocType(type){
+    docTypeSelected = type;
+    document.querySelectorAll('#docTypeToggle .seg-opt').forEach(el => {
+        const active = el.dataset.type === type;
+        el.classList.toggle('active', active);
+        el.classList.toggle('free-active', active && type === 'free');
+    });
+    document.getElementById('docPriceWrap').classList.toggle('hidden', type === 'free');
+}
+
+async function submitDocument(){
+    const title = document.getElementById('docTitle').value.trim();
+    const description = document.getElementById('docDesc').value.trim();
+    const suggested_price = docTypeSelected === 'free' ? 0 : document.getElementById('docPrice').value;
+    const external_link = document.getElementById('docLink').value.trim();
+    const imageInput = document.getElementById('docImage');
+    const image = imageInput.files[0];
+    const msgEl = document.getElementById('docUploadMsg');
+    const btn = document.getElementById('docSubmitBtn');
+    msgEl.style.display = 'none';
+
+    if (!title){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Vui lòng nhập tên tài liệu.'; return; }
+    if (!/^https?:\/\//i.test(external_link)){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Vui lòng dán link tài liệu, bắt đầu bằng http:// hoặc https://.'; return; }
+    if (image && image.size > 5 * 1024 * 1024){ msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = 'Ảnh bìa tối đa 5MB.'; return; }
+
+    btn.disabled = true; const original = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang nộp...';
+    try{
+        const { data: { session } } = await sb.auth.getSession();
+
+        let imagePath = '';
+        if (image){
+            const safeImgName = image.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            imagePath = `${session.user.id}/cover_${Date.now()}_${safeImgName}`;
+            const { publicUrl: uploadedImgUrl } = await r2Upload('ctv-documents', imagePath, image).catch(e => {
+                throw new Error('Không tải ảnh bìa lên được: ' + e.message);
+            });
+        }
+
+        const res = await fetch(CTV_PORTAL_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+            body: JSON.stringify({
+                action: 'submit_document', title, description, suggested_price,
+                doc_type: docTypeSelected,
+                external_link,
+                image_path: imagePath || undefined,
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Có lỗi xảy ra');
+
+        showToast('Đã nộp tài liệu, chờ admin duyệt!');
+        document.getElementById('docTitle').value = '';
+        document.getElementById('docDesc').value = '';
+        document.getElementById('docPrice').value = '';
+        document.getElementById('docLink').value = '';
+        imageInput.value = '';
+        pickDocType('paid');
+        loadMyDocuments();
+    }catch(e){
+        msgEl.className = 'msg err'; msgEl.style.display = 'block'; msgEl.textContent = e.message;
+    }finally{
+        btn.disabled = false; btn.innerHTML = original;
+    }
+}
+
+async function loadMyDocuments(){
+    const box = document.getElementById('myDocList');
+    const { data } = await sb.from('ctv_document_submissions').select('*').order('created_at', { ascending: false }).limit(50);
+    const list = data || [];
+    if (!list.length){ box.innerHTML = '<div class="empty-state">Bạn chưa nộp tài liệu nào.</div>'; return; }
+    box.innerHTML = list.map(d => {
+        const imgUrl = d.image_path ? `${CTV_DOCS_R2_PUBLIC_URL}/${d.image_path}` : null;
+        const typeLabel = d.doc_type === 'free' ? 'Miễn phí' : 'Trả phí';
+        return `
+        <div class="doc-item">
+            <div class="row">
+                <div class="row-left">
+                    ${imgUrl ? `<img class="thumb" src="${imgUrl}" alt="">` : ''}
+                    <div>
+                        <div class="title">${escapeHtml(d.title)} <span class="badge ${d.doc_type}">${typeLabel}</span></div>
+                        <div class="meta">${new Date(d.created_at).toLocaleString('vi-VN')}${d.doc_type === 'paid' ? ` · Giá đề xuất ${fmtVND(d.suggested_price)}` : ''}${d.status==='approved' ? ` · Giá bán ${fmtVND(d.approved_price)}${d.doc_type === 'paid' ? ` · Bạn nhận ${d.revenue_share_percent}%/đơn` : ''}` : ''}</div>
+                        <div class="meta">Nguồn: <a href="${d.external_link}" target="_blank" rel="noopener">Link ngoài</a></div>
+                        ${d.status === 'rejected' && d.reject_reason ? `<div class="meta" style="color:var(--red);">Lý do: ${escapeHtml(d.reject_reason)}</div>` : ''}
+                    </div>
+                </div>
+                <span class="badge ${d.status}">${DOC_STATUS_LABEL[d.status] || d.status}</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function loadDashboard(ctv){
+    const link = location.origin + '/?ctv=' + encodeURIComponent(ctv.code);
+    document.getElementById('refLink').value = link;
+
+    const commissionText = ctv.commission_type === 'percent'
+        ? `Hoa hồng: ${Number(ctv.commission_value)}% giá trị mỗi đơn hàng`
+        : `Hoa hồng: ${fmtVND(ctv.commission_value)} / mỗi đơn hàng thành công`;
+    document.getElementById('commissionText').textContent = commissionText;
+
+    if (!ctv.active){
+        document.getElementById('commissionTag').style.background = 'var(--red-bg)';
+        document.getElementById('commissionTag').style.color = 'var(--red)';
+        document.getElementById('commissionText').textContent = 'Kênh CTV của bạn đang bị tạm khoá — liên hệ admin để biết thêm.';
+    }
+
+    const [{ data: clicks }, { data: commissions }] = await Promise.all([
+        sb.from('ctv_clicks').select('created_at, visitor_id').ilike('ctv_code', ctv.code).order('created_at', { ascending: false }).limit(20000),
+        sb.from('ctv_commissions').select('order_id, order_amount, commission_amount, status, source, created_at').eq('ctv_id', ctv.id).order('created_at', { ascending: false }).limit(500),
+    ]);
+
+    const clickList = clicks || [];
+    const commissionList = commissions || [];
+
+    document.getElementById('statClicks').textContent = clickList.length.toLocaleString('vi-VN');
+    document.getElementById('statVisitors').textContent = new Set(clickList.map(c => c.visitor_id).filter(Boolean)).size.toLocaleString('vi-VN');
+    document.getElementById('statOrders').textContent = commissionList.filter(c => c.status === 'credited').length.toLocaleString('vi-VN');
+    document.getElementById('statCommission').textContent = fmtVND(commissionList.filter(c => c.status === 'credited').reduce((s,c) => s + Number(c.commission_amount), 0));
+
+    renderClicksChart(clickList);
+    renderCommissions(commissionList);
+    refreshWalletAndWithdrawals();
+    loadMyDocuments();
+}
+
+async function init(){
     const { data: { session } } = await sb.auth.getSession();
     if (!session){
-        document.getElementById('authLoading').classList.add('hidden');
-        document.getElementById('loginScreen').classList.remove('hidden');
+        showGate('Bạn cần đăng nhập', 'Đăng nhập để xem link giới thiệu và số liệu hoa hồng của bạn.', 'Đăng nhập ngay', () => {
+            window.location.href = '../account/login.html?next=' + encodeURIComponent(location.pathname);
+        });
         return;
     }
-    const ok = await isAdminUser(session.user);
-    if (!ok){
-        document.getElementById('authLoading').classList.add('hidden');
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('loginMsg').textContent = 'Tài khoản đăng nhập không có quyền admin.';
+
+    const { data: ctv, error } = await sb.from('ctv_accounts').select('*').eq('user_id', session.user.id).maybeSingle();
+    if (error || !ctv){
+        showGate('Bạn chưa là Cộng tác viên', 'Tài khoản của bạn chưa được cấp quyền CTV. Liên hệ admin SNG EDU để đăng ký làm cộng tác viên và nhận link giới thiệu riêng.', 'Về trang chủ', () => { window.location.href = '/index.html'; });
         return;
     }
-    boot();
-})();
+
+    document.getElementById('authLoading').classList.add('hidden');
+    document.getElementById('shell').classList.remove('hidden');
+    loadDashboard(ctv);
+}
+
+init();
 </script>
 </body>
 </html>

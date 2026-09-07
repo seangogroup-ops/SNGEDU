@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<script src="frontend/maintenance-check.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14151c" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="noindex, nofollow">
+<script>
+    try{
+        var savedTheme = localStorage.getItem('sng-theme');
+        document.documentElement.setAttribute('data-theme', (savedTheme === 'dark' || savedTheme === 'light') ? savedTheme : 'dark');
+    }catch(e){}
+</script>
+<title>Xem tài liệu · SNG EDU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<script src="frontend/pwa-register.js" defer></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+    :root{
+        --bg:#f5f7fb; --card:#ffffff; --line:#e8eaf1; --ink:#1f2433; --ink-soft:#6b7180; --ink-mute:#9aa0b1;
+        --green:#17b26a; --green-bg:#e7f9f0; --amber:#f5a524; --amber-bg:#fef3e0;
+        --brand:#4f6bff; --brand-bg:#eef1ff;
+        --shadow:0 1px 2px rgba(20,22,40,.04), 0 8px 24px -12px rgba(20,22,40,.08);
+    }
+    html[data-theme="dark"]{
+        --bg:#14151c; --card:#1c1e28; --line:#2c2f3c; --ink:#f0f1f6; --ink-soft:#a2a7ba; --ink-mute:#6f7488;
+        --green:#2ed392; --green-bg:#163a2c; --amber:#ffbd4a; --amber-bg:#3a2f16;
+        --brand:#6d84ff; --brand-bg:#1c2340;
+        --shadow:0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+    *{ box-sizing:border-box; }
+    html, body{
+        margin:0; background:var(--bg); color:var(--ink); font-family:'Be Vietnam Pro',sans-serif;
+        /* Chặn bôi đen/copy chữ + long-press lưu ảnh trên mobile — chỉ là rào cản, không tuyệt đối */
+        -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
+    }
+    .topbar{
+        position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:12px;
+        padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line);
+    }
+    .topbar .back{ width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); text-decoration:none; border:1px solid var(--line); flex-shrink:0; }
+    .topbar .title{ font-weight:700; font-size:.95rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+    .topbar .pages-count{ font-size:.78rem; color:var(--ink-mute); flex-shrink:0; }
+
+    .wrap{ max-width:820px; margin:0 auto; padding:18px 14px 80px; }
+
+    .page-slot{
+        position:relative; margin:0 auto 14px; background:var(--card); border:1px solid var(--line);
+        border-radius:10px; overflow:hidden; box-shadow:var(--shadow); min-height:320px;
+        display:flex; align-items:center; justify-content:center;
+    }
+    .page-img{
+        width:100%; aspect-ratio:auto; background-size:contain; background-position:center; background-repeat:no-repeat;
+        min-height:320px; pointer-events:none; /* ảnh nền -> right click không ra menu "Lưu ảnh" */
+    }
+    .page-loading{ color:var(--ink-mute); font-size:.85rem; display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .page-num{ position:absolute; bottom:8px; right:12px; font-size:.72rem; color:#fff; background:rgba(0,0,0,.45); padding:2px 8px; border-radius:999px; pointer-events:none; }
+
+    /* watermark phủ lên mỗi trang — không chặn được chụp màn hình, nhưng giúp truy vết nếu bị phát tán */
+    .watermark{
+        position:absolute; inset:0; pointer-events:none; overflow:hidden; opacity:.16;
+        display:flex; flex-wrap:wrap; align-content:space-around; justify-content:space-around;
+        transform:rotate(-24deg) scale(1.3); font-size:.78rem; font-weight:700; color:#000;
+    }
+    html[data-theme="dark"] .watermark{ color:#fff; }
+    .watermark span{ white-space:nowrap; margin:14px 22px; }
+
+    .lock-card{
+        background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow);
+        padding:34px 22px; text-align:center; margin-top:6px;
+    }
+    .lock-card i.fa-lock{ font-size:2.1rem; color:var(--brand); margin-bottom:14px; }
+    .lock-card h3{ margin:0 0 6px; font-size:1.05rem; }
+    .lock-card p{ margin:0 0 18px; color:var(--ink-soft); font-size:.88rem; line-height:1.6; }
+    .lock-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .btn{ padding:11px 20px; border-radius:10px; border:none; font-weight:700; font-size:.87rem; cursor:pointer; font-family:inherit; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+    .btn-primary{ background:var(--brand); color:#fff; }
+    .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); }
+
+    .state{ text-align:center; padding:80px 20px; color:var(--ink-mute); }
+    .state i{ font-size:2rem; margin-bottom:12px; display:block; }
+
+    .blur-teaser{ filter:blur(6px) brightness(.9); }
+</style>
+</head>
+<body oncontextmenu="return false">
+
+<div class="topbar">
+    <a href="javascript:history.back()" class="back"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="title" id="docTitle">Đang tải...</div>
+    <div class="pages-count" id="pagesCount"></div>
+</div>
+
+<div class="wrap" id="wrap">
+    <div class="state"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải tài liệu...</div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const DOC_PAGES_FN_URL = SUPABASE_URL + '/functions/v1/doc-pages';
+
+const params = new URLSearchParams(location.search);
+const DOC_ID = params.get('id') || '';
+
+let currentSession = null;
+let currentItem = null;
+let isPaidDoc = false;
+let watermarkLabel = 'SNG EDU';
+
+function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function isProActive(user){
+    if (!user) return false;
+    const meta = user.user_metadata || {};
+    const until = meta.premium_until ? new Date(meta.premium_until) : null;
+    return meta.plan === 'premium' && (!until || until > new Date());
+}
+
+function showState(html){
+    document.getElementById('wrap').innerHTML = `<div class="state">${html}</div>`;
+}
+
+function watermarkHtml(){
+    const parts = [];
+    for (let i = 0; i < 10; i++) parts.push(`<span>${escapeHtml(watermarkLabel)}</span>`);
+    return `<div class="watermark">${parts.join('')}</div>`;
+}
+
+async function boot(){
+    if (!DOC_ID){
+        showState('<i class="fa-solid fa-circle-exclamation"></i>Thiếu tài liệu cần xem.');
+        return;
+    }
+
+    const { data: { session } } = await sb.auth.getSession();
+    currentSession = session;
+    watermarkLabel = session ? (session.user.email || 'SNG EDU') : 'SNG EDU · Khách';
+
+    const { data: settingsRow } = await sb.from('site_settings').select('payload').eq('key', 'doc_content').single();
+    const payload = (settingsRow && settingsRow.payload) || { free: [], paid: [] };
+    const paidList = Array.isArray(payload.paid) ? payload.paid : [];
+    const freeList = Array.isArray(payload.free) ? payload.free : [];
+
+    let item = paidList.find((it) => String(it.id) === DOC_ID);
+    isPaidDoc = !!item;
+    if (!item) item = freeList.find((it) => String(it.id) === DOC_ID);
+
+    if (!item || item.preview_mode !== 'pages'){
+        showState('<i class="fa-solid fa-circle-exclamation"></i>Tài liệu này chưa hỗ trợ xem trước theo trang.<br><a href="index.html#doc">Quay lại trang Tài liệu</a>');
+        return;
+    }
+    currentItem = item;
+
+    document.title = `${item.title || 'Tài liệu'} · SNG EDU`;
+    document.getElementById('docTitle').textContent = item.title || 'Tài liệu';
+
+    const pagesTotal = Number(item.pages_total) || 0;
+    document.getElementById('pagesCount').textContent = pagesTotal ? `${pagesTotal} trang` : '';
+
+    // Quyền xem full (chỉ để hiển thị UI cho đẹp — quyền THẬT được Edge Function kiểm tra lại)
+    // CHỈ Pro mới mở khoá — không có luồng mua lẻ tài liệu để xem.
+    let hasFullAccess = !isPaidDoc;
+    if (isPaidDoc && currentSession && isProActive(currentSession.user)){
+        hasFullAccess = true;
+    }
+
+    renderPages(pagesTotal, hasFullAccess);
+}
+
+function renderPages(pagesTotal, hasFullAccess){
+    const wrap = document.getElementById('wrap');
+    wrap.innerHTML = '';
+    if (!pagesTotal){
+        showState('<i class="fa-solid fa-circle-exclamation"></i>Tài liệu chưa có trang nào.');
+        return;
+    }
+
+    const slots = [];
+    for (let p = 1; p <= pagesTotal; p++){
+        const slot = document.createElement('div');
+        slot.className = 'page-slot';
+        slot.dataset.page = p;
+        slot.innerHTML = `<div class="page-loading"><i class="fa-solid fa-spinner fa-spin"></i>Trang ${p}</div>`;
+        wrap.appendChild(slot);
+        slots.push(slot);
+    }
+
+    // Lazy-load: chỉ gọi API khi trang sắp lọt vào khung nhìn, đỡ tốn băng thông
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting){
+                observer.unobserve(entry.target);
+                loadPage(entry.target);
+            }
+        });
+    }, { rootMargin: '600px 0px' });
+
+    slots.forEach((s) => observer.observe(s));
+}
+
+async function loadPage(slot){
+    const page = Number(slot.dataset.page);
+    // Lưu ý: publishable/anon key KHÔNG phải JWT nên không gửi như Bearer token —
+    // chỉ gửi Authorization khi thực sự có phiên đăng nhập; khách chưa đăng nhập
+    // vẫn gọi được (function doc-pages đã tắt Verify JWT, tự xử lý ẩn danh).
+    const headers = { apikey: SUPABASE_ANON_KEY };
+    if (currentSession) headers.Authorization = 'Bearer ' + currentSession.access_token;
+
+    try{
+        const res = await fetch(`${DOC_PAGES_FN_URL}?doc_id=${encodeURIComponent(DOC_ID)}&page=${page}`, { headers });
+
+        if (res.status === 403){
+            const info = await res.json().catch(() => ({}));
+            renderLockedFrom(slot, info);
+            return;
+        }
+        if (!res.ok) throw new Error('Không tải được trang ' + page);
+
+        const blob = await res.blob();
+        const objUrl = URL.createObjectURL(blob);
+        slot.innerHTML = `<div class="page-img" style="background-image:url('${objUrl}')"></div>${watermarkHtml()}<div class="page-num">${page}</div>`;
+    }catch(e){
+        slot.innerHTML = `<div class="page-loading"><i class="fa-solid fa-triangle-exclamation"></i>Lỗi tải trang ${page}</div>`;
+    }
+}
+
+function renderLockedFrom(fromSlot){
+    // Xoá mọi slot còn lại từ đây trở đi (chưa render), thay bằng 1 khối khoá + CTA
+    let sib = fromSlot;
+    const toRemove = [];
+    while (sib){
+        const next = sib.nextElementSibling;
+        toRemove.push(sib);
+        sib = next;
+    }
+    const remainingCount = toRemove.length;
+    toRemove.forEach((el) => el.remove());
+
+    const wrap = document.getElementById('wrap');
+    const box = document.createElement('div');
+    box.className = 'lock-card';
+    const loggedIn = !!currentSession;
+    box.innerHTML = `
+        <i class="fa-solid fa-lock"></i>
+        <h3>Còn ${remainingCount} trang nữa</h3>
+        <p>${loggedIn
+            ? 'Nâng cấp Pro để xem toàn bộ nội dung tài liệu này.'
+            : 'Đăng nhập rồi nâng cấp Pro để xem toàn bộ nội dung tài liệu này.'}</p>
+        <div class="lock-actions">
+            ${loggedIn ? '' : `<a class="btn btn-ghost" href="account/login.html?next=${encodeURIComponent(location.pathname + location.search)}"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a>`}
+            <a class="btn btn-primary" href="nhan-pro.html"><i class="fa-solid fa-crown"></i> Nâng cấp Pro</a>
+        </div>`;
+    wrap.appendChild(box);
+}
+
+// Rào cản cơ bản chống copy/in — không chặn được 100% (chụp màn hình/quay phim thì
+// không công nghệ web nào chặn nổi), nhưng chặn được thao tác phổ biến nhất.
+document.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && (k === 'p' || k === 's' || k === 'u')){
+        e.preventDefault();
+    }
+});
+
+boot();
+</script>
+</body>
+</html>

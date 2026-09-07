@@ -642,6 +642,14 @@ async function loadDocItem(){
                    </button>`;
     }
 
+    // Tài liệu đã bật "xem trước theo trang" -> ghi đè hẳn CTA cũ (không còn mua lẻ,
+    // chỉ Pro mới mở khoá xem hết trang, xem qua doc-preview-viewer.html)
+    if (item.preview_mode === 'pages' && item.pages_ready){
+        ctaHtml = `<a class="pd-cta" href="doc-preview-viewer.html?id=${encodeURIComponent(String(ITEM_ID))}">
+                        <i class="fa-solid fa-eye"></i> Xem trước ${item.free_pages || 0}/${item.pages_total || '?'} trang — cần Pro để xem hết
+                   </a>`;
+    }
+
     const specs = [];
     specs.push(isPaid
         ? (owned
@@ -657,7 +665,7 @@ async function loadDocItem(){
         mediaHtml, title: item.title, priceHtml, ctaHtml, desc: item.desc, specs
     });
 
-    if (isPaid && !owned){
+    if (isPaid && !owned && !(item.preview_mode === 'pages' && item.pages_ready)){
         const btn = document.getElementById('pdBuyBtn');
         if (!paymentSettings.sepay_enabled){
             btn.disabled = true;

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<script src="../frontend/maintenance-check.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+    try{
+        var savedTheme = localStorage.getItem('sng-theme');
+        document.documentElement.setAttribute('data-theme', (savedTheme === 'dark' || savedTheme === 'light') ? savedTheme : 'dark');
+    }catch(e){}
+</script>
+<title>Xem trước tài liệu theo trang · Admin SNG EDU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+    :root{
+        --bg:#eef2f9; --card:#ffffff; --line:#dde3ef; --ink:#131b2e; --ink-soft:#4d5673; --ink-mute:#8791a8;
+        --green:#17b26a; --green-bg:#e7f9f0; --red:#e5484d; --red-bg:#fdeeee;
+        --amber:#b3760a; --amber-bg:#fdf3e0; --brand:#0b2e6b; --brand2:#14509e; --brand-bg:#e6edfb;
+        --shadow:0 1px 2px rgba(20,30,60,.05), 0 8px 24px -12px rgba(20,30,60,.12);
+    }
+    html[data-theme="dark"]{
+        --bg:#14151c; --card:#1c1e28; --line:#2c2f3c; --ink:#f0f1f6; --ink-soft:#a2a7ba; --ink-mute:#6f7488;
+        --green:#2ed392; --green-bg:#163a2c; --red:#ff7875; --red-bg:#3a2020;
+        --amber:#e0aa3e; --amber-bg:#3a2f16; --brand:#2c62b0; --brand2:#4a86d6; --brand-bg:#17263f;
+        --shadow:0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font-family:'Be Vietnam Pro',sans-serif; }
+    .wrap{ max-width:920px; margin:0 auto; padding:22px 18px 60px; }
+    .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; }
+    .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); font-weight:800; }
+    .back-btn{ width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:var(--card); color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; text-decoration:none; }
+    h1{ font-size:1.3rem; margin:0 0 4px; font-weight:800; }
+    p.sub{ color:var(--ink-mute); font-size:.86rem; margin:0 0 20px; line-height:1.6; max-width:760px; }
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:18px 20px; margin-bottom:16px; }
+    .doc-title{ font-weight:700; font-size:1rem; margin-bottom:2px; }
+    .doc-meta{ color:var(--ink-mute); font-size:.8rem; margin-bottom:14px; }
+    .badge{ display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-size:.74rem; font-weight:700; }
+    .badge.on{ background:var(--green-bg); color:var(--green); }
+    .badge.off{ background:var(--amber-bg); color:var(--amber); }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:10px; }
+    .field{ display:flex; flex-direction:column; gap:5px; }
+    .field label{ font-size:.76rem; font-weight:700; color:var(--ink-mute); }
+    .field input[type=number], .field input[type=file]{
+        padding:9px 11px; border-radius:9px; border:1px solid var(--line); background:var(--bg); color:var(--ink);
+        font-family:inherit; font-size:.86rem; width:170px;
+    }
+    .field input[type=file]{ width:280px; }
+    .btn{ padding:10px 16px; border-radius:10px; border:none; font-weight:700; font-size:.85rem; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
+    .btn-primary{ background:linear-gradient(135deg,var(--brand),var(--brand2)); color:#fff; }
+    .btn-primary:disabled{ opacity:.55; cursor:not-allowed; }
+    .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); }
+    .btn-ghost:hover{ background:var(--brand-bg); color:var(--brand); }
+    .progress-wrap{ margin-top:10px; display:none; }
+    .progress-bar{ height:8px; border-radius:5px; background:var(--bg); border:1px solid var(--line); overflow:hidden; }
+    .progress-fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--brand),var(--brand2)); transition:width .2s ease; }
+    .progress-txt{ font-size:.78rem; color:var(--ink-mute); margin-top:6px; }
+    .msg{ font-size:.82rem; margin-top:10px; padding:9px 12px; border-radius:9px; display:none; }
+    .msg.ok{ background:var(--green-bg); color:var(--green); display:block; }
+    .msg.err{ background:var(--red-bg); color:var(--red); display:block; }
+    .empty{ text-align:center; padding:60px 20px; color:var(--ink-mute); }
+    .gate{ max-width:380px; margin:80px auto; text-align:center; }
+</style>
+</head>
+<body>
+
+<div id="gate" class="wrap gate" style="display:none;">
+    <h1><i class="fa-solid fa-lock"></i> Cần quyền admin</h1>
+    <p class="sub" id="gateMsg">Đang kiểm tra đăng nhập...</p>
+    <a href="../account/login.html?next=admin/doc-preview.html" class="btn btn-primary">Đăng nhập</a>
+</div>
+
+<div id="shell" class="wrap" style="display:none;">
+    <div class="topbar">
+        <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+        <div class="brand"><i class="fa-solid fa-file-shield"></i> Xem trước theo trang</div>
+        <span style="width:38px;"></span>
+    </div>
+    <h1>🧩 Xem trước tài liệu theo trang</h1>
+    <p class="sub">
+        Chỉ áp dụng cho <b>tài liệu trả phí</b>. Sau khi tách trang, khách xem được đúng số trang
+        "free" đầu tiên (không cần mua) — xem tiếp phải <b>đang có Pro</b> hoặc <b>đã mua tài liệu này</b>.
+        File PDF gốc không public — chỉ ảnh từng trang được phát ra, có kiểm tra quyền phía server.
+        Trang xem cho khách: <code>../doc-preview-viewer.html?id=&lt;id&gt;</code>
+    </p>
+    <div id="list"></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const DOC_PAGES_BUCKET = 'tai-lieu-trang'; // ⚠️ Tạo bucket này trên Cloudflare R2, KHÔNG bật Public Access
+
+let docList = [];
+
+async function isAdminUser(){
+    const { data } = await sb.auth.getUser();
+    const user = data?.user;
+    if (!user) return false;
+    const { data: profile } = await sb.from('profiles').select('role').eq('id', user.id).maybeSingle();
+    return !!profile && profile.role === 'admin';
+}
+
+async function boot(){
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session){
+        document.getElementById('gate').style.display = 'block';
+        document.getElementById('gateMsg').textContent = 'Bạn chưa đăng nhập.';
+        return;
+    }
+    const ok = await isAdminUser();
+    if (!ok){
+        document.getElementById('gate').style.display = 'block';
+        document.getElementById('gateMsg').textContent = 'Tài khoản này không có quyền admin.';
+        return;
+    }
+    document.getElementById('shell').style.display = 'block';
+    await loadDocs();
+}
+
+async function loadDocs(){
+    const { data } = await sb.from('site_settings').select('payload').eq('key', 'doc_content').single();
+    const payload = (data && data.payload) || { free: [], paid: [] };
+    docList = Array.isArray(payload.paid) ? payload.paid : [];
+    renderList();
+}
+
+function renderList(){
+    const wrap = document.getElementById('list');
+    if (!docList.length){
+        wrap.innerHTML = `<div class="card empty"><i class="fa-solid fa-folder-open" style="font-size:1.8rem;margin-bottom:10px;"></i><br>Chưa có tài liệu trả phí nào. Vào mục "Tài liệu" ở trang admin chính để thêm trước.</div>`;
+        return;
+    }
+    wrap.innerHTML = docList.map((item, idx) => {
+        const ready = item.pages_ready && item.preview_mode === 'pages';
+        return `
+        <div class="card" id="doc_${idx}">
+            <div class="doc-title">${escapeHtml(item.title || '(chưa đặt tên)')}</div>
+            <div class="doc-meta">
+                ID: <code>${escapeHtml(String(item.id))}</code> ·
+                <span class="badge ${ready ? 'on' : 'off'}">
+                    <i class="fa-solid ${ready ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i>
+                    ${ready ? `Đã tách ${item.pages_total || 0} trang` : 'Chưa bật xem trước theo trang'}
+                </span>
+            </div>
+            <div class="row">
+                <div class="field">
+                    <label>Số trang xem thử (free)</label>
+                    <input type="number" min="0" id="freePages_${idx}" value="${item.free_pages != null ? item.free_pages : 5}">
+                </div>
+                <div class="field">
+                    <label>File PDF gốc (để tách trang)</label>
+                    <input type="file" id="pdfFile_${idx}" accept="application/pdf">
+                </div>
+                <button class="btn btn-primary" onclick="processDoc(${idx})"><i class="fa-solid fa-scissors"></i> Tách trang &amp; Lưu</button>
+                ${ready ? `<a class="btn btn-ghost" href="../doc-preview-viewer.html?id=${encodeURIComponent(item.id)}" target="_blank"><i class="fa-solid fa-eye"></i> Xem thử</a>` : ''}
+                ${ready ? `<button class="btn btn-ghost" onclick="togglePreview(${idx}, false)"><i class="fa-solid fa-toggle-off"></i> Tắt xem trước</button>` : ''}
+            </div>
+            <div class="progress-wrap" id="progWrap_${idx}">
+                <div class="progress-bar"><div class="progress-fill" id="progFill_${idx}"></div></div>
+                <div class="progress-txt" id="progTxt_${idx}">Đang xử lý...</div>
+            </div>
+            <div class="msg" id="msg_${idx}"></div>
+        </div>`;
+    }).join('');
+}
+
+function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function showMsg(idx, ok, text){
+    const el = document.getElementById('msg_' + idx);
+    el.className = 'msg ' + (ok ? 'ok' : 'err');
+    el.textContent = text;
+}
+
+// ---------- Tải PDF.js động (chỉ khi cần, đỡ nặng trang) ----------
+let pdfjsReady = null;
+function loadPdfJs(){
+    if (pdfjsReady) return pdfjsReady;
+    pdfjsReady = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.onload = () => {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            resolve(window.pdfjsLib);
+        };
+        s.onerror = () => reject(new Error('Không tải được thư viện PDF.js'));
+        document.head.appendChild(s);
+    });
+    return pdfjsReady;
+}
+
+// ---------- Upload 1 trang ảnh lên R2 qua Edge Function r2-storage có sẵn ----------
+async function r2UploadPage(path, blob){
+    const form = new FormData();
+    form.append('bucket', DOC_PAGES_BUCKET);
+    form.append('path', path);
+    form.append('file', blob, path.split('/').pop());
+    const { data, error } = await sb.functions.invoke('r2-storage', { body: form });
+    if (error) throw new Error(error.message || 'Lỗi tải ảnh trang lên R2');
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Lỗi tải ảnh trang lên R2');
+    return data;
+}
+
+async function processDoc(idx){
+    const item = docList[idx];
+    const fileInput = document.getElementById('pdfFile_' + idx);
+    const file = fileInput.files && fileInput.files[0];
+    const freePages = Math.max(0, parseInt(document.getElementById('freePages_' + idx).value, 10) || 0);
+    if (!file){ showMsg(idx, false, 'Chọn file PDF trước đã.'); return; }
+    if (file.type !== 'application/pdf'){ showMsg(idx, false, 'Chỉ hỗ trợ file .pdf ở bước tách trang này (Word cần convert sang PDF trước).'); return; }
+
+    const btn = document.querySelectorAll(`#doc_${idx} .btn-primary`)[0];
+    btn.disabled = true;
+    const progWrap = document.getElementById('progWrap_' + idx);
+    const progFill = document.getElementById('progFill_' + idx);
+    const progTxt = document.getElementById('progTxt_' + idx);
+    progWrap.style.display = 'block';
+    showMsg(idx, true, '');
+    document.getElementById('msg_' + idx).style.display = 'none';
+
+    try{
+        progTxt.textContent = 'Đang tải thư viện đọc PDF...';
+        const pdfjsLib = await loadPdfJs();
+
+        progTxt.textContent = 'Đang đọc file PDF...';
+        const buf = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+        const total = pdf.numPages;
+        const docId = String(item.id);
+
+        for (let p = 1; p <= total; p++){
+            progTxt.textContent = `Đang tách & tải trang ${p}/${total}...`;
+            progFill.style.width = Math.round((p / total) * 100) + '%';
+
+            const page = await pdf.getPage(p);
+            // scale vừa đủ đọc rõ, không quá nặng dung lượng
+            const viewport = page.getViewport({ scale: 1.4 });
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+            await page.render({ canvasContext: ctx, viewport }).promise;
+
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.72));
+            await r2UploadPage(`${docId}/page-${p}.jpg`, blob);
+        }
+
+        progTxt.textContent = 'Đang lưu file PDF gốc (riêng tư)...';
+        // Lưu luôn PDF gốc vào cùng bucket riêng tư (không public) — để lần sau
+        // muốn tách lại (đổi chất lượng, sửa lỗi...) không cần tìm lại file trên máy.
+        await r2UploadPage(`${docId}/original.pdf`, file);
+
+        progTxt.textContent = 'Đang lưu thông tin vào database...';
+
+        // 1) Ghi đường dẫn lưu trữ thật vào document_sources (bảng riêng, không public)
+        const { error: srcErr } = await sb.from('document_sources').upsert({
+            doc_id: docId,
+            storage_bucket: DOC_PAGES_BUCKET,
+            storage_prefix: docId,
+            pages_total: total,
+            has_original: true,
+            updated_at: new Date().toISOString(),
+        }, { onConflict: 'doc_id' });
+        if (srcErr) throw new Error('Lỗi lưu document_sources: ' + srcErr.message);
+
+        // 2) Cập nhật thông tin công khai (an toàn) vào doc_content
+        item.preview_mode = 'pages';
+        item.free_pages = freePages;
+        item.pages_total = total;
+        item.pages_ready = true;
+        await savePayload();
+
+        progFill.style.width = '100%';
+        showMsg(idx, true, `✅ Xong! Đã tách ${total} trang, cho xem thử ${freePages} trang đầu.`);
+        renderList();
+    }catch(e){
+        showMsg(idx, false, '❌ ' + (e.message || 'Có lỗi xảy ra.'));
+    }finally{
+        btn.disabled = false;
+    }
+}
+
+async function togglePreview(idx, on){
+    docList[idx].preview_mode = on ? 'pages' : null;
+    await savePayload();
+    renderList();
+}
+
+async function savePayload(){
+    const { data } = await sb.from('site_settings').select('payload').eq('key', 'doc_content').single();
+    const payload = (data && data.payload) || { free: [], paid: [] };
+    payload.paid = docList; // docList giữ nguyên tham chiếu object đã sửa ở trên
+    const { error } = await sb.from('site_settings').update({ payload }).eq('key', 'doc_content');
+    if (error) throw new Error('Lỗi lưu site_settings: ' + error.message);
+}
+
+boot();
+</script>
+</body>
+</html>

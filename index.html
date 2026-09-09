@@ -2,210 +2,689 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#14151c" media="(prefers-color-scheme: dark)">
+<script src="assets/js/supabase-config.js"></script>
+<!-- Kiểm tra chế độ bảo trì (Admin > Bảo trì) trước khi hiện trang -->
+<script src="assets/js/maintenance-check.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-J2P8ECB8TL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-J2P8ECB8TL');
+</script>
 <script>
     try{
         var savedTheme = localStorage.getItem('sng-theme');
         if(savedTheme === 'dark' || savedTheme === 'light'){
             document.documentElement.setAttribute('data-theme', savedTheme);
         }else{
+            // Chưa từng chọn thủ công -> mặc định luôn là giao diện tối
             document.documentElement.setAttribute('data-theme', 'dark');
         }
     }catch(e){}
 </script>
-<title>Đang bảo trì · SNG EDU</title>
-<meta name="robots" content="noindex, nofollow">
+<title>SNG EDU — Không gian tri thức cộng đồng</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<script src="assets/js/sepay-checkout.js" defer></script>
+<link rel="stylesheet" href="assets/css/index.css">
+
+<!-- ===== SEO: mô tả, canonical, Open Graph, Twitter Card, favicon ===== -->
+<meta name="description" content="SNG EDU — nền tảng học tập miễn phí: tài liệu, trắc nghiệm, đề thi thử và luyện tính toán. Học và ôn tập mọi lúc, mọi nơi.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://sngedu.site/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SNG EDU">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:title" content="SNG EDU — Không gian tri thức cộng đồng">
+<meta property="og:description" content="SNG EDU — nền tảng học tập miễn phí: tài liệu, trắc nghiệm, đề thi thử và luyện tính toán. Học và ôn tập mọi lúc, mọi nơi.">
+<meta property="og:url" content="https://sngedu.site/">
+<meta property="og:image" content="https://sngedu.site/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SNG EDU — Không gian tri thức cộng đồng">
+<meta name="twitter:description" content="SNG EDU — nền tảng học tập miễn phí: tài liệu, trắc nghiệm, đề thi thử và luyện tính toán. Học và ôn tập mọi lúc, mọi nơi.">
+<meta name="twitter:image" content="https://sngedu.site/assets/og-image.png">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-
-<style>
-    :root{
-        --bg:        #e4e7f0;
-        --card:      #f3f4f9;
-        --line:      #d3d7e3;
-        --ink:       #23273a;
-        --ink-soft:  #5c6272;
-        --ink-mute:  #83899c;
-        --brand:     #4f6bff;
-        --brand2:    #8b5cf6;
-        --amber:     #f5a524;
-        --amber-bg:  #fbedd6;
-        --grad-brand: linear-gradient(135deg, var(--brand) 0%, var(--brand2) 100%);
-        --shadow: 0 1px 2px rgba(20,22,40,.06), 0 8px 24px -12px rgba(20,22,40,.12);
-    }
-    html[data-theme="dark"]{
-        --bg:        #14151c;
-        --card:      #1c1e28;
-        --line:      #2a2d3a;
-        --ink:       #f2f3f8;
-        --ink-soft:  #b4b8c8;
-        --ink-mute:  #7d8296;
-        --amber-bg:  rgba(245,165,36,.14);
-        --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
-    }
-    *{ box-sizing:border-box; }
-    body{
-        margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-        background:var(--bg); color:var(--ink); font-family:'Be Vietnam Pro','Segoe UI',Roboto,Arial,sans-serif;
-        padding:24px; transition:background .2s,color .2s;
-    }
-    .wrap{
-        max-width:460px; width:100%; text-align:center;
-        background:var(--card); border:1px solid var(--line); border-radius:24px;
-        padding:40px 30px 34px; box-shadow:var(--shadow);
-    }
-    .brand-row{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:22px; }
-    .brand-dot{
-        width:34px; height:34px; border-radius:10px; background:var(--grad-brand);
-        display:flex; align-items:center; justify-content:center; flex:0 0 auto;
-    }
-    .brand-dot svg{ width:20px; height:20px; }
-    .brand-name{ font-weight:800; font-size:1.05rem; letter-spacing:.2px; }
-    .ico-wrap{
-        width:76px; height:76px; border-radius:20px; margin:0 auto 20px; background:var(--amber-bg);
-        display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--amber);
-    }
-    .ico-wrap i{ animation:spin 3.2s linear infinite; }
-    @keyframes spin{ to{ transform:rotate(360deg); } }
-    h1{ font-size:1.3rem; margin:0 0 10px; font-weight:800; }
-    p{ font-size:.92rem; color:var(--ink-soft); line-height:1.6; margin:0 0 6px; }
-    #mntMsg{ margin-bottom:18px; white-space:pre-line; }
-    .dots span{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--ink-mute); margin:0 3px; opacity:.35; animation:blink 1.4s infinite; }
-    .dots span:nth-child(2){ animation-delay:.2s; }
-    .dots span:nth-child(3){ animation-delay:.4s; }
-    @keyframes blink{ 0%,80%,100%{ opacity:.25; } 40%{ opacity:1; } }
-    .foot-hint{ margin-top:22px; font-size:.78rem; color:var(--ink-mute); }
-    .foot-hint a{ color:var(--brand); font-weight:600; text-decoration:none; }
-
-    .timer{ display:flex; gap:8px; justify-content:center; margin:22px 0 4px; }
-    .timer-box{
-        background:var(--bg); border:1px solid var(--line); border-radius:12px;
-        padding:10px 4px; width:64px;
-    }
-    .timer-box .num{ font-size:1.35rem; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; color:var(--ink); }
-    .timer-box .lbl{ font-size:.62rem; color:var(--ink-mute); margin-top:4px; text-transform:uppercase; letter-spacing:.4px; }
-    .target-txt{ font-size:.78rem; color:var(--ink-mute); margin:2px 0 0; }
-
-    .contact-box{
-        margin-top:20px; padding-top:18px; border-top:1px solid var(--line);
-        display:flex; flex-direction:column; gap:8px;
-    }
-    .contact-row{
-        display:flex; align-items:center; justify-content:center; gap:8px;
-        font-size:.85rem; color:var(--ink-soft); text-decoration:none;
-    }
-    .contact-row i{ color:var(--brand); width:16px; text-align:center; }
-    .contact-row b{ color:var(--ink); font-weight:700; }
-</style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14151c" media="(prefers-color-scheme: dark)">
+<script src="assets/js/pwa-register.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "SNG EDU",
+  "url": "https://sngedu.site/",
+  "logo": "https://sngedu.site/assets/icon-512.png",
+  "description": "SNG EDU — nền tảng học tập miễn phí: tài liệu, trắc nghiệm, đề thi thử và luyện tính toán."
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "SNG EDU",
+  "url": "https://sngedu.site/",
+  "inLanguage": "vi-VN",
+  "description": "SNG EDU — nền tảng học tập miễn phí: tài liệu, trắc nghiệm, đề thi thử và luyện tính toán. Học và ôn tập mọi lúc, mọi nơi."
+}
+</script>
+<!-- ===== Hết block SEO ===== -->
 </head>
-<body data-page="maintenance" data-page-label="Bảo trì">
-    <script src="frontend/track-visit.js"></script>
-<script src="frontend/ctv-track.js"></script>
-    <div class="wrap">
-        <div class="brand-row">
-            <span class="brand-dot">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 3 2 8l10 5 8-4.2V15h1.5V8L12 3Z" fill="#fff"/>
-                    <path d="M6 11.5V16c0 1.7 2.7 3.5 6 3.5s6-1.8 6-3.5v-4.5l-6 3-6-3Z" fill="#fff" fill-opacity=".92"/>
+<body>
+
+<div class="shell">
+
+    <aside class="sidebar">
+        <a class="side-logo" href="#" data-go="home" style="text-decoration:none; color:inherit; cursor:pointer;">
+            <div class="mark">S</div>
+            <div class="name">SNG EDU</div>
+        </a>
+        <nav class="side-nav" id="sideNav">
+            <a class="side-link active" href="#" data-tab="home" title="Trang chủ"><i class="fa-solid fa-house"></i><span class="lbl">Trang chủ</span></a>
+            <a class="side-link" href="#" data-tab="doc" title="Tài liệu"><i class="fa-solid fa-folder-open"></i><span class="lbl">Tài liệu</span></a>
+            <a class="side-link" href="#" data-tab="quiz" title="Trắc nghiệm"><i class="fa-solid fa-list-check"></i><span class="lbl">Trắc nghiệm</span></a>
+            <a class="side-link" href="#" data-tab="tool" title="Công cụ"><i class="fa-solid fa-toolbox"></i><span class="lbl">Công cụ</span></a>
+            <a class="side-link" href="#" data-tab="product" title="Sản phẩm"><i class="fa-solid fa-bag-shopping"></i><span class="lbl">Sản phẩm</span></a>
+            <a class="side-link" href="#" data-tab="account" title="Tài khoản"><i class="fa-solid fa-crown"></i><span class="lbl">Tài khoản</span></a>
+            <a class="side-link" href="#" data-tab="support" title="Hỗ trợ"><i class="fa-solid fa-headset"></i><span class="lbl">Hỗ trợ</span></a>
+            <div class="side-collapse-wrap">
+                <button type="button" class="side-collapse-btn" id="sideCollapseBtn" title="Thu gọn / mở rộng menu" aria-label="Thu gọn / mở rộng menu">
+                    <i class="fa-solid fa-angles-left"></i>
+                </button>
+            </div>
+        </nav>
+        <div class="side-foot">
+            <button type="button" id="sideProBtn" onclick="openProUpgradeModal(); closeMobileMenu();" title="Nâng cấp Pro" style="display:none; width:100%; margin-bottom:8px; border:none; border-radius:99px; padding:11px; background:linear-gradient(135deg, var(--brand), var(--brand2)); color:#fff; font-weight:800; font-size:.86rem; cursor:pointer; align-items:center; justify-content:center; gap:8px;">
+                <i class="fa-solid fa-crown"></i> <span class="lbl">Nâng cấp Pro</span>
+            </button>
+            <a href="nhan-pro.html" id="sideEarnProBtn" style="display:flex; width:100%; margin-bottom:12px; border-radius:99px; padding:9px; background:var(--amber-bg); color:var(--amber); font-weight:700; font-size:.8rem; text-decoration:none; align-items:center; justify-content:center; gap:7px;">
+                <i class="fa-solid fa-gift"></i> <span class="lbl">Nhận Pro miễn phí</span>
+            </a>
+            <div class="side-user">
+                <div class="side-avatar is-guest"><span class="avt-content"><i class="fa-solid fa-user"></i></span><span class="online-dot"></span><span class="pro-badge"><i class="fa-solid fa-crown"></i></span></div>
+                <div class="u-info">
+                    <div class="u-name">Khách</div>
+                    <div class="u-sub">Nhấn để xem hồ sơ</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main">
+
+        <div class="topbar">
+            <div class="topbar-left">
+                <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Mở menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="topbar-title">Trang chủ</div>
+            </div>
+            <div class="topbar-right">
+                <div class="pill"><i class="fa-solid fa-fire"></i> <span class="pill-label">Chuỗi ôn tập</span></div>
+                <div class="notify-bell hidden" id="notifyBell" aria-label="Thông báo">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="notify-dot hidden" id="notifyDot">0</span>
+                    <div class="notify-dropdown hidden" id="notifyDropdown" onclick="event.stopPropagation()">
+                        <div class="notify-dropdown-head">Thông báo của bạn</div>
+                        <div class="notify-dropdown-list" id="notifyDropdownList"></div>
+                    </div>
+                </div>
+                <button class="theme-toggle" id="pwaInstallBtn" aria-label="Cài đặt ứng dụng SNG EDU" type="button" style="display:none;" title="Cài đặt ứng dụng">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+                <button class="theme-toggle" id="themeToggle" aria-label="Đổi giao diện sáng/tối" type="button">
+                    <i class="fa-solid fa-moon"></i>
+                    <i class="fa-solid fa-sun"></i>
+                </button>
+                <div class="avatar-btn is-guest"><span class="avt-content"><i class="fa-solid fa-user"></i></span><span class="online-dot"></span><span class="pro-badge"><i class="fa-solid fa-crown"></i></span></div>
+            </div>
+        </div>
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+        <div class="wrap">
+
+    <!-- ============ TAB: TRANG CHỦ ============ -->
+    <section class="tab-panel" id="panel-home">
+
+        <div class="promo-banner hidden" id="promoBanner" onclick="openProUpgradeModal()">
+            <div class="promo-banner-left">
+                <span class="promo-crown">👑</span>
+                <span class="promo-msg" id="promoBannerMsg"></span>
+            </div>
+            <div class="promo-banner-right">
+                <span class="promo-pill promo-pill-slots hidden" id="promoSlotsPill"></span>
+                <span class="promo-pill promo-pill-timer hidden" id="promoTimerPill"></span>
+                <button type="button" class="promo-close" id="promoCloseBtn" title="Đóng" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+
+        <div class="hero">
+            <div class="hero-card" id="heroCard" data-hero-style="gradient">
+                <div class="hero-text" id="heroText" style="opacity:0;">
+                    <div class="hero-eyebrow" id="heroEyebrow">SNG EDU - Không gian tri thức cộng đồng</div>
+                    <h1 id="heroTitle">Mở kho tài liệu, bắt đầu ôn tập ngay hôm nay</h1>
+                    <div class="avatar-group" id="avatarGroup" data-effect="none">
+                        <div class="avatar-stack" id="avatarStack">
+                            <div class="mini-avt" style="background:#4f6bff">H</div>
+                            <div class="mini-avt" style="background:var(--brand2)">L</div>
+                            <div class="mini-avt" style="background:#17b26a">M</div>
+                            <div class="mini-avt" style="background:#f5a524">T</div>
+                        </div>
+                        <div class="ag-text" id="avatarText"><b id="avatarCount">1.240 bạn</b> <span id="avatarSuffix">đang ôn tập tuần này</span></div>
+                    </div>
+                    <div class="hero-badge-alt hidden" id="heroBadgeAlt" data-effect="none">
+                        <i class="fa-solid fa-star" id="heroBadgeIcon"></i>
+                        <span id="heroBadgeText">4.9/5 từ 320 đánh giá</span>
+                    </div>
+                </div>
+                <svg class="hero-illustration" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="100" cy="176" rx="72" ry="10" fill="#1f2433" opacity=".06"/>
+                    <rect x="34" y="128" width="132" height="20" rx="6" fill="#4f6bff" transform="rotate(-2 100 138)"/>
+                    <rect x="46" y="106" width="112" height="20" rx="6" fill="var(--brand2)" transform="rotate(1.5 100 116)"/>
+                    <rect x="40" y="84"  width="118" height="20" rx="6" fill="#17b26a" transform="rotate(-1.5 100 94)"/>
+                    <g transform="translate(100 55)">
+                        <polygon points="0,-16 40,0 0,16 -40,0" fill="#1f2433"/>
+                        <polygon points="0,-16 40,0 0,4 -40,0" fill="#333a4d"/>
+                        <circle cx="0" cy="0" r="6" fill="#f5a524"/>
+                        <line x1="30" y1="-5" x2="30" y2="16" stroke="#f5a524" stroke-width="2.5" stroke-linecap="round"/>
+                        <circle cx="30" cy="18" r="3" fill="#f5a524"/>
+                    </g>
+                    <g transform="translate(150 96) rotate(18)">
+                        <rect x="-3" y="-30" width="6" height="42" rx="3" fill="#ffb37a"/>
+                        <polygon points="-3,12 3,12 0,24" fill="#e08a4f"/>
+                    </g>
+                    <circle cx="158" cy="52" r="16" fill="#fef3e0"/>
+                    <path d="M158 44 a8 8 0 1 1 -0.1 0 M154 60 h8" stroke="#f5a524" stroke-width="2.5" stroke-linecap="round" fill="none"/>
                 </svg>
-            </span>
-            <span class="brand-name">SNG EDU</span>
-        </div>
-        <div class="ico-wrap"><i class="fa-solid fa-gear"></i></div>
-        <h1>Website đang được bảo trì</h1>
-        <p id="mntMsg">Bọn mình đang nâng cấp để mang lại trải nghiệm tốt hơn. Vui lòng quay lại sau ít phút nhé!</p>
-        <p class="dots"><span></span><span></span><span></span></p>
-
-        <div class="timer" id="cdTimer" style="display:none;">
-            <div class="timer-box"><div class="num" id="cdD">00</div><div class="lbl">Ngày</div></div>
-            <div class="timer-box"><div class="num" id="cdH">00</div><div class="lbl">Giờ</div></div>
-            <div class="timer-box"><div class="num" id="cdM">00</div><div class="lbl">Phút</div></div>
-            <div class="timer-box"><div class="num" id="cdS">00</div><div class="lbl">Giây</div></div>
-        </div>
-        <p class="target-txt" id="cdTarget" style="display:none;"></p>
-
-        <div class="contact-box">
-            <a class="contact-row" href="https://zalo.me/0825160035" target="_blank" rel="noopener">
-                <i class="fa-brands fa-facebook-messenger"></i> Zalo: <b>0825 160 035</b>
-            </a>
-            <a class="contact-row" href="mailto:seangogroup@gmail.com">
-                <i class="fa-solid fa-envelope"></i> <b>seangogroup@gmail.com</b>
-            </a>
+            </div>
         </div>
 
-        <div class="foot-hint">Cần hỗ trợ gấp? <a href="lien-he.html">Liên hệ Admin</a></div>
+        <div class="sec-head"><h2 id="quickAccessTitle">Truy cập nhanh</h2></div>
+        <div class="quick-grid" id="quickGrid">
+            <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
+        </div>
+
+
+        <div class="sec-head" style="margin-top:8px">
+            <h2 id="homeSubjectsTitle">Học phần nổi bật</h2>
+            <div class="sec-head-right">
+                <a class="sec-view-all" href="#" data-go="quiz">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        </div>
+        <div class="grid grid-hscroll" id="homeSubjectGrid">
+            <div class="empty-state small"><div class="empty-title">Đang tải danh sách môn học...</div></div>
+        </div>
+
+        <!-- Các khối "nổi bật" theo từng loại — ghim ở trang admin > Ghim nổi bật, tự ẩn nếu chưa ghim mục nào -->
+        <!-- Tài liệu nổi bật được tách riêng Miễn phí / Trả phí, mỗi khối có thứ tự ghim và tiêu đề riêng (chỉnh ở admin) -->
+        <div id="featuredDocFreeSection" style="display:none; margin-top:8px">
+            <div class="sec-head"><h2 id="featuredDocFreeTitle">Tài liệu miễn phí nổi bật</h2><a class="sec-view-all" href="#" data-go="doc" data-doc-filter="free">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a></div>
+            <div class="grid grid-hscroll" id="featuredDocFreeGrid"></div>
+        </div>
+        <div id="featuredDocPaidSection" style="display:none; margin-top:8px">
+            <div class="sec-head"><h2 id="featuredDocPaidTitle">Tài liệu trả phí nổi bật</h2><a class="sec-view-all" href="#" data-go="doc" data-doc-filter="paid">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a></div>
+            <div class="grid grid-hscroll" id="featuredDocPaidGrid"></div>
+        </div>
+        <div id="featuredToolSection" style="display:none; margin-top:8px">
+            <div class="sec-head"><h2 id="featuredToolTitle">Công cụ nổi bật</h2><a class="sec-view-all" href="#" data-go="tool">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a></div>
+            <div class="grid grid-hscroll" id="featuredToolGrid"></div>
+        </div>
+        <div id="featuredProductSection" style="display:none; margin-top:8px">
+            <div class="sec-head"><h2 id="featuredProductTitle">Sản phẩm nổi bật</h2><a class="sec-view-all" href="#" data-go="product">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a></div>
+            <div class="grid grid-hscroll" id="featuredProductGrid"></div>
+        </div>
+
+    </section>
+
+    <!-- ============ TAB: TRẮC NGHIỆM ============ -->
+    <section class="tab-panel" id="panel-quiz" style="display:none">
+
+        <div class="sec-head">
+            <h2 id="quizSectionTitle">Học phần đại cương</h2>
+            <span id="quizSubjectCount">Đang tải...</span>
+        </div>
+
+        <div class="grid" id="quizSubjectGrid">
+            <div class="empty-state small"><div class="empty-title">Đang tải danh sách môn học...</div></div>
+        </div>
+
+    </section>
+
+    <!-- ============ TAB: TÀI LIỆU ============ -->
+    <section class="tab-panel" id="panel-doc" style="display:none">
+        <div class="doc-hero">
+            <div>
+                <h2 id="docSectionTitle">Tài liệu ôn tập</h2>
+                <p class="doc-hero-sub">Đề cương, tóm tắt kiến thức &amp; tài liệu tổng hợp theo từng học phần.</p>
+            </div>
+            <div class="doc-hero-stat"><i class="fa-solid fa-folder-open"></i> <span id="docAllCount">Đang tải...</span></div>
+        </div>
+
+        <div class="pill-row">
+            <button class="filter-pill active" data-filter="all" type="button">Tất cả</button>
+            <button class="filter-pill" data-filter="free" type="button">Miễn phí</button>
+            <button class="filter-pill" data-filter="paid" type="button">Trả phí</button>
+            <button class="filter-pill" data-filter="vip" type="button">VIP</button>
+        </div>
+
+        <div id="docAllGrid">
+            <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
+        </div>
+
+        <div class="doc-cat" id="docHistorySec" style="display:none">
+            <div class="doc-cat-head">
+                <div class="doc-cat-name"><i class="fa-solid fa-clock-rotate-left" style="color:var(--brand)"></i> Lịch sử mua tài liệu</div>
+            </div>
+            <div class="acct-order-card">
+                <div class="acc-loading" id="docOrderLoading">Đang tải lịch sử...</div>
+                <div id="docOrderList" style="display:none"></div>
+                <div class="acc-empty" id="docOrderEmpty" style="display:none">
+                    <i class="fa-solid fa-receipt"></i>
+                    <p>Chưa có giao dịch mua tài liệu nào thành công.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ TAB: CÔNG CỤ ============ -->
+    <section class="tab-panel" id="panel-tool" style="display:none">
+        <div class="sec-head"><h2 id="toolSectionTitle">Công cụ</h2></div>
+        <div id="toolGrid" class="grid">
+            <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
+        </div>
+    </section>
+
+    <!-- ============ TAB: SẢN PHẨM ============ -->
+    <section class="tab-panel" id="panel-product" style="display:none">
+        <div class="prod-hero">
+            <div>
+                <h2 id="productSectionTitle">Sản phẩm &amp; gói nâng cao</h2>
+                <p class="prod-hero-sub">Khoá ôn thi, gói tài liệu tổng hợp và các sản phẩm hỗ trợ học tập khác.</p>
+            </div>
+            <div class="prod-hero-stat"><i class="fa-solid fa-bag-shopping"></i> <span id="productAllCount">Đang tải...</span></div>
+        </div>
+
+        <div class="pill-row" id="productCatPills" style="display:none"></div>
+
+        <div id="productGrid">
+            <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
+        </div>
+
+        <div class="doc-cat" id="prodHistorySec" style="display:none">
+            <div class="doc-cat-head">
+                <div class="doc-cat-name"><i class="fa-solid fa-clock-rotate-left" style="color:var(--brand)"></i> Lịch sử mua sản phẩm</div>
+            </div>
+            <div class="acct-order-card">
+                <div class="acc-loading" id="prodOrderLoading">Đang tải lịch sử...</div>
+                <div id="prodOrderList" style="display:none"></div>
+                <div class="acc-empty" id="prodOrderEmpty" style="display:none">
+                    <i class="fa-solid fa-receipt"></i>
+                    <p>Chưa có giao dịch mua sản phẩm nào thành công.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ TAB: TÀI KHOẢN & GÓI PRO ============ -->
+    <section class="tab-panel" id="panel-account" style="display:none">
+        <div class="acct-subtabs" id="acctSubtabs">
+            <button type="button" class="acct-subtab active" data-subtab="overview">Tổng quan</button>
+            <button type="button" class="acct-subtab" data-subtab="history">Lịch sử giao dịch</button>
+        </div>
+
+        <div class="acct-subpanel active" id="acctSubOverview">
+            <div class="sec-head"><h2>Thông tin tài khoản</h2></div>
+            <div style="background:var(--card); border:1px solid var(--line); border-radius:20px; padding:22px 24px; margin-bottom:28px;">
+                <div class="acc-info-row"><span class="label">Email</span><span class="value" id="acctPageEmail">—</span></div>
+                <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="acctPageName">—</span></div>
+                <div class="acc-info-row"><span class="label">Gói hiện tại</span><span class="value"><span class="acc-plan-badge" id="acctPagePlanBadge">Miễn phí</span></span></div>
+                <div class="acc-info-row" id="acctPageBalanceRow" style="display:none">
+                    <span class="label">Số dư</span>
+                    <span class="value" style="display:flex; align-items:center; gap:10px;">
+                        <span id="acctPageBalanceValue">—</span>
+                        <button type="button" class="acc-upgrade-btn" id="acctPageTopupBtn" style="padding:6px 14px; font-size:13px;" onclick="openTopupModal()"><i class="fa-solid fa-wallet"></i> Nạp tiền</button>
+                    </span>
+                </div>
+            </div>
+
+            <div class="sec-head acctpw-toggle" id="acctPwToggle" role="button" tabindex="0" aria-expanded="false">
+                <div class="acctpw-toggle-icon"><i class="fa-solid fa-key"></i></div>
+                <h2>Đổi mật khẩu</h2>
+                <span class="acctpw-toggle-hint">Bấm để mở</span>
+                <i class="fa-solid fa-chevron-down acctpw-chevron" id="acctPwChevron"></i>
+            </div>
+            <div class="acctpw-card" id="acctPwCard" style="display:none;">
+                <div class="acctpw-grid">
+                    <div class="acctpw-field">
+                        <label for="acctPwOld">Mật khẩu hiện tại</label>
+                        <input type="password" id="acctPwOld" placeholder="Nhập mật khẩu hiện tại" autocomplete="current-password">
+                    </div>
+                    <div class="acctpw-field">
+                        <label for="acctPwNew">Mật khẩu mới</label>
+                        <input type="password" id="acctPwNew" placeholder="Ít nhất 6 ký tự" autocomplete="new-password">
+                    </div>
+                    <div class="acctpw-field">
+                        <label for="acctPwConfirm">Nhập lại mật khẩu mới</label>
+                        <input type="password" id="acctPwConfirm" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password">
+                    </div>
+                </div>
+                <div class="acctpw-msg" id="acctPwMsg"></div>
+                <button class="acctpw-save-btn" id="acctPwSave" type="button"><i class="fa-solid fa-key"></i> Lưu mật khẩu mới</button>
+            </div>
+
+            <div class="sec-head"><h2>Nâng cấp gói Pro</h2></div>
+            <div id="proGrid" class="pro-pkg-grid">
+                <div class="empty-state small"><div class="empty-title">Đang tải...</div></div>
+            </div>
+        </div>
+
+        <div class="acct-subpanel" id="acctSubHistory" style="display:none;">
+            <div class="sec-head"><h2>Lịch sử giao dịch</h2></div>
+            <div class="acct-order-card">
+                <div class="acc-loading" id="acctOrderLoading">Đang tải lịch sử...</div>
+                <div id="acctOrderList" style="display:none"></div>
+                <div class="acc-empty" id="acctOrderEmpty" style="display:none">
+                    <i class="fa-solid fa-receipt"></i>
+                    <p>Chưa có giao dịch nào.<br>Lịch sử nâng cấp gói Pro của bạn (tự thanh toán hoặc do admin điều chỉnh) sẽ hiện tại đây.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ TAB: LỊCH SỬ MUA HÀNG (toàn bộ đơn thành công) ============ -->
+    <section class="tab-panel" id="panel-history" style="display:none">
+        <div class="sec-head"><h2>Lịch sử mua hàng</h2></div>
+
+        <div class="hist-stats" id="histStats" style="display:none">
+            <div class="hist-stat">
+                <div class="hist-stat-ico"><i class="fa-solid fa-receipt"></i></div>
+                <div>
+                    <div class="hist-stat-label">Tổng số đơn</div>
+                    <div class="hist-stat-value" id="histStatCount">0</div>
+                </div>
+            </div>
+            <div class="hist-stat">
+                <div class="hist-stat-ico amount"><i class="fa-solid fa-sack-dollar"></i></div>
+                <div>
+                    <div class="hist-stat-label">Tổng đã chi tiêu</div>
+                    <div class="hist-stat-value" id="histStatAmount">0đ</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hist-toolbar" id="histToolbar" style="display:none">
+            <div class="hist-filters" id="histFilters">
+                <button type="button" class="hist-filter-chip active" data-histtype="">Tất cả</button>
+                <button type="button" class="hist-filter-chip" data-histtype="subscription"><i class="fa-solid fa-crown"></i> Gói Pro</button>
+                <button type="button" class="hist-filter-chip" data-histtype="document"><i class="fa-solid fa-file-lines"></i> Tài liệu</button>
+                <button type="button" class="hist-filter-chip" data-histtype="product"><i class="fa-solid fa-bag-shopping"></i> Sản phẩm</button>
+                <button type="button" class="hist-filter-chip" data-histtype="course"><i class="fa-solid fa-graduation-cap"></i> Khoá học</button>
+                <button type="button" class="hist-filter-chip" data-histtype="admin"><i class="fa-solid fa-user-shield"></i> Admin điều chỉnh</button>
+            </div>
+            <div class="hist-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="histSearchInput" placeholder="Tìm theo tên, mã đơn...">
+            </div>
+        </div>
+
+        <div class="acct-order-card">
+            <div class="acc-loading" id="histOrderLoading">Đang tải lịch sử...</div>
+            <div id="histOrderList" style="display:none"></div>
+            <div class="acc-empty" id="histOrderEmpty" style="display:none">
+                <i class="fa-solid fa-receipt"></i>
+                <p>Chưa có giao dịch nào thành công.<br>Mọi đơn thanh toán thành công (tài liệu, khoá học, gói Pro) và các lần admin điều chỉnh tài khoản sẽ hiện tại đây.</p>
+            </div>
+            <div class="acc-empty" id="histFilterEmpty" style="display:none">
+                <i class="fa-solid fa-filter-circle-xmark"></i>
+                <p>Không tìm thấy đơn nào khớp với bộ lọc hiện tại.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ TAB: HỖ TRỢ (nội dung động — quản lý ở trang admin > Hỗ trợ) ============ -->
+    <section class="tab-panel" id="panel-support" style="display:none">
+        <div class="sec-head"><h2>Hỗ trợ</h2></div>
+
+        <div id="supportIntroBox" style="background:var(--brand-bg); border:1px solid var(--line); border-radius:20px; padding:26px 28px; margin-bottom:22px;">
+            <div id="supportIntroTitle" style="font-weight:800; font-size:1.1rem; margin-bottom:6px;">Vướng chỗ nào, nhắn liền chỗ đó 👋</div>
+            <div id="supportIntroDesc" style="color:var(--ink-mute); font-size:.9rem; max-width:600px; line-height:1.6;">Câu hỏi sai, đáp án chưa rõ, hay muốn góp ý thêm tính năng — cứ nhắn. Đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.</div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:repeat(2, 1fr)" id="supportContactsGrid"></div>
+
+        <div class="sec-head" style="margin-top:30px"><h2>Câu hỏi thường gặp</h2></div>
+        <div style="display:flex; flex-direction:column; gap:10px;" id="supportFaqList"></div>
+    </section>
+
+    <footer id="siteFooter"></footer>
+
+        </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <script>
-        const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<div class="toast" id="toast">
+    <i class="fa-solid fa-hourglass-half"></i>
+    <span id="toastMsg">Học phần này đang được biên soạn, quay lại sau nhé.</span>
+    <button class="toast-btn" id="toastBtn" type="button">Quan tâm</button>
+</div>
 
-        // Hiện đúng lời nhắn admin đã cấu hình (nếu có), và tự kiểm tra định kỳ —
-        // hết bảo trì thì tự quay lại trang chủ, không cần khách bấm tải lại tay.
-        var countdownTimer = null;
+<div class="site-toast" id="siteToast">
+    <div class="site-toast-icon" id="siteToastIcon"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="site-toast-body">
+        <div class="site-toast-title" id="siteToastTitle">Thông báo</div>
+        <div class="site-toast-msg" id="siteToastMsg"></div>
+    </div>
+    <button type="button" class="site-toast-close" id="siteToastClose" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+</div>
 
-        function fmt2(n){ return String(n).padStart(2,'0'); }
+<!-- ============ POPUP: Thông báo nổi khi vào trang (quản lý ở Admin > Thông báo nổi) ============ -->
+<div class="announce-popup-overlay hidden" id="announcePopupOverlay">
+    <div class="announce-popup-modal" role="dialog" aria-modal="true" aria-label="Thông báo">
+        <button type="button" class="announce-popup-close" id="announcePopupCloseIcon" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        <div class="announce-popup-icon"><i class="fa-solid fa-bullhorn"></i></div>
+        <div class="announce-popup-title" id="announcePopupTitle">Thông báo</div>
+        <div class="announce-popup-msg" id="announcePopupMsg"></div>
+        <div class="announce-popup-actions">
+            <button type="button" class="announce-popup-hide-btn" id="announcePopupHideBtn">Ẩn trong 2 giờ</button>
+            <button type="button" class="announce-popup-close-btn" id="announcePopupCloseBtn">Đóng</button>
+        </div>
+    </div>
+</div>
 
-        function startCountdown(untilStr){
-            var target = new Date(untilStr);
-            if (isNaN(target.getTime())) return;
+<!-- ============ MODAL: Nâng cấp Pro (chọn gói kiểu thẻ + danh sách tính năng) ============ -->
+<div class="pro-upg-overlay hidden" id="proUpgradeOverlay">
+    <div class="pro-upg-modal" role="dialog" aria-modal="true" aria-label="Nâng cấp Pro">
+        <button class="pro-upg-close" onclick="closeProUpgradeModal()" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        <div class="pro-upg-plans" id="proUpgradePlans"></div>
+        <div class="pro-upg-features" id="proUpgradeFeatures"></div>
+        <button class="pro-upg-cta" id="proUpgradeCta" onclick="submitProUpgrade()">Thanh toán</button>
+        <div class="pro-upg-note">Hệ thống chuyển sang cổng thanh toán SePay. Sau khi thanh toán thành công, quay lại web để tự động kích hoạt Premium.</div>
+        <div class="pro-upg-note" style="margin-top:6px;">🎁 Chưa muốn trả phí? <a href="nhan-pro.html" style="color:var(--brand); font-weight:700; text-decoration:none;">Nhận Pro miễn phí tại đây</a></div>
+    </div>
+</div>
 
-            document.getElementById('cdTimer').style.display = 'flex';
-            document.getElementById('cdTarget').style.display = 'block';
-            document.getElementById('cdTarget').textContent =
-                'Dự kiến mở lại: ' + target.toLocaleString('vi-VN', {
-                    day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
-                });
+<!-- ============ MODAL: Xác nhận thanh toán (bước 2 — hiện sau khi bấm "Thanh toán") ============ -->
+<div class="pro-confirm-overlay hidden" id="proConfirmOverlay">
+    <div class="pro-confirm-modal" role="dialog" aria-modal="true" aria-label="Xác nhận thanh toán">
+        <button class="pro-confirm-close" onclick="closeProConfirm()" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        <div class="pro-confirm-head">
+            <div class="icon"><i class="fa-solid fa-crown"></i></div>
+            <h3>Xác nhận nâng cấp Pro</h3>
+            <p>Kiểm tra lại thông tin gói trước khi chuyển sang cổng thanh toán.</p>
+        </div>
+        <div class="pro-confirm-body">
+            <div class="pro-confirm-summary">
+                <div>
+                    <div class="name" id="proConfirmName">—</div>
+                    <div class="days" id="proConfirmDays">—</div>
+                </div>
+                <div class="price" id="proConfirmPrice">—</div>
+            </div>
+            <div class="pro-confirm-features" id="proConfirmFeatures"></div>
+        </div>
+        <div class="pro-confirm-actions">
+            <button type="button" class="pro-confirm-cancel" onclick="closeProConfirm()">Hủy</button>
+            <button type="button" class="pro-confirm-ok" id="proConfirmOkBtn" onclick="confirmProUpgrade()"><i class="fa-solid fa-lock"></i> Xác nhận thanh toán</button>
+        </div>
+        <div class="pro-confirm-balance-pay" id="proConfirmBalancePayWrap" style="display:none; text-align:center; margin-top:10px;">
+            <button type="button" class="pro-confirm-cancel" id="proConfirmBalanceBtn" style="width:100%;" onclick="confirmProUpgrade(true)">
+                <i class="fa-solid fa-wallet"></i> Thanh toán bằng số dư ví (<span id="proConfirmBalanceText">—</span>)
+            </button>
+        </div>
+    </div>
+</div>
 
-            if (countdownTimer) clearInterval(countdownTimer);
+<!-- ============ MODAL: Chi tiết sản phẩm ============ -->
+<div class="prod-detail-overlay hidden" id="prodDetailOverlay" onclick="if(event.target===this) closeProductDetail()">
+    <div class="prod-detail-modal" role="dialog" aria-modal="true" aria-label="Chi tiết sản phẩm">
+        <button class="prod-detail-close" onclick="closeProductDetail()" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        <div class="prod-detail-media" id="prodDetailMedia"></div>
+        <div class="prod-detail-info">
+            <h3 id="prodDetailTitle">—</h3>
+            <div class="prod-detail-price" id="prodDetailPrice"></div>
+            <div class="prod-detail-desc" id="prodDetailDesc"></div>
+            <a class="prod-detail-cta" id="prodDetailCta" href="#" target="_blank" rel="noopener">Xem chi tiết</a>
+            <button type="button" class="prod-detail-cta" id="prodDetailBalanceBtn" style="display:none; background:transparent; border:1.5px solid var(--line); color:var(--text);" onclick="muaSanPhamBangSoDu()">
+                <i class="fa-solid fa-wallet"></i> Thanh toán bằng số dư (<span id="prodDetailBalanceText">—</span>)
+            </button>
+        </div>
+    </div>
+</div>
 
-            function tick(){
-                var diff = target - new Date();
-                if (diff <= 0){
-                    document.getElementById('cdD').textContent = '00';
-                    document.getElementById('cdH').textContent = '00';
-                    document.getElementById('cdM').textContent = '00';
-                    document.getElementById('cdS').textContent = '00';
-                    clearInterval(countdownTimer);
-                    checkMaintenance(); // đến giờ -> kiểm tra ngay, không đợi đủ 20s
-                    return;
-                }
-                var totalSec = Math.floor(diff / 1000);
-                document.getElementById('cdD').textContent = fmt2(Math.floor(totalSec / 86400));
-                document.getElementById('cdH').textContent = fmt2(Math.floor((totalSec % 86400) / 3600));
-                document.getElementById('cdM').textContent = fmt2(Math.floor((totalSec % 3600) / 60));
-                document.getElementById('cdS').textContent = fmt2(totalSec % 60);
-            }
-            tick();
-            countdownTimer = setInterval(tick, 1000);
-        }
+<!-- ============ MODAL: Xác nhận mua tài liệu trả phí ============ -->
+<div class="pro-confirm-overlay hidden" id="docConfirmOverlay">
+    <div class="pro-confirm-modal" role="dialog" aria-modal="true" aria-label="Xác nhận mua tài liệu">
+        <button class="pro-confirm-close" onclick="closeDocConfirm()" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        <div class="pro-confirm-head">
+            <div class="icon"><i class="fa-solid fa-file-lines"></i></div>
+            <h3>Xác nhận mua tài liệu</h3>
+            <p>Kiểm tra lại thông tin tài liệu trước khi chuyển sang cổng thanh toán SePay.</p>
+        </div>
+        <div class="pro-confirm-body">
+            <div class="pro-confirm-summary">
+                <div>
+                    <div class="name" id="docConfirmName">—</div>
+                    <div class="days" id="docConfirmMeta">—</div>
+                </div>
+                <div class="price" id="docConfirmPrice">—</div>
+            </div>
+        </div>
+        <div class="pro-confirm-actions">
+            <button type="button" class="pro-confirm-cancel" onclick="closeDocConfirm()">Hủy</button>
+            <button type="button" class="pro-confirm-ok" id="docConfirmOkBtn" onclick="confirmDocPurchase()"><i class="fa-solid fa-lock"></i> Xác nhận thanh toán</button>
+        </div>
+        <div class="pro-confirm-balance-pay" id="docConfirmBalancePayWrap" style="display:none; text-align:center; margin-top:10px;">
+            <button type="button" class="pro-confirm-cancel" id="docConfirmBalanceBtn" style="width:100%;" onclick="confirmDocPurchase(true)">
+                <i class="fa-solid fa-wallet"></i> Thanh toán bằng số dư ví (<span id="docConfirmBalanceText">—</span>)
+            </button>
+        </div>
+    </div>
+</div>
 
-        async function checkMaintenance(){
-            const { data } = await sb.from('site_settings').select('payload').eq('key', 'site_maintenance').maybeSingle();
-            const payload = (data && data.payload) || {};
-            if (payload.message) document.getElementById('mntMsg').innerText = payload.message;
+<!-- ============ MODAL: Nạp tiền vào ví ============ -->
+<div class="pro-confirm-overlay hidden" id="napTienOverlay">
+    <div class="pro-confirm-modal" role="dialog" aria-modal="true" aria-label="Nạp tiền vào ví">
+        <button class="pro-confirm-close" onclick="closeTopupModal()" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        <div class="pro-confirm-head">
+            <div class="icon"><i class="fa-solid fa-wallet"></i></div>
+            <h3>Nạp tiền vào ví</h3>
+            <p>Số dư ví dùng để thanh toán trực tiếp khoá học, gói Pro, tài liệu, sản phẩm — không cần qua cổng thanh toán mỗi lần mua.</p>
+        </div>
+        <div class="pro-confirm-body">
+            <div class="pro-confirm-summary" style="margin-bottom:4px;">
+                <div><div class="name">Số dư hiện tại</div></div>
+                <div class="price" id="napTienCurrentBalance">—</div>
+            </div>
+            <div class="naptien-amounts" id="napTienQuickAmounts">
+                <button type="button" class="naptien-amt-btn" data-amt="50000" onclick="chonNhanhSoTienNap(50000)">50.000đ</button>
+                <button type="button" class="naptien-amt-btn" data-amt="100000" onclick="chonNhanhSoTienNap(100000)">100.000đ</button>
+                <button type="button" class="naptien-amt-btn" data-amt="200000" onclick="chonNhanhSoTienNap(200000)">200.000đ</button>
+                <button type="button" class="naptien-amt-btn" data-amt="500000" onclick="chonNhanhSoTienNap(500000)">500.000đ</button>
+                <button type="button" class="naptien-amt-btn" data-amt="1000000" onclick="chonNhanhSoTienNap(1000000)">1.000.000đ</button>
+                <button type="button" class="naptien-amt-btn" data-amt="2000000" onclick="chonNhanhSoTienNap(2000000)">2.000.000đ</button>
+            </div>
+            <div class="naptien-input-wrap">
+                <input type="number" id="napTienAmountInput" class="naptien-input" min="10000" max="20000000" step="1000" placeholder="Hoặc nhập số tiền khác">
+                <span class="cur">VNĐ</span>
+            </div>
+            <div id="napTienError" style="color:var(--red,#e5484d); font-size:13px; margin-top:8px; display:none;"></div>
+        </div>
+        <div class="pro-confirm-actions">
+            <button type="button" class="pro-confirm-cancel" onclick="closeTopupModal()">Hủy</button>
+            <button type="button" class="pro-confirm-ok" id="napTienOkBtn" onclick="submitNapTien()"><i class="fa-solid fa-arrow-right"></i> Tiếp tục thanh toán</button>
+        </div>
+    </div>
+</div>
 
-            // Admin có thể cấu hình payload.until = "2026-09-20T00:00:00" (ISO string)
-            // trong bảng site_settings để hiện đồng hồ đếm ngược. Nếu không set, chỉ hiện thông báo.
-            if (payload.until) {
-                startCountdown(payload.until);
-            }
+<div class="acc-overlay" id="accOverlay">
+    <div class="acc-modal" role="dialog" aria-modal="true" aria-label="Tài khoản">
+        <div class="acc-modal-head">
+            <div class="acc-modal-avatar" id="accAvatar"><span class="avt-content" id="accAvatarInitial">K</span><span class="pro-badge"><i class="fa-solid fa-crown"></i></span></div>
+            <div>
+                <div class="acc-modal-name" id="accName">Khách</div>
+                <div class="acc-modal-sub" id="accSub"></div>
+            </div>
+            <button class="acc-modal-close" id="accClose" type="button" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="acc-tabs">
+            <button class="acc-tab active" data-acctab="info" type="button">Thông tin</button>
+            <button class="acc-tab" data-acctab="history" type="button">Lịch sử</button>
+        </div>
+        <div class="acc-body">
+            <div class="acc-panel active" id="accPanel-info">
+                <div class="acc-info-row"><span class="label">Email</span><span class="value" id="accInfoEmail">—</span></div>
+                <div class="acc-info-row"><span class="label">Tên hiển thị</span><span class="value" id="accInfoName">—</span></div>
+                <div class="acc-info-row"><span class="label">Gói sử dụng</span><span class="value"><span class="acc-plan-badge" id="accPlanBadge">Miễn phí</span></span></div>
+                <div class="acc-info-row" id="accBalanceRow" style="display:none">
+                    <span class="label">Số dư</span>
+                    <span class="value" style="display:flex; align-items:center; gap:10px;">
+                        <span id="accBalanceValue">—</span>
+                        <button type="button" class="acc-upgrade-btn" id="accTopupBtn" style="padding:6px 14px; font-size:13px;" onclick="closeAccountModal(); openTopupModal();"><i class="fa-solid fa-wallet"></i> Nạp tiền</button>
+                    </span>
+                </div>
+                <button class="acc-upgrade-btn" id="accUpgradeBtn" type="button" style="display:none" onclick="closeAccountModal(); openProUpgradeModal();">
+                    <i class="fa-solid fa-crown"></i> Nâng cấp Pro
+                </button>
+                <button class="acc-changepw-btn" type="button" onclick="closeAccountModal(); goTab('account');">
+                    <i class="fa-solid fa-gear"></i> Quản lý tài khoản
+                </button>
+                <button class="acc-admin-btn" id="accAdminBtn" type="button" style="display:none" onclick="goToAdminPanel()">
+                    <i class="fa-solid fa-shield-halved"></i> Trang Quản trị
+                </button>
+            </div>
+            <div class="acc-panel" id="accPanel-history">
+                <div class="acc-loading" id="accHistoryLoading">Đang tải lịch sử...</div>
+                <div id="accHistoryList" style="display:none"></div>
+                <div class="acc-empty" id="accHistoryEmpty" style="display:none">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <p>Chưa có giao dịch nào.<br>Lịch sử nâng cấp Pro / mua tài liệu của bạn sẽ hiện tại đây sau khi thanh toán.</p>
+                </div>
+            </div>
+        </div>
+        <div class="acc-foot">
+            <button class="acc-logout-btn" id="accLogoutBtn" type="button">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </button>
+        </div>
+    </div>
+</div>
 
-            if (!payload.enabled){
-                location.replace('/');
-            }
-        }
-        checkMaintenance();
-        setInterval(checkMaintenance, 20000);
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="assets/js/usage-limits.js"></script>
+<script src="assets/js/track-visit.js"></script>
+<script src="assets/js/ctv-track.js"></script>
+<script src="assets/js/index.js"></script>
+
 </body>
 </html>

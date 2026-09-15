@@ -2668,8 +2668,9 @@ const DOC_IMAGE_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 // Lý do: Supabase Storage tính egress theo GB tải xuống, dễ vượt hạn mức gói Free khi
 // nhiều học viên cùng tải tài liệu. R2 miễn phí hoàn toàn egress, chỉ đổi nơi lưu file,
 // database (bảng questions, feedback, ctv...) vẫn ở Supabase như cũ, không đổi gì khác.
-// Việc upload/xoá thật sự diễn ra ở Edge Function "r2-storage" (giữ khoá bí mật an toàn
-// phía server) — ở đây chỉ là các hàm gọi tới function đó.
+// Cách upload: Edge Function "r2-storage" chỉ cấp 1 link ký sẵn (presigned URL,
+// giữ khoá bí mật an toàn phía server) — file KHÔNG đi qua Supabase, trình duyệt
+// PUT thẳng file lên R2 bằng link đó (xem hàm r2Upload bên dưới).
 const R2_PUBLIC_URLS = {
     'tai-lieu': 'https://pub-1d650009eedc4c9bb38c2a0a5713407f.r2.dev',
     'feedback-images': 'https://pub-b6c3ac33d32c483d9532578f9ed21303.r2.dev',
@@ -2853,7 +2854,7 @@ function contentBlockHtml(subKey){
                         <button type="button" class="side-add" onclick="document.getElementById('cmFile_${subKey}').click()">📎 Chọn file</button>
                         <span class="hint-inline" id="cmFileName_${subKey}"></span>
                     </div>
-                    <div class="hint" id="cmUploadHint_${subKey}" style="margin-top:4px;">Chỉ hỗ trợ .pdf, .doc, .docx — tối đa 100MB. File được lưu trực tiếp trên hệ thống, khách bấm tải là có ngay.</div>
+                    <div class="hint" id="cmUploadHint_${subKey}" style="margin-top:4px;">Chỉ hỗ trợ .pdf, .doc, .docx — tối đa 100MB. File được lưu trên Cloudflare R2, khách bấm tải là có ngay.</div>
                     </div>
                     ${meta.sourceToggle ? `
                     <div id="cmSrcLinkWrap_${subKey}" class="hidden" style="margin-top:8px;">

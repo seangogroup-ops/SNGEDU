@@ -200,16 +200,24 @@ function loadPdfJs(){
     return pdfjsReady;
 }
 
-// ---------- Upload 1 trang ảnh lên R2 qua Edge Function r2-storage có sẵn ----------
+// ---------- Upload 1 trang ảnh (hoặc PDF gốc) lên R2 qua Edge Function r2-storage ----------
+// Bucket "tai-lieu-trang" là bucket riêng tư (không Public Access), nên publicUrl trả về
+// sẽ là null — không sao, chỗ gọi hàm này không cần publicUrl, chỉ cần upload thành công.
 async function r2UploadPage(path, blob){
-    const form = new FormData();
-    form.append('bucket', DOC_PAGES_BUCKET);
-    form.append('path', path);
-    form.append('file', blob, path.split('/').pop());
-    const { data, error } = await sb.functions.invoke('r2-storage', { body: form });
-    if (error) throw new Error(error.message || 'Lỗi tải ảnh trang lên R2');
-    if (!data || !data.ok) throw new Error((data && data.error) || 'Lỗi tải ảnh trang lên R2');
-    return data;
+    const { data, error } = await sb.functions.invoke('r2-storage', {
+        body: { action: 'get-upload-url', bucket: DOC_PAGES_BUCKET, path, contentType: blob.type || 'application/octet-stream' }
+    });
+    if (error) throw new Error(error.message || 'Không lấy được link upload.');
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Không lấy được link upload.');
+
+    const putRes = await fetch(data.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': blob.type || 'application/octet-stream' },
+        body: blob
+    });
+    if (!putRes.ok) throw new Error('Upload lên R2 thất bại (HTTP ' + putRes.status + ').');
+
+    return { ok: true, publicUrl: data.publicUrl, path: data.path };
 }
 
 async function processDoc(idx){

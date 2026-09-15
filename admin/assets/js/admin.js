@@ -2676,14 +2676,24 @@ const R2_PUBLIC_URLS = {
     'ctv-documents': 'https://pub-04d67e116ce44411888b66104e6c614e.r2.dev'
 };
 async function r2Upload(bucket, path, file){
-    const form = new FormData();
-    form.append('bucket', bucket);
-    form.append('path', path);
-    form.append('file', file);
-    const { data, error } = await sb.functions.invoke('r2-storage', { body: form });
-    if (error) throw new Error(error.message || 'Lỗi tải file lên.');
-    if (!data || !data.ok) throw new Error((data && data.error) || 'Lỗi tải file lên.');
-    return data; // { ok:true, publicUrl, path }
+    // Bước 1: xin presigned URL từ Edge Function (request nhẹ, chỉ JSON — không kèm file
+    // nên không bị giới hạn payload ~6MB của Supabase Edge Functions).
+    const { data, error } = await sb.functions.invoke('r2-storage', {
+        body: { action: 'get-upload-url', bucket, path, contentType: file.type || 'application/octet-stream' }
+    });
+    if (error) throw new Error(error.message || 'Không lấy được link upload.');
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Không lấy được link upload.');
+
+    // Bước 2: PUT file thẳng từ trình duyệt lên R2, không qua Supabase nữa
+    // -> không còn giới hạn dung lượng, file to bao nhiêu cũng lên được.
+    const putRes = await fetch(data.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file
+    });
+    if (!putRes.ok) throw new Error('Upload lên R2 thất bại (HTTP ' + putRes.status + ').');
+
+    return { ok: true, publicUrl: data.publicUrl, path: data.path };
 }
 async function r2Delete(bucket, path){
     if (!path) return;

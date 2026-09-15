@@ -357,14 +357,23 @@ const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const IMG_BUCKET = 'feedback-images';
 async function r2Upload(bucket, path, file){
-    const form = new FormData();
-    form.append('bucket', bucket);
-    form.append('path', path);
-    form.append('file', file);
-    const { data, error } = await sb.functions.invoke('r2-storage', { body: form });
-    if (error) throw new Error(error.message || 'Lỗi tải file lên.');
-    if (!data || !data.ok) throw new Error((data && data.error) || 'Lỗi tải file lên.');
-    return data; // { ok:true, publicUrl, path }
+    // Xin link ký sẵn (presigned URL) từ Edge Function — request nhẹ, chỉ JSON,
+    // không kèm file nên không bị giới hạn payload ~6MB của Supabase Edge Functions.
+    const { data, error } = await sb.functions.invoke('r2-storage', {
+        body: { action: 'get-upload-url', bucket, path, contentType: file.type || 'application/octet-stream' }
+    });
+    if (error) throw new Error(error.message || 'Không lấy được link upload.');
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Không lấy được link upload.');
+
+    // PUT file thẳng từ trình duyệt lên R2, không qua Supabase nữa.
+    const putRes = await fetch(data.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file
+    });
+    if (!putRes.ok) throw new Error('Upload lên R2 thất bại (HTTP ' + putRes.status + ').');
+
+    return { ok: true, publicUrl: data.publicUrl, path: data.path };
 }
 
 const themeBtn = document.getElementById('themeToggle');

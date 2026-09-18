@@ -2668,33 +2668,22 @@ const DOC_IMAGE_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 // Lý do: Supabase Storage tính egress theo GB tải xuống, dễ vượt hạn mức gói Free khi
 // nhiều học viên cùng tải tài liệu. R2 miễn phí hoàn toàn egress, chỉ đổi nơi lưu file,
 // database (bảng questions, feedback, ctv...) vẫn ở Supabase như cũ, không đổi gì khác.
-// Cách upload: Edge Function "r2-storage" chỉ cấp 1 link ký sẵn (presigned URL,
-// giữ khoá bí mật an toàn phía server) — file KHÔNG đi qua Supabase, trình duyệt
-// PUT thẳng file lên R2 bằng link đó (xem hàm r2Upload bên dưới).
+// Việc upload/xoá thật sự diễn ra ở Edge Function "r2-storage" (giữ khoá bí mật an toàn
+// phía server) — ở đây chỉ là các hàm gọi tới function đó.
 const R2_PUBLIC_URLS = {
     'tai-lieu': 'https://pub-1d650009eedc4c9bb38c2a0a5713407f.r2.dev',
     'feedback-images': 'https://pub-b6c3ac33d32c483d9532578f9ed21303.r2.dev',
     'ctv-documents': 'https://pub-04d67e116ce44411888b66104e6c614e.r2.dev'
 };
 async function r2Upload(bucket, path, file){
-    // Bước 1: xin presigned URL từ Edge Function (request nhẹ, chỉ JSON — không kèm file
-    // nên không bị giới hạn payload ~6MB của Supabase Edge Functions).
-    const { data, error } = await sb.functions.invoke('r2-storage', {
-        body: { action: 'get-upload-url', bucket, path, contentType: file.type || 'application/octet-stream' }
-    });
-    if (error) throw new Error(error.message || 'Không lấy được link upload.');
-    if (!data || !data.ok) throw new Error((data && data.error) || 'Không lấy được link upload.');
-
-    // Bước 2: PUT file thẳng từ trình duyệt lên R2, không qua Supabase nữa
-    // -> không còn giới hạn dung lượng, file to bao nhiêu cũng lên được.
-    const putRes = await fetch(data.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type || 'application/octet-stream' },
-        body: file
-    });
-    if (!putRes.ok) throw new Error('Upload lên R2 thất bại (HTTP ' + putRes.status + ').');
-
-    return { ok: true, publicUrl: data.publicUrl, path: data.path };
+    const form = new FormData();
+    form.append('bucket', bucket);
+    form.append('path', path);
+    form.append('file', file);
+    const { data, error } = await sb.functions.invoke('r2-storage', { body: form });
+    if (error) throw new Error(error.message || 'Lỗi tải file lên.');
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Lỗi tải file lên.');
+    return data; // { ok:true, publicUrl, path }
 }
 async function r2Delete(bucket, path){
     if (!path) return;
@@ -2854,7 +2843,7 @@ function contentBlockHtml(subKey){
                         <button type="button" class="side-add" onclick="document.getElementById('cmFile_${subKey}').click()">📎 Chọn file</button>
                         <span class="hint-inline" id="cmFileName_${subKey}"></span>
                     </div>
-                    <div class="hint" id="cmUploadHint_${subKey}" style="margin-top:4px;">Chỉ hỗ trợ .pdf, .doc, .docx — tối đa 100MB. File được lưu trên Cloudflare R2, khách bấm tải là có ngay.</div>
+                    <div class="hint" id="cmUploadHint_${subKey}" style="margin-top:4px;">Chỉ hỗ trợ .pdf, .doc, .docx — tối đa 100MB. File được lưu trực tiếp trên hệ thống, khách bấm tải là có ngay.</div>
                     </div>
                     ${meta.sourceToggle ? `
                     <div id="cmSrcLinkWrap_${subKey}" class="hidden" style="margin-top:8px;">
@@ -5200,37 +5189,64 @@ function deleteNotify(id){
     );
 }
 
-// ---------- MODAL: soạn & gửi thông báo riêng cho 1 thành viên ----------
-// Nếu gọi với userId có sẵn (từ trang chi tiết 1 tài khoản) -> chọn sẵn người nhận đó.
-// Nếu gọi không có tham số (từ tab "Thông báo thành viên") -> cho tìm/chọn người nhận.
+// ---------- MODAL: soạn & gửi thông báo — cho 1 thành viên HOẶC tất cả ----------
+// Nếu gọi với userId có sẵn (từ trang chi tiết 1 tài khoản) -> chọn sẵn người nhận đó,
+// khoá luôn ở chế độ "gửi riêng" (không cho đổi sang "tất cả" trong ngữ cảnh này).
+// Nếu gọi không có tham số (từ tab "Thông báo thành viên") -> cho chọn phạm vi gửi:
+// "Gửi riêng 1 người" (tìm/chọn người nhận) hoặc "Gửi cho tất cả thành viên" (broadcast).
+// Cả 2 chế độ đều có thể bật thêm "Gửi kèm email" để gửi email tới hộp thư người nhận.
 let notifyPickedUserId = null;
+let notifyScope = 'one'; // 'one' | 'all'
 async function openNotifyComposeModal(userId){
     await ensureAccountsCacheLoaded();
     notifyPickedUserId = userId || null;
+    notifyScope = 'one'; // luôn bắt đầu ở "gửi riêng"; nếu không có userId thì admin tự chọn thêm "tất cả"
     renderNotifyComposeForm();
     document.getElementById('acctFormOverlay').classList.remove('hidden');
 }
+function setNotifyScope(scope){
+    notifyScope = scope;
+    renderNotifyComposeForm();
+}
 function renderNotifyComposeForm(){
     const picked = notifyPickedUserId ? (accountsCache || []).find(x => x.id === notifyPickedUserId) : null;
-    document.getElementById('acctFormBox').innerHTML = `
-        <h4>🔔 Gửi thông báo riêng</h4>
-        ${picked
+    const lockedToOne = !!picked; // đã có userId truyền sẵn (mở từ trang chi tiết tài khoản) -> không cho đổi phạm vi
+    const totalMembers = (accountsCache || []).length;
+
+    const scopeSwitchHtml = lockedToOne ? '' : `
+        <div class="notify-scope-switch" style="display:flex;gap:8px;margin:0 0 12px;">
+            <button type="button" class="acct-chip${notifyScope === 'one' ? ' active' : ''}" onclick="setNotifyScope('one')" style="flex:1;">👤 Gửi riêng 1 người</button>
+            <button type="button" class="acct-chip${notifyScope === 'all' ? ' active' : ''}" onclick="setNotifyScope('all')" style="flex:1;">📢 Gửi tất cả thành viên</button>
+        </div>`;
+
+    const recipientHtml = notifyScope === 'all'
+        ? `<p class="acct-form-target">Sẽ gửi tới <b>toàn bộ ${totalMembers} thành viên</b> hiện có trong hệ thống.</p>`
+        : (picked
             ? `<p class="acct-form-target">Gửi tới <b>${escapeHtml(picked.full_name || picked.email || '')}</b> (${escapeHtml(picked.email || '')})</p>`
             : `
             <label style="margin-top:0;">Người nhận</label>
             <input id="notifyRecipientSearch" placeholder="Tìm theo email hoặc tên..." oninput="renderNotifyRecipientOptions()">
             <div id="notifyRecipientOptions"></div>
-            `}
+            `);
+
+    document.getElementById('acctFormBox').innerHTML = `
+        <h4>🔔 ${notifyScope === 'all' ? 'Gửi thông báo cho tất cả' : 'Gửi thông báo riêng'}</h4>
+        ${scopeSwitchHtml}
+        ${recipientHtml}
         <label style="margin-top:10px;">Tiêu đề</label>
         <input id="notifyTitleInput" placeholder="VD: Nhắc gia hạn gói Pro">
         <label style="margin-top:10px;">Nội dung</label>
-        <textarea id="notifyMessageInput" rows="4" placeholder="Nội dung thông báo gửi riêng cho thành viên này..."></textarea>
+        <textarea id="notifyMessageInput" rows="4" placeholder="Nội dung thông báo..."></textarea>
+        <label style="margin-top:10px;display:flex;align-items:center;gap:8px;font-weight:400;">
+            <input type="checkbox" id="notifySendEmailChk" style="width:auto;">
+            Đồng thời gửi qua email cho người nhận
+        </label>
         <div id="acctFormMsg"></div>
         <div class="acct-form-actions">
             <button class="btn-acct-cancel" onclick="closeAcctFormModal()">Hủy</button>
-            <button class="btn-acct-save" onclick="submitNotify()">Gửi thông báo</button>
+            <button class="btn-acct-save" id="notifySubmitBtn" onclick="submitNotify()">${notifyScope === 'all' ? 'Gửi cho tất cả' : 'Gửi thông báo'}</button>
         </div>`;
-    if (!picked) renderNotifyRecipientOptions();
+    if (notifyScope === 'one' && !picked) renderNotifyRecipientOptions();
 }
 function renderNotifyRecipientOptions(){
     const wrap = document.getElementById('notifyRecipientOptions');
@@ -5253,20 +5269,47 @@ async function submitNotify(){
     const msg = document.getElementById('acctFormMsg');
     const title = document.getElementById('notifyTitleInput').value.trim();
     const message = document.getElementById('notifyMessageInput').value.trim();
-    if (!notifyPickedUserId){ msg.className='err'; msg.innerText = 'Chọn 1 người nhận trước.'; return; }
+    const sendEmail = document.getElementById('notifySendEmailChk').checked;
+    if (notifyScope === 'one' && !notifyPickedUserId){ msg.className='err'; msg.innerText = 'Chọn 1 người nhận trước.'; return; }
     if (!title || !message){ msg.className='err'; msg.innerText = 'Nhập đủ tiêu đề và nội dung.'; return; }
 
-    const { data: { user } } = await sb.auth.getUser();
-    const { error } = await sb.from('user_notifications').insert({
-        user_id: notifyPickedUserId,
-        title,
-        message,
-        created_by: user ? user.id : null
-    });
-    if (error){ msg.className='err'; msg.innerText = 'Lỗi gửi: ' + error.message; return; }
+    if (notifyScope === 'all'){
+        showConfirm(
+            'Gửi cho TẤT CẢ thành viên?',
+            `Thông báo này sẽ được gửi tới toàn bộ ${(accountsCache||[]).length} thành viên${sendEmail ? ' (kèm email)' : ''}. Không thể hoàn tác. Tiếp tục?`,
+            () => doSubmitNotify(title, message, sendEmail)
+        );
+        return;
+    }
+    doSubmitNotify(title, message, sendEmail);
+}
+
+async function doSubmitNotify(title, message, sendEmail){
+    const msg = document.getElementById('acctFormMsg');
+    const btn = document.getElementById('notifySubmitBtn');
+    if (btn){ btn.disabled = true; btn.innerText = 'Đang gửi...'; }
+    msg.className = ''; msg.innerText = '';
+
+    const payload = { scope: notifyScope, title, message, send_email: sendEmail };
+    if (notifyScope === 'one') payload.user_id = notifyPickedUserId;
+
+    const { data, error } = await sb.functions.invoke('send-user-notification', { body: payload });
+
+    if (error || (data && data.error)){
+        if (btn){ btn.disabled = false; btn.innerText = notifyScope === 'all' ? 'Gửi cho tất cả' : 'Gửi thông báo'; }
+        msg.className = 'err';
+        msg.innerText = 'Lỗi gửi: ' + ((data && data.error) || error.message || 'Không gửi được.');
+        return;
+    }
+
     closeAcctFormModal();
-    showMsg('Đã gửi thông báo.', 'ok');
+    let okText = notifyScope === 'all'
+        ? `Đã gửi thông báo cho ${data.recipients} thành viên.`
+        : 'Đã gửi thông báo.';
+    if (sendEmail) okText += ` Email: ${data.emails_sent} thành công${data.emails_failed ? ', ' + data.emails_failed + ' lỗi' : ''}.`;
+    showMsg(okText, 'ok');
     notifyPickedUserId = null;
+    notifyScope = 'one';
     if (!document.getElementById('notifyPanel').classList.contains('hidden')) loadNotifyList();
 }
 

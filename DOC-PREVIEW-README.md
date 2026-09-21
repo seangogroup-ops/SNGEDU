@@ -1,101 +1,264 @@
-# Tính năng: Xem trước tài liệu theo trang (kiểu Scribd)
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<script src="frontend/maintenance-check.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14151c" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="noindex, nofollow">
+<script>
+    try{
+        var savedTheme = localStorage.getItem('sng-theme');
+        document.documentElement.setAttribute('data-theme', (savedTheme === 'dark' || savedTheme === 'light') ? savedTheme : 'dark');
+    }catch(e){}
+</script>
+<title>Xem tài liệu · SNG EDU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<script src="frontend/pwa-register.js" defer></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+    :root{
+        --bg:#f5f7fb; --card:#ffffff; --line:#e8eaf1; --ink:#1f2433; --ink-soft:#6b7180; --ink-mute:#9aa0b1;
+        --green:#17b26a; --green-bg:#e7f9f0; --amber:#f5a524; --amber-bg:#fef3e0;
+        --brand:#4f6bff; --brand-bg:#eef1ff;
+        --shadow:0 1px 2px rgba(20,22,40,.04), 0 8px 24px -12px rgba(20,22,40,.08);
+    }
+    html[data-theme="dark"]{
+        --bg:#14151c; --card:#1c1e28; --line:#2c2f3c; --ink:#f0f1f6; --ink-soft:#a2a7ba; --ink-mute:#6f7488;
+        --green:#2ed392; --green-bg:#163a2c; --amber:#ffbd4a; --amber-bg:#3a2f16;
+        --brand:#6d84ff; --brand-bg:#1c2340;
+        --shadow:0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+    *{ box-sizing:border-box; }
+    html, body{
+        margin:0; background:var(--bg); color:var(--ink); font-family:'Be Vietnam Pro',sans-serif;
+        /* Chặn bôi đen/copy chữ + long-press lưu ảnh trên mobile — chỉ là rào cản, không tuyệt đối */
+        -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
+    }
+    .topbar{
+        position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:12px;
+        padding:12px 16px; background:var(--card); border-bottom:1px solid var(--line);
+    }
+    .topbar .back{ width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); text-decoration:none; border:1px solid var(--line); flex-shrink:0; }
+    .topbar .title{ font-weight:700; font-size:.95rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+    .topbar .pages-count{ font-size:.78rem; color:var(--ink-mute); flex-shrink:0; }
 
-## Cách hoạt động
-1. Admin đăng tài liệu **trả phí** như bình thường (mục "Tài liệu" ở trang admin chính),
-   sau đó vào trang mới **`admin/doc-preview.html`** để tách trang.
-2. Admin chọn file PDF gốc + đặt "Số trang xem thử (free)" → bấm **Tách trang & Lưu**.
-   Trình duyệt của admin (dùng PDF.js) tự tách từng trang thành ảnh JPG, tải lên bucket
-   R2 **riêng tư** `tai-lieu-trang` (không public), rồi lưu:
-   - Đường dẫn lưu trữ thật → bảng `document_sources` (không ai đọc được qua RLS, kể cả
-     bằng anon key — chỉ Edge Function bằng service_role đọc được).
-   - Thông tin công khai an toàn (`free_pages`, `pages_total`, `preview_mode:'pages'`) →
-     vào JSON `site_settings.doc_content.paid[]` như các trường khác.
-3. Khách vào **`doc-preview-viewer.html?id=<id tài liệu>`** → trang gọi Edge Function
-   **`doc-pages`** để lấy TỪNG ảnh trang một. Function kiểm tra:
-   - Trang ≤ số trang free → trả ảnh cho tất cả (kể cả khách chưa đăng nhập).
-   - Trang > số trang free → phải **đăng nhập và đang có Pro** mới được trả ảnh,
-     không thì trả lỗi 403 và trang viewer hiện khối "Nâng cấp Pro" (không có lựa
-     chọn mua lẻ tài liệu — chỉ Pro mới mở khoá xem).
-4. File PDF gốc **không còn public** — không có cách nào lấy nguyên file qua giới hạn
-   trang nữa (khác với cơ chế `item.link` cũ vẫn lộ URL công khai).
+    .wrap{ max-width:820px; margin:0 auto; padding:18px 14px 80px; }
 
-## ⚠️ Giới hạn thực tế (nói thật, không hứa quá)
-- **Không có cách nào trên web chặn được chụp màn hình / quay phim màn hình** — kể cả
-  Scribd cũng vậy. Mình chỉ chặn được: tải file gốc, "Lưu ảnh" qua right-click, copy
-  text, in trang (Ctrl+P/Ctrl+S bị chặn ở mức JS). Mỗi trang có **watermark email
-  người xem** (mờ, chéo góc) để nếu ai đó chụp lại rồi phát tán thì admin tra được
-  `document_view_logs` ra ai đã xem trang đó lúc nào.
-- Người rành kỹ thuật vẫn có thể lưu ảnh từng trang qua tab Network của DevTools —
-  nhưng chỉ lưu được **đúng số trang họ được phép xem**, không lấy được nguyên file.
+    .page-slot{
+        position:relative; margin:0 auto 14px; background:var(--card); border:1px solid var(--line);
+        border-radius:10px; overflow:hidden; box-shadow:var(--shadow); min-height:320px;
+        display:flex; align-items:center; justify-content:center;
+    }
+    .page-img{
+        width:100%; aspect-ratio:auto; background-size:contain; background-position:center; background-repeat:no-repeat;
+        min-height:320px; pointer-events:none; /* ảnh nền -> right click không ra menu "Lưu ảnh" */
+    }
+    .page-loading{ color:var(--ink-mute); font-size:.85rem; display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .page-num{ position:absolute; bottom:8px; right:12px; font-size:.72rem; color:#fff; background:rgba(0,0,0,.45); padding:2px 8px; border-radius:999px; pointer-events:none; }
 
-## Việc cần làm để deploy
+    .lock-card{
+        background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow);
+        padding:34px 22px; text-align:center; margin-top:6px;
+    }
+    .lock-card i.fa-lock{ font-size:2.1rem; color:var(--brand); margin-bottom:14px; }
+    .lock-card h3{ margin:0 0 6px; font-size:1.05rem; }
+    .lock-card p{ margin:0 0 18px; color:var(--ink-soft); font-size:.88rem; line-height:1.6; }
+    .lock-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .btn{ padding:11px 20px; border-radius:10px; border:none; font-weight:700; font-size:.87rem; cursor:pointer; font-family:inherit; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+    .btn-primary{ background:var(--brand); color:#fff; }
+    .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); }
 
-### 1. Chạy migration
-Supabase SQL Editor → chạy `supabase/migrations/0016_doc_page_preview.sql`.
+    .state{ text-align:center; padding:80px 20px; color:var(--ink-mute); }
+    .state i{ font-size:2rem; margin-bottom:12px; display:block; }
 
-### 2. Tạo bucket R2 mới (riêng tư)
-Vào Cloudflare R2 → tạo bucket tên **`tai-lieu-trang`** → **KHÔNG bật Public Access**
-(khác với bucket `tai-lieu` hiện tại đang public).
+    .blur-teaser{ filter:blur(6px) brightness(.9); }
+</style>
+</head>
+<body oncontextmenu="return false">
 
-### 3. Deploy Edge Function `doc-pages`
-```
-supabase functions deploy doc-pages
-```
-Sau đó vào **Supabase Dashboard → Edge Functions → doc-pages → Settings** →
-**tắt "Verify JWT"** (function tự xử lý xác thực bên trong, kể cả khách ẩn danh xem
-trang free vẫn gọi được).
-
-Thêm Secret (nếu chưa có sẵn từ trước — dùng đúng giá trị mà function `r2-storage`
-của bạn đang dùng để upload lên R2):
-```
-supabase secrets set R2_ACCOUNT_ID=xxx R2_ACCESS_KEY_ID=xxx R2_SECRET_ACCESS_KEY=xxx
-```
-> Nếu `r2-storage` đặt tên biến khác 3 tên trên, mở
-> `supabase/functions/doc-pages/index.ts`, sửa 3 dòng `Deno.env.get(...)` đầu file
-> cho khớp tên biến bạn đang dùng.
-
-### 4. Copy 2 file mới vào đúng chỗ
-- `doc-preview-viewer.html` → đặt ở **thư mục gốc** (ngang hàng `chi-tiet.html`).
-- `admin/doc-preview.html` → đặt trong thư mục **`admin/`**.
-
-### 5. Dán 2 đoạn nhỏ (thủ công) vào code hiện có
-
-**a) `admin/index.html`** — thêm link vào sidebar, ngay dưới mục "Tài liệu"
-(tìm dòng có `id="nav_doc"`, khoảng dòng 1795-1797):
-```html
-<div class="side-item settings-item" id="nav_doc" onclick="showContentManager('doc')">
-    <span class="set-ico">📁</span><span class="name">Tài liệu</span>
+<div class="topbar">
+    <a href="javascript:history.back()" class="back"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="title" id="docTitle">Đang tải...</div>
+    <div class="pages-count" id="pagesCount"></div>
 </div>
-<!-- 👇 THÊM ĐOẠN NÀY -->
-<div class="side-item settings-item" id="nav_doc_preview" onclick="window.location.href='doc-preview.html'">
-    <span class="set-ico">🧩</span><span class="name">Xem trước theo trang</span>
+
+<div class="wrap" id="wrap">
+    <div class="state"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải tài liệu...</div>
 </div>
-```
 
-**b) `chi-tiet.html`** — file này **đã được sửa sẵn** trong gói tải về (đính kèm
-cùng chỗ với zip), bạn chỉ cần **ghi đè lên file `chi-tiet.html` gốc** của bạn là
-xong, không cần dán tay. Nếu bạn đã tự sửa `chi-tiet.html` từ lúc đăng bài trước thì
-nhớ merge lại cho khỏi mất thay đổi riêng của bạn — phần mình thêm nằm trong hàm
-`loadDocItem()`, có 2 chỗ:
-1. Sau khối `if (!isPaid){...} else if (owned){...} else {...}` xây `ctaHtml`,
-   thêm đoạn ghi đè khi `item.preview_mode === 'pages' && item.pages_ready`.
-2. Sửa điều kiện `if (isPaid && !owned){` thành
-   `if (isPaid && !owned && !(item.preview_mode === 'pages' && item.pages_ready)){`
-   để không bị lỗi null khi nút `pdBuyBtn` không còn tồn tại.
+<script>
+const SUPABASE_URL = 'https://sakombvgdobdehbvsfjw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_gsXHbhvTTlYPyaa58FkNOQ_IylV8uEU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const DOC_PAGES_FN_URL = SUPABASE_URL + '/functions/v1/doc-pages';
 
-### 6. Test
-1. Vào `admin/doc-preview.html`, chọn 1 tài liệu trả phí đã có sẵn, tách trang thử.
-2. Mở `doc-preview-viewer.html?id=<id>` ở trình duyệt ẩn danh (chưa đăng nhập) → phải xem
-   được đúng số trang free, quá số đó phải hiện khối khoá.
-3. Đăng nhập bằng tài khoản Pro hoặc tài khoản đã mua tài liệu đó → phải xem được
-   hết toàn bộ trang.
+const params = new URLSearchParams(location.search);
+const DOC_ID = params.get('id') || '';
 
-## Có thể mở rộng thêm (chưa làm, để sau)
-- Hỗ trợ tách trang cho file Word (cần convert .docx → PDF trước, ví dụ qua
-  LibreOffice ở 1 service riêng, trình duyệt không tự làm được).
-- Đóng dấu watermark **trực tiếp vào pixel ảnh** ở Edge Function (hiện đang overlay
-  bằng CSS ở client — dễ làm hơn nhưng dễ gỡ hơn 1 chút so với bake vào ảnh).
-- Đếm & hiển thị "X lượt xem" công khai kiểu Scribd (đã có log ở `document_view_logs`,
-  chỉ cần thêm 1 query đếm).
-- Trang quản lý admin xoá được `document_sources` + ảnh trang khi admin xoá hẳn
-  tài liệu (hiện chưa dọn rác khi xoá tài liệu gốc).
+let currentSession = null;
+let currentItem = null;
+let isPaidDoc = false;
+let watermarkLabel = 'SNG EDU';
+
+function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function isProActive(user){
+    if (!user) return false;
+    const meta = user.user_metadata || {};
+    const until = meta.premium_until ? new Date(meta.premium_until) : null;
+    return meta.plan === 'premium' && (!until || until > new Date());
+}
+
+function showState(html){
+    document.getElementById('wrap').innerHTML = `<div class="state">${html}</div>`;
+}
+
+async function boot(){
+    if (!DOC_ID){
+        showState('<i class="fa-solid fa-circle-exclamation"></i>Thiếu tài liệu cần xem.');
+        return;
+    }
+
+    const { data: { session } } = await sb.auth.getSession();
+    currentSession = session;
+    watermarkLabel = session ? (session.user.email || 'SNG EDU') : 'SNG EDU · Khách';
+
+    const { data: settingsRow } = await sb.from('site_settings').select('payload').eq('key', 'doc_content').single();
+    const payload = (settingsRow && settingsRow.payload) || { free: [], paid: [] };
+    const paidList = Array.isArray(payload.paid) ? payload.paid : [];
+    const freeList = Array.isArray(payload.free) ? payload.free : [];
+
+    let item = paidList.find((it) => String(it.id) === DOC_ID);
+    isPaidDoc = !!item;
+    if (!item) item = freeList.find((it) => String(it.id) === DOC_ID);
+
+    if (!item || item.preview_mode !== 'pages'){
+        showState('<i class="fa-solid fa-circle-exclamation"></i>Tài liệu này chưa hỗ trợ xem trước theo trang.<br><a href="index.html#doc">Quay lại trang Tài liệu</a>');
+        return;
+    }
+    currentItem = item;
+
+    document.title = `${item.title || 'Tài liệu'} · SNG EDU`;
+    document.getElementById('docTitle').textContent = item.title || 'Tài liệu';
+
+    const pagesTotal = Number(item.pages_total) || 0;
+    document.getElementById('pagesCount').textContent = pagesTotal ? `${pagesTotal} trang` : '';
+
+    // Quyền xem full (chỉ để hiển thị UI cho đẹp — quyền THẬT được Edge Function kiểm tra lại)
+    // CHỈ Pro mới mở khoá — không có luồng mua lẻ tài liệu để xem.
+    let hasFullAccess = !isPaidDoc;
+    if (isPaidDoc && currentSession && isProActive(currentSession.user)){
+        hasFullAccess = true;
+    }
+
+    renderPages(pagesTotal, hasFullAccess);
+}
+
+function renderPages(pagesTotal, hasFullAccess){
+    const wrap = document.getElementById('wrap');
+    wrap.innerHTML = '';
+    if (!pagesTotal){
+        showState('<i class="fa-solid fa-circle-exclamation"></i>Tài liệu chưa có trang nào.');
+        return;
+    }
+
+    const slots = [];
+    for (let p = 1; p <= pagesTotal; p++){
+        const slot = document.createElement('div');
+        slot.className = 'page-slot';
+        slot.dataset.page = p;
+        slot.innerHTML = `<div class="page-loading"><i class="fa-solid fa-spinner fa-spin"></i>Trang ${p}</div>`;
+        wrap.appendChild(slot);
+        slots.push(slot);
+    }
+
+    // Lazy-load: chỉ gọi API khi trang sắp lọt vào khung nhìn, đỡ tốn băng thông
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting){
+                observer.unobserve(entry.target);
+                loadPage(entry.target);
+            }
+        });
+    }, { rootMargin: '600px 0px' });
+
+    slots.forEach((s) => observer.observe(s));
+}
+
+async function loadPage(slot){
+    const page = Number(slot.dataset.page);
+    // Lưu ý: publishable/anon key KHÔNG phải JWT nên không gửi như Bearer token —
+    // chỉ gửi Authorization khi thực sự có phiên đăng nhập; khách chưa đăng nhập
+    // vẫn gọi được (function doc-pages đã tắt Verify JWT, tự xử lý ẩn danh).
+    const headers = { apikey: SUPABASE_ANON_KEY };
+    if (currentSession) headers.Authorization = 'Bearer ' + currentSession.access_token;
+
+    try{
+        const res = await fetch(`${DOC_PAGES_FN_URL}?doc_id=${encodeURIComponent(DOC_ID)}&page=${page}`, { headers });
+
+        if (res.status === 403){
+            const info = await res.json().catch(() => ({}));
+            renderLockedFrom(slot, info);
+            return;
+        }
+        if (!res.ok) throw new Error('Không tải được trang ' + page);
+
+        const blob = await res.blob();
+        const objUrl = URL.createObjectURL(blob);
+        slot.innerHTML = `<div class="page-img" style="background-image:url('${objUrl}')"></div><div class="page-num">${page}</div>`;
+    }catch(e){
+        slot.innerHTML = `<div class="page-loading"><i class="fa-solid fa-triangle-exclamation"></i>Lỗi tải trang ${page}</div>`;
+    }
+}
+
+function renderLockedFrom(fromSlot){
+    // Xoá mọi slot còn lại từ đây trở đi (chưa render), thay bằng 1 khối khoá + CTA
+    let sib = fromSlot;
+    const toRemove = [];
+    while (sib){
+        const next = sib.nextElementSibling;
+        toRemove.push(sib);
+        sib = next;
+    }
+    const remainingCount = toRemove.length;
+    toRemove.forEach((el) => el.remove());
+
+    const wrap = document.getElementById('wrap');
+    const box = document.createElement('div');
+    box.className = 'lock-card';
+    const loggedIn = !!currentSession;
+    box.innerHTML = `
+        <i class="fa-solid fa-lock"></i>
+        <h3>Còn ${remainingCount} trang nữa</h3>
+        <p>${loggedIn
+            ? 'Nâng cấp Pro để xem toàn bộ nội dung tài liệu này.'
+            : 'Đăng nhập rồi nâng cấp Pro để xem toàn bộ nội dung tài liệu này.'}</p>
+        <div class="lock-actions">
+            ${loggedIn ? '' : `<a class="btn btn-ghost" href="account/login.html?next=${encodeURIComponent(location.pathname + location.search)}"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a>`}
+            <a class="btn btn-primary" href="nhan-pro.html"><i class="fa-solid fa-crown"></i> Nâng cấp Pro</a>
+        </div>`;
+    wrap.appendChild(box);
+}
+
+// Rào cản cơ bản chống copy/in — không chặn được 100% (chụp màn hình/quay phim thì
+// không công nghệ web nào chặn nổi), nhưng chặn được thao tác phổ biến nhất.
+document.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && (k === 'p' || k === 's' || k === 'u')){
+        e.preventDefault();
+    }
+});
+
+boot();
+</script>
+</body>
+</html>

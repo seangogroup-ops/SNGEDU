@@ -265,9 +265,25 @@ async function loadDocs(){
     const payload = (data && data.payload) || { free: [], paid: [] };
     const freeArr = Array.isArray(payload.free) ? payload.free : [];
     const paidArr = Array.isArray(payload.paid) ? payload.paid : [];
-    docList = freeArr.map((x) => Object.assign({}, x, { type: 'free', price: 0 }))
+    const merged = freeArr.map((x) => Object.assign({}, x, { type: 'free', price: 0 }))
         .concat(paidArr.map((x) => Object.assign({}, x, { type: x.access === 'pro' ? 'vip' : 'paid' })));
+    // Khử trùng: nếu 1 ID lỡ nằm ở CẢ HAI mảng free[]/paid[] (hậu quả 1 bug đã sửa ở admin.js —
+    // trước đây lưu tài liệu VIP bị ghi thừa 1 bản vào free[]), chỉ giữ đúng 1 bản, ưu tiên bản
+    // paid/vip (đó mới là "sự thật", bản free là bản lỗi bị ghi thừa).
+    let hadDupToClean = false;
+    const byId = new Map();
+    merged.forEach((it) => {
+        const key = String(it.id);
+        const existing = byId.get(key);
+        if (existing && (existing.type === 'free') !== (it.type === 'free')) hadDupToClean = true;
+        if (!existing || existing.type === 'free') byId.set(key, it);
+    });
+    docList = Array.from(byId.values());
     renderList();
+    if (hadDupToClean){
+        // Tự dọn database ngay lần tải đầu tiên sau khi vá lỗi, không cần bấm Lưu thủ công.
+        savePayload().catch(() => {});
+    }
 }
 
 function docTypeBadge(type){

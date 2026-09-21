@@ -159,3 +159,35 @@ nơi đều có 3 nút chọn loại; ô giá tự khoá về 0đ khi chọn Mi�
 - Trang chủ: tài liệu VIP có badge 👑 VIP, CTA "Đọc online · cần Pro".
 - `chi-tiet.html`: tài liệu VIP không hiện nút mua; có Pro thì tải/đọc được ngay, chưa có thì
   hiện nút "Nâng cấp Pro để xem".
+
+
+---
+
+## Cập nhật 3: sửa bug gây trùng lặp tài liệu VIP (quan trọng)
+
+### Bug là gì
+Ở `admin/assets/js/admin.js`, khi lưu danh sách tài liệu, dòng lọc mảng "miễn phí" viết sai:
+```js
+payload.free = cfg.items.filter(it => it.type !== 'paid')   // ❌ "khác trả phí" gồm luôn cả 'vip'
+```
+Đúng ra phải là `it.type === 'free'`. Vì lọc sai, **mỗi lần lưu bất kỳ thay đổi nào** ở mục
+Tài liệu (sửa, ẩn/hiện, kéo thả, tách trang...), tài liệu loại **VIP bị ghi thêm 1 bản thừa vào
+mảng free[]** trong database — càng lưu càng nhân bản, gây hiện tượng:
+- Danh sách hiện trùng 2 dòng cùng 1 tài liệu.
+- `chi-tiet.html` có lúc lấy nhầm bản free thừa (ưu tiên tìm free trước) → hiện "Miễn phí — Sắp
+  ra mắt" dù tài liệu đã set VIP và đã tách trang xong.
+
+### Đã sửa
+1. **Sửa gốc**: lọc lại đúng `it.type === 'free'` khi lưu.
+2. **Tự khử trùng khi tải danh sách** (cả ở `admin/assets/js/admin.js` và
+   `admin/doc-preview.html`): nếu phát hiện 1 ID nằm ở cả free[] và paid[], tự giữ đúng 1 bản
+   (ưu tiên bản paid/vip) rồi **tự lưu lại ngay** để dọn sạch database — không cần bấm gì thêm,
+   chỉ cần mở lại mục Tài liệu 1 lần sau khi đã cập nhật code mới.
+3. **Rào chắn ở trang chủ** (`assets/js/index.js`): nếu dữ liệu cũ chưa kịp dọn, trang chủ vẫn
+   không hiện 2 thẻ trùng — tự ẩn bản free nếu ID đó đã có ở paid[].
+4. **Sửa thứ tự tìm kiếm ở `chi-tiet.html`**: trước đây tìm trong `free[]` trước rồi mới tới
+   `paid[]` — nếu bị trùng ID sẽ luôn lấy nhầm bản free (sai). Nay đổi lại tìm `paid[]` trước.
+
+### Cần làm sau khi cập nhật code
+Chỉ cần mở lại mục **Tài liệu** ở admin (hoặc tab **Tài liệu doc**) một lần — code tự phát hiện
+và dọn sạch các bản trùng còn sót lại trong database, không cần thao tác gì thêm.

@@ -340,7 +340,16 @@ async function loadFooterSettings(){
 }
 
 async function loadPage(){
-    const { data: { session } } = await sb.auth.getSession();
+    let { data: { session } } = await sb.auth.getSession();
+    // Làm mới session từ server (không chỉ dùng bản cache local) để nếu tài khoản vừa được
+    // admin cộng/gia hạn Pro thì trang chi tiết nhận ra NGAY, không phải đợi token tự refresh
+    // (nếu không sẽ bị lỗi: đã có Pro nhưng vẫn thấy "Nâng cấp Pro để xem").
+    if (session){
+        try{
+            const { data, error } = await sb.auth.refreshSession();
+            if (!error && data && data.session) session = data.session;
+        }catch(e){ /* mạng lỗi -> cứ dùng session cache cũ, không chặn trang */ }
+    }
     currentSession = session;
 
     loadFooterSettings();
@@ -588,9 +597,19 @@ async function loadDocItem(){
 
     const free = Array.isArray(payload.free) ? payload.free : [];
     const paid = Array.isArray(payload.paid) ? payload.paid : [];
-    let item = free.find(it => String(it.id) === String(ITEM_ID));
-    let isPaid = false;
-    if (!item){ item = paid.find(it => String(it.id) === String(ITEM_ID)); isPaid = !!item; }
+    // Ưu tiên tìm trong paid[] trước: nếu 1 ID lỡ nằm ở CẢ HAI mảng (do 1 bug đã sửa ở admin —
+    // tài liệu VIP từng bị ghi thừa 1 bản vào free[]), bản paid/vip mới là "sự thật".
+    // Nếu 1 ID bị lưu trùng thành 2 dòng trong cùng mảng (lỗi thao tác ở admin), .find() chỉ lấy
+    // dòng ĐẦU TIÊN nên có thể nhận nhầm bản dữ liệu cũ/thiếu (VD: bản chưa tách trang) dù khách
+    // bấm vào thẻ của bản đã tách trang. Ưu tiên bản đã tách trang xong (pages_ready) nếu có trùng.
+    function pickDocMatch(arr, id){
+        const matches = arr.filter(it => String(it.id) === String(id));
+        if (!matches.length) return null;
+        return matches.find(it => it.preview_mode === 'pages' && it.pages_ready) || matches[matches.length - 1];
+    }
+    let item = pickDocMatch(paid, ITEM_ID);
+    let isPaid = !!item;
+    if (!item) item = pickDocMatch(free, ITEM_ID);
 
     if (!item){
         document.getElementById('headerTitle').textContent = 'Không tìm thấy tài liệu';
@@ -636,7 +655,11 @@ async function loadDocItem(){
                 ? `<a class="pd-cta owned" href="${escapeHtml(item.link)}" target="_blank" rel="noopener"><i class="fa-solid fa-download"></i> Tải xuống (Pro)</a>`
                 : `<button class="pd-cta owned" disabled><i class="fa-solid fa-crown"></i> Đang cập nhật nội dung</button>`;
         } else {
-            ctaHtml = `<a class="pd-cta" href="nhan-pro.html"><i class="fa-solid fa-crown"></i> Nâng cấp Pro để xem</a>`;
+            // "Nâng cấp Pro" ở đây phải đưa khách tới CỔNG THANH TOÁN gói Premium (modal chọn gói + trả phí
+            // ở trang chủ), KHÔNG phải trang "Nhận Pro miễn phí" (đó là trang đổi tài liệu/báo lỗi lấy Pro,
+            // hai việc khác nhau). Trang này không có sẵn modal thanh toán nên điều hướng về trang chủ kèm
+            // ?openPro=1 — trang chủ đã có sẵn cơ chế tự mở modal nâng cấp Pro khi thấy tham số này.
+            ctaHtml = `<a class="pd-cta" href="index.html?openPro=1#doc"><i class="fa-solid fa-crown"></i> Nâng cấp Pro để xem</a>`;
         }
     } else if (!isPaid){
         const disabled = !item.link;

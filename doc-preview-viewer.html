@@ -153,7 +153,7 @@
         <button class="tb-btn" onclick="zoomStep(1)" title="Phóng to"><i class="fa-solid fa-plus"></i></button>
         <button class="tb-btn" onclick="zoomReset()" title="Vừa khung đọc"><i class="fa-solid fa-arrows-left-right-to-line"></i></button>
     </div>
-    <a class="btn-pro" id="proBtn" href="nhan-pro.html" style="display:none;"><i class="fa-solid fa-crown"></i> <span class="lbl">Nâng cấp Pro</span></a>
+    <a class="btn-pro" id="proBtn" href="index.html?openPro=1#doc" style="display:none;"><i class="fa-solid fa-crown"></i> <span class="lbl">Nâng cấp Pro</span></a>
 </div>
 
 <div class="wrap" id="wrap">
@@ -231,7 +231,15 @@ async function boot(){
         return;
     }
 
-    const { data: { session } } = await sb.auth.getSession();
+    let { data: { session } } = await sb.auth.getSession();
+    // Làm mới session từ server để nhận ngay quyền Pro vừa được cấp, không dựa vào bản cache cũ
+    // (tránh trường hợp đã có Pro nhưng viewer vẫn khoá/không nhận ra).
+    if (session){
+        try{
+            const { data, error } = await sb.auth.refreshSession();
+            if (!error && data && data.session) session = data.session;
+        }catch(e){}
+    }
     currentSession = session;
     watermarkLabel = session ? (session.user.email || 'SNG EDU') : 'SNG EDU · Khách';
 
@@ -240,9 +248,17 @@ async function boot(){
     const paidList = Array.isArray(payload.paid) ? payload.paid : [];
     const freeList = Array.isArray(payload.free) ? payload.free : [];
 
-    let item = paidList.find((it) => String(it.id) === DOC_ID);
+    // Nếu 1 ID bị lưu trùng thành 2 dòng trong cùng mảng (lỗi thao tác ở admin), .find() thường
+    // lấy nhầm dòng đầu tiên (có thể là bản CHƯA tách trang) -> hiện lầm lỗi "chưa hỗ trợ xem
+    // trước theo trang" dù tài liệu đã được tách. Ưu tiên bản đã tách trang xong nếu có trùng ID.
+    function pickDocMatch(arr, id){
+        const matches = arr.filter((it) => String(it.id) === String(id));
+        if (!matches.length) return null;
+        return matches.find((it) => it.preview_mode === 'pages' && it.pages_ready) || matches[matches.length - 1];
+    }
+    let item = pickDocMatch(paidList, DOC_ID);
     isPaidDoc = !!item;
-    if (!item) item = freeList.find((it) => String(it.id) === DOC_ID);
+    if (!item) item = pickDocMatch(freeList, DOC_ID);
 
     if (!item || item.preview_mode !== 'pages'){
         showState('<i class="fa-solid fa-circle-exclamation"></i>Tài liệu này chưa hỗ trợ xem trước theo trang.<br><a href="index.html#doc">Quay lại trang Tài liệu</a>');
@@ -402,7 +418,7 @@ function renderLockedFrom(fromSlot){
         </div>
         <div class="lock-actions">
             ${loggedIn ? '' : `<a class="btn btn-ghost" href="account/login.html?next=${encodeURIComponent(nextUrl)}"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a>`}
-            <a class="btn btn-primary" href="nhan-pro.html"><i class="fa-solid fa-crown"></i> Nâng cấp Pro</a>
+            <a class="btn btn-primary" href="index.html?openPro=1#doc"><i class="fa-solid fa-crown"></i> Nâng cấp Pro</a>
         </div>`;
     wrap.appendChild(box);
 }

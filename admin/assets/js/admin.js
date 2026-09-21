@@ -2996,6 +2996,7 @@ async function loadContentList(subKey){
     let payload = (data && data.payload) ? data.payload : null;
     if (!payload) payload = CONTENT_DEFAULTS[cfg.settingsKey] || {};
     let arr;
+    let hadDupToClean = false;
     if (cfg.meta.docTypeField){
         // Tài liệu: gộp 2 mảng free/paid (định dạng lưu trữ cũ, trang chủ vẫn đọc riêng 2 mảng này)
         // thành 1 danh sách duy nhất trong admin, đánh dấu bằng item.type.
@@ -3003,8 +3004,19 @@ async function loadContentList(subKey){
         const paidArr = Array.isArray(payload.paid) ? payload.paid : [];
         // 3 loại: free (tải tự do) · paid (mua lẻ) · vip (access:'pro' — nạp VIP mới xem).
         // Loại vip vẫn nằm trong mảng paid[] để Edge Function doc-pages coi là tài liệu cần quyền.
-        arr = freeArr.map(x => Object.assign({}, x, { type: 'free', price: 0 }))
+        const merged = freeArr.map(x => Object.assign({}, x, { type: 'free', price: 0 }))
             .concat(paidArr.map(x => Object.assign({}, x, { type: x.access === 'pro' ? 'vip' : 'paid' })));
+        // Khử trùng: nếu 1 ID lỡ nằm ở CẢ HAI mảng free[]/paid[] (hậu quả của 1 bug đã sửa —
+        // trước đây lưu tài liệu VIP bị ghi thừa 1 bản vào free[]), chỉ giữ đúng 1 bản, ưu tiên
+        // bản paid/vip (đó mới là "sự thật", bản free là bản lỗi bị ghi thừa).
+        const byId = new Map();
+        merged.forEach(it => {
+            const key = String(it.id);
+            const existing = byId.get(key);
+            if (existing && (existing.type === 'free') !== (it.type === 'free')) hadDupToClean = true;
+            if (!existing || existing.type === 'free') byId.set(key, it);
+        });
+        arr = Array.from(byId.values());
     } else {
         arr = Array.isArray(payload[cfg.arrayField]) ? payload[cfg.arrayField] : [];
         arr = arr.map(x => Object.assign({}, x));
@@ -3012,6 +3024,10 @@ async function loadContentList(subKey){
     cfg.items = arr;
     cfg.items.forEach(it => { if (!it.id) it.id = 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); });
     renderContentList(subKey);
+    if (hadDupToClean){
+        // Tự dọn database ngay lần tải đầu tiên sau khi vá lỗi, không bắt admin phải bấm Lưu thủ công.
+        saveContentList(subKey).catch(() => {});
+    }
 }
 
 function contentItemRowHtml(subKey, item){
@@ -4216,8 +4232,10 @@ async function saveContentList(subKey){
     const payload = (data && data.payload) ? data.payload : Object.assign({}, CONTENT_DEFAULTS[cfg.settingsKey] || {});
     if (cfg.meta.docTypeField){
         // Tách lại danh sách gộp thành 2 mảng free/paid để trang chủ (index.html) đọc như cũ.
-        payload.free = cfg.items.filter(it => it.type !== 'paid').map(it => {
-            const { type, ...rest } = it;
+        // BUG CŨ (đã sửa): lọc "khác paid" vô tình gồm luôn cả 'vip' -> tài liệu VIP
+        // bị ghi lặp thêm 1 bản vào free[] mỗi lần lưu, gây trùng lặp tăng dần theo mỗi lần Lưu.
+        payload.free = cfg.items.filter(it => it.type === 'free').map(it => {
+            const { type, access, ...rest } = it;
             return Object.assign({}, rest, { price: 0 });
         });
         payload.paid = cfg.items.filter(it => it.type === 'paid' || it.type === 'vip').map(it => {

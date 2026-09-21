@@ -902,7 +902,7 @@ const toast = document.getElementById('toast');
         return false;
     }
 
-    function docItemCardHtml(item, isPaid){
+    function docItemCardHtml(item, isPaid, isPro){
         const metaHtml = item.size ? `<div class="doc-meta"><i class="fa-solid fa-file-lines"></i> ${escapeHtmlHome(item.size)}</div>` : '';
         const descHtml = item.desc ? `<div class="doc-desc">${escapeHtmlHome(item.desc)}</div>` : '';
         const topHtml = item.image
@@ -937,18 +937,28 @@ const toast = document.getElementById('toast');
         const idAttr = escapeHtmlHome(docId);
 
         // Loại 3: tài liệu VIP (item.access === 'pro') — không bán lẻ, nạp Pro là xem/đọc online được.
+        // Nếu người xem hiện tại ĐÃ có Pro rồi thì không được hiện "Nâng cấp/cần Pro" nữa —
+        // phải cho họ 1 nút "Xem/Đọc online" đi thẳng vào nội dung.
         if (item.access === 'pro'){
             const readOnline = item.preview_mode === 'pages' && item.pages_ready;
+            let ctaIcon, ctaText;
+            if (isPro){
+                ctaIcon = readOnline ? 'fa-book-open' : (item.link ? 'fa-download' : 'fa-crown');
+                ctaText = readOnline ? 'Đọc online' : (item.link ? 'Xem tài liệu' : 'Đang cập nhật nội dung');
+            } else {
+                ctaIcon = readOnline ? 'fa-book-open' : 'fa-crown';
+                ctaText = readOnline ? 'Đọc online · cần Pro' : 'Nâng cấp Pro để xem';
+            }
             return `
-                <a class="doc-card is-paid" data-cat="paid" href="chi-tiet.html?type=doc&id=${idAttr}">
+                <a class="doc-card ${isPro ? 'is-owned' : 'is-paid'}" data-cat="paid" href="chi-tiet.html?type=doc&id=${idAttr}">
                     <div class="${topClass}">
                         ${topHtml || iconHtml}
-                        <span class="doc-tag paid"><i class="fa-solid fa-crown"></i> VIP</span>
+                        <span class="doc-tag ${isPro ? 'owned' : 'paid'}"><i class="fa-solid fa-crown"></i> VIP</span>
                     </div>
                     <div class="doc-title">${escapeHtmlHome(item.title || '')}</div>
                     ${metaHtml}
                     ${descHtml}
-                    <div class="doc-cta"><i class="fa-solid ${readOnline ? 'fa-book-open' : 'fa-crown'}"></i> ${readOnline ? 'Đọc online · cần Pro' : 'Nâng cấp Pro để xem'}</div>
+                    <div class="doc-cta"><i class="fa-solid ${ctaIcon}"></i> ${ctaText}</div>
                 </a>`;
         }
 
@@ -979,21 +989,56 @@ const toast = document.getElementById('toast');
             </a>`;
     }
 
+    // Khử trùng NGAY TRONG 1 mảng: nếu do lỗi thao tác ở admin, 1 ID vô tình bị lưu thành 2 dòng
+    // riêng biệt trong cùng free[]/paid[] (khác `title`/`desc` do sửa nhầm), chỉ hiện ĐÚNG 1 thẻ,
+    // ưu tiên giữ bản đã tách trang xong (pages_ready) — đó mới là bản "sống" khách xem được;
+    // nếu cả 2 đều chưa tách trang thì giữ bản xuất hiện sau (thường là bản admin sửa gần nhất).
+    // Việc này cũng chặn hẳn tình trạng bấm vào 1 trong 2 thẻ trùng lại nhận nhầm dữ liệu của thẻ kia
+    // (2 thẻ cùng id -> cùng link chi-tiet.html?id=... -> trang chi tiết/đọc-online chỉ tìm thấy bản đầu tiên).
+    function dedupeDocsById(list){
+        const byId = new Map();
+        list.forEach(it => {
+            const key = String(it.id);
+            const existing = byId.get(key);
+            if (!existing){ byId.set(key, it); return; }
+            const existingReady = existing.preview_mode === 'pages' && existing.pages_ready;
+            const itReady = it.preview_mode === 'pages' && it.pages_ready;
+            if (itReady || !existingReady) byId.set(key, it);
+        });
+        return Array.from(byId.values());
+    }
+
     async function renderDocContent(){
         const payload = await fetchSiteSettingPayload('doc_content', DEFAULT_DOC_CONTENT);
         // Tài liệu bị ẩn (item.hidden) không hiện trong danh sách công khai.
         // Ngoại lệ: tài liệu trả phí khách đã mua rồi vẫn hiện để họ tải lại được, dù admin đã ẩn khỏi trang chủ.
-        const free = (Array.isArray(payload.free) ? payload.free : []).filter(it => !it.hidden);
-        const paid = (Array.isArray(payload.paid) ? payload.paid : []).filter(it => !it.hidden || purchasedDocIds.has(String(it.id)));
+        let free = (Array.isArray(payload.free) ? payload.free : []).filter(it => !it.hidden);
+        let paid = (Array.isArray(payload.paid) ? payload.paid : []).filter(it => !it.hidden || purchasedDocIds.has(String(it.id)));
+        free = dedupeDocsById(free);
+        paid = dedupeDocsById(paid);
+        // Rào chắn: nếu 1 ID lỡ nằm ở cả free[] và paid[] (dữ liệu cũ từ 1 bug đã sửa ở admin),
+        // không hiện 2 thẻ trùng ngoài trang chủ — ưu tiên giữ bản trả phí/VIP.
+        const paidIds = new Set(paid.map(it => String(it.id)));
+        free = free.filter(it => !paidIds.has(String(it.id)));
         DOC_PAID_ITEMS_MAP = {};
+
+        // Lấy trạng thái Pro MỚI NHẤT (không dựa vào session đã cache có thể bị cũ nếu vừa được
+        // admin cộng Pro / vừa gia hạn) để thẻ VIP hiện đúng "Xem/Đọc online" thay vì "Nâng cấp Pro".
+        let isPro = false;
+        try{
+            const { data } = await sb.auth.getUser();
+            isPro = !!(data && data.user && window.SNG_USAGE && SNG_USAGE.isProActive(data.user));
+        }catch(e){
+            isPro = !!(currentSession && window.SNG_USAGE && SNG_USAGE.isProActive(currentSession.user));
+        }
 
         const allGrid = document.getElementById('docAllGrid');
         const allCount = document.getElementById('docAllCount');
         const total = free.length + paid.length;
         if (allCount) allCount.textContent = total + ' tài liệu';
 
-        const cardsHtml = free.map(it => docItemCardHtml(it, false)).join('')
-            + paid.map(it => docItemCardHtml(it, true)).join('');
+        const cardsHtml = free.map(it => docItemCardHtml(it, false, isPro)).join('')
+            + paid.map(it => docItemCardHtml(it, true, isPro)).join('');
 
         allGrid.innerHTML = total
             ? `<div class="doc-grid">${cardsHtml}</div>`
@@ -2647,7 +2692,16 @@ const toast = document.getElementById('toast');
     })();
 
     (async function initSideNav(){
-        const { data: { session } } = await sb.auth.getSession();
+        let { data: { session } } = await sb.auth.getSession();
+        // Làm mới session từ server ngay khi vào trang, để nếu tài khoản vừa được admin cộng/gia
+        // hạn Pro thì mọi UI phụ thuộc Pro (thẻ VIP, badge tài khoản...) nhận ra ngay lần tải này,
+        // không phải đợi token tự refresh hoặc phải đăng xuất/đăng nhập lại.
+        if (session){
+            try{
+                const { data, error } = await sb.auth.refreshSession();
+                if (!error && data && data.session) session = data.session;
+            }catch(e){}
+        }
         currentSession = session;
         updateAccountUI();
         loadPaymentSettings();

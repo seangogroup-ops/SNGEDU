@@ -2675,13 +2675,32 @@ const R2_PUBLIC_URLS = {
     'feedback-images': 'https://pub-b6c3ac33d32c483d9532578f9ed21303.r2.dev',
     'ctv-documents': 'https://pub-04d67e116ce44411888b66104e6c614e.r2.dev'
 };
+// Supabase JS chỉ trả error.message = "Edge Function returned a non-2xx status code" (chung chung,
+// không nói lý do thật) mỗi khi function trả lỗi — lý do thật nằm trong BODY của response lỗi đó,
+// nằm ở error.context (đối tượng Response). Đọc ra để hiện đúng lý do (VD: sai key R2, file quá lớn
+// theo giới hạn của function, bucket không tồn tại...) thay vì mỗi lần lỗi đều chỉ thấy 1 câu chung.
+async function r2ErrorDetail(error){
+    try{
+        if (error && error.context && typeof error.context.json === 'function'){
+            const body = await error.context.clone().json();
+            if (body && (body.error || body.message)) return body.error || body.message;
+        }
+    }catch(e){}
+    try{
+        if (error && error.context && typeof error.context.text === 'function'){
+            const text = await error.context.clone().text();
+            if (text) return text.slice(0, 300);
+        }
+    }catch(e){}
+    return (error && error.message) || 'Lỗi tải file lên.';
+}
 async function r2Upload(bucket, path, file){
     const form = new FormData();
     form.append('bucket', bucket);
     form.append('path', path);
     form.append('file', file);
     const { data, error } = await sb.functions.invoke('r2-storage', { body: form });
-    if (error) throw new Error(error.message || 'Lỗi tải file lên.');
+    if (error) throw new Error(await r2ErrorDetail(error));
     if (!data || !data.ok) throw new Error((data && data.error) || 'Lỗi tải file lên.');
     return data; // { ok:true, publicUrl, path }
 }

@@ -947,7 +947,7 @@ const toast = document.getElementById('toast');
                 ctaText = readOnline ? 'Đọc ngay' : (item.link ? 'Xem tài liệu' : 'Đang cập nhật nội dung');
             } else {
                 ctaIcon = readOnline ? 'fa-book-open' : 'fa-crown';
-                ctaText = readOnline ? 'Đọc thử ngay' : 'Nâng cấp Pro để xem';
+                ctaText = readOnline ? 'Đọc ngay' : 'Nâng cấp Pro để xem';
             }
             return `
                 <a class="doc-card ${isPro ? 'is-owned' : 'is-paid'}" data-cat="paid" href="chi-tiet.html?type=doc&id=${idAttr}">

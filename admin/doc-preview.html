@@ -552,13 +552,30 @@ async function savePayload(){
 }
 
 // ---------- Upload/xoá file lên bucket public "tai-lieu" (dùng chung r2-storage, giống admin.js) ----------
+// Supabase JS chỉ trả error.message chung chung "Edge Function returned a non-2xx status code" —
+// lý do thật nằm trong body response lỗi (error.context). Đọc ra để hiện đúng nguyên nhân.
+async function r2ErrorDetail(error){
+    try{
+        if (error && error.context && typeof error.context.json === 'function'){
+            const body = await error.context.clone().json();
+            if (body && (body.error || body.message)) return body.error || body.message;
+        }
+    }catch(e){}
+    try{
+        if (error && error.context && typeof error.context.text === 'function'){
+            const text = await error.context.clone().text();
+            if (text) return text.slice(0, 300);
+        }
+    }catch(e){}
+    return (error && error.message) || 'Lỗi tải file lên.';
+}
 async function r2UploadDoc(bucket, path, file){
     const form = new FormData();
     form.append('bucket', bucket);
     form.append('path', path);
     form.append('file', file);
     const { data, error } = await sb.functions.invoke('r2-storage', { body: form });
-    if (error) throw new Error(error.message || 'Lỗi tải file lên.');
+    if (error) throw new Error(await r2ErrorDetail(error));
     if (!data || !data.ok) throw new Error((data && data.error) || 'Lỗi tải file lên.');
     return data; // { ok:true, publicUrl, path }
 }

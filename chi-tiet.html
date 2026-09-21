@@ -642,10 +642,11 @@ async function loadDocItem(){
         : `<div class="pd-icon"><i class="fa-solid ${isPaid ? 'fa-lock' : 'fa-file-lines'}"></i></div>`;
 
     let priceHtml = '';
-    if (isVip) priceHtml = `<div class="pd-price"><i class="fa-solid fa-crown"></i> Dành cho thành viên Pro</div>`;
-    else if (isPaid && owned) priceHtml = `<div class="pd-price owned"><i class="fa-solid fa-circle-check"></i> Đã mua${priceLabel ? ' · ' + priceLabel : ''}</div>`;
-    else if (isPaid && priceLabel) priceHtml = `<div class="pd-price">${priceLabel}</div>`;
+    if (isPaid && owned) priceHtml = `<div class="pd-price owned"><i class="fa-solid fa-circle-check"></i> Đã mua${priceLabel ? ' · ' + priceLabel : ''}</div>`;
+    else if (isPaid && !isVip && priceLabel) priceHtml = `<div class="pd-price">${priceLabel}</div>`;
     else if (!isPaid) priceHtml = `<div class="pd-price free"><i class="fa-solid fa-unlock"></i> Miễn phí</div>`;
+    // Tài liệu VIP: không hiện dòng "Dành cho thành viên Pro" nữa — chỉ còn đúng 1 nút bấm để đọc,
+    // giống hệt tài liệu free/trả phí (khoá Pro thật sự vẫn do CTA + Edge Function xử lý bên dưới).
 
     let ctaHtml = '';
     if (isVip){
@@ -682,9 +683,7 @@ async function loadDocItem(){
     // Tài liệu đã bật "xem trước theo trang" -> ghi đè hẳn CTA cũ (không còn mua lẻ,
     // chỉ Pro mới mở khoá xem hết trang, xem qua doc-preview-viewer.html)
     if (item.preview_mode === 'pages' && item.pages_ready){
-        const label = (!isPaid || isPro)
-            ? `Đọc online · ${item.pages_total || '?'} trang`
-            : `Đọc thử ${item.free_pages || 0}/${item.pages_total || '?'} trang — cần Pro để xem hết`;
+        const label = 'Đọc tài liệu';
         ctaHtml = `<a class="pd-cta" href="doc-preview-viewer.html?id=${encodeURIComponent(String(ITEM_ID))}">
                         <i class="fa-solid fa-eye"></i> ${label}
                    </a>`;

@@ -944,10 +944,10 @@ const toast = document.getElementById('toast');
             let ctaIcon, ctaText;
             if (isPro){
                 ctaIcon = readOnline ? 'fa-book-open' : (item.link ? 'fa-download' : 'fa-crown');
-                ctaText = readOnline ? 'Đọc online' : (item.link ? 'Xem tài liệu' : 'Đang cập nhật nội dung');
+                ctaText = readOnline ? 'Đọc ngay' : (item.link ? 'Xem tài liệu' : 'Đang cập nhật nội dung');
             } else {
                 ctaIcon = readOnline ? 'fa-book-open' : 'fa-crown';
-                ctaText = readOnline ? 'Đọc online · cần Pro' : 'Nâng cấp Pro để xem';
+                ctaText = readOnline ? 'Đọc thử ngay' : 'Nâng cấp Pro để xem';
             }
             return `
                 <a class="doc-card ${isPro ? 'is-owned' : 'is-paid'}" data-cat="paid" href="chi-tiet.html?type=doc&id=${idAttr}">

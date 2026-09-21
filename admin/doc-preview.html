@@ -570,14 +570,20 @@ async function r2ErrorDetail(error){
     return (error && error.message) || 'Lỗi tải file lên.';
 }
 async function r2UploadDoc(bucket, path, file){
-    const form = new FormData();
-    form.append('bucket', bucket);
-    form.append('path', path);
-    form.append('file', file);
-    const { data, error } = await sb.functions.invoke('r2-storage', { body: form });
+    const { data, error } = await sb.functions.invoke('r2-storage', {
+        body: { action: 'get-upload-url', bucket, path, contentType: file.type || 'application/octet-stream' }
+    });
     if (error) throw new Error(await r2ErrorDetail(error));
-    if (!data || !data.ok) throw new Error((data && data.error) || 'Lỗi tải file lên.');
-    return data; // { ok:true, publicUrl, path }
+    if (!data || !data.ok || !data.uploadUrl) throw new Error((data && data.error) || 'Lỗi tải file lên.');
+
+    const putRes = await fetch(data.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file
+    });
+    if (!putRes.ok) throw new Error('Tải file lên R2 thất bại (mã lỗi ' + putRes.status + ').');
+
+    return data; // { ok:true, uploadUrl, publicUrl, path }
 }
 async function r2DeleteDoc(bucket, path){
     if (!path) return;

@@ -337,8 +337,9 @@ function renderList(){
                     <select id="quality_${idx}" style="padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-family:inherit;font-size:.86rem;width:230px;">
                         <option value="1600" ${item.render_width == 1600 ? 'selected' : ''}>Tiêu chuẩn — 1600px (nhẹ)</option>
                         <option value="2200" ${item.render_width == 2200 ? 'selected' : ''}>Cao — 2200px</option>
-                        <option value="2560" ${(item.render_width == null || item.render_width == 2560) ? 'selected' : ''}>Rất nét — 2560px (khuyên dùng)</option>
-                        <option value="3200" ${item.render_width == 3200 ? 'selected' : ''}>Siêu nét — 3200px (nặng)</option>
+                        <option value="2560" ${item.render_width == 2560 ? 'selected' : ''}>Rất nét — 2560px</option>
+                        <option value="3200" ${(item.render_width == null || item.render_width == 3200) ? 'selected' : ''}>Siêu nét — 3200px (khuyên dùng)</option>
+                        <option value="3840" ${item.render_width == 3840 ? 'selected' : ''}>Cực nét — 3840px (rất nặng)</option>
                     </select>
                 </div>
                 <div class="field" style="max-width:320px;">
@@ -445,7 +446,7 @@ async function processDoc(idx){
         // Kiểu cũ (scale 2.2) cho ra ảnh chỉ ~1300px ngang với PDF khổ A4 -> màn hình Retina
         // (devicePixelRatio 2) hiển thị khung ~900px CSS = 1800px thật -> phải phóng to ảnh lên
         // -> chữ nhoè. Render thẳng 2560px thì trình duyệt chỉ việc THU NHỎ ảnh xuống, luôn nét.
-        const targetW = Math.max(1200, parseInt(document.getElementById('quality_' + idx).value, 10) || 2560);
+        const targetW = Math.max(1200, parseInt(document.getElementById('quality_' + idx).value, 10) || 3200);
         let firstW = 0, firstH = 0;
 
         for (let p = 1; p <= total; p++){
@@ -454,9 +455,9 @@ async function processDoc(idx){
 
             const page = await pdf.getPage(p);
             const base = page.getViewport({ scale: 1 });
-            // Tự tính scale sao cho ảnh ra đúng chiều rộng mục tiêu; chặn trần scale 6x
+            // Tự tính scale sao cho ảnh ra đúng chiều rộng mục tiêu; chặn trần scale 8x
             // để PDF khổ nhỏ (vd slide dọc) không tạo ảnh khổng lồ gây treo trình duyệt.
-            const scale = Math.min(6, targetW / base.width);
+            const scale = Math.min(8, targetW / base.width);
             const viewport = page.getViewport({ scale });
             const canvas = document.createElement('canvas');
             canvas.width = Math.round(viewport.width);
@@ -469,11 +470,12 @@ async function processDoc(idx){
 
             if (p === 1){ firstW = canvas.width; firstH = canvas.height; }
 
-            // 0.95: gần như không thấy vết nén quanh chữ (0.9 vẫn còn quầng mờ ở nét mảnh)
-            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+            // 0.97: gần như không còn thấy vết nén quanh chữ (0.95 thỉnh thoảng vẫn có quầng mờ
+            // rất nhẹ ở nét mảnh khi phóng to hết cỡ) — đánh đổi ảnh nặng hơn 1 chút.
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.97));
             await r2UploadPage(`${docId}/page-${p}.jpg`, blob);
 
-            // Giải phóng bộ nhớ canvas ngay (ảnh 2560px x 100 trang rất dễ làm tab bị "Aw, Snap")
+            // Giải phóng bộ nhớ canvas ngay (ảnh 3200px x 100 trang rất dễ làm tab bị "Aw, Snap")
             canvas.width = canvas.height = 0;
         }
 

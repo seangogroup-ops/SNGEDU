@@ -408,6 +408,7 @@ const prefType = qp.get('type') || (prefSubject ? 'wrong_question' : '');
 // URL gốc của đúng câu hỏi trên trang làm đề (để admin bấm "Trang gốc" nhảy thẳng tới câu đó),
 // được nút "Báo lỗi câu này" gắn kèm khi mở trang này. Nếu không có (vào từ banner góp ý chung), dùng location.href như cũ.
 const prefOrigin = qp.get('origin') || '';
+const prefDoc = qp.get('doc') === '1'; // đến từ nút "Báo lỗi" ở trang đọc tài liệu
 
 function selectType(type){
     document.querySelectorAll('.type-opt').forEach(el => {
@@ -630,6 +631,14 @@ const isQuickReport = !!(prefQuestion || prefSubject);
         selectType('other');
     }
     if (prefQuestion) document.getElementById('fbQuestionRef').value = prefQuestion;
+
+    if (prefDoc){
+        document.querySelector('.head-box h1').textContent = 'Báo lỗi tài liệu';
+        document.querySelector('.head-box .sub').textContent = 'Trang bị mờ, thiếu trang, sai nội dung hay lỗi hiển thị? Mô tả ngắn gọn bên dưới, đội SNG EDU sẽ kiểm tra và sửa sớm nhất.';
+        const refLabel = document.querySelector('#questionRefRow label');
+        if (refLabel) refLabel.innerHTML = 'Tài liệu / trang bị lỗi';
+        document.getElementById('fbMessage').placeholder = 'VD: Trang này bị mờ / thiếu chữ / sai nội dung ở mục... Bạn nghĩ nội dung đúng phải là gì?';
+    }
 
     const { data: { session } } = await sb.auth.getSession();
     if (session && session.user){

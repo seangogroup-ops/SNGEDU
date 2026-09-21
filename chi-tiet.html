@@ -203,6 +203,11 @@
     .pd-cta.owned{ background:var(--brand-bg); color:var(--brand); }
     .pd-cta.free{ background:var(--green-bg); color:var(--green); }
     .pd-cta.outline{ background:transparent; color:var(--ink); border:1.5px solid var(--line); }
+    .pd-report{
+        display:inline-flex; align-items:center; gap:7px; font-size:.84rem; font-weight:600;
+        color:var(--ink-soft); text-decoration:none; margin:2px 0 6px;
+    }
+    .pd-report:hover{ color:var(--red); }
 
     .pd-desc{ color:var(--ink-soft); font-size:.94rem; line-height:1.75; margin:18px 0 24px; white-space:pre-line; overflow-wrap:break-word; word-break:break-word; }
 
@@ -690,6 +695,17 @@ async function loadDocItem(){
         if (isVip && isPro && item.link){
             ctaHtml += `<a class="pd-cta outline" href="${escapeHtml(item.link)}" target="_blank" rel="noopener"><i class="fa-solid fa-download"></i> Tải file gốc</a>`;
         }
+    }
+
+    // Link "Báo lỗi tài liệu" -> form góp ý đã điền sẵn tên tài liệu
+    {
+        const rp = new URLSearchParams({
+            type: 'other',
+            doc: '1',
+            question: `📄 Tài liệu: ${item.title || ''}`,
+            origin: location.href
+        });
+        ctaHtml += `<a class="pd-report" href="gop-y.html?${rp.toString()}"><i class="fa-solid fa-flag"></i> Báo lỗi tài liệu này</a>`;
     }
 
     const specs = [];

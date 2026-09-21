@@ -1561,8 +1561,7 @@ const toast = document.getElementById('toast');
         intro_desc: 'Câu hỏi sai, đáp án chưa rõ, hay muốn góp ý thêm tính năng — cứ nhắn. Đội SNG EDU đọc và trả lời trực tiếp, không qua chatbot.',
         contacts: [
             { id:'c1', icon:'fa-solid fa-comment-dots', color:'blue',  title:'Nhắn Zalo',            desc:'Mở Zalo, nhắn thẳng cho admin', status_label:'Phản hồi trong ngày', link:'https://zalo.me/0825160035' },
-            { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi form góp ý',   desc:'Điền ngay trên web, không cần rời trang',           status_label:'Kèm ảnh, chọn đúng môn & câu',    link:'gop-y.html' },
-            { id:'c3', icon:'fa-solid fa-gift', color:'amber', title:'Nhận Pro miễn phí', desc:'Đổi tài liệu, báo lỗi hoặc giới thiệu bạn bè để nhận Premium', status_label:'Không cần thanh toán', link:'nhan-pro.html' }
+            { id:'c2', icon:'fa-solid fa-pen-to-square', color:'green', title:'Gửi form góp ý',   desc:'Điền ngay trên web, không cần rời trang',           status_label:'Kèm ảnh, chọn đúng môn & câu',    link:'gop-y.html' }
         ],
         faq: [
             { id:'f1', title:'Tài liệu và trắc nghiệm trên SNG EDU có mất phí không?', desc:'Toàn bộ học phần đang mở đều miễn phí 100%. Nếu SNG EDU ra thêm gói nâng cao, bạn sẽ được báo trước — không có chuyện tự động trừ phí.' },
@@ -1609,7 +1608,9 @@ const toast = document.getElementById('toast');
         if (titleEl) titleEl.textContent = payload.intro_title || DEFAULT_SUPPORT_CONTENT.intro_title;
         if (descEl) descEl.textContent = payload.intro_desc || DEFAULT_SUPPORT_CONTENT.intro_desc;
 
-        const contacts = Array.isArray(payload.contacts) ? payload.contacts : [];
+        // Ẩn thẻ "Nhận Pro miễn phí" (kể cả khi đã được lưu sẵn trong DB / admin)
+        const contacts = (Array.isArray(payload.contacts) ? payload.contacts : [])
+            .filter(c => !(c && (/nhan-pro/i.test(String(c.link || '')) || /Nhận Pro miễn phí/i.test(String(c.title || '')))));
         const contactsGrid = document.getElementById('supportContactsGrid');
         if (contactsGrid){
             contactsGrid.innerHTML = contacts.length

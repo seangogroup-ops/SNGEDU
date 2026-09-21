@@ -65,10 +65,17 @@
         background:linear-gradient(135deg,#f5a524,#f97316); color:#fff; font-weight:700; font-size:.8rem;
         text-decoration:none; white-space:nowrap; flex-shrink:0;
     }
+    .btn-report{
+        display:inline-flex; align-items:center; gap:7px; padding:9px 12px; border-radius:10px;
+        border:1px solid var(--line); background:var(--card); color:var(--ink-soft);
+        font-weight:600; font-size:.8rem; font-family:inherit; text-decoration:none; white-space:nowrap; flex-shrink:0; cursor:pointer;
+    }
+    .btn-report:hover{ color:#dc2626; border-color:#dc2626; }
     @media (max-width:680px){
         .zoom-group{ display:none; }
         .btn-pro span.lbl{ display:none; }
         .btn-pro{ padding:9px 12px; }
+        .btn-report span.lbl{ display:none; }
     }
 
     /* ---------- Vùng trang ---------- */
@@ -153,6 +160,7 @@
         <button class="tb-btn" onclick="zoomStep(1)" title="Phóng to"><i class="fa-solid fa-plus"></i></button>
         <button class="tb-btn" onclick="zoomReset()" title="Vừa khung đọc"><i class="fa-solid fa-arrows-left-right-to-line"></i></button>
     </div>
+    <a class="btn-report" id="reportBtn" href="#" onclick="return openReport()" title="Báo lỗi tài liệu / trang này"><i class="fa-solid fa-flag"></i> <span class="lbl">Báo lỗi</span></a>
     <a class="btn-pro" id="proBtn" href="index.html?openPro=1#doc" style="display:none;"><i class="fa-solid fa-crown"></i> <span class="lbl">Nâng cấp Pro</span></a>
 </div>
 
@@ -278,11 +286,19 @@ async function boot(){
     if (!hasFullAccess) document.getElementById('proBtn').style.display = '';
 
     renderPages(pagesTotal);
+
+    // Mở từ link báo lỗi của admin (?page=N) -> nhảy thẳng tới trang đó
+    const startPage = parseInt(params.get('page'), 10);
+    if (Number.isFinite(startPage) && startPage > 1){
+        const t = document.querySelector(`.page-slot[data-page="${Math.min(pagesTotal, startPage)}"]`);
+        if (t) t.scrollIntoView({ block: 'start' });
+    }
 }
 
 function renderPages(total){
     const wrap = document.getElementById('wrap');
     wrap.innerHTML = '';
+    lockedFromPage = Infinity; lockBox = null;
     if (!total){
         showState('<i class="fa-solid fa-circle-exclamation"></i>Tài liệu chưa có trang nào.');
         return;
@@ -327,6 +343,22 @@ function renderPages(total){
 
     document.getElementById('pager').classList.add('show');
     updatePager();
+}
+
+// Báo lỗi tài liệu: mở form góp ý (gop-y.html) đã điền sẵn tên tài liệu + trang đang đọc.
+// Admin thấy trong mục Góp ý dòng "📄 Tài liệu: ... — Trang N" và bấm "Trang gốc" sẽ nhảy đúng trang đó.
+function openReport(){
+    const title = (currentItem && currentItem.title) || document.getElementById('docTitle').textContent || 'Tài liệu';
+    const page = currentPage || 1;
+    const origin = `${location.origin}${location.pathname}?id=${encodeURIComponent(DOC_ID)}&page=${page}`;
+    const q = new URLSearchParams({
+        type: 'other',
+        doc: '1',
+        question: `📄 Tài liệu: ${title} — Trang ${page}`,
+        origin
+    });
+    location.href = 'gop-y.html?' + q.toString();
+    return false;
 }
 
 function updatePager(){
@@ -385,27 +417,35 @@ async function loadPage(slot){
     }
 }
 
+// Trạng thái khoá: chỉ có DUY NHẤT 1 khối khoá cho cả tài liệu.
+// Các trang được lazy-load song song nên nhiều trang bị khoá có thể cùng trả 403 gần như
+// đồng thời (và không theo thứ tự). Nếu mỗi 403 tự dựng 1 khối riêng thì sẽ bị lặp nhiều
+// khối "Còn 1 trang đang khoá". Vì vậy ta nhớ trang khoá SỚM NHẤT đã biết và chỉ cập nhật
+// lại 1 khối duy nhất.
+let lockedFromPage = Infinity;
+let lockBox = null;
+
 function renderLockedFrom(fromSlot){
-    // Xoá mọi slot còn lại từ đây trở đi (chưa render), thay bằng 1 khối khoá + CTA
-    let sib = fromSlot;
-    const toRemove = [];
-    while (sib){
-        const next = sib.nextElementSibling;
-        if (sib.classList && sib.classList.contains('page-slot')) toRemove.push(sib);
-        sib = next;
-    }
-    const remainingCount = toRemove.length;
-    if (!remainingCount) return;
-    toRemove.forEach((el) => el.remove());
+    const page = Number(fromSlot && fromSlot.dataset && fromSlot.dataset.page);
+    if (!Number.isFinite(page)) return;
+    // Đã biết khoá từ trang này (hoặc sớm hơn) rồi -> bỏ qua, không dựng thêm khối
+    if (page >= lockedFromPage) return;
+    lockedFromPage = page;
+
+    const wrap = document.getElementById('wrap');
+
+    // Xoá mọi slot từ trang khoá đầu tiên trở đi (kể cả slot đã render dở)
+    wrap.querySelectorAll('.page-slot').forEach((el) => {
+        if (Number(el.dataset.page) >= lockedFromPage) el.remove();
+    });
+
+    const remainingCount = Math.max(1, pagesTotal - lockedFromPage + 1);
 
     document.getElementById('pager').classList.remove('show');
 
-    const wrap = document.getElementById('wrap');
-    const box = document.createElement('div');
-    box.className = 'lock-card';
     const loggedIn = !!currentSession;
     const nextUrl = location.pathname.replace(/^\//, '') + location.search;
-    box.innerHTML = `
+    const html = `
         <div class="crown"><i class="fa-solid fa-crown"></i></div>
         <h3>Còn ${remainingCount} trang đang khoá</h3>
         <p>${loggedIn
@@ -420,7 +460,13 @@ function renderLockedFrom(fromSlot){
             ${loggedIn ? '' : `<a class="btn btn-ghost" href="account/login.html?next=${encodeURIComponent(nextUrl)}"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</a>`}
             <a class="btn btn-primary" href="index.html?openPro=1#doc"><i class="fa-solid fa-crown"></i> Nâng cấp Pro</a>
         </div>`;
-    wrap.appendChild(box);
+
+    if (!lockBox){
+        lockBox = document.createElement('div');
+        lockBox.className = 'lock-card';
+    }
+    lockBox.innerHTML = html;
+    wrap.appendChild(lockBox); // appendChild trên node đã có sẽ chuyển nó xuống cuối, không nhân bản
 }
 
 // Rào cản cơ bản chống copy/in — không chặn được 100% (chụp màn hình/quay phim thì

@@ -632,9 +632,9 @@
             <div id="supportIntroBlock" class="mini-form show hidden" style="max-width:620px; margin-bottom:26px; display:flex;">
                 <div class="mini-form-title">Khối giới thiệu đầu trang</div>
                 <label>Tiêu đề</label>
-                <input id="supportIntroTitleInput" placeholder="VD: Kẹt chỗ nào, nhắn liền chỗ đó 👋">
+                <input id="supportIntroTitleInput" placeholder="VD: Kẹt chỗ nào, nhắn liền chỗ đó 👋 — để trống sẽ ẩn">
                 <label>Mô tả</label>
-                <textarea id="supportIntroDescInput" rows="3" placeholder="Mô tả ngắn hiển thị dưới tiêu đề"></textarea>
+                <textarea id="supportIntroDescInput" rows="3" placeholder="Mô tả ngắn hiển thị dưới tiêu đề — để trống sẽ ẩn"></textarea>
                 <div class="mini-actions">
                     <button class="btn-mini-save" onclick="saveSupportIntro()">Lưu</button>
                 </div>
@@ -1171,11 +1171,11 @@
                         <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:10px;">
                             <div style="flex:1; min-width:170px;">
                                 <label>Số/chữ đậm (vd: 1.240 bạn)</label>
-                                <input id="setThemeSPCount" placeholder="1.240 bạn" oninput="updateThemePreview()">
+                                <input id="setThemeSPCount" placeholder="1.240 bạn — để trống sẽ ẩn" oninput="updateThemePreview()">
                             </div>
                             <div style="flex:1; min-width:170px;">
                                 <label>Chữ theo sau</label>
-                                <input id="setThemeSPSuffix" placeholder="đang ôn tập tuần này" oninput="updateThemePreview()">
+                                <input id="setThemeSPSuffix" placeholder="đang ôn tập tuần này — để trống sẽ ẩn" oninput="updateThemePreview()">
                             </div>
                         </div>
                         <label style="margin-top:10px;">4 avatar tròn (chữ cái + màu)</label>
@@ -1189,9 +1189,9 @@
 
                     <div id="setThemeSPBadge" class="hidden" style="margin-top:10px;">
                         <label>Icon (mã lớp Font Awesome)</label>
-                        <input id="setThemeSPBadgeIcon" placeholder="fa-solid fa-star">
+                        <input id="setThemeSPBadgeIcon" placeholder="fa-solid fa-star — để trống sẽ ẩn">
                         <label>Nội dung huy hiệu</label>
-                        <input id="setThemeSPBadgeText" placeholder="4.9/5 từ 320 đánh giá">
+                        <input id="setThemeSPBadgeText" placeholder="4.9/5 từ 320 đánh giá — để trống sẽ ẩn">
                     </div>
 
                     <label style="margin-top:12px;">Hiệu ứng chuyển động của khối này</label>
@@ -1219,32 +1219,32 @@
                     <input id="setHeroPageTitle" placeholder="SNG EDU — Không gian tri thức cộng đồng">
                     <div class="hint" style="margin:2px 0 10px;">Chữ hiện trên tab trình duyệt và khi chia sẻ link (Google, Zalo, Facebook...). Nếu để trống, web dùng tiêu đề mặc định.</div>
                     <label>Dòng nhỏ phía trên (eyebrow)</label>
-                    <input id="setHeroEyebrow" placeholder="Mác – Lênin">
+                    <input id="setHeroEyebrow" placeholder="Mác – Lênin — để trống sẽ ẩn">
                     <label>Tiêu đề chính</label>
-                    <input id="setHeroTitle" placeholder="Ôn tập trắc nghiệm...">
+                    <input id="setHeroTitle" placeholder="Ôn tập trắc nghiệm... — để trống sẽ ẩn">
                 </div>
 
                 <div id="setFieldsTexts" class="hidden">
                     <label style="margin-top:10px;">Tiêu đề "Truy cập nhanh"</label>
-                    <input id="setTextQuick" placeholder="Truy cập nhanh">
+                    <input id="setTextQuick" placeholder="Truy cập nhanh — để trống sẽ ẩn">
                     <label style="margin-top:10px;">Tiêu đề "Học phần nổi bật" (trang chủ)</label>
-                    <input id="setTextHomeSubjects" placeholder="Học phần nổi bật">
+                    <input id="setTextHomeSubjects" placeholder="Học phần nổi bật — để trống sẽ ẩn">
                     <label style="margin-top:10px;">Tiêu đề khối "Tài liệu miễn phí nổi bật" (chỉ hiện khi có tài liệu miễn phí được ghim)</label>
-                    <input id="setTextFeaturedDocFree" placeholder="Tài liệu miễn phí nổi bật">
+                    <input id="setTextFeaturedDocFree" placeholder="Tài liệu miễn phí nổi bật — để trống sẽ ẩn">
                     <label style="margin-top:10px;">Tiêu đề khối "Tài liệu trả phí nổi bật" (chỉ hiện khi có tài liệu trả phí được ghim)</label>
-                    <input id="setTextFeaturedDocPaid" placeholder="Tài liệu trả phí nổi bật">
+                    <input id="setTextFeaturedDocPaid" placeholder="Tài liệu trả phí nổi bật — để trống sẽ ẩn">
                     <label style="margin-top:10px;">Tiêu đề khối "Công cụ nổi bật" (chỉ hiện khi có công cụ được ghim)</label>
-                    <input id="setTextFeaturedTool" placeholder="Công cụ nổi bật">
+                    <input id="setTextFeaturedTool" placeholder="Công cụ nổi bật — để trống sẽ ẩn">
                     <label style="margin-top:10px;">Tiêu đề khối "Sản phẩm nổi bật" (chỉ hiện khi có sản phẩm được ghim)</label>
-                    <input id="setTextFeaturedProduct" placeholder="Sản phẩm nổi bật">
+                    <input id="setTextFeaturedProduct" placeholder="Sản phẩm nổi bật — để trống sẽ ẩn">
                     <label style="margin-top:10px;">Tiêu đề tab "Trắc nghiệm"</label>
-                    <input id="setTextQuiz" placeholder="Học phần đại cương">
+                    <input id="setTextQuiz" placeholder="Học phần đại cương — để trống sẽ ẩn">
                     <label style="margin-top:10px;">Tiêu đề tab "Tài liệu"</label>
-                    <input id="setTextDoc" placeholder="Tài liệu">
+                    <input id="setTextDoc" placeholder="Tài liệu — để trống sẽ ẩn">
                     <label style="margin-top:10px;">Tiêu đề tab "Công cụ"</label>
-                    <input id="setTextTool" placeholder="Công cụ">
+                    <input id="setTextTool" placeholder="Công cụ — để trống sẽ ẩn">
                     <label style="margin-top:10px;">Tiêu đề tab "Sản phẩm"</label>
-                    <input id="setTextProduct" placeholder="Sản phẩm">
+                    <input id="setTextProduct" placeholder="Sản phẩm — để trống sẽ ẩn">
                     <div class="hint" style="margin-top:6px;">Để trống ô nào thì trang chủ dùng đúng chữ mặc định như placeholder ở ô đó.</div>
                 </div>
 

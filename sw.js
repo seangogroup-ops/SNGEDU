@@ -10,7 +10,7 @@
 // Tăng CACHE_VERSION mỗi khi đổi asset tĩnh quan trọng để buộc cập nhật cache.
 // ============================================================
 
-const CACHE_VERSION = 'sngedu-shell-v4';
+const CACHE_VERSION = 'sngedu-shell-v7';
 
 const CORE_ASSETS = [
     '/',

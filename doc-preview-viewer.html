@@ -100,14 +100,14 @@
         padding:2px 9px; border-radius:999px; pointer-events:none; font-variant-numeric:tabular-nums;
     }
 
-    /* Watermark phủ lên mỗi trang — không chặn được chụp màn hình, nhưng giúp truy vết nếu bị
-       phát tán. Để rất nhạt cho khỏi làm bẩn chữ của tài liệu (bản cũ đậm .16 nhìn như bị mờ). */
+    /* Dấu truy vết: chỉ 1 dòng chữ nhỏ ở góc dưới bên trái mỗi trang (không còn chữ chéo phủ cả trang).
+       Vẫn ghi email người xem để nếu tài liệu bị phát tán thì tra được ai đã xem. */
     .watermark{
-        position:absolute; inset:0; pointer-events:none; overflow:hidden; opacity:.085;
-        display:flex; flex-wrap:wrap; align-content:space-around; justify-content:space-around;
-        transform:rotate(-24deg) scale(1.25); font-size:.72rem; font-weight:600; color:#000; letter-spacing:.02em;
+        position:absolute; left:12px; bottom:9px; max-width:calc(100% - 80px); z-index:2;
+        font-size:.68rem; font-weight:500; letter-spacing:.01em; line-height:1.2;
+        color:rgba(0,0,0,.55); text-shadow:0 0 3px rgba(255,255,255,.9);
+        overflow:hidden; text-overflow:ellipsis; white-space:nowrap; pointer-events:none;
     }
-    .watermark span{ white-space:nowrap; margin:18px 26px; }
 
     /* ---------- Khối khoá / trạng thái ---------- */
     .lock-card{
@@ -211,9 +211,8 @@ function showState(html){
 }
 
 function watermarkHtml(){
-    const parts = [];
-    for (let i = 0; i < 12; i++) parts.push(`<span>${escapeHtml(watermarkLabel)}</span>`);
-    return `<div class="watermark">${parts.join('')}</div>`;
+    // 1 dòng nhỏ ở góc dưới bên trái mỗi trang
+    return `<div class="watermark">${escapeHtml(watermarkLabel)}</div>`;
 }
 
 // ---------- Zoom ----------

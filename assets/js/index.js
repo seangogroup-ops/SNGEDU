@@ -707,6 +707,38 @@ const toast = document.getElementById('toast');
 
     renderSubjectGrids();
 
+    // ---------------- QUY TẮC CHUNG: ô nào admin để TRỐNG thì ẨN, không dùng chữ mặc định ----------------
+    // - Trường CHƯA TỪNG được lưu (undefined)  -> giữ nội dung mặc định trong HTML.
+    // - Trường đã lưu nhưng để trống ("")       -> ẩn hẳn phần tử đó.
+    function isBlankField(obj, key){
+        return !!obj && typeof obj[key] === 'string' && obj[key].trim() === '';
+    }
+    function hasField(obj, key){
+        return !!obj && typeof obj[key] === 'string';
+    }
+    // Ẩn 1 phần tử; nếu cha là .sec-head mà không còn con nào hiện thì ẩn luôn cả cha (đỡ chừa khoảng trống).
+    function hideEl(el){
+        if (!el) return;
+        el.style.display = 'none';
+        const parent = el.parentElement;
+        if (parent && parent.classList.contains('sec-head') &&
+            Array.from(parent.children).every(c => c === el || c.style.display === 'none')){
+            parent.style.display = 'none';
+        }
+    }
+    function showEl(el){
+        if (!el) return;
+        el.style.display = '';
+        const parent = el.parentElement;
+        if (parent && parent.classList.contains('sec-head')) parent.style.display = '';
+    }
+    // Gán chữ nếu có, ẩn nếu để trống, giữ mặc định nếu chưa từng cấu hình.
+    function applyTextOrHide(el, obj, key){
+        if (!el || !hasField(obj, key)) return;
+        const v = obj[key].trim();
+        if (v){ el.textContent = v; showEl(el); } else { hideEl(el); }
+    }
+
     // ---------------- KHỐI GIỚI THIỆU (hero) — đọc từ Supabase site_settings ----------------
     async function loadHeroSettings(){
         let revealed = false;
@@ -723,8 +755,8 @@ const toast = document.getElementById('toast');
             if (error || !data || !data.payload) return; // chưa cấu hình -> giữ nội dung tĩnh mặc định
             const hero = data.payload;
             if (hero.pageTitle) document.title = hero.pageTitle;
-            if (hero.eyebrow) document.getElementById('heroEyebrow').textContent = hero.eyebrow;
-            if (hero.title)   document.getElementById('heroTitle').textContent = hero.title;
+            applyTextOrHide(document.getElementById('heroEyebrow'), hero, 'eyebrow');
+            applyTextOrHide(document.getElementById('heroTitle'),   hero, 'title');
         } finally {
             // Chỉ hiện chữ ra SAU KHI đã biết chắc nội dung cuối cùng (mặc định hoặc tuỳ chỉnh)
             // -> tránh hiện tượng nháy chữ mặc định rồi đổi sang chữ tuỳ chỉnh khi tải trang.
@@ -766,18 +798,41 @@ const toast = document.getElementById('toast');
             if (badgeAlt) badgeAlt.classList.toggle('hidden', spType !== 'badge');
             if (spType === 'avatars' && avatarGroup){
                 avatarGroup.setAttribute('data-effect', sp.effect || 'none');
-                if (sp.count) document.getElementById('avatarCount').textContent = sp.count;
-                if (sp.suffix) document.getElementById('avatarSuffix').textContent = sp.suffix;
+                const countEl = document.getElementById('avatarCount');
+                const suffixEl = document.getElementById('avatarSuffix');
+                applyTextOrHide(countEl, sp, 'count');
+                applyTextOrHide(suffixEl, sp, 'suffix');
                 const avts = document.querySelectorAll('#avatarStack .mini-avt');
-                (sp.avatars || []).slice(0,4).forEach((a, i) => {
-                    if (!avts[i]) return;
-                    if (a.letter) avts[i].textContent = a.letter;
-                    if (a.color)  avts[i].style.background = a.color;
-                });
+                if (Array.isArray(sp.avatars)){
+                    avts.forEach((el, i) => {
+                        const a = sp.avatars[i];
+                        // Không có dữ liệu hoặc để trống chữ cái -> ẩn avatar đó
+                        if (!a || !String(a.letter || '').trim()){ el.style.display = 'none'; return; }
+                        el.style.display = '';
+                        el.textContent = String(a.letter).trim();
+                        if (a.color) el.style.background = a.color;
+                    });
+                }
+                // Ẩn cả nhóm nếu không còn gì để hiện (không avatar + không chữ)
+                const anyAvatar = Array.from(avts).some(el => el.style.display !== 'none');
+                const anyText = [countEl, suffixEl].some(el => el && el.style.display !== 'none');
+                const stack = document.getElementById('avatarStack');
+                if (stack) stack.style.display = anyAvatar ? '' : 'none';
+                const agText = avatarGroup.querySelector('.ag-text');
+                if (agText) agText.style.display = anyText ? '' : 'none';
+                if (!anyAvatar && !anyText) avatarGroup.style.display = 'none';
             } else if (spType === 'badge' && badgeAlt){
                 badgeAlt.setAttribute('data-effect', sp.effect || 'none');
-                if (sp.badgeIcon) document.getElementById('heroBadgeIcon').className = sp.badgeIcon;
-                if (sp.badgeText) document.getElementById('heroBadgeText').textContent = sp.badgeText;
+                const iconEl = document.getElementById('heroBadgeIcon');
+                const textEl = document.getElementById('heroBadgeText');
+                if (hasField(sp, 'badgeIcon')){
+                    if (sp.badgeIcon.trim()){ iconEl.className = sp.badgeIcon.trim(); iconEl.style.display = ''; }
+                    else iconEl.style.display = 'none';
+                }
+                applyTextOrHide(textEl, sp, 'badgeText');
+                // Huy hiệu trống cả icon lẫn chữ -> ẩn hẳn
+                if (iconEl.style.display === 'none' && textEl.style.display === 'none') badgeAlt.style.display = 'none';
+                else badgeAlt.style.display = '';
             }
         }catch(e){ /* mạng lỗi -> im lặng giữ mặc định, không chặn trang tải */ }
     }
@@ -801,8 +856,12 @@ const toast = document.getElementById('toast');
             productSectionTitle: payload.productTitle,
         };
         Object.keys(map).forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
             const val = map[id];
-            if (val){ const el = document.getElementById(id); if (el) el.textContent = val; }
+            if (typeof val !== 'string') return;      // chưa từng cấu hình -> giữ mặc định
+            if (val.trim()){ el.textContent = val.trim(); showEl(el); }
+            else hideEl(el);                          // admin để trống -> ẩn tiêu đề
         });
     }
     loadHomeTexts();
@@ -1605,8 +1664,14 @@ const toast = document.getElementById('toast');
 
         const titleEl = document.getElementById('supportIntroTitle');
         const descEl = document.getElementById('supportIntroDesc');
-        if (titleEl) titleEl.textContent = payload.intro_title || DEFAULT_SUPPORT_CONTENT.intro_title;
-        if (descEl) descEl.textContent = payload.intro_desc || DEFAULT_SUPPORT_CONTENT.intro_desc;
+        if (titleEl){
+            if (isBlankField(payload, 'intro_title')) titleEl.style.display = 'none';
+            else { titleEl.style.display = ''; titleEl.textContent = payload.intro_title || DEFAULT_SUPPORT_CONTENT.intro_title; }
+        }
+        if (descEl){
+            if (isBlankField(payload, 'intro_desc')) descEl.style.display = 'none';
+            else { descEl.style.display = ''; descEl.textContent = payload.intro_desc || DEFAULT_SUPPORT_CONTENT.intro_desc; }
+        }
 
         // Ẩn thẻ "Nhận Pro miễn phí" (kể cả khi đã được lưu sẵn trong DB / admin)
         const contacts = (Array.isArray(payload.contacts) ? payload.contacts : [])

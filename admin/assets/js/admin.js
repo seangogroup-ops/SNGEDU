@@ -6183,17 +6183,21 @@ async function openSettingsPanel(key){
         document.getElementById('setThemeCardRadius').value = currentSetPayload.cardRadius || 16;
         document.getElementById('setThemeShowIllustration').checked = currentSetPayload.showIllustration !== false;
 
+        // Đã từng lưu cấu hình -> hiện đúng những gì đã lưu (ô trống giữ TRỐNG = ẩn ở trang chủ).
+        // Chưa từng lưu -> điền giá trị mẫu lần đầu cho dễ sửa.
+        const hasSP = !!currentSetPayload.socialProof;
         const sp = currentSetPayload.socialProof || {};
+        const spVal = (k, d) => (hasSP && typeof sp[k] === 'string') ? sp[k] : d;
         document.getElementById('setThemeSPType').value = sp.type || 'avatars';
-        document.getElementById('setThemeSPCount').value = sp.count || '1.240 bạn';
-        document.getElementById('setThemeSPSuffix').value = sp.suffix || 'đang ôn tập tuần này';
+        document.getElementById('setThemeSPCount').value = spVal('count', '1.240 bạn');
+        document.getElementById('setThemeSPSuffix').value = spVal('suffix', 'đang ôn tập tuần này');
         document.getElementById('setThemeSPEffect').value = sp.effect || 'none';
-        document.getElementById('setThemeSPBadgeIcon').value = sp.badgeIcon || 'fa-solid fa-star';
-        document.getElementById('setThemeSPBadgeText').value = sp.badgeText || '4.9/5 từ 320 đánh giá';
+        document.getElementById('setThemeSPBadgeIcon').value = spVal('badgeIcon', 'fa-solid fa-star');
+        document.getElementById('setThemeSPBadgeText').value = spVal('badgeText', '4.9/5 từ 320 đánh giá');
         const defaultAvts = [{letter:'H',color:'#4f6bff'},{letter:'L',color:'#8b5cf6'},{letter:'M',color:'#17b26a'},{letter:'T',color:'#f5a524'}];
         const avts = (sp.avatars && sp.avatars.length === 4) ? sp.avatars : defaultAvts;
         avts.forEach((a, i) => {
-            document.getElementById(`setThemeAvt${i+1}Letter`).value = a.letter || defaultAvts[i].letter;
+            document.getElementById(`setThemeAvt${i+1}Letter`).value = (typeof a.letter === 'string') ? a.letter : defaultAvts[i].letter;
             document.getElementById(`setThemeAvt${i+1}Color`).value = a.color || defaultAvts[i].color;
         });
         onThemeSPTypeChange();
@@ -6528,7 +6532,7 @@ async function saveSiteSetting(){
                 badgeIcon: document.getElementById('setThemeSPBadgeIcon').value.trim(),
                 badgeText: document.getElementById('setThemeSPBadgeText').value.trim(),
                 avatars: [1,2,3,4].map(i => ({
-                    letter: document.getElementById(`setThemeAvt${i}Letter`).value.trim() || '?',
+                    letter: document.getElementById(`setThemeAvt${i}Letter`).value.trim(), // để trống = ẩn avatar đó
                     color: document.getElementById(`setThemeAvt${i}Color`).value,
                 })),
             },

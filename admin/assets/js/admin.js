@@ -2778,6 +2778,7 @@ function contentBlockHtml(subKey){
                     <div class="doc-type-toggle" id="cmDocType_${subKey}">
                         <div class="doc-type-opt free" data-type="free" onclick="pickDocType('${subKey}','free')"><i class="fa-solid fa-gift"></i> Miễn phí</div>
                         <div class="doc-type-opt paid" data-type="paid" onclick="pickDocType('${subKey}','paid')"><i class="fa-solid fa-lock"></i> Trả phí</div>
+                        <div class="doc-type-opt vip" data-type="vip" onclick="pickDocType('${subKey}','vip')"><i class="fa-solid fa-crown"></i> Nạp VIP xem</div>
                     </div>
                     <label style="margin-top:10px;">Giá bán (VNĐ)</label>
                     <input id="cmPrice_${subKey}" type="number" min="0" step="1000" placeholder="VD: 20000" oninput="updateContentPreview('${subKey}')">
@@ -2919,11 +2920,53 @@ function contentBlockHtml(subKey){
     </div>`;
 }
 
-async function showContentManager(type){
+// ============================================================================
+// TAB "TÀI LIỆU DOC" — chỉ có ở mục Tài liệu.
+// Tab 1: danh sách tài liệu như cũ (free/paid).
+// Tab 2: nhúng trang admin/doc-preview.html để tách trang cho từng tài liệu trả phí
+//        -> khách đọc online, xem thử N trang đầu, nạp VIP (Pro) mới xem full.
+// ============================================================================
+let docTabCurrent = 'list';
+
+function switchDocTab(tab, focusId){
+    docTabCurrent = (tab === 'pages') ? 'pages' : 'list';
+    document.querySelectorAll('#docTabs .fmgr-tab').forEach(el => {
+        el.classList.toggle('active', el.dataset.doctab === docTabCurrent);
+    });
+    const isPages = docTabCurrent === 'pages';
+    document.getElementById('cmListsWrap').classList.toggle('hidden', isPages);
+    document.getElementById('docPagesTabBox').classList.toggle('hidden', !isPages);
+
+    const frame = document.getElementById('docPagesFrame');
+    if (isPages){
+        // Nạp lại iframe mỗi lần mở để luôn thấy dữ liệu mới nhất (và cuộn tới đúng tài liệu nếu có focusId)
+        frame.src = 'doc-preview.html?embed=1' + (focusId ? '&focus=' + encodeURIComponent(focusId) : '') + '&t=' + Date.now();
+    } else {
+        frame.src = 'about:blank';
+    }
+}
+
+// Mở thẳng tab "Tài liệu doc" và nhảy tới đúng tài liệu vừa bấm trong danh sách
+function openDocPagesFor(id){
+    switchDocTab('pages', id);
+    document.getElementById('docTabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function showContentManager(type, docTab){
     const group = CONTENT_MANAGER_GROUPS[type];
     if (!group) return;
     rememberAdminPanel('content:' + type);
-    showAdminPanel('contentManagerPanel', 'nav_' + type);
+    showAdminPanel('contentManagerPanel', type === 'doc' && docTab === 'pages' ? 'nav_doc_preview' : 'nav_' + type);
+
+    const isDoc = !!(contentLists && group.subKeys.some(k => contentLists[k] && contentLists[k].meta.docTypeField));
+    document.getElementById('docTabs').classList.toggle('hidden', !isDoc);
+    if (isDoc){
+        switchDocTab(docTab === 'pages' ? 'pages' : 'list');
+    } else {
+        document.getElementById('cmListsWrap').classList.remove('hidden');
+        document.getElementById('docPagesTabBox').classList.add('hidden');
+        document.getElementById('docPagesFrame').src = 'about:blank';
+    }
     document.getElementById('cmHeaderIcon').textContent = group.icon;
     document.getElementById('cmHeaderTitle').textContent = group.title;
     document.getElementById('cmHeaderHint').textContent = group.hint;
@@ -2958,8 +3001,10 @@ async function loadContentList(subKey){
         // thành 1 danh sách duy nhất trong admin, đánh dấu bằng item.type.
         const freeArr = Array.isArray(payload.free) ? payload.free : [];
         const paidArr = Array.isArray(payload.paid) ? payload.paid : [];
+        // 3 loại: free (tải tự do) · paid (mua lẻ) · vip (access:'pro' — nạp VIP mới xem).
+        // Loại vip vẫn nằm trong mảng paid[] để Edge Function doc-pages coi là tài liệu cần quyền.
         arr = freeArr.map(x => Object.assign({}, x, { type: 'free', price: 0 }))
-            .concat(paidArr.map(x => Object.assign({}, x, { type: 'paid' })));
+            .concat(paidArr.map(x => Object.assign({}, x, { type: x.access === 'pro' ? 'vip' : 'paid' })));
     } else {
         arr = Array.isArray(payload[cfg.arrayField]) ? payload[cfg.arrayField] : [];
         arr = arr.map(x => Object.assign({}, x));
@@ -2991,7 +3036,11 @@ function contentItemRowHtml(subKey, item){
     let typeBadgeHtml = '';
     if (cfg.docTypeField){
         const isPaid = item.type === 'paid';
-        typeBadgeHtml = `<span class="status-badge ${isPaid ? 'maintenance' : 'ready'}" style="margin-right:6px;">${isPaid ? 'Trả phí' : 'Miễn phí'}</span>`;
+        const isVipDoc = item.type === 'vip';
+        typeBadgeHtml = `<span class="status-badge ${isPaid || isVipDoc ? 'maintenance' : 'ready'}" style="margin-right:6px;">${isVipDoc ? '👑 Nạp VIP xem' : isPaid ? 'Trả phí' : 'Miễn phí'}</span>`;
+        if (item.pages_ready && item.preview_mode === 'pages'){
+            typeBadgeHtml += `<span class="status-badge ready" style="margin-right:6px;" title="Khách đọc được ${item.pages_total || 0} trang online, xem thử ${item.free_pages || 0} trang đầu">🧩 Đọc online${item.pages_total ? ' · ' + item.pages_total + ' tr' : ''}</span>`;
+        }
         if (isPaid && item.price) extraLabel += ' · ' + Number(item.price).toLocaleString('vi-VN') + 'đ';
     }
     const thumbSize = cfg.docTypeField ? 38 : 26;
@@ -3015,7 +3064,7 @@ function contentItemRowHtml(subKey, item){
                     <div class="menu-drop hidden" id="cmmenu-${subKey}-${item.id}">
                         <button onclick="event.stopPropagation(); closeAllContentMenus(); editContentItem('${subKey}','${item.id}')">✏️ Sửa</button>
                         <button onclick="event.stopPropagation(); closeAllContentMenus(); deleteContentItem('${subKey}','${item.id}')">🗑️ Xóa</button>
-
+                        ${cfg.docTypeField && (item.type === 'paid' || item.type === 'vip') ? `<button onclick="event.stopPropagation(); closeAllContentMenus(); openDocPagesFor('${String(item.id).replace(/'/g, "\\'")}')">🧩 Tài liệu doc (đọc online)</button>` : ''}
                     </div>
                 </span>
             </span>
@@ -3356,7 +3405,7 @@ function pickDocType(subKey, type){
     const priceEl = document.getElementById('cmPrice_' + subKey);
     const priceHintEl = document.getElementById('cmPriceHint_' + subKey);
     if (priceEl){
-        if (type === 'free'){
+        if (type === 'free' || type === 'vip'){
             priceEl.value = 0;
             priceEl.disabled = true;
         } else {
@@ -3367,6 +3416,8 @@ function pickDocType(subKey, type){
     if (priceHintEl){
         priceHintEl.textContent = type === 'free'
             ? 'Tài liệu miễn phí — giá tự động là 0đ, khách tải trực tiếp.'
+            : type === 'vip'
+            ? 'Không bán lẻ — khách phải đang có gói Pro (VIP) mới xem/tải được. Giá để 0đ.'
             : 'Bắt buộc > 0. Khách phải thanh toán qua SePay mới tải được file này.';
     }
     updateContentPreview(subKey);
@@ -3403,20 +3454,26 @@ function updateContentPreview(subKey){
     // Tài liệu: xem trước dạng thẻ giống hệt thẻ thật ngoài trang chủ (ảnh/icon + badge + giá/CTA).
     if (cfg.meta.docTypeField){
         const typeSel = document.querySelector('#cmDocType_' + subKey + ' .doc-type-opt.selected');
-        const isPaid = typeSel ? typeSel.dataset.type === 'paid' : false;
+        const docType = typeSel ? typeSel.dataset.type : 'free';
+        const isVipType = docType === 'vip';
+        const isPaid = docType === 'paid';
 
         const tagEl = document.getElementById('cmPrevTag_' + subKey);
         if (tagEl){
-            tagEl.className = 'dcp-tag' + (isPaid ? ' paid' : '');
-            tagEl.innerHTML = isPaid ? '<i class="fa-solid fa-lock"></i> Trả phí' : '<i class="fa-solid fa-gift"></i> Miễn phí';
+            tagEl.className = 'dcp-tag' + (isPaid || isVipType ? ' paid' : '');
+            tagEl.innerHTML = isVipType ? '<i class="fa-solid fa-crown"></i> VIP'
+                : isPaid ? '<i class="fa-solid fa-lock"></i> Trả phí'
+                : '<i class="fa-solid fa-gift"></i> Miễn phí';
         }
 
         const ctaEl = document.getElementById('cmPrevCta_' + subKey);
         if (ctaEl){
             const priceEl = document.getElementById('cmPrice_' + subKey);
             const priceVal = priceEl ? Number(priceEl.value || 0) : 0;
-            ctaEl.className = 'dcp-cta' + (isPaid ? ' paid' : '');
-            ctaEl.innerHTML = isPaid
+            ctaEl.className = 'dcp-cta' + (isPaid || isVipType ? ' paid' : '');
+            ctaEl.innerHTML = isVipType
+                ? '<i class="fa-solid fa-crown"></i> Nâng cấp Pro để xem'
+                : isPaid
                 ? '<i class="fa-solid fa-cart-shopping"></i> Mua ngay' + (priceVal > 0 ? ' · ' + priceVal.toLocaleString('vi-VN') + 'đ' : '')
                 : '<i class="fa-solid fa-download"></i> Tải xuống';
         }
@@ -4008,7 +4065,7 @@ function editContentItem(subKey, id){
         pickDocSource(subKey, isUploaded || !item.link ? 'upload' : 'link');
     }
     if (!cfg.meta.hideIconColor) pickContentColor(subKey, item.color || cfg.meta.color || 'indigo');
-    if (cfg.meta.docTypeField) pickDocType(subKey, item.type === 'paid' ? 'paid' : 'free');
+    if (cfg.meta.docTypeField) pickDocType(subKey, ['paid','vip'].includes(item.type) ? item.type : 'free');
     if (cfg.meta.docTypeField && priceEl) priceEl.value = item.price || (item.type === 'paid' ? '' : 0);
     const visibleEl = document.getElementById('cmVisible_' + subKey); if (visibleEl) visibleEl.checked = !item.hidden;
     if (cfg.meta.stockManagedField){
@@ -4084,7 +4141,7 @@ async function saveContentItem(subKey){
     }
     if (cfg.meta.priceField && !usingVariants){
         const priceEl = document.getElementById('cmPrice_' + subKey);
-        if (docType === 'free'){
+        if (docType === 'free' || docType === 'vip'){
             item.price = 0;
         } else {
             const price = priceEl ? Number(priceEl.value) : 0;
@@ -4107,7 +4164,16 @@ async function saveContentItem(subKey){
     const wasEditing = cfg.editingId;
     if (wasEditing){
         const idx = cfg.items.findIndex(x => String(x.id) === String(cfg.editingId));
-        if (idx >= 0) cfg.items[idx] = item;
+        if (idx >= 0){
+            // Giữ lại các trường của tính năng "đọc online theo trang" (tab Tài liệu doc).
+            // Không có đoạn này thì mỗi lần admin sửa tiêu đề/giá là tài liệu mất luôn
+            // trạng thái đã tách trang -> khách hết xem online được.
+            const old = cfg.items[idx] || {};
+            ['preview_mode','pages_ready','pages_total','free_pages','render_width','page_w','page_h','access'].forEach(k => {
+                if (old[k] !== undefined && item[k] === undefined) item[k] = old[k];
+            });
+            cfg.items[idx] = item;
+        }
     } else {
         cfg.items.push(item);
     }
@@ -4154,9 +4220,10 @@ async function saveContentList(subKey){
             const { type, ...rest } = it;
             return Object.assign({}, rest, { price: 0 });
         });
-        payload.paid = cfg.items.filter(it => it.type === 'paid').map(it => {
+        payload.paid = cfg.items.filter(it => it.type === 'paid' || it.type === 'vip').map(it => {
             const { type, ...rest } = it;
-            return rest;
+            // vip -> access:'pro', giá 0 (không bán lẻ); trả phí thường -> access:'buy'
+            return Object.assign({}, rest, it.type === 'vip' ? { access: 'pro', price: 0 } : { access: 'buy' });
         });
     } else {
         payload[cfg.arrayField] = cfg.items;

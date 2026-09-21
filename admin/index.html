@@ -139,7 +139,7 @@
                         <div class="side-item settings-item" id="nav_doc" onclick="showContentManager('doc')">
                             <span class="set-ico">📁</span><span class="name">Tài liệu</span>
                         </div>
-                        <div class="side-item settings-item" id="nav_doc_preview" onclick="window.location.href='doc-preview.html'">
+                        <div class="side-item settings-item" id="nav_doc_preview" onclick="showContentManager('doc', 'pages')">
                             <span class="set-ico">🧩</span><span class="name">Xem trước theo trang</span>
                         </div>
                         <div class="side-item settings-item" id="navSubjectMgr" onclick="showSubjectManager()">
@@ -650,6 +650,21 @@
                     <button class="btn-mini-save" onclick="saveEarnProIntro()">Lưu</button>
                 </div>
                 <div id="earnProIntroMsg" class="hint" style="margin-top:6px;"></div>
+            </div>
+            <!-- Tab chỉ hiện ở mục "Tài liệu": chuyển qua lại giữa danh sách tài liệu thường
+                 và phần "Tài liệu doc" (tách trang để khách đọc online, nạp VIP mới xem full). -->
+            <div class="fmgr-tabs hidden" id="docTabs" style="margin-bottom:18px;">
+                <button type="button" class="fmgr-tab active" data-doctab="list" onclick="switchDocTab('list')">📄 Danh sách tài liệu</button>
+                <button type="button" class="fmgr-tab" data-doctab="pages" onclick="switchDocTab('pages')">🧩 Tài liệu doc (đọc online)</button>
+            </div>
+            <div id="docPagesTabBox" class="hidden">
+                <p class="hint" style="margin:0 0 12px;">
+                    Tách file PDF thành từng trang ảnh để khách đọc thẳng trên web như Scribd: xem thử vài trang đầu miễn phí,
+                    muốn xem full phải <b>nạp VIP (Pro)</b>. File gốc không bị lộ link. Mỗi tài liệu ở đây gắn với đúng
+                    một tài liệu trả phí trong tab "Danh sách tài liệu" (cùng ID).
+                </p>
+                <iframe id="docPagesFrame" src="about:blank" title="Tài liệu doc"
+                        style="width:100%; height:1400px; border:1px solid var(--border); border-radius:14px; background:var(--white);"></iframe>
             </div>
             <div id="cmListsWrap"></div>
         </div>

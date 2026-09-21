@@ -255,6 +255,7 @@ aside{
 .doc-type-opt:hover{border-color:var(--accent);}
 .doc-type-opt.selected.free{background:rgba(46,211,146,.14);border-color:#21983f;color:#21983f;}
 .doc-type-opt.selected.paid{background:rgba(180,83,9,.14);border-color:var(--amber);color:var(--amber);}
+.doc-type-opt.selected.vip{background:rgba(245,165,36,.16);border-color:#f5a524;color:#d98a05;}
 .doc-type-opt.selected.neutral{background:rgba(37,99,235,.12);border-color:#e3a62d;color:#e3a62d;}
 .fmgr-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
 .fmgr-tab{background:var(--white);border:1px solid var(--border);color:var(--gray);padding:6px 12px;font-size:.78rem;font-weight:600;border-radius:7px;font-family:var(--font-display);cursor:pointer;}

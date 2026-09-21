@@ -936,6 +936,22 @@ const toast = document.getElementById('toast');
         const priceLabel = Number(item.price) > 0 ? Number(item.price).toLocaleString('vi-VN') + 'đ' : '';
         const idAttr = escapeHtmlHome(docId);
 
+        // Loại 3: tài liệu VIP (item.access === 'pro') — không bán lẻ, nạp Pro là xem/đọc online được.
+        if (item.access === 'pro'){
+            const readOnline = item.preview_mode === 'pages' && item.pages_ready;
+            return `
+                <a class="doc-card is-paid" data-cat="paid" href="chi-tiet.html?type=doc&id=${idAttr}">
+                    <div class="${topClass}">
+                        ${topHtml || iconHtml}
+                        <span class="doc-tag paid"><i class="fa-solid fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="doc-title">${escapeHtmlHome(item.title || '')}</div>
+                    ${metaHtml}
+                    ${descHtml}
+                    <div class="doc-cta"><i class="fa-solid ${readOnline ? 'fa-book-open' : 'fa-crown'}"></i> ${readOnline ? 'Đọc online · cần Pro' : 'Nâng cấp Pro để xem'}</div>
+                </a>`;
+        }
+
         if (owned){
             return `
                 <a class="doc-card is-owned" data-cat="paid" href="chi-tiet.html?type=doc&id=${idAttr}">

@@ -99,3 +99,63 @@ nhớ merge lại cho khỏi mất thay đổi riêng của bạn — phần mì
   chỉ cần thêm 1 query đếm).
 - Trang quản lý admin xoá được `document_sources` + ảnh trang khi admin xoá hẳn
   tài liệu (hiện chưa dọn rác khi xoá tài liệu gốc).
+
+
+---
+
+## Cập nhật: khắc phục ảnh trang bị mờ + tab "Tài liệu doc" trong admin
+
+### 1) Vì sao trang bị mờ, và đã sửa gì
+- Bản cũ render mỗi trang bằng `scale: 2.2` -> PDF khổ A4 chỉ ra ảnh **~1350px** ngang.
+  Màn hình Retina/2K hiển thị khung đọc ~900px CSS tức **1800px thật**, nên trình duyệt phải
+  *phóng to* ảnh lên -> chữ nhoè.
+- Bản mới render theo **chiều rộng mục tiêu** (mặc định **2560px**, chọn được 1600/2200/2560/3200
+  ngay trên thẻ tài liệu), tô nền trắng trước khi vẽ (tránh JPEG ra nền đen), và nén ở **q=0.95**.
+  Trình duyệt chỉ việc thu nhỏ ảnh -> luôn nét.
+- Viewer đổi từ `background-image` sang thẻ `<img>` thật (trình duyệt biết kích thước gốc nên
+  resample chất lượng cao), có **nút zoom 70–220%**, thanh **số trang nổi** + ô nhảy tới trang,
+  khung trang chừa sẵn đúng tỉ lệ (không giật layout), watermark làm nhạt còn `opacity .085`
+  cho khỏi làm bẩn chữ.
+- Lưu thêm `render_width`, `page_w`, `page_h` vào từng tài liệu trong `doc_content`.
+
+> ⚠️ Tài liệu đã tách bằng bản cũ vẫn mờ vì **ảnh đã lưu trên R2 chỉ có bấy nhiêu pixel**.
+> Phải vào tab "Tài liệu doc", chọn lại file PDF gốc và bấm **Tách lại & Lưu** thì mới nét.
+
+### 2) Tab "Tài liệu doc" gắn thẳng vào mục Tài liệu
+- Mục **Tài liệu** ở admin giờ có 2 tab: `📄 Danh sách tài liệu` và `🧩 Tài liệu doc (đọc online)`.
+  Tab thứ hai nhúng `admin/doc-preview.html?embed=1` — cùng một dữ liệu, cùng ID tài liệu.
+- Mỗi tài liệu trả phí trong danh sách có thêm mục menu **🧩 Tài liệu doc (đọc online)** để nhảy
+  thẳng tới đúng thẻ tài liệu đó ở tab kia, và có **badge "🧩 Đọc online · N tr"** nếu đã tách trang.
+- Sửa lỗi ngầm: trước đây sửa tiêu đề/giá một tài liệu ở mục Tài liệu sẽ **ghi đè mất**
+  `preview_mode`/`pages_ready`/`free_pages`... làm khách hết đọc online được. Nay các trường này
+  được giữ lại khi lưu.
+
+### 3) Nạp VIP mới xem full
+Không đổi luồng: trang <= `free_pages` ai cũng xem; quá số đó `doc-pages` trả 403 nếu tài khoản
+không có Pro còn hạn. Viewer hiện khối "Còn N trang đang khoá" + nút **Nâng cấp Pro** dẫn sang
+`nhan-pro.html`, và thanh trên cùng luôn có nút Pro khi chưa mở khoá.
+
+
+---
+
+## Cập nhật 2: 3 loại tài liệu (free / trả phí / nạp VIP) + đồng bộ 2 nơi
+
+### Mô hình dữ liệu (vẫn giữ nguyên `doc_content` cũ, không cần migration)
+| Loại | Lưu ở | Trường | Khách thấy gì |
+|---|---|---|---|
+| 🆓 Miễn phí | `doc_content.free[]` | `price: 0` | Tải/đọc online thoải mái |
+| 💰 Trả phí | `doc_content.paid[]` | `access: 'buy'`, `price > 0` | Mua lẻ qua SePay để tải file |
+| 👑 Nạp VIP xem | `doc_content.paid[]` | `access: 'pro'`, `price: 0` | Không bán lẻ — có Pro là xem full |
+
+Tài liệu VIP vẫn nằm trong `paid[]` nên Edge Function `doc-pages` tự động coi là tài liệu
+cần quyền: quá `free_pages` mà không có Pro thì trả 403 như cũ.
+
+### Đồng bộ 2 màn hình
+`admin/doc-preview.html` giờ đọc/ghi **cả hai mảng** `free[]` + `paid[]` — thêm tài liệu ở tab
+"Tài liệu doc" hay ở mục "Tài liệu" đều ra cùng một danh sách, cùng ID. Form thêm/sửa ở cả hai
+nơi đều có 3 nút chọn loại; ô giá tự khoá về 0đ khi chọn Miễn phí hoặc Nạp VIP.
+
+### Trang khách
+- Trang chủ: tài liệu VIP có badge 👑 VIP, CTA "Đọc online · cần Pro".
+- `chi-tiet.html`: tài liệu VIP không hiện nút mua; có Pro thì tải/đọc được ngay, chưa có thì
+  hiện nút "Nâng cấp Pro để xem".

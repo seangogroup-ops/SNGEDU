@@ -87,6 +87,19 @@
     .check-row{ display:flex; align-items:center; gap:8px; font-size:.84rem; color:var(--ink-soft); margin-bottom:14px; cursor:pointer; }
     .cover-thumb{ width:64px; height:40px; object-fit:cover; border-radius:6px; border:1px solid var(--line); }
     .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:6px; }
+    .type-toggle{ display:flex; gap:8px; margin-top:6px; }
+    .type-opt{
+        flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+        padding:10px 8px; border-radius:10px; border:1px solid var(--line); background:var(--bg);
+        color:var(--ink-mute); font-size:.78rem; font-weight:700; cursor:pointer; text-align:center; user-select:none;
+    }
+    .type-opt small{ font-weight:500; font-size:.68rem; opacity:.85; }
+    .type-opt:hover{ border-color:var(--brand2); }
+    .type-opt.selected[data-type="free"]{ background:var(--green-bg); border-color:var(--green); color:var(--green); }
+    .type-opt.selected[data-type="paid"]{ background:var(--amber-bg); border-color:var(--amber); color:var(--amber); }
+    .type-opt.selected[data-type="vip"]{ background:rgba(245,165,36,.16); border-color:#f5a524; color:#d98a05; }
+    .badge.vip{ background:rgba(245,165,36,.16); color:#d98a05; }
+    .badge.free{ background:var(--green-bg); color:var(--green); }
 </style>
 </head>
 <body>
@@ -105,22 +118,32 @@
     </div>
     <h1>🧩 Xem trước tài liệu theo trang</h1>
     <p class="sub">
-        Chỉ áp dụng cho <b>tài liệu trả phí</b>. Sau khi tách trang, khách xem được đúng số trang
-        "free" đầu tiên (không cần mua) — xem tiếp phải <b>đang có Pro</b> hoặc <b>đã mua tài liệu này</b>.
+        Dữ liệu ở đây <b>dùng chung</b> với mục "Tài liệu" ở admin chính, gồm 3 loại:
+        <b>🆓 Miễn phí</b> (ai cũng xem/tải), <b>💰 Trả phí</b> (mua lẻ để tải file) và
+        <b>👑 Nạp VIP xem</b> (không bán lẻ, có Pro là đọc full online).
+        Với tài liệu trả phí/VIP, khách chỉ xem được số trang "free" đầu tiên, xem tiếp phải <b>đang có Pro</b>.
         File PDF gốc không public — chỉ ảnh từng trang được phát ra, có kiểm tra quyền phía server.
         Trang xem cho khách: <code>../doc-preview-viewer.html?id=&lt;id&gt;</code>
     </p>
     <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
-        <button class="btn btn-primary" onclick="openDocForm()"><i class="fa-solid fa-plus"></i> Thêm tài liệu trả phí mới</button>
+        <button class="btn btn-primary" onclick="openDocForm()"><i class="fa-solid fa-plus"></i> Thêm tài liệu mới</button>
     </div>
     <div id="list"></div>
 </div>
 
 <div class="modal-overlay" id="docFormOverlay">
     <div class="modal-card">
-        <h3 id="docFormTitle">Thêm tài liệu trả phí mới</h3>
-        <p class="sub">Tài liệu thêm/sửa ở đây luôn là <b>trả phí</b> (để có thể bật xem trước theo trang). Muốn thêm tài liệu miễn phí, dùng mục "Tài liệu" ở trang admin chính.</p>
+        <h3 id="docFormTitle">Thêm tài liệu mới</h3>
+        <p class="sub">Tài liệu thêm/sửa ở đây <b>dùng chung dữ liệu</b> với mục "Tài liệu" ở trang admin chính — thêm bên nào cũng hiện ở cả hai.</p>
 
+        <div class="field-full">
+            <label>Loại tài liệu</label>
+            <div class="type-toggle" id="dfTypeToggle">
+                <div class="type-opt" data-type="free" onclick="pickDfType('free')"><span>🆓 Miễn phí</span><small>Ai cũng tải được</small></div>
+                <div class="type-opt" data-type="paid" onclick="pickDfType('paid')"><span>💰 Trả phí</span><small>Mua lẻ theo giá</small></div>
+                <div class="type-opt selected" data-type="vip" onclick="pickDfType('vip')"><span>👑 Nạp VIP xem</span><small>Có Pro là xem full</small></div>
+            </div>
+        </div>
         <div class="field-full">
             <label>Tiêu đề</label>
             <input type="text" id="dfTitle" placeholder="VD: Learn English Tiếng Anh 1">
@@ -129,9 +152,10 @@
             <label>Mô tả ngắn</label>
             <textarea id="dfDesc" placeholder="VD: Đáp án Learn English Tiếng Anh 1 — Đầy đủ &amp; Chính xác"></textarea>
         </div>
-        <div class="field-full">
+        <div class="field-full" id="dfPriceWrap">
             <label>Giá bán (VNĐ)</label>
             <input type="number" id="dfPrice" min="1" placeholder="VD: 33333">
+            <div class="upload-name" id="dfPriceHint"></div>
         </div>
         <div class="field-full">
             <label>File tài liệu (PDF hoặc Word)</label>
@@ -179,6 +203,13 @@ const R2_PUBLIC_URLS = { 'tai-lieu': 'https://pub-1d650009eedc4c9bb38c2a0a571340
 let docList = [];
 let docFormEditIdx = null; // null = đang thêm mới, số = đang sửa docList[idx]
 
+// ?embed=1  -> đang được nhúng trong tab "Tài liệu doc" của trang admin chính:
+//              bỏ topbar/tiêu đề cho gọn, chỉ còn phần danh sách.
+// ?focus=<id> -> cuộn tới & làm nổi bật đúng tài liệu vừa bấm ở danh sách bên kia.
+const QS = new URLSearchParams(location.search);
+const IS_EMBED = QS.get('embed') === '1';
+const FOCUS_ID = QS.get('focus') || '';
+
 async function isAdminUser(){
     const { data } = await sb.auth.getUser();
     const user = data?.user;
@@ -201,14 +232,48 @@ async function boot(){
         return;
     }
     document.getElementById('shell').style.display = 'block';
+    if (IS_EMBED){
+        document.querySelector('.topbar').style.display = 'none';
+        document.querySelector('#shell h1').style.display = 'none';
+        document.body.style.background = 'transparent';
+        document.querySelector('.wrap').style.padding = '0 0 20px';
+        document.querySelector('.wrap').style.maxWidth = 'none';
+    }
     await loadDocs();
+    focusDocCard();
 }
 
+function focusDocCard(){
+    if (!FOCUS_ID) return;
+    const idx = docList.findIndex((it) => String(it.id) === FOCUS_ID);
+    if (idx < 0) return;
+    const card = document.getElementById('doc_' + idx);
+    if (!card) return;
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.style.outline = '2px solid var(--brand2)';
+    card.style.transition = 'outline-color .4s ease';
+    setTimeout(() => { card.style.outline = '2px solid transparent'; }, 2600);
+}
+
+// Dữ liệu dùng chung với mục "Tài liệu" ở admin chính: doc_content.free[] + doc_content.paid[].
+// Gộp lại thành 1 danh sách, mỗi mục có item.type = 'free' | 'paid' | 'vip'.
+//   free -> mảng free[]            : ai cũng tải được
+//   paid -> mảng paid[], access buy: mua lẻ theo giá
+//   vip  -> mảng paid[], access pro: không bán lẻ, nạp VIP (Pro) là xem full
 async function loadDocs(){
     const { data } = await sb.from('site_settings').select('payload').eq('key', 'doc_content').single();
     const payload = (data && data.payload) || { free: [], paid: [] };
-    docList = Array.isArray(payload.paid) ? payload.paid : [];
+    const freeArr = Array.isArray(payload.free) ? payload.free : [];
+    const paidArr = Array.isArray(payload.paid) ? payload.paid : [];
+    docList = freeArr.map((x) => Object.assign({}, x, { type: 'free', price: 0 }))
+        .concat(paidArr.map((x) => Object.assign({}, x, { type: x.access === 'pro' ? 'vip' : 'paid' })));
     renderList();
+}
+
+function docTypeBadge(type){
+    if (type === 'free') return '<span class="badge free"><i class="fa-solid fa-gift"></i> Miễn phí</span>';
+    if (type === 'vip')  return '<span class="badge vip"><i class="fa-solid fa-crown"></i> Nạp VIP xem</span>';
+    return '<span class="badge off"><i class="fa-solid fa-lock"></i> Trả phí</span>';
 }
 
 function renderList(){
@@ -224,12 +289,20 @@ function renderList(){
             <div class="doc-title">${escapeHtml(item.title || '(chưa đặt tên)')}</div>
             <div class="doc-meta">
                 ID: <code>${escapeHtml(String(item.id))}</code> ·
+                ${docTypeBadge(item.type)} ·
                 <span class="badge ${ready ? 'on' : 'off'}">
                     <i class="fa-solid ${ready ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i>
                     ${ready ? `Đã tách ${item.pages_total || 0} trang` : 'Chưa bật xem trước theo trang'}
                 </span>
                 ${item.hidden ? `<span class="badge hidden-badge"><i class="fa-solid fa-eye-slash"></i> Đã ẩn</span>` : ''}
-                ${item.price != null ? ` · ${Number(item.price).toLocaleString('vi-VN')}đ` : ''}
+                ${item.type === 'paid' && item.price ? ` · ${Number(item.price).toLocaleString('vi-VN')}đ` : ''}
+            </div>
+            <div class="doc-meta" style="margin-top:-8px;">
+                ${item.type === 'free'
+                    ? 'Tách trang xong: khách xem online <b>toàn bộ</b>, không cần đăng nhập.'
+                    : item.type === 'vip'
+                    ? `Khách xem thử <b>${item.free_pages != null ? item.free_pages : 5}</b> trang đầu, muốn xem full phải <b>nạp VIP (Pro)</b>.`
+                    : `Khách xem thử <b>${item.free_pages != null ? item.free_pages : 5}</b> trang đầu; xem full cần <b>Pro</b> (mua lẻ chỉ để tải file).`}
             </div>
             <div class="card-actions-row">
                 <button class="btn btn-ghost btn-sm" onclick="openDocForm(${idx})"><i class="fa-solid fa-pen"></i> Sửa</button>
@@ -241,6 +314,24 @@ function renderList(){
                     <input type="number" min="0" id="freePages_${idx}" value="${item.free_pages != null ? item.free_pages : 5}">
                 </div>
                 ${ready ? `<button class="btn btn-ghost" onclick="saveFreePages(${idx})"><i class="fa-solid fa-floppy-disk"></i> Lưu số trang</button>` : ''}
+            </div>
+            <div class="row">
+                <div class="field">
+                    <label>Chất lượng ảnh trang</label>
+                    <select id="quality_${idx}" style="padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-family:inherit;font-size:.86rem;width:230px;">
+                        <option value="1600" ${item.render_width == 1600 ? 'selected' : ''}>Tiêu chuẩn — 1600px (nhẹ)</option>
+                        <option value="2200" ${item.render_width == 2200 ? 'selected' : ''}>Cao — 2200px</option>
+                        <option value="2560" ${(item.render_width == null || item.render_width == 2560) ? 'selected' : ''}>Rất nét — 2560px (khuyên dùng)</option>
+                        <option value="3200" ${item.render_width == 3200 ? 'selected' : ''}>Siêu nét — 3200px (nặng)</option>
+                    </select>
+                </div>
+                <div class="field" style="max-width:320px;">
+                    <label>&nbsp;</label>
+                    <div style="font-size:.76rem;color:var(--ink-mute);line-height:1.5;">
+                        Ảnh càng rộng thì chữ càng nét khi khách phóng to, đổi lại dung lượng/trang nặng hơn.
+                        ${item.render_width ? `Lần tách gần nhất: <b>${item.render_width}px</b>.` : 'Tài liệu tách trước đây dùng bản cũ (~1300px) nên bị mờ — hãy <b>tách lại</b>.'}
+                    </div>
+                </div>
             </div>
             <div class="row">
                 <div class="field">
@@ -334,22 +425,40 @@ async function processDoc(idx){
         const total = pdf.numPages;
         const docId = String(item.id);
 
+        // Chất lượng: render theo CHIỀU RỘNG MỤC TIÊU cố định (px) thay vì scale cố định.
+        // Kiểu cũ (scale 2.2) cho ra ảnh chỉ ~1300px ngang với PDF khổ A4 -> màn hình Retina
+        // (devicePixelRatio 2) hiển thị khung ~900px CSS = 1800px thật -> phải phóng to ảnh lên
+        // -> chữ nhoè. Render thẳng 2560px thì trình duyệt chỉ việc THU NHỎ ảnh xuống, luôn nét.
+        const targetW = Math.max(1200, parseInt(document.getElementById('quality_' + idx).value, 10) || 2560);
+        let firstW = 0, firstH = 0;
+
         for (let p = 1; p <= total; p++){
             progTxt.textContent = `Đang tách & tải trang ${p}/${total}...`;
             progFill.style.width = Math.round((p / total) * 100) + '%';
 
             const page = await pdf.getPage(p);
-            // scale cao hơn (2.2x) + nén nhẹ hơn (0.9) để chữ nét khi xem full màn hình trên web,
-            // đổi lại dung lượng file/trang nặng hơn khoảng gấp đôi so với trước.
-            const viewport = page.getViewport({ scale: 2.2 });
+            const base = page.getViewport({ scale: 1 });
+            // Tự tính scale sao cho ảnh ra đúng chiều rộng mục tiêu; chặn trần scale 6x
+            // để PDF khổ nhỏ (vd slide dọc) không tạo ảnh khổng lồ gây treo trình duyệt.
+            const scale = Math.min(6, targetW / base.width);
+            const viewport = page.getViewport({ scale });
             const canvas = document.createElement('canvas');
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            const ctx = canvas.getContext('2d');
+            canvas.width = Math.round(viewport.width);
+            canvas.height = Math.round(viewport.height);
+            const ctx = canvas.getContext('2d', { alpha: false });
+            // PDF nền trong suốt -> nếu không tô trắng trước, JPEG sẽ ra nền ĐEN.
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             await page.render({ canvasContext: ctx, viewport }).promise;
 
-            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+            if (p === 1){ firstW = canvas.width; firstH = canvas.height; }
+
+            // 0.95: gần như không thấy vết nén quanh chữ (0.9 vẫn còn quầng mờ ở nét mảnh)
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
             await r2UploadPage(`${docId}/page-${p}.jpg`, blob);
+
+            // Giải phóng bộ nhớ canvas ngay (ảnh 2560px x 100 trang rất dễ làm tab bị "Aw, Snap")
+            canvas.width = canvas.height = 0;
         }
 
         progTxt.textContent = 'Đang lưu file PDF gốc (riêng tư)...';
@@ -375,10 +484,13 @@ async function processDoc(idx){
         item.free_pages = freePages;
         item.pages_total = total;
         item.pages_ready = true;
+        item.render_width = targetW;            // để admin biết lần tách này nét cỡ nào
+        item.page_w = firstW;                   // kích thước ảnh trang 1 -> viewer chừa đúng
+        item.page_h = firstH;                   // khung trước khi ảnh tải xong (không giật layout)
         await savePayload();
 
         progFill.style.width = '100%';
-        showMsg(idx, true, `✅ Xong! Đã tách ${total} trang, cho xem thử ${freePages} trang đầu.`);
+        showMsg(idx, true, `✅ Xong! Đã tách ${total} trang ở ${firstW}×${firstH}px, cho xem thử ${freePages} trang đầu.`);
         renderList();
     }catch(e){
         showMsg(idx, false, '❌ ' + (e.message || 'Có lỗi xảy ra.'));
@@ -408,7 +520,15 @@ async function saveFreePages(idx){
 async function savePayload(){
     const { data } = await sb.from('site_settings').select('payload').eq('key', 'doc_content').single();
     const payload = (data && data.payload) || { free: [], paid: [] };
-    payload.paid = docList; // docList giữ nguyên tham chiếu object đã sửa ở trên
+    // Tách ngược về đúng định dạng cũ để trang chủ / chi-tiet.html đọc như bình thường
+    payload.free = docList.filter((it) => it.type === 'free').map((it) => {
+        const { type, access, ...rest } = it;
+        return Object.assign({}, rest, { price: 0 });
+    });
+    payload.paid = docList.filter((it) => it.type !== 'free').map((it) => {
+        const { type, ...rest } = it;
+        return Object.assign({}, rest, it.type === 'vip' ? { access: 'pro', price: 0 } : { access: 'buy' });
+    });
     const { error } = await sb.from('site_settings').update({ payload }).eq('key', 'doc_content');
     if (error) throw new Error('Lỗi lưu site_settings: ' + error.message);
 }
@@ -443,15 +563,38 @@ function storagePathFromPublicUrl(url, bucket){
     try{ return decodeURIComponent(url.slice(base.length + 1)); }catch(e){ return url.slice(base.length + 1); }
 }
 
+// ---------- Chọn loại tài liệu trong form ----------
+let dfType = 'vip';
+function pickDfType(type){
+    dfType = type;
+    document.querySelectorAll('#dfTypeToggle .type-opt').forEach((el) => {
+        el.classList.toggle('selected', el.dataset.type === type);
+    });
+    const priceEl = document.getElementById('dfPrice');
+    const hintEl = document.getElementById('dfPriceHint');
+    if (type === 'paid'){
+        priceEl.disabled = false;
+        if (Number(priceEl.value) === 0) priceEl.value = '';
+        hintEl.textContent = 'Bắt buộc > 0. Khách thanh toán qua SePay mới tải được file gốc.';
+    } else {
+        priceEl.value = 0;
+        priceEl.disabled = true;
+        hintEl.textContent = type === 'free'
+            ? 'Tài liệu miễn phí — giá 0đ, khách tải/đọc trực tiếp.'
+            : 'Không bán lẻ — khách phải đang có gói Pro (VIP) mới xem full.';
+    }
+}
+
 // ---------- Mở/đóng form thêm/sửa ----------
 function openDocForm(idx){
     docFormEditIdx = (idx === undefined) ? null : idx;
     const item = (docFormEditIdx != null) ? docList[docFormEditIdx] : null;
 
-    document.getElementById('docFormTitle').textContent = item ? 'Sửa tài liệu' : 'Thêm tài liệu trả phí mới';
+    document.getElementById('docFormTitle').textContent = item ? 'Sửa tài liệu' : 'Thêm tài liệu mới';
     document.getElementById('dfTitle').value = item ? (item.title || '') : '';
     document.getElementById('dfDesc').value = item ? (item.desc || '') : '';
-    document.getElementById('dfPrice').value = item ? (item.price || '') : '';
+    pickDfType(item ? (item.type || 'vip') : 'vip');
+    document.getElementById('dfPrice').value = item ? (item.price || 0) : 0;
     document.getElementById('dfLink').value = item ? (item.link || '') : '';
     document.getElementById('dfFile').value = '';
     document.getElementById('dfFileName').textContent = item && item.link ? ('📄 ' + fileNameFromUrl(item.link) + ' (đang dùng)') : '';
@@ -549,20 +692,22 @@ async function saveDocForm(){
     const hidden = !document.getElementById('dfVisible').checked;
 
     if (!title) return showDfMsg(false, 'Nhập tiêu đề.');
-    if (!price || price <= 0) return showDfMsg(false, 'Nhập giá bán hợp lệ (lớn hơn 0).');
+    if (dfType === 'paid' && (!price || price <= 0)) return showDfMsg(false, 'Tài liệu trả phí cần giá bán lớn hơn 0.');
     if (!link) return showDfMsg(false, 'Chọn file tài liệu (PDF hoặc Word) trước.');
 
     const btn = document.getElementById('dfSaveBtn');
     btn.disabled = true;
     try{
+        const finalPrice = dfType === 'paid' ? price : 0;
         if (docFormEditIdx != null){
             const item = docList[docFormEditIdx];
-            item.title = title; item.desc = desc; item.price = price; item.link = link; item.image = image; item.hidden = hidden;
+            item.title = title; item.desc = desc; item.price = finalPrice; item.link = link;
+            item.image = image; item.hidden = hidden; item.type = dfType;
         } else {
             docList.push({
                 id: 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
                 icon: 'fa-solid fa-file-lines', color: 'green',
-                title, desc, price, link, image, hidden
+                title, desc, price: finalPrice, link, image, hidden, type: dfType
             });
         }
         await savePayload();

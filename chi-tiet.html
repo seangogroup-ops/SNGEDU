@@ -512,7 +512,7 @@ function renderProductDetail(){
         : price > 0
             ? { lbl:'Trạng thái', val:'Trả phí', icon:'fa-lock', bg:'var(--amber-bg)', fg:'var(--amber)' }
             : { lbl:'Trạng thái', val:'Miễn phí / Giới thiệu', icon:'fa-unlock', bg:'var(--green-bg)', fg:'var(--green)' });
-    specs.push({ lbl:'Giá', val: priceLabel || 'Miễn phí', icon:'fa-tag', bg:'var(--brand-bg)', fg:'var(--brand)' });
+    specs.push({ lbl:'Giá', val: isVip ? 'Gói Pro' : (priceLabel || 'Miễn phí'), icon:'fa-tag', bg:'var(--brand-bg)', fg:'var(--brand)' });
     specs.push({ lbl:'Danh mục', val: item.category || 'Chưa phân loại', icon:'fa-layer-group', bg:'var(--purple-bg)', fg:'var(--purple)' });
     specs.push({ lbl:'Định dạng', val: item.format || 'Kỹ thuật số', icon:'fa-file', bg:'var(--blue-bg)', fg:'var(--blue)' });
 
@@ -600,8 +600,12 @@ async function loadDocItem(){
     currentItem = item;
     currentIsPaid = isPaid;
 
+    // 3 loại tài liệu: free (tải tự do) · paid/buy (mua lẻ) · vip (item.access === 'pro' — nạp VIP mới xem)
+    const isVip = item.access === 'pro';
+    const isPro = !!(currentSession && window.SNG_USAGE && SNG_USAGE.isProActive(currentSession.user));
+
     let owned = false;
-    if (isPaid && currentSession){
+    if (isPaid && !isVip && currentSession){
         try{
             const { data } = await sb.from('document_purchases').select('document_id').eq('user_id', currentSession.user.id).eq('document_id', String(ITEM_ID));
             owned = !!(data && data.length);
@@ -619,12 +623,22 @@ async function loadDocItem(){
         : `<div class="pd-icon"><i class="fa-solid ${isPaid ? 'fa-lock' : 'fa-file-lines'}"></i></div>`;
 
     let priceHtml = '';
-    if (isPaid && owned) priceHtml = `<div class="pd-price owned"><i class="fa-solid fa-circle-check"></i> Đã mua${priceLabel ? ' · ' + priceLabel : ''}</div>`;
+    if (isVip) priceHtml = `<div class="pd-price"><i class="fa-solid fa-crown"></i> Dành cho thành viên Pro</div>`;
+    else if (isPaid && owned) priceHtml = `<div class="pd-price owned"><i class="fa-solid fa-circle-check"></i> Đã mua${priceLabel ? ' · ' + priceLabel : ''}</div>`;
     else if (isPaid && priceLabel) priceHtml = `<div class="pd-price">${priceLabel}</div>`;
     else if (!isPaid) priceHtml = `<div class="pd-price free"><i class="fa-solid fa-unlock"></i> Miễn phí</div>`;
 
     let ctaHtml = '';
-    if (!isPaid){
+    if (isVip){
+        // Tài liệu VIP: không bán lẻ. Có Pro -> tải/đọc được ngay, chưa có -> mời nâng cấp.
+        if (isPro){
+            ctaHtml = item.link
+                ? `<a class="pd-cta owned" href="${escapeHtml(item.link)}" target="_blank" rel="noopener"><i class="fa-solid fa-download"></i> Tải xuống (Pro)</a>`
+                : `<button class="pd-cta owned" disabled><i class="fa-solid fa-crown"></i> Đang cập nhật nội dung</button>`;
+        } else {
+            ctaHtml = `<a class="pd-cta" href="nhan-pro.html"><i class="fa-solid fa-crown"></i> Nâng cấp Pro để xem</a>`;
+        }
+    } else if (!isPaid){
         const disabled = !item.link;
         ctaHtml = disabled
             ? `<button class="pd-cta free" disabled><i class="fa-solid fa-hourglass-half"></i> Sắp ra mắt</button>`
@@ -645,27 +659,35 @@ async function loadDocItem(){
     // Tài liệu đã bật "xem trước theo trang" -> ghi đè hẳn CTA cũ (không còn mua lẻ,
     // chỉ Pro mới mở khoá xem hết trang, xem qua doc-preview-viewer.html)
     if (item.preview_mode === 'pages' && item.pages_ready){
+        const label = (!isPaid || isPro)
+            ? `Đọc online · ${item.pages_total || '?'} trang`
+            : `Đọc thử ${item.free_pages || 0}/${item.pages_total || '?'} trang — cần Pro để xem hết`;
         ctaHtml = `<a class="pd-cta" href="doc-preview-viewer.html?id=${encodeURIComponent(String(ITEM_ID))}">
-                        <i class="fa-solid fa-eye"></i> Xem trước ${item.free_pages || 0}/${item.pages_total || '?'} trang — cần Pro để xem hết
+                        <i class="fa-solid fa-eye"></i> ${label}
                    </a>`;
+        if (isVip && isPro && item.link){
+            ctaHtml += `<a class="pd-cta outline" href="${escapeHtml(item.link)}" target="_blank" rel="noopener"><i class="fa-solid fa-download"></i> Tải file gốc</a>`;
+        }
     }
 
     const specs = [];
-    specs.push(isPaid
+    specs.push(isVip
+        ? { lbl:'Trạng thái', val: isPro ? 'Pro — đã mở khoá' : 'Cần Pro', icon:'fa-crown', bg:'var(--amber-bg)', fg:'var(--amber)' }
+        : isPaid
         ? (owned
             ? { lbl:'Trạng thái', val:'Đã mua', icon:'fa-circle-check', bg:'var(--green-bg)', fg:'var(--green)' }
             : { lbl:'Trạng thái', val:'Trả phí', icon:'fa-lock', bg:'var(--amber-bg)', fg:'var(--amber)' })
         : { lbl:'Trạng thái', val:'Miễn phí', icon:'fa-unlock', bg:'var(--green-bg)', fg:'var(--green)' });
     specs.push({ lbl:'Giá', val: priceLabel || 'Miễn phí', icon:'fa-tag', bg:'var(--brand-bg)', fg:'var(--brand)' });
     specs.push({ lbl:'Định dạng', val: item.size || 'PDF', icon:'fa-file-lines', bg:'var(--blue-bg)', fg:'var(--blue)' });
-    specs.push({ lbl:'Loại tài liệu', val: isPaid ? 'Tài liệu trả phí' : 'Tài liệu miễn phí', icon:'fa-graduation-cap', bg:'var(--purple-bg)', fg:'var(--purple)' });
+    specs.push({ lbl:'Loại tài liệu', val: isVip ? 'Tài liệu VIP (Pro)' : (isPaid ? 'Tài liệu trả phí' : 'Tài liệu miễn phí'), icon:'fa-graduation-cap', bg:'var(--purple-bg)', fg:'var(--purple)' });
 
     renderDetail({
         eyebrow: '<i class="fa-solid fa-file-lines"></i> Tài liệu',
         mediaHtml, title: item.title, priceHtml, ctaHtml, desc: item.desc, specs
     });
 
-    if (isPaid && !owned && !(item.preview_mode === 'pages' && item.pages_ready)){
+    if (isPaid && !isVip && !owned && !(item.preview_mode === 'pages' && item.pages_ready)){
         const btn = document.getElementById('pdBuyBtn');
         if (!paymentSettings.sepay_enabled){
             btn.disabled = true;

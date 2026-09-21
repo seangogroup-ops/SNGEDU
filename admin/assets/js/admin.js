@@ -219,6 +219,7 @@ function restoreLastAdminPanel(){
         if (last === 'stats')             return showStatsPanel();
         if (last === 'visits')            return showVisitsPanel();
         if (last === 'stock')             return showStockManager();
+        if (last === 'ctv')               return showCtvPanel();
     }
     showStatsPanel(); // mặc định: lần đăng nhập đầu tiên / chưa từng chọn màn nào -> luôn vào Thống kê trước
 }
@@ -227,7 +228,7 @@ function restoreLastAdminPanel(){
 // subjectManagerPanel: chọn/quản lý Môn học + Chương/đề (rộng rãi, khu vực chính)
 // mainAppArea: soạn/xem câu hỏi của 1 chương/đề đã chọn
 // settingsPanel: cài đặt trang chủ (hero + các thẻ truy cập nhanh)
-const ADMIN_PANEL_IDS = ['statsPanel', 'visitsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'maintenancePanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel', 'paymentSettingsPanel', 'emailSettingsPanel', 'stockManagerPanel'];
+const ADMIN_PANEL_IDS = ['statsPanel', 'visitsPanel', 'subjectManagerPanel', 'mainAppArea', 'settingsPanel', 'generalSettingsPanel', 'maintenancePanel', 'comingSoonPanel', 'contentManagerPanel', 'accountsPanel', 'sepayPackagesPanel', 'featuredPanel', 'usageLimitsPanel', 'feedbackPanel', 'notifyPanel', 'paymentSettingsPanel', 'emailSettingsPanel', 'stockManagerPanel', 'ctvPanel'];
 function showAdminPanel(panelId, navId){
     ADMIN_PANEL_IDS.forEach(id => {
         const el = document.getElementById(id);
@@ -252,6 +253,18 @@ function showComingSoon(key){
 function showSubjectManager(){
     rememberAdminPanel('subjectMgr');
     showAdminPanel('subjectManagerPanel', 'navSubjectMgr');
+}
+
+// ---------- CỘNG TÁC VIÊN (CTV) — nhúng ctv.html bằng iframe, ở lại trong trang admin, không mở tab/trang mới ----------
+function showCtvPanel(){
+    rememberAdminPanel('ctv');
+    showAdminPanel('ctvPanel', 'navCtv');
+    const iframe = document.getElementById('ctvIframe');
+    // Chỉ gán src lần đầu tiên (khi còn rỗng) để mỗi lần quay lại mục này không bị tải lại từ đầu,
+    // mất trạng thái (bộ lọc, trang đang xem...) mà CTV đang thao tác dở.
+    if (iframe && !iframe.getAttribute('src')){
+        iframe.setAttribute('src', 'ctv.html');
+    }
 }
 
 // ---------- THỐNG KÊ (trang đầu tiên khi vào admin) ----------
@@ -2695,14 +2708,24 @@ async function r2ErrorDetail(error){
     return (error && error.message) || 'Lỗi tải file lên.';
 }
 async function r2Upload(bucket, path, file){
-    const form = new FormData();
-    form.append('bucket', bucket);
-    form.append('path', path);
-    form.append('file', file);
-    const { data, error } = await sb.functions.invoke('r2-storage', { body: form });
+    // Bước 1: xin link ký sẵn (presigned URL) từ Edge Function — function chỉ nhận
+    // JSON, KHÔNG nhận file kèm theo nữa (Supabase Edge Function giới hạn cứng
+    // body ~6MB nên không gửi file thẳng qua function được).
+    const { data, error } = await sb.functions.invoke('r2-storage', {
+        body: { action: 'get-upload-url', bucket, path, contentType: file.type || 'application/octet-stream' }
+    });
     if (error) throw new Error(await r2ErrorDetail(error));
-    if (!data || !data.ok) throw new Error((data && data.error) || 'Lỗi tải file lên.');
-    return data; // { ok:true, publicUrl, path }
+    if (!data || !data.ok || !data.uploadUrl) throw new Error((data && data.error) || 'Lỗi tải file lên.');
+
+    // Bước 2: trình duyệt PUT file thẳng lên R2 bằng link đó (không qua Supabase nữa).
+    const putRes = await fetch(data.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file
+    });
+    if (!putRes.ok) throw new Error('Tải file lên R2 thất bại (mã lỗi ' + putRes.status + ').');
+
+    return data; // { ok:true, uploadUrl, publicUrl, path }
 }
 async function r2Delete(bucket, path){
     if (!path) return;

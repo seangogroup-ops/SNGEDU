@@ -423,7 +423,11 @@ function mountAnnotLayer(slot, page, ratio){
 
     const notesLayer = document.createElement('div');
     notesLayer.className = 'notes-layer';
-    notesLayer.style.cssText = 'position:absolute;inset:0;z-index:4;';
+    // pointer-events:none TRÊN CHÍNH LỚP NÀY: đây là <div> phủ kín cả trang, nằm ĐÈ LÊN TRÊN
+    // lớp vẽ (SVG). Nếu không tắt pointer-events ở đây, div rỗng này sẽ chặn đứng MỌI thao tác
+    // chạm/click trước khi tới được SVG bên dưới -> bút/tô đậm/ghim note đều không phản hồi.
+    // Từng ghim note bên trong (note-pin) được bật lại pointer-events riêng để vẫn bấm được.
+    notesLayer.style.cssText = 'position:absolute;inset:0;z-index:4;pointer-events:none;';
     slot.appendChild(notesLayer);
 
     redrawPage(slot, svg, notesLayer, page);
@@ -490,6 +494,7 @@ function noteToEl(n, slot, svg, notesLayer, page){
     pin.style.left = n.x + '%';
     pin.style.top = n.y + '%';
     pin.style.background = n.color;
+    pin.style.pointerEvents = 'auto';
     pin.innerHTML = '<i class="fa-solid fa-note-sticky"></i>';
     pin.title = n.text;
     pin.addEventListener('click', (e) => {

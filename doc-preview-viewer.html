@@ -164,39 +164,41 @@
 
     /* ---------- Thanh công cụ ghi chú nổi (góc phải dưới) ---------- */
     .annot-fab{
-        position:fixed; right:calc(14px + env(safe-area-inset-right, 0px)); bottom:calc(84px + env(safe-area-inset-bottom, 0px));
-        z-index:40; width:48px; height:48px; border-radius:50%; border:none; cursor:pointer;
-        background:linear-gradient(135deg,#4f6bff,#6d84ff); color:#fff; font-size:1.15rem;
-        display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px -4px rgba(79,107,255,.55);
+        position:fixed; right:calc(16px + env(safe-area-inset-right, 0px)); bottom:calc(88px + env(safe-area-inset-bottom, 0px));
+        z-index:40; width:58px; height:58px; border-radius:50%; border:2px solid rgba(255,255,255,.65); cursor:pointer;
+        background:linear-gradient(135deg,#4f6bff,#6d84ff); color:#fff; font-size:1.4rem;
+        display:flex; align-items:center; justify-content:center; box-shadow:0 10px 26px -6px rgba(79,107,255,.65), 0 0 0 4px rgba(79,107,255,.14);
         transition:transform .2s ease;
     }
-    .annot-fab.active{ background:linear-gradient(135deg,#f5a524,#f97316); box-shadow:0 6px 18px -4px rgba(249,115,22,.55); }
+    .annot-fab.active{ background:linear-gradient(135deg,#f5a524,#f97316); box-shadow:0 10px 26px -6px rgba(249,115,22,.65), 0 0 0 4px rgba(249,115,22,.16); }
     .annot-fab:active{ transform:scale(.92); }
     .annot-panel{
-        position:fixed; right:calc(14px + env(safe-area-inset-right, 0px)); bottom:calc(140px + env(safe-area-inset-bottom, 0px));
-        z-index:40; background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow);
-        padding:10px; display:none; flex-direction:column; gap:8px; width:210px;
+        position:fixed; right:calc(16px + env(safe-area-inset-right, 0px)); bottom:calc(156px + env(safe-area-inset-bottom, 0px));
+        z-index:40; background:var(--card); border:2px solid var(--brand); border-radius:20px;
+        box-shadow:0 16px 40px -10px rgba(20,22,40,.35), 0 0 0 4px rgba(79,107,255,.10);
+        padding:14px; display:none; flex-direction:column; gap:11px; width:252px;
     }
     .annot-panel.show{ display:flex; }
-    .annot-tools{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+    .annot-tools{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
     .annot-tool{
-        width:100%; aspect-ratio:1; border-radius:10px; border:1px solid var(--line); background:var(--bg);
-        color:var(--ink-soft); display:flex; align-items:center; justify-content:center; font-size:.85rem; cursor:pointer;
+        width:100%; aspect-ratio:1; border-radius:12px; border:1px solid var(--line); background:var(--bg);
+        color:var(--ink-soft); display:flex; align-items:center; justify-content:center; font-size:1.05rem; cursor:pointer;
+        transition:transform .15s ease, box-shadow .15s ease;
     }
-    .annot-tool.on{ background:var(--brand); color:#fff; border-color:var(--brand); }
-    .annot-colors{ display:flex; gap:6px; flex-wrap:wrap; }
+    .annot-tool.on{ background:var(--brand); color:#fff; border-color:var(--brand); box-shadow:0 4px 12px -2px rgba(79,107,255,.55); transform:translateY(-1px); }
+    .annot-colors{ display:flex; gap:9px; flex-wrap:wrap; justify-content:center; }
     .annot-color{
-        width:24px; height:24px; border-radius:50%; border:2px solid var(--line); cursor:pointer; padding:0;
+        width:30px; height:30px; border-radius:50%; border:2px solid var(--line); cursor:pointer; padding:0;
     }
-    .annot-color.on{ border-color:var(--ink); box-shadow:0 0 0 2px var(--card), 0 0 0 3px var(--ink); }
-    .annot-panel-row{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+    .annot-color.on{ border-color:var(--ink); box-shadow:0 0 0 2px var(--card), 0 0 0 4px var(--ink); transform:scale(1.08); }
+    .annot-panel-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .annot-mini-btn{
-        flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:7px 6px; border-radius:8px;
-        border:1px solid var(--line); background:var(--bg); color:var(--ink-soft); font-size:.74rem; font-weight:600;
+        flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:9px 6px; border-radius:10px;
+        border:1px solid var(--line); background:var(--bg); color:var(--ink-soft); font-size:.82rem; font-weight:700;
         cursor:pointer; font-family:inherit;
     }
     .annot-mini-btn:hover{ color:var(--brand); border-color:var(--brand); }
-    .annot-hint{ font-size:.68rem; color:var(--ink-mute); text-align:center; line-height:1.4; }
+    .annot-hint{ font-size:.76rem; color:var(--ink-mute); text-align:center; line-height:1.45; font-weight:500; }
     .note-editor{
         z-index:60; width:210px; background:var(--card); border:1px solid var(--line);
         border-radius:12px; box-shadow:var(--shadow); padding:10px;
@@ -397,7 +399,7 @@ function setTool(tool){
     document.querySelectorAll('.annot-layer').forEach((svg) => {
         svg.classList.toggle('drawable', tool === 'highlight' || tool === 'pen' || tool === 'note');
         svg.classList.toggle('erase-mode', tool === 'eraser');
-        svg.style.pointerEvents = tool === 'none' ? 'none' : 'auto';
+        svg.style.pointerEvents = tool === 'none' ? 'none' : 'all';
     });
 }
 
@@ -415,8 +417,9 @@ function mountAnnotLayer(slot, page, ratio){
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', `0 0 1000 ${H}`);
     svg.setAttribute('class', 'annot-layer' + (annot.tool === 'none' ? '' : ' drawable'));
-    svg.style.pointerEvents = annot.tool === 'none' ? 'none' : 'auto';
+    svg.style.pointerEvents = annot.tool === 'none' ? 'none' : 'all';
     slot.appendChild(svg);
+    ensureAnnotBg(svg, H);
 
     const notesLayer = document.createElement('div');
     notesLayer.className = 'notes-layer';
@@ -431,9 +434,26 @@ function mountAnnotLayer(slot, page, ratio){
     svg.addEventListener('pointerleave', onLayerPointerUp);
 }
 
+// Nền trong suốt phủ kín toàn bộ canvas SVG. Không có nền này, vùng CHƯA có nét vẽ nào
+// sẽ không bắt được sự kiện con trỏ/chạm ở một số trình duyệt (SVG mặc định chỉ tính
+// pointer-events trên phần "đã tô màu") -> đây là lý do bút/tô đậm/ghim note không phản hồi
+// khi trang còn trống. fill="transparent" vẫn được tính là "đã tô" nên luôn bắt được sự kiện.
+function ensureAnnotBg(svg, H){
+    let bg = svg.querySelector('.annot-bg');
+    if (!bg){
+        bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        bg.setAttribute('class', 'annot-bg');
+        bg.setAttribute('fill', 'transparent');
+        svg.insertBefore(bg, svg.firstChild);
+    }
+    bg.setAttribute('x', 0); bg.setAttribute('y', 0);
+    bg.setAttribute('width', 1000); bg.setAttribute('height', H || svg.viewBox.baseVal.height);
+}
+
 function redrawPage(slot, svg, notesLayer, page){
     svg.innerHTML = '';
     notesLayer.innerHTML = '';
+    ensureAnnotBg(svg);
     const data = annotStore[page];
     if (!data) return;
     (data.strokes || []).forEach((s) => svg.appendChild(strokeToEl(s)));

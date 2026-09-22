@@ -38,7 +38,19 @@ export async function grantEntitlement(db: DbClient, order: OrderRow): Promise<v
 
     const durationDays = Number(plan.duration_days) || 30;
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+    // Cộng dồn ngày Pro: nếu user đang còn hạn Pro (chưa hết hạn), thời điểm bắt đầu cộng
+    // thêm số ngày mới phải là hạn hiện có (expires_at), KHÔNG phải "now" — nếu không, mua
+    // thêm gói trong lúc đang còn hạn Pro sẽ làm mất số ngày còn lại thay vì được cộng thêm.
+    const { data: existingSub } = await db
+      .from("subscriptions")
+      .select("expires_at")
+      .eq("user_id", order.user_id)
+      .maybeSingle();
+
+    const existingExpiresAt = existingSub?.expires_at ? new Date(existingSub.expires_at) : null;
+    const baseDate = existingExpiresAt && existingExpiresAt.getTime() > now.getTime() ? existingExpiresAt : now;
+    const expiresAt = new Date(baseDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
     const { error: subErr } = await db.from("subscriptions").upsert(
       {

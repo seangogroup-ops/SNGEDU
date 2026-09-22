@@ -79,11 +79,17 @@
     }
 
     /* ---------- Vùng trang ---------- */
-    .wrap{ padding:18px 12px 96px; }
+    /* display:flex + align-items:center để canh giữa trang: cách này cuộn ngang được đầy đủ cả
+       2 bên khi trang rộng hơn khung nhìn (margin:0 auto kiểu cũ bị lỗi kẹt, không cuộn được
+       hết sang trái khi nội dung tràn ra ngoài). */
+    .wrap{ padding:18px 12px 96px; overflow-x:auto; display:flex; flex-direction:column; align-items:center; }
     .page-slot{
-        position:relative; width:min(100%, var(--page-width, 900px)); margin:0 auto 18px;
+        position:relative; width:min(100%, var(--page-width, 900px)); margin:0 0 18px; flex-shrink:0;
         background:var(--card); border-radius:6px; overflow:hidden; box-shadow:var(--page-shadow);
     }
+    /* Khi đang PHÓNG TO (>100%): bỏ giới hạn "không quá 100% khung nhìn" để trang thật sự to
+       ra theo đúng mức zoom đã chọn, dù rộng hơn cả cửa sổ trình duyệt -> cuộn ngang để xem hết. */
+    .wrap.zoomed-in .page-slot{ width:var(--page-width, 900px); }
     .page-slot .ph{
         position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
         color:var(--ink-mute); font-size:.82rem; gap:8px; flex-direction:column;
@@ -149,11 +155,18 @@
     .pager .go{ border:none; background:var(--brand); color:#fff; border-radius:8px; padding:6px 11px; font-weight:700; cursor:pointer; font-family:inherit; font-size:.78rem; }
 
     /* ---------- Lớp ghi chú trên trang (highlight / bút / ghim note) ---------- */
+    /* Cục tẩy vẽ tay (SVG) làm con trỏ chuột: xoay 45°, phần hồng là cao su, phần trắng là viền
+       gôm — encode base64 để không phải lo escape ký tự trong data URI. Toạ độ hotspot 13,22 rơi
+       đúng vào mép dưới-trái của khối, chỗ người dùng cảm nhận là "đầu tẩy" khi rê qua nét vẽ. */
     .annot-layer{ position:absolute; inset:0; z-index:3; touch-action:pan-y; }
     .annot-layer.drawable{ touch-action:none; cursor:crosshair; }
-    .annot-layer.erase-mode{ cursor:cell; }
+    .annot-layer.erase-mode{
+        touch-action:none;
+        cursor:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI2IDI2Ij48ZyB0cmFuc2Zvcm09InJvdGF0ZSg0NSAxMyAxMykiPjxyZWN0IHg9IjQiIHk9IjkiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxMSIgcng9IjIuNSIgZmlsbD0iI2ZmY2RkOCIgc3Ryb2tlPSIjMjIyODMxIiBzdHJva2Utd2lkdGg9IjEuNiIvPjxyZWN0IHg9IjQiIHk9IjkiIHdpZHRoPSIxOCIgaGVpZ2h0PSI0LjUiIHJ4PSIyLjUiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzIyMjgzMSIgc3Ryb2tlLXdpZHRoPSIxLjYiLz48L2c+PC9zdmc+') 13 22, cell;
+    }
+    .annot-layer.erase-mode path{ cursor:inherit; }
     .annot-layer path{ pointer-events:stroke; }
-    .annot-layer.erase-mode path{ pointer-events:stroke; cursor:pointer; }
+    body.eraser-active .note-pin{ cursor:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNiIgaGVpZ2h0PSIyNiIgdmlld0JveD0iMCAwIDI2IDI2Ij48ZyB0cmFuc2Zvcm09InJvdGF0ZSg0NSAxMyAxMykiPjxyZWN0IHg9IjQiIHk9IjkiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxMSIgcng9IjIuNSIgZmlsbD0iI2ZmY2RkOCIgc3Ryb2tlPSIjMjIyODMxIiBzdHJva2Utd2lkdGg9IjEuNiIvPjxyZWN0IHg9IjQiIHk9IjkiIHdpZHRoPSIxOCIgaGVpZ2h0PSI0LjUiIHJ4PSIyLjUiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iIzIyMjgzMSIgc3Ryb2tlLXdpZHRoPSIxLjYiLz48L2c+PC9zdmc+') 13 22, cell; }
     .note-pin{
         position:absolute; width:24px; height:24px; margin:-22px 0 0 -12px; border-radius:50% 50% 50% 4px;
         display:flex; align-items:center; justify-content:center; color:#fff; font-size:.68rem; font-weight:800;
@@ -191,6 +204,23 @@
         width:30px; height:30px; border-radius:50%; border:2px solid var(--line); cursor:pointer; padding:0;
     }
     .annot-color.on{ border-color:var(--ink); box-shadow:0 0 0 2px var(--card), 0 0 0 4px var(--ink); transform:scale(1.08); }
+    .annot-size-row{ display:none; align-items:center; gap:10px; padding:2px 2px 0; }
+    .annot-size-row.show{ display:flex; }
+    .annot-size-bar{
+        position:relative; flex:1; height:40px; border-radius:13px; background:var(--bg);
+        border:1px solid var(--line); cursor:pointer; touch-action:none; overflow:hidden;
+    }
+    .annot-size-bar-shape{
+        position:absolute; left:16px; right:16px; top:9px; bottom:9px; width:auto; height:auto;
+        color:var(--ink-mute); pointer-events:none;
+    }
+    .annot-size-bar-shape path{ fill:currentColor; }
+    .annot-size-thumb{
+        position:absolute; top:50%; left:0; width:28px; height:28px; border-radius:50%; background:var(--brand);
+        border:3px solid var(--card); box-shadow:0 2px 8px rgba(0,0,0,.4); transform:translate(-50%,-50%);
+        pointer-events:none; transition:background .12s ease;
+    }
+    .annot-size-label{ font-size:.72rem; color:var(--ink-mute); width:44px; text-align:right; flex-shrink:0; }
     .annot-mode-row{ display:none; gap:6px; background:var(--bg); border-radius:10px; padding:4px; }
     .annot-mode-btn{
         flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:7px 4px; border-radius:8px;
@@ -258,6 +288,15 @@
         <button class="annot-tool" id="toolEraser" title="Xoá ghi chú" onclick="setTool('eraser')"><i class="fa-solid fa-eraser"></i></button>
     </div>
     <div class="annot-colors" id="annotColors"></div>
+    <div class="annot-size-row" id="annotSizeRow">
+        <div class="annot-size-bar" id="annotSizeBar">
+            <svg class="annot-size-bar-shape" viewBox="0 0 100 24" preserveAspectRatio="none">
+                <path d="M0,13 L100,3 L100,21 Z"></path>
+            </svg>
+            <div class="annot-size-thumb" id="annotSizeThumb"></div>
+        </div>
+        <span class="annot-size-label" id="annotSizeLabel">Vừa</span>
+    </div>
     <div class="annot-mode-row" id="annotModeRow">
         <button class="annot-mode-btn" id="modeFree" title="Vẽ tự do theo tay" onclick="setAnnotMode(false)"><i class="fa-solid fa-signature"></i> Tự do</button>
         <button class="annot-mode-btn" id="modeStraight" title="Vẽ đường thẳng" onclick="setAnnotMode(true)"><i class="fa-solid fa-ruler"></i> Thẳng</button>
@@ -315,6 +354,7 @@ function applyZoom(){
     const pct = ZOOM_STEPS[zoomIdx];
     document.documentElement.style.setProperty('--page-width', Math.round(900 * pct / 100) + 'px');
     document.getElementById('zoomVal').textContent = pct + '%';
+    document.getElementById('wrap').classList.toggle('zoomed-in', pct > 100);
     try{ localStorage.setItem('sng-doc-zoom', String(zoomIdx)); }catch(e){}
 }
 function zoomStep(dir){
@@ -352,10 +392,19 @@ document.addEventListener('wheel', (e) => {
 // Lưu hoàn toàn trên máy người đọc (localStorage), riêng theo từng tài liệu — không gửi lên máy chủ.
 const ANNOT_HIGHLIGHT_COLORS = ['#ffeb3b', '#a6f39a', '#8ecbff', '#ffb3c7', '#ffcc80'];
 const ANNOT_PEN_COLORS = ['#e53935', '#1e88e5', '#222831', '#43a047', '#8e24aa'];
-const annot = { tool: 'none', color: ANNOT_HIGHLIGHT_COLORS[0], straight: true };
-let annotStore = {}; // { [page]: { strokes:[{id,type,color,d}], notes:[{id,x,y,color,text}] } }
+const annot = { tool: 'none', color: ANNOT_HIGHLIGHT_COLORS[0], straight: true, size: 3 };
+let annotStore = {}; // { [page]: { strokes:[{id,type,color,d,sz}], notes:[{id,x,y,color,text,sz}] } }
 let annotOrder = {}; // { [page]: [itemId,...] } thứ tự thêm vào, dùng cho Hoàn tác
-let drawing = null;  // path đang vẽ dở: { svg, page, el, pts, type, color }
+let drawing = null;  // path đang vẽ dở: { svg, page, el, pts, type, color, size }
+
+// Thanh kéo kích thước dùng mức 1-5 (mặc định 3 = "Vừa"), quy đổi ra số px cụ thể cho từng loại.
+// Mức 3 được chọn TRÙNG với độ dày cố định cũ (tô đậm 28 / bút 6 / ghim note 24px) để các ghi
+// chú đã lưu từ trước (không có trường "sz") vẫn hiển thị y hệt như cũ, không bị đổi hình dạng.
+const SIZE_LABELS = ['Rất nhỏ', 'Nhỏ', 'Vừa', 'Lớn', 'Rất lớn'];
+function highlightWidthFor(sz){ return 14 + ((sz || 3) - 1) * 7; }   // 1..5 -> 14,21,28,35,42
+function penWidthFor(sz){ return 2 + ((sz || 3) - 1) * 2; }          // 1..5 -> 2,4,6,8,10
+function notePinSizeFor(sz){ return 14 + ((sz || 3) - 1) * 5; }      // 1..5 -> 14,19,24,29,34
+function strokeWidthFor(type, sz){ return type === 'highlight' ? highlightWidthFor(sz) : penWidthFor(sz); }
 
 function annotKey(){ return 'sng-doc-annot-' + DOC_ID; }
 function loadAnnotStore(){
@@ -386,7 +435,7 @@ function renderColorSwatches(){
     if (!list.includes(annot.color)) annot.color = list[0];
     box.innerHTML = list.map((c) => `<button type="button" class="annot-color${c === annot.color ? ' on' : ''}" style="background:${c}" onclick="setAnnotColor('${c}')"></button>`).join('');
 }
-function setAnnotColor(c){ annot.color = c; renderColorSwatches(); }
+function setAnnotColor(c){ annot.color = c; renderColorSwatches(); renderSizeRow(); }
 
 function renderModeRow(){
     const row = document.getElementById('annotModeRow');
@@ -396,6 +445,42 @@ function renderModeRow(){
     document.getElementById('modeStraight').classList.toggle('on', annot.straight);
 }
 function setAnnotMode(straight){ annot.straight = straight; renderModeRow(); }
+
+function sizeLabelFor(sz){
+    return SIZE_LABELS[Math.max(0, Math.min(4, Math.round(sz) - 1))];
+}
+function renderSizeRow(){
+    const row = document.getElementById('annotSizeRow');
+    const applies = annot.tool === 'pen' || annot.tool === 'highlight' || annot.tool === 'note';
+    row.classList.toggle('show', applies);
+    if (!applies) return;
+    const pct = ((annot.size - 1) / 4) * 100; // size 1..5 -> 0%..100% dọc theo thanh
+    const thumb = document.getElementById('annotSizeThumb');
+    thumb.style.left = pct + '%';
+    thumb.style.background = annot.color;
+    document.getElementById('annotSizeLabel').textContent = sizeLabelFor(annot.size);
+}
+// Kéo trực tiếp trên thanh dài (không phải input range của trình duyệt) để cảm giác giống
+// đang "kéo dày/mỏng nét vẽ" -- bấm ở đâu trên thanh, chấm tròn nhảy tới đó luôn; giữ và rê
+// ngón tay/chuột qua lại để chỉnh liên tục, không phải bấm từng nấc.
+(function initSizeBarDrag(){
+    const bar = document.getElementById('annotSizeBar');
+    let dragging = false;
+    function setFromClientX(clientX){
+        const rect = bar.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        annot.size = 1 + ratio * 4;
+        renderSizeRow();
+    }
+    bar.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        bar.setPointerCapture(e.pointerId);
+        setFromClientX(e.clientX);
+    });
+    bar.addEventListener('pointermove', (e) => { if (dragging) setFromClientX(e.clientX); });
+    bar.addEventListener('pointerup', () => { dragging = false; });
+    bar.addEventListener('pointercancel', () => { dragging = false; });
+})();
 
 function toggleAnnotPanel(){
     document.getElementById('annotPanel').classList.toggle('show');
@@ -408,17 +493,23 @@ function setTool(tool){
         document.getElementById(id).classList.toggle('on', tool === t);
     });
     renderColorSwatches();
+    renderSizeRow();
     renderModeRow();
+    // Con trỏ hình cục tẩy áp dụng toàn trang (cả lớp vẽ SVG lẫn ghim note) khi bật công cụ tẩy —
+    // gắn ở body vì ghim note nằm ở lớp <div> khác, không phải con của .annot-layer.
+    document.body.classList.toggle('eraser-active', tool === 'eraser');
     const hints = {
         none: 'Chọn công cụ rồi tô/viết trực tiếp lên trang. Ghi chú chỉ lưu trên máy này.',
         highlight: 'Kéo để tô đậm đoạn văn bản cần chú ý.',
         pen: 'Kéo để viết/khoanh vùng tự do trên trang.',
         note: 'Chạm vào vị trí bất kỳ trên trang để ghim chú thích.',
-        eraser: 'Chạm trúng nét vẽ hoặc ghim note nào thì nét/ghim đó bị xoá.'
+        eraser: 'Chạm hoặc rê ngón tay/chuột qua nét vẽ hay ghim note để xoá — xoá được nhiều nét cùng lúc.'
     };
     document.getElementById('annotHint').textContent = hints[tool] || hints.none;
     document.querySelectorAll('.annot-layer').forEach((svg) => {
-        svg.classList.toggle('drawable', tool === 'highlight' || tool === 'pen' || tool === 'note');
+        // touch-action:none cho CẢ tẩy: nếu không, kéo ngón tay để tẩy trên di động sẽ bị trình
+        // duyệt hiểu nhầm là đang cuộn trang thay vì tẩy nhiều nét liên tiếp.
+        svg.classList.toggle('drawable', tool !== 'none');
         svg.classList.toggle('erase-mode', tool === 'eraser');
         svg.style.pointerEvents = tool === 'none' ? 'none' : 'all';
     });
@@ -437,7 +528,7 @@ function mountAnnotLayer(slot, page, ratio){
     const H = Math.round(1000 * ratio);
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', `0 0 1000 ${H}`);
-    svg.setAttribute('class', 'annot-layer' + (annot.tool === 'none' ? '' : ' drawable'));
+    svg.setAttribute('class', 'annot-layer' + (annot.tool === 'none' ? '' : ' drawable') + (annot.tool === 'eraser' ? ' erase-mode' : ''));
     svg.style.pointerEvents = annot.tool === 'none' ? 'none' : 'all';
     slot.appendChild(svg);
     ensureAnnotBg(svg, H);
@@ -488,35 +579,32 @@ function redrawPage(slot, svg, notesLayer, page){
 function strokeToEl(s){
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     g.dataset.id = s.id;
+    const width = strokeWidthFor(s.type, s.sz);
 
-    // Vùng bắt chạm để xoá RỘNG HƠN nét thật (nét bút mảnh chỉ 6px rất khó chạm trúng bằng
-    // ngón tay) -- trong suốt, không nhìn thấy, chỉ để dễ chạm trúng hơn khi dùng cục tẩy.
+    // Vùng bắt chạm để xoá RỘNG HƠN nét thật (nét bút mảnh chỉ vài px rất khó chạm trúng bằng
+    // ngón tay) -- trong suốt, không nhìn thấy, chỉ để dễ chạm/kéo trúng hơn khi dùng cục tẩy.
+    // Việc xoá thực sự được xử lý tập trung ở tầng document (xem eraseAtClientPoint) để hỗ trợ
+    // kéo qua nhiều nét liên tiếp thay vì phải bấm trúng từng nét một.
     const hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     hit.setAttribute('d', s.d);
     hit.setAttribute('fill', 'none');
     hit.setAttribute('stroke', 'transparent');
-    hit.setAttribute('stroke-width', s.type === 'highlight' ? 34 : 26);
+    hit.setAttribute('stroke-width', width + (s.type === 'highlight' ? 6 : 20));
     hit.setAttribute('stroke-linecap', 'round');
     hit.setAttribute('stroke-linejoin', 'round');
     hit.style.pointerEvents = 'stroke';
-    hit.addEventListener('pointerdown', (e) => {
-        if (annot.tool !== 'eraser') return;
-        e.stopPropagation();
-        removeAnnotItem(currentPage, s.id);
-    });
 
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', s.d);
     path.setAttribute('fill', 'none');
     path.setAttribute('stroke', s.color);
+    path.setAttribute('stroke-width', width);
     path.setAttribute('stroke-linecap', 'round');
     path.setAttribute('stroke-linejoin', 'round');
     if (s.type === 'highlight'){
-        path.setAttribute('stroke-width', 28);
         path.setAttribute('opacity', '0.42');
         path.style.mixBlendMode = 'multiply';
     } else {
-        path.setAttribute('stroke-width', 6);
         path.setAttribute('opacity', '0.92');
     }
     path.style.pointerEvents = 'none';
@@ -529,6 +617,12 @@ function strokeToEl(s){
 function noteToEl(n, slot, svg, notesLayer, page){
     const pin = document.createElement('div');
     pin.className = 'note-pin';
+    pin.dataset.id = n.id; // dùng để eraseAtClientPoint (xoá kiểu kéo-qua-đâu-xoá-đó) nhận diện
+    const px = notePinSizeFor(n.sz);
+    pin.style.width = px + 'px';
+    pin.style.height = px + 'px';
+    pin.style.margin = `${-(px - 2)}px 0 0 ${-(px / 2)}px`;
+    pin.style.fontSize = Math.max(9, Math.round(px * 0.28)) + 'px';
     pin.style.left = n.x + '%';
     pin.style.top = n.y + '%';
     pin.style.background = n.color;
@@ -537,7 +631,9 @@ function noteToEl(n, slot, svg, notesLayer, page){
     pin.title = n.text;
     pin.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (annot.tool === 'eraser'){ removeAnnotItem(page, n.id); return; }
+        // Khi đang ở chế độ tẩy: việc xoá đã được xử lý ở tầng document ngay lúc pointerdown/
+        // pointermove (xem eraseAtClientPoint), nên tại đây chỉ cần bỏ qua, không mở trình soạn chú thích.
+        if (annot.tool === 'eraser') return;
         openNoteEditor(page, n, false, { x: e.clientX, y: e.clientY });
     });
     return pin;
@@ -566,19 +662,20 @@ function onLayerPointerDown(e, slot, svg, notesLayer, page){
     if (annot.tool === 'note'){
         openNoteEditor(page, {
             id: uid(), x: (pt.x / 1000) * 100, y: (pt.y / svg.viewBox.baseVal.height) * 100,
-            color: annot.color, text: ''
+            color: annot.color, sz: annot.size, text: ''
         }, true, { x: e.clientX, y: e.clientY });
         return;
     }
     svg.setPointerCapture(e.pointerId);
-    drawing = { svg, page, pts: [pt], type: annot.tool, color: annot.color, straight: annot.straight };
+    drawing = { svg, page, pts: [pt], type: annot.tool, color: annot.color, straight: annot.straight, size: annot.size };
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('fill', 'none');
     path.setAttribute('stroke', annot.color);
+    path.setAttribute('stroke-width', strokeWidthFor(annot.tool, annot.size));
     path.setAttribute('stroke-linecap', 'round');
     path.setAttribute('stroke-linejoin', 'round');
-    if (annot.tool === 'highlight'){ path.setAttribute('stroke-width', 28); path.setAttribute('opacity', '0.42'); path.style.mixBlendMode = 'multiply'; }
-    else { path.setAttribute('stroke-width', 6); path.setAttribute('opacity', '0.92'); }
+    if (annot.tool === 'highlight'){ path.setAttribute('opacity', '0.42'); path.style.mixBlendMode = 'multiply'; }
+    else { path.setAttribute('opacity', '0.92'); }
     path.setAttribute('d', `M ${pt.x} ${pt.y}`);
     svg.appendChild(path);
     drawing.el = path;
@@ -596,10 +693,45 @@ function onLayerPointerMove(e){
         drawing.el.setAttribute('d', drawing.pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' '));
     }
 }
+// ---- Tẩy: kéo qua đâu xoá đó ----
+// Trước đây mỗi nét/ghim note tự gắn 1 pointerdown riêng để tự xoá chính nó khi bấm trúng,
+// nên phải bấm đi bấm lại từng nét một. Giờ chuyển sang bắt sự kiện con trỏ ở TẦNG DOCUMENT
+// (không phải ở svg), rồi dùng elementsFromPoint để dò xem đang đè lên nét/ghim note nào tại
+// đúng toạ độ đó -- nhờ vậy vừa xoá được lúc chạm/bấm xuống, vừa xoá tiếp khi rê qua trong lúc
+// vẫn đang giữ chuột/ngón tay (không cần nhấc lên bấm lại), kể cả khi bắt đầu kéo ngay trên 1 nét.
+let erasingDrag = false;
+function eraseAtClientPoint(clientX, clientY, page){
+    const els = document.elementsFromPoint(clientX, clientY);
+    for (const el of els){
+        const pin = el.closest && el.closest('.note-pin');
+        if (pin && pin.dataset.id){ removeAnnotItem(page, pin.dataset.id); return; }
+        const g = el.closest && el.closest('g[data-id]');
+        if (g && g.dataset.id){ removeAnnotItem(page, g.dataset.id); return; }
+    }
+}
+document.addEventListener('pointerdown', (e) => {
+    if (annot.tool !== 'eraser') return;
+    const slot = e.target.closest && e.target.closest('.page-slot');
+    if (!slot) return;
+    erasingDrag = true;
+    eraseAtClientPoint(e.clientX, e.clientY, Number(slot.dataset.page));
+});
+document.addEventListener('pointermove', (e) => {
+    if (!erasingDrag || annot.tool !== 'eraser') return;
+    // Dò trực tiếp bằng toạ độ (không dựa vào e.target) để vẫn bắt trúng dù ngón tay/chuột
+    // đã rê sang phần trang khác kể từ lúc bấm xuống.
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const slot = el && el.closest && el.closest('.page-slot');
+    if (!slot) return;
+    eraseAtClientPoint(e.clientX, e.clientY, Number(slot.dataset.page));
+});
+document.addEventListener('pointerup', () => { erasingDrag = false; });
+document.addEventListener('pointercancel', () => { erasingDrag = false; });
+
 function onLayerPointerUp(){
     if (!drawing) return;
     if (drawing.pts.length > 1){
-        const s = { id: uid(), t: Date.now(), type: drawing.type, color: drawing.color, d: drawing.el.getAttribute('d') };
+        const s = { id: uid(), t: Date.now(), type: drawing.type, color: drawing.color, sz: drawing.size, d: drawing.el.getAttribute('d') };
         pageData(drawing.page).strokes.push(s);
         updateOrderForPage(drawing.page);
         saveAnnotStore();
@@ -640,7 +772,7 @@ function openNoteEditor(page, note, isNew, clientPos){
         if (!text) return;
         const data = pageData(page);
         const idx = data.notes.findIndex((n) => n.id === note.id);
-        const saved = { id: note.id, t: Date.now(), x: note.x, y: note.y, color: note.color, text };
+        const saved = { id: note.id, t: Date.now(), x: note.x, y: note.y, color: note.color, sz: note.sz, text };
         if (idx >= 0) data.notes[idx] = saved; else data.notes.push(saved);
         updateOrderForPage(page);
         saveAnnotStore();

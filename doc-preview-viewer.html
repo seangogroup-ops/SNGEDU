@@ -586,19 +586,17 @@ function redrawPage(slot, svg, notesLayer, page){
     ensureAnnotBg(svg);
     const data = annotStore[page];
     if (!data) return;
-    (data.strokes || []).forEach((s) => svg.appendChild(strokeToEl(s)));
+    (data.strokes || []).forEach((s) => svg.appendChild(strokeToEl(s, page)));
     (data.notes || []).forEach((n) => notesLayer.appendChild(noteToEl(n, slot, svg, notesLayer, page)));
 }
 
-function strokeToEl(s){
+function strokeToEl(s, page){
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     g.dataset.id = s.id;
     const width = strokeWidthFor(s.type, s.sz);
 
     // Vùng bắt chạm để xoá RỘNG HƠN nét thật (nét bút mảnh chỉ vài px rất khó chạm trúng bằng
     // ngón tay) -- trong suốt, không nhìn thấy, chỉ để dễ chạm/kéo trúng hơn khi dùng cục tẩy.
-    // Việc xoá thực sự được xử lý tập trung ở tầng document (xem eraseAtClientPoint) để hỗ trợ
-    // kéo qua nhiều nét liên tiếp thay vì phải bấm trúng từng nét một.
     const hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     hit.setAttribute('d', s.d);
     hit.setAttribute('fill', 'none');
@@ -609,6 +607,17 @@ function strokeToEl(s){
     hit.setAttribute('stroke-linecap', 'round');
     hit.setAttribute('stroke-linejoin', 'round');
     hit.style.pointerEvents = 'stroke';
+    // Gắn TRỰC TIẾP listener xoá ngay trên chính nét vẽ (không chỉ dựa vào phép "dò toạ độ"
+    // eraseAtClientPoint ở tầng document). Đây là lớp bảo hiểm: dò toạ độ giúp kéo-qua-nhiều-nét
+    // xoá liên tiếp, nhưng nếu vì lý do gì đó (trang đã tồn tại lâu, nhiều lớp annot chồng lên
+    // nhau qua nhiều lượt vẽ/xoá...) phép dò toạ độ bị trật, thì cú bấm/chạm trực tiếp lên đúng
+    // nét vẽ vẫn LUÔN xoá được — đây là cơ chế click gốc của trình duyệt, không thể "trật" được.
+    hit.addEventListener('pointerdown', (e) => {
+        if (annot.tool !== 'eraser') return;
+        e.stopPropagation();
+        erasingDrag = true;
+        removeAnnotItem(page, s.id);
+    });
 
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', s.d);
@@ -645,10 +654,18 @@ function noteToEl(n, slot, svg, notesLayer, page){
     pin.style.pointerEvents = 'auto';
     pin.innerHTML = '<i class="fa-solid fa-note-sticky"></i>';
     pin.title = n.text;
+    pin.addEventListener('pointerdown', (e) => {
+        // Bảo hiểm giống hit-path của nét vẽ: bấm/chạm trực tiếp vào ghim luôn xoá được ngay,
+        // không chỉ dựa vào phép dò toạ độ ở tầng document.
+        if (annot.tool !== 'eraser') return;
+        e.stopPropagation();
+        erasingDrag = true;
+        removeAnnotItem(page, n.id);
+    });
     pin.addEventListener('click', (e) => {
         e.stopPropagation();
-        // Khi đang ở chế độ tẩy: việc xoá đã được xử lý ở tầng document ngay lúc pointerdown/
-        // pointermove (xem eraseAtClientPoint), nên tại đây chỉ cần bỏ qua, không mở trình soạn chú thích.
+        // Khi đang ở chế độ tẩy: việc xoá đã được xử lý ở pointerdown ngay phía trên, nên tại
+        // đây chỉ cần bỏ qua, không mở trình soạn chú thích.
         if (annot.tool === 'eraser') return;
         openNoteEditor(page, n, false, { x: e.clientX, y: e.clientY });
     });
@@ -717,13 +734,15 @@ function onLayerPointerMove(e){
 // vẫn đang giữ chuột/ngón tay (không cần nhấc lên bấm lại), kể cả khi bắt đầu kéo ngay trên 1 nét.
 let erasingDrag = false;
 function eraseAtClientPoint(clientX, clientY, page){
-    const els = document.elementsFromPoint(clientX, clientY);
-    for (const el of els){
-        const pin = el.closest && el.closest('.note-pin');
-        if (pin && pin.dataset.id){ removeAnnotItem(page, pin.dataset.id); return; }
-        const g = el.closest && el.closest('g[data-id]');
-        if (g && g.dataset.id){ removeAnnotItem(page, g.dataset.id); return; }
-    }
+    try{
+        const els = document.elementsFromPoint(clientX, clientY);
+        for (const el of els){
+            const pin = el.closest && el.closest('.note-pin');
+            if (pin && pin.dataset.id){ removeAnnotItem(page, pin.dataset.id); return; }
+            const g = el.closest && el.closest('g[data-id]');
+            if (g && g.dataset.id){ removeAnnotItem(page, g.dataset.id); return; }
+        }
+    }catch(e){ /* không để 1 lỗi bất thường làm gãy cả thao tác kéo-xoá đang diễn ra */ }
 }
 document.addEventListener('pointerdown', (e) => {
     if (annot.tool !== 'eraser') return;
@@ -780,14 +799,26 @@ function openNoteEditor(page, note, isNew, clientPos){
     document.body.appendChild(box);
     const ta = box.querySelector('textarea');
     ta.focus();
+    // Lắng nghe "bấm ra ngoài để đóng". QUAN TRỌNG: phải gỡ listener này ở MỌI đường thoát khỏi
+    // hộp soạn (Lưu / Xoá / bấm ra ngoài) — trước đây chỉ tự gỡ khi chính nó bắn ra (bấm ra
+    // ngoài), nên mỗi lần người dùng bấm "Lưu" thay vì bấm ra ngoài, 1 listener bị bỏ quên mãi
+    // trên document. Dùng nhiều lần (sửa/thêm nhiều ghi chú trong 1 phiên đọc) sẽ tích tụ rất
+    // nhiều listener "chết" chồng lên document, âm thầm làm chậm và dễ gây tương tác lạ về sau.
+    let outsideHandler = null;
+    function detachOutsideHandler(){
+        if (outsideHandler) document.removeEventListener('pointerdown', outsideHandler);
+        outsideHandler = null;
+    }
     setTimeout(() => {
-        document.addEventListener('pointerdown', function outside(e){
+        outsideHandler = function outside(e){
             if (box.contains(e.target)) return;
-            document.removeEventListener('pointerdown', outside);
+            detachOutsideHandler();
             if (document.body.contains(box)) box.remove();
-        });
+        };
+        document.addEventListener('pointerdown', outsideHandler);
     }, 0);
     box.querySelector('.save').onclick = () => {
+        detachOutsideHandler();
         const text = ta.value.trim();
         box.remove();
         if (!text) return;
@@ -800,7 +831,7 @@ function openNoteEditor(page, note, isNew, clientPos){
         rerenderPage(page);
     };
     const delBtn = box.querySelector('.del');
-    if (delBtn) delBtn.onclick = () => { box.remove(); removeAnnotItem(page, note.id); };
+    if (delBtn) delBtn.onclick = () => { detachOutsideHandler(); box.remove(); removeAnnotItem(page, note.id); };
 }
 
 function undoAnnot(){

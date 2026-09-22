@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="frontend/maintenance-check.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14151c" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex, nofollow">
@@ -82,7 +82,13 @@
     /* display:flex + align-items:center để canh giữa trang: cách này cuộn ngang được đầy đủ cả
        2 bên khi trang rộng hơn khung nhìn (margin:0 auto kiểu cũ bị lỗi kẹt, không cuộn được
        hết sang trái khi nội dung tràn ra ngoài). */
-    .wrap{ padding:18px 12px 96px; overflow-x:auto; display:flex; flex-direction:column; align-items:center; }
+    /* touch-action:none ở đây để trình duyệt (đặc biệt Safari/iOS) không tự ý phóng to bằng
+       cử chỉ chụm 2 ngón (pinch) của HỆ ĐIỀU HÀNH song song với zoom riêng của app (initPinchZoom
+       bên dưới) — 2 cơ chế zoom cùng lúc làm toạ độ chạm bị lệch, khiến các thao tác chạm chính
+       xác như TẨY hoạt động chập chờn hoặc "chết" hẳn sau khi phóng to/thu nhỏ, phải tải lại
+       trang mới hết. Việc phóng to/thu nhỏ trong app đã có nút +/- và pinch riêng (initPinchZoom)
+       nên tắt pinch gốc của trình duyệt không mất chức năng gì. */
+    .wrap{ padding:18px 12px 96px; overflow-x:auto; display:flex; flex-direction:column; align-items:center; touch-action:pan-x pan-y; }
     .page-slot{
         position:relative; width:min(100%, var(--page-width, 900px)); margin:0 0 18px; flex-shrink:0;
         background:var(--card); border-radius:6px; overflow:hidden; box-shadow:var(--page-shadow);
@@ -370,6 +376,14 @@ document.addEventListener('wheel', (e) => {
     zoomStep(e.deltaY < 0 ? 1 : -1);
 }, { passive:false });
 
+// Chặn cử chỉ zoom gốc của Safari/iOS (sự kiện gesturestart/gesturechange, KHÁC với touch
+// event) — bản thân touchmove.preventDefault() phía dưới không chặn được cử chỉ này trên một
+// số phiên bản Safari, khiến trang bị trình duyệt tự phóng to song song với zoom riêng của app,
+// gây lệch toạ độ chạm và các thao tác như tẩy bị chập chờn/mất tác dụng sau khi zoom.
+['gesturestart', 'gesturechange', 'gestureend'].forEach((evt) => {
+    document.addEventListener(evt, (e) => e.preventDefault());
+});
+
 // Pinch-zoom 2 ngón trên di động: gộp khoảng cách 2 ngón thành các bước zoom có sẵn
 (function initPinchZoom(){
     let startDist = 0, startIdx = 2, pinching = false;
@@ -589,7 +603,9 @@ function strokeToEl(s){
     hit.setAttribute('d', s.d);
     hit.setAttribute('fill', 'none');
     hit.setAttribute('stroke', 'transparent');
-    hit.setAttribute('stroke-width', width + (s.type === 'highlight' ? 6 : 20));
+    // Đệm rộng hơn bản cũ (pen: 20 -> 40, highlight: 6 -> 20) để khi thu nhỏ trang (zoom 70-85%)
+    // vùng bắt chạm trên màn hình vẫn đủ lớn cho ngón tay, không bị "rê trúng mới xoá được".
+    hit.setAttribute('stroke-width', width + (s.type === 'highlight' ? 20 : 40));
     hit.setAttribute('stroke-linecap', 'round');
     hit.setAttribute('stroke-linejoin', 'round');
     hit.style.pointerEvents = 'stroke';
@@ -727,6 +743,11 @@ document.addEventListener('pointermove', (e) => {
 });
 document.addEventListener('pointerup', () => { erasingDrag = false; });
 document.addEventListener('pointercancel', () => { erasingDrag = false; });
+// Nhỡ đang giữ kéo để tẩy mà chuyển tab / cửa sổ mất focus (vd. bị popup, chuyển app trên di
+// động) thì pointerup có thể không bao giờ bắn tới -> erasingDrag bị "kẹt" true mãi, lần chạm
+// tiếp theo dù chỉ là chạm nhẹ cũng bị hiểu nhầm thành đang kéo. Dọn trạng thái ở đây cho chắc.
+window.addEventListener('blur', () => { erasingDrag = false; });
+document.addEventListener('visibilitychange', () => { if (document.hidden) erasingDrag = false; });
 
 function onLayerPointerUp(){
     if (!drawing) return;

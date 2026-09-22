@@ -525,29 +525,36 @@
     }
     .hero-card{
         background: var(--grad-hero);
-        border:1px solid var(--line);
-        border-radius:var(--radius-lg); padding:38px 40px;
+        background-image: radial-gradient(circle at 1.6px 1.6px, color-mix(in srgb, #fff 10%, transparent) 1.6px, transparent 0), var(--grad-hero);
+        background-size: 24px 24px, auto;
+        border:1px solid color-mix(in srgb, var(--ink) 8%, var(--line));
+        border-radius:28px; padding:42px 44px;
         display:flex; align-items:center; gap:32px;
         position:relative; overflow:hidden;
-        box-shadow: var(--shadow-glow);
+        box-shadow: var(--shadow-glow), inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent);
     }
     .hero-card::before{
-        content:''; position:absolute; top:-70px; right:-60px; width:260px; height:260px; border-radius:50%;
-        background:radial-gradient(circle, color-mix(in srgb, var(--brand) 20%, transparent) 0%, transparent 70%);
-        pointer-events:none;
+        content:''; position:absolute; top:-110px; right:-90px; width:320px; height:320px; border-radius:50%;
+        background:radial-gradient(circle, color-mix(in srgb, var(--brand) 55%, transparent) 0%, transparent 70%);
+        filter:blur(6px); pointer-events:none; animation:heroBlobDrift 9s ease-in-out infinite;
     }
     .hero-card::after{
-        content:''; position:absolute; bottom:-90px; left:8%; width:220px; height:220px; border-radius:50%;
-        background:radial-gradient(circle, color-mix(in srgb, var(--accent2) 22%, transparent) 0%, transparent 70%);
-        pointer-events:none;
+        content:''; position:absolute; bottom:-120px; left:6%; width:280px; height:280px; border-radius:50%;
+        background:radial-gradient(circle, color-mix(in srgb, var(--accent2) 50%, transparent) 0%, transparent 70%);
+        filter:blur(6px); pointer-events:none; animation:heroBlobDrift 11s ease-in-out infinite reverse;
     }
+    @keyframes heroBlobDrift{
+        0%,100%{ transform:translate(0,0) scale(1); }
+        50%{ transform:translate(-14px,10px) scale(1.06); }
+    }
+    @media (prefers-reduced-motion: reduce){ .hero-card::before, .hero-card::after{ animation:none; } }
     /* ---- kiểu khối hero, đổi được ở admin > Giao diện ---- */
     .hero-card[data-hero-style="minimal"]{ background:var(--card); box-shadow:var(--shadow); }
     .hero-card[data-hero-style="minimal"]::before,
     .hero-card[data-hero-style="minimal"]::after{ display:none; }
-    .hero-card[data-hero-style="minimal"] .hero-eyebrow{ background:var(--brand-bg); color:var(--brand); box-shadow:none; }
-    .hero-card[data-hero-style="minimal"] .hero-eyebrow::before{ background:var(--brand); }
-    .hero-card[data-hero-style="minimal"] h1{ background:none; -webkit-background-clip:initial; background-clip:initial; color:var(--ink); }
+    .hero-card[data-hero-style="minimal"] .hero-eyebrow{ background:var(--brand-bg); color:var(--brand); box-shadow:none; border-color:transparent; backdrop-filter:none; -webkit-backdrop-filter:none; }
+    .hero-card[data-hero-style="minimal"] .hero-eyebrow::before{ background:var(--brand); box-shadow:0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent); }
+    .hero-card[data-hero-style="minimal"] h1{ background:none; -webkit-background-clip:initial; background-clip:initial; color:var(--ink); text-shadow:none; }
     .hero-card[data-hero-style="dots"]{
         background-image: var(--grad-hero), radial-gradient(color-mix(in srgb, var(--brand) 45%, transparent) 1.4px, transparent 1.4px);
         background-size: auto, 18px 18px;
@@ -577,18 +584,31 @@
     body[data-show-illustration="0"] .hero-card.has-photo{ min-height:0; }
     body[data-show-illustration="0"] .hero-card.has-photo .hero-text{ max-width:none; }
     .hero-eyebrow{
-        display:inline-flex; align-items:center; gap:7px;
-        font-size:.74rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
-        color:#fff; margin-bottom:14px;
-        background:var(--grad-brand); padding:6px 14px 6px 10px; border-radius:999px;
-        box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--brand) 60%, transparent);
+        display:inline-flex; align-items:center; gap:8px;
+        font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+        color:#fff; margin-bottom:16px;
+        background:color-mix(in srgb, #fff 16%, transparent);
+        backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+        border:1px solid color-mix(in srgb, #fff 26%, transparent);
+        padding:7px 16px 7px 11px; border-radius:999px;
+        box-shadow:0 6px 16px -8px rgba(0,0,0,.3);
     }
-    .hero-eyebrow::before{ content:''; width:6px; height:6px; border-radius:50%; background:#fff; flex-shrink:0; }
+    .hero-eyebrow::before{
+        content:''; width:7px; height:7px; border-radius:50%; background:#fff; flex-shrink:0;
+        box-shadow:0 0 0 3px color-mix(in srgb, #fff 24%, transparent);
+        animation:heroDotPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes heroDotPulse{
+        0%,100%{ box-shadow:0 0 0 3px color-mix(in srgb, #fff 24%, transparent); }
+        50%{ box-shadow:0 0 0 6px color-mix(in srgb, #fff 6%, transparent); }
+    }
+    @media (prefers-reduced-motion: reduce){ .hero-eyebrow::before{ animation:none; } }
     .hero-card h1{
-        font-size:2rem; font-weight:800; line-height:1.24; margin-bottom:12px; max-width:460px; letter-spacing:-.01em;
-        background:linear-gradient(100deg, var(--ink) 45%, var(--brand) 100%);
+        font-size:clamp(1.65rem, 1.25rem + 1.8vw, 2.3rem); font-weight:800; line-height:1.22; margin-bottom:12px; max-width:480px; letter-spacing:-.015em;
+        background:linear-gradient(100deg, var(--ink) 25%, var(--brand) 78%, var(--accent2) 130%);
         -webkit-background-clip:text; background-clip:text; color:transparent;
     }
+    html[data-theme="dark"] .hero-card h1{ text-shadow:0 10px 32px color-mix(in srgb, var(--brand) 30%, transparent); }
     .hero-card p{ color:var(--ink-soft); font-size:.94rem; line-height:1.65; max-width:430px; margin-bottom:20px; }
     .hero-text{ transition: opacity 0.38s ease; }
 
@@ -617,13 +637,26 @@
 
     /* ---- huy hiệu thay thế (kiểu "badge" đơn giản: icon + chữ), bật ở admin > Giao diện ---- */
     .hero-badge-alt{
-        display:inline-flex; align-items:center; gap:9px;
-        background:var(--grad-brand); color:#fff; border-radius:999px;
-        padding:9px 18px 9px 14px; box-shadow:0 8px 18px -8px color-mix(in srgb, var(--brand) 60%, transparent);
+        display:inline-flex; align-items:center; gap:10px;
+        background:color-mix(in srgb, #fff 15%, transparent);
+        backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+        color:#fff; border:1px solid color-mix(in srgb, #fff 22%, transparent);
+        border-radius:999px; padding:6px 18px 6px 6px;
+        box-shadow:0 12px 24px -12px rgba(0,0,0,.4);
         font-size:.82rem; font-weight:700;
     }
+    .hero-badge-alt.icon-only{ padding:6px; gap:0; }
     .hero-badge-alt.hidden{ display:none; }
-    .hero-badge-alt i{ font-size:.9rem; }
+    .hero-badge-alt i{
+        width:32px; height:32px; border-radius:50%; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center;
+        background:var(--grad-brand); color:#fff; font-size:.86rem;
+        box-shadow:0 4px 10px -2px color-mix(in srgb, var(--brand) 65%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 30%, transparent);
+    }
+    .hero-card[data-hero-style="minimal"] .hero-badge-alt{
+        background:var(--card); border-color:var(--line); color:var(--ink); backdrop-filter:none; -webkit-backdrop-filter:none;
+        box-shadow:var(--shadow);
+    }
     .hero-badge-alt[data-effect="pulse"]{ animation:agPulse 2.2s ease-in-out infinite; }
     .hero-badge-alt[data-effect="float"]{ animation:agFloat 2.6s ease-in-out infinite; }
 
@@ -1131,6 +1164,8 @@
         .topbar{ padding:14px 18px; }
         .wrap{ padding:24px 16px 48px; }
         .hero-illustration{ display:none; }
+        .hero-card{ padding:30px 24px; border-radius:22px; }
+        .hero-card h1{ max-width:none; }
         .topbar .pill{ padding:8px 10px; }
         .topbar .pill .pill-label{ display:none; }
 

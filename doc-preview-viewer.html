@@ -72,7 +72,7 @@
     }
     .btn-report:hover{ color:#dc2626; border-color:#dc2626; }
     @media (max-width:680px){
-        .zoom-group{ display:none; }
+        .zoom-val{ display:none; }
         .btn-pro span.lbl{ display:none; }
         .btn-pro{ padding:9px 12px; }
         .btn-report span.lbl{ display:none; }
@@ -147,6 +147,70 @@
         color:var(--ink); font-family:inherit; font-size:.8rem; text-align:center;
     }
     .pager .go{ border:none; background:var(--brand); color:#fff; border-radius:8px; padding:6px 11px; font-weight:700; cursor:pointer; font-family:inherit; font-size:.78rem; }
+
+    /* ---------- Lớp ghi chú trên trang (highlight / bút / ghim note) ---------- */
+    .annot-layer{ position:absolute; inset:0; z-index:3; touch-action:pan-y; }
+    .annot-layer.drawable{ touch-action:none; cursor:crosshair; }
+    .annot-layer.erase-mode{ cursor:cell; }
+    .annot-layer path{ pointer-events:stroke; }
+    .annot-layer.erase-mode path{ pointer-events:stroke; cursor:pointer; }
+    .note-pin{
+        position:absolute; width:24px; height:24px; margin:-22px 0 0 -12px; border-radius:50% 50% 50% 4px;
+        display:flex; align-items:center; justify-content:center; color:#fff; font-size:.68rem; font-weight:800;
+        box-shadow:0 2px 6px rgba(0,0,0,.35); cursor:pointer; z-index:4; transform:rotate(-45deg);
+        border:2px solid #fff;
+    }
+    .note-pin i, .note-pin span{ transform:rotate(45deg); }
+
+    /* ---------- Thanh công cụ ghi chú nổi (góc phải dưới) ---------- */
+    .annot-fab{
+        position:fixed; right:calc(14px + env(safe-area-inset-right, 0px)); bottom:calc(84px + env(safe-area-inset-bottom, 0px));
+        z-index:40; width:48px; height:48px; border-radius:50%; border:none; cursor:pointer;
+        background:linear-gradient(135deg,#4f6bff,#6d84ff); color:#fff; font-size:1.15rem;
+        display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px -4px rgba(79,107,255,.55);
+        transition:transform .2s ease;
+    }
+    .annot-fab.active{ background:linear-gradient(135deg,#f5a524,#f97316); box-shadow:0 6px 18px -4px rgba(249,115,22,.55); }
+    .annot-fab:active{ transform:scale(.92); }
+    .annot-panel{
+        position:fixed; right:calc(14px + env(safe-area-inset-right, 0px)); bottom:calc(140px + env(safe-area-inset-bottom, 0px));
+        z-index:40; background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow);
+        padding:10px; display:none; flex-direction:column; gap:8px; width:210px;
+    }
+    .annot-panel.show{ display:flex; }
+    .annot-tools{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+    .annot-tool{
+        width:100%; aspect-ratio:1; border-radius:10px; border:1px solid var(--line); background:var(--bg);
+        color:var(--ink-soft); display:flex; align-items:center; justify-content:center; font-size:.85rem; cursor:pointer;
+    }
+    .annot-tool.on{ background:var(--brand); color:#fff; border-color:var(--brand); }
+    .annot-colors{ display:flex; gap:6px; flex-wrap:wrap; }
+    .annot-color{
+        width:24px; height:24px; border-radius:50%; border:2px solid var(--line); cursor:pointer; padding:0;
+    }
+    .annot-color.on{ border-color:var(--ink); box-shadow:0 0 0 2px var(--card), 0 0 0 3px var(--ink); }
+    .annot-panel-row{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+    .annot-mini-btn{
+        flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:7px 6px; border-radius:8px;
+        border:1px solid var(--line); background:var(--bg); color:var(--ink-soft); font-size:.74rem; font-weight:600;
+        cursor:pointer; font-family:inherit;
+    }
+    .annot-mini-btn:hover{ color:var(--brand); border-color:var(--brand); }
+    .annot-hint{ font-size:.68rem; color:var(--ink-mute); text-align:center; line-height:1.4; }
+    .note-editor{
+        z-index:60; width:210px; background:var(--card); border:1px solid var(--line);
+        border-radius:12px; box-shadow:var(--shadow); padding:10px;
+    }
+    .note-editor textarea{
+        width:100%; min-height:64px; resize:vertical; border:1px solid var(--line); border-radius:8px; padding:7px 9px;
+        background:var(--bg); color:var(--ink); font-family:inherit; font-size:.82rem;
+    }
+    .note-editor .row{ display:flex; gap:6px; margin-top:7px; }
+    .note-editor button{
+        flex:1; border:none; border-radius:7px; padding:7px 6px; font-size:.74rem; font-weight:700; cursor:pointer; font-family:inherit;
+    }
+    .note-editor .save{ background:var(--brand); color:#fff; }
+    .note-editor .del{ background:var(--red-bg,#fde8e8); color:#dc2626; }
 </style>
 </head>
 <body oncontextmenu="return false">
@@ -172,6 +236,24 @@
     <span id="pagerLabel">1 / 1</span>
     <input type="number" id="pagerInput" min="1" placeholder="Trang" onkeydown="if(event.key==='Enter') jumpToPage()">
     <button class="go" onclick="jumpToPage()">Đi</button>
+</div>
+
+<!-- Ghi chú cá nhân: tô đậm / viết chú thích / ghim note ngay trên trang, lưu riêng trên máy người đọc -->
+<button class="annot-fab" id="annotFab" title="Công cụ ghi chú" onclick="toggleAnnotPanel()"><i class="fa-solid fa-pen-nib"></i></button>
+<div class="annot-panel" id="annotPanel">
+    <div class="annot-tools">
+        <button class="annot-tool" id="toolCursor" title="Cuộn trang" onclick="setTool('none')"><i class="fa-solid fa-hand"></i></button>
+        <button class="annot-tool" id="toolHighlight" title="Tô đậm" onclick="setTool('highlight')"><i class="fa-solid fa-highlighter"></i></button>
+        <button class="annot-tool" id="toolPen" title="Viết / khoanh vùng" onclick="setTool('pen')"><i class="fa-solid fa-pen"></i></button>
+        <button class="annot-tool" id="toolNote" title="Ghim chú thích" onclick="setTool('note')"><i class="fa-solid fa-note-sticky"></i></button>
+        <button class="annot-tool" id="toolEraser" title="Xoá ghi chú" onclick="setTool('eraser')"><i class="fa-solid fa-eraser"></i></button>
+    </div>
+    <div class="annot-colors" id="annotColors"></div>
+    <div class="annot-panel-row">
+        <button class="annot-mini-btn" onclick="undoAnnot()"><i class="fa-solid fa-rotate-left"></i> Hoàn tác</button>
+        <button class="annot-mini-btn" onclick="clearPageAnnot()"><i class="fa-solid fa-trash"></i> Xoá trang</button>
+    </div>
+    <div class="annot-hint" id="annotHint">Chọn công cụ rồi tô/viết trực tiếp lên trang. Ghi chú chỉ lưu trên máy này.</div>
 </div>
 
 <script>
@@ -228,6 +310,290 @@ function zoomStep(dir){
 }
 function zoomReset(){ zoomIdx = 2; applyZoom(); }
 
+// Cuộn giữa trang bằng Ctrl/Cmd + lăn chuột, giống Ctrl +/- trên bàn phím (desktop)
+document.addEventListener('wheel', (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    zoomStep(e.deltaY < 0 ? 1 : -1);
+}, { passive:false });
+
+// Pinch-zoom 2 ngón trên di động: gộp khoảng cách 2 ngón thành các bước zoom có sẵn
+(function initPinchZoom(){
+    let startDist = 0, startIdx = 2, pinching = false;
+    function dist(t){ return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
+    document.getElementById('wrap').addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2){ pinching = true; startDist = dist(e.touches); startIdx = zoomIdx; }
+    }, { passive:true });
+    document.getElementById('wrap').addEventListener('touchmove', (e) => {
+        if (!pinching || e.touches.length !== 2) return;
+        e.preventDefault();
+        const ratio = dist(e.touches) / (startDist || 1);
+        const steps = Math.round((ratio - 1) * 4);
+        const target = Math.max(0, Math.min(ZOOM_STEPS.length - 1, startIdx + steps));
+        if (target !== zoomIdx){ zoomIdx = target; applyZoom(); }
+    }, { passive:false });
+    document.getElementById('wrap').addEventListener('touchend', (e) => { if (e.touches.length < 2) pinching = false; }, { passive:true });
+})();
+
+// ==================== Ghi chú cá nhân trên trang (tô đậm / bút / ghim note / tẩy) ====================
+// Lưu hoàn toàn trên máy người đọc (localStorage), riêng theo từng tài liệu — không gửi lên máy chủ.
+const ANNOT_HIGHLIGHT_COLORS = ['#ffeb3b', '#a6f39a', '#8ecbff', '#ffb3c7', '#ffcc80'];
+const ANNOT_PEN_COLORS = ['#e53935', '#1e88e5', '#222831', '#43a047', '#8e24aa'];
+const annot = { tool: 'none', color: ANNOT_HIGHLIGHT_COLORS[0] };
+let annotStore = {}; // { [page]: { strokes:[{id,type,color,d}], notes:[{id,x,y,color,text}] } }
+let annotOrder = {}; // { [page]: [itemId,...] } thứ tự thêm vào, dùng cho Hoàn tác
+let drawing = null;  // path đang vẽ dở: { svg, page, el, pts, type, color }
+
+function annotKey(){ return 'sng-doc-annot-' + DOC_ID; }
+function loadAnnotStore(){
+    try{ annotStore = JSON.parse(localStorage.getItem(annotKey())) || {}; }catch(e){ annotStore = {}; }
+    annotOrder = {};
+    Object.keys(annotStore).forEach((p) => updateOrderForPage(p));
+}
+function saveAnnotStore(){
+    try{ localStorage.setItem(annotKey(), JSON.stringify(annotStore)); }catch(e){}
+}
+function pageData(page){
+    if (!annotStore[page]) annotStore[page] = { strokes: [], notes: [] };
+    return annotStore[page];
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function updateOrderForPage(page){
+    const data = annotStore[page];
+    if (!data){ annotOrder[page] = []; return; }
+    const items = [...(data.strokes || []), ...(data.notes || [])].sort((a, b) => a.t - b.t);
+    annotOrder[page] = items.map((it) => it.id);
+}
+
+function renderColorSwatches(){
+    const box = document.getElementById('annotColors');
+    const list = annot.tool === 'pen' ? ANNOT_PEN_COLORS : ANNOT_HIGHLIGHT_COLORS;
+    if (annot.tool !== 'highlight' && annot.tool !== 'pen'){ box.style.display = 'none'; return; }
+    box.style.display = 'flex';
+    if (!list.includes(annot.color)) annot.color = list[0];
+    box.innerHTML = list.map((c) => `<button type="button" class="annot-color${c === annot.color ? ' on' : ''}" style="background:${c}" onclick="setAnnotColor('${c}')"></button>`).join('');
+}
+function setAnnotColor(c){ annot.color = c; renderColorSwatches(); }
+
+function toggleAnnotPanel(){
+    document.getElementById('annotPanel').classList.toggle('show');
+}
+function setTool(tool){
+    annot.tool = tool;
+    document.getElementById('annotFab').classList.toggle('active', tool !== 'none');
+    ['toolCursor:none', 'toolHighlight:highlight', 'toolPen:pen', 'toolNote:note', 'toolEraser:eraser'].forEach((pair) => {
+        const [id, t] = pair.split(':');
+        document.getElementById(id).classList.toggle('on', tool === t);
+    });
+    renderColorSwatches();
+    const hints = {
+        none: 'Chọn công cụ rồi tô/viết trực tiếp lên trang. Ghi chú chỉ lưu trên máy này.',
+        highlight: 'Kéo để tô đậm đoạn văn bản cần chú ý.',
+        pen: 'Kéo để viết/khoanh vùng tự do trên trang.',
+        note: 'Chạm vào vị trí bất kỳ trên trang để ghim chú thích.',
+        eraser: 'Chạm vào nét tô/ghim note để xoá.'
+    };
+    document.getElementById('annotHint').textContent = hints[tool] || hints.none;
+    document.querySelectorAll('.annot-layer').forEach((svg) => {
+        svg.classList.toggle('drawable', tool === 'highlight' || tool === 'pen' || tool === 'note');
+        svg.classList.toggle('erase-mode', tool === 'eraser');
+        svg.style.pointerEvents = tool === 'none' ? 'none' : 'auto';
+    });
+}
+
+function svgPoint(svg, clientX, clientY){
+    const rect = svg.getBoundingClientRect();
+    const vb = svg.viewBox.baseVal;
+    return {
+        x: ((clientX - rect.left) / rect.width) * vb.width,
+        y: ((clientY - rect.top) / rect.height) * vb.height
+    };
+}
+
+function mountAnnotLayer(slot, page, ratio){
+    const H = Math.round(1000 * ratio);
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', `0 0 1000 ${H}`);
+    svg.setAttribute('class', 'annot-layer' + (annot.tool === 'none' ? '' : ' drawable'));
+    svg.style.pointerEvents = annot.tool === 'none' ? 'none' : 'auto';
+    slot.appendChild(svg);
+
+    const notesLayer = document.createElement('div');
+    notesLayer.className = 'notes-layer';
+    notesLayer.style.cssText = 'position:absolute;inset:0;z-index:4;';
+    slot.appendChild(notesLayer);
+
+    redrawPage(slot, svg, notesLayer, page);
+
+    svg.addEventListener('pointerdown', (e) => onLayerPointerDown(e, slot, svg, notesLayer, page));
+    svg.addEventListener('pointermove', onLayerPointerMove);
+    svg.addEventListener('pointerup', onLayerPointerUp);
+    svg.addEventListener('pointerleave', onLayerPointerUp);
+}
+
+function redrawPage(slot, svg, notesLayer, page){
+    svg.innerHTML = '';
+    notesLayer.innerHTML = '';
+    const data = annotStore[page];
+    if (!data) return;
+    (data.strokes || []).forEach((s) => svg.appendChild(strokeToEl(s)));
+    (data.notes || []).forEach((n) => notesLayer.appendChild(noteToEl(n, slot, svg, notesLayer, page)));
+}
+
+function strokeToEl(s){
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', s.d);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', s.color);
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    if (s.type === 'highlight'){
+        path.setAttribute('stroke-width', 28);
+        path.setAttribute('opacity', '0.42');
+        path.style.mixBlendMode = 'multiply';
+    } else {
+        path.setAttribute('stroke-width', 6);
+        path.setAttribute('opacity', '0.92');
+    }
+    path.dataset.id = s.id;
+    path.addEventListener('pointerdown', (e) => {
+        if (annot.tool !== 'eraser') return;
+        e.stopPropagation();
+        removeAnnotItem(currentPage, s.id);
+    });
+    return path;
+}
+
+function noteToEl(n, slot, svg, notesLayer, page){
+    const pin = document.createElement('div');
+    pin.className = 'note-pin';
+    pin.style.left = n.x + '%';
+    pin.style.top = n.y + '%';
+    pin.style.background = n.color;
+    pin.innerHTML = '<i class="fa-solid fa-note-sticky"></i>';
+    pin.title = n.text;
+    pin.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (annot.tool === 'eraser'){ removeAnnotItem(page, n.id); return; }
+        openNoteEditor(page, n, false, { x: e.clientX, y: e.clientY });
+    });
+    return pin;
+}
+
+function removeAnnotItem(page, id){
+    const data = pageData(page);
+    data.strokes = (data.strokes || []).filter((s) => s.id !== id);
+    data.notes = (data.notes || []).filter((n) => n.id !== id);
+    updateOrderForPage(page);
+    saveAnnotStore();
+    rerenderPage(page);
+}
+
+function rerenderPage(page){
+    const slot = document.querySelector(`.page-slot[data-page="${page}"]`);
+    if (!slot) return;
+    const svg = slot.querySelector('.annot-layer');
+    const notesLayer = slot.querySelector('.notes-layer');
+    if (svg && notesLayer) redrawPage(slot, svg, notesLayer, page);
+}
+
+function onLayerPointerDown(e, slot, svg, notesLayer, page){
+    if (annot.tool === 'none' || annot.tool === 'eraser') return;
+    const pt = svgPoint(svg, e.clientX, e.clientY);
+    if (annot.tool === 'note'){
+        openNoteEditor(page, {
+            id: uid(), x: (pt.x / 1000) * 100, y: (pt.y / svg.viewBox.baseVal.height) * 100,
+            color: annot.color, text: ''
+        }, true, { x: e.clientX, y: e.clientY });
+        return;
+    }
+    svg.setPointerCapture(e.pointerId);
+    drawing = { svg, page, pts: [pt], type: annot.tool, color: annot.color };
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', annot.color);
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    if (annot.tool === 'highlight'){ path.setAttribute('stroke-width', 28); path.setAttribute('opacity', '0.42'); path.style.mixBlendMode = 'multiply'; }
+    else { path.setAttribute('stroke-width', 6); path.setAttribute('opacity', '0.92'); }
+    path.setAttribute('d', `M ${pt.x} ${pt.y}`);
+    svg.appendChild(path);
+    drawing.el = path;
+}
+function onLayerPointerMove(e){
+    if (!drawing || drawing.svg !== e.currentTarget) return;
+    const pt = svgPoint(drawing.svg, e.clientX, e.clientY);
+    drawing.pts.push(pt);
+    drawing.el.setAttribute('d', drawing.pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' '));
+}
+function onLayerPointerUp(){
+    if (!drawing) return;
+    if (drawing.pts.length > 1){
+        const s = { id: uid(), t: Date.now(), type: drawing.type, color: drawing.color, d: drawing.el.getAttribute('d') };
+        pageData(drawing.page).strokes.push(s);
+        updateOrderForPage(drawing.page);
+        saveAnnotStore();
+    } else {
+        drawing.el.remove();
+    }
+    drawing = null;
+}
+
+function openNoteEditor(page, note, isNew, clientPos){
+    document.querySelectorAll('.note-editor').forEach((el) => el.remove());
+    const box = document.createElement('div');
+    box.className = 'note-editor';
+    box.style.position = 'fixed';
+    const left = Math.min(Math.max(clientPos.x - 20, 8), window.innerWidth - 228);
+    const top = Math.min(Math.max(clientPos.y - 20, 8), window.innerHeight - 170);
+    box.style.left = left + 'px';
+    box.style.top = top + 'px';
+    box.innerHTML = `
+        <textarea placeholder="Nhập chú thích của bạn...">${escapeHtml(note.text || '')}</textarea>
+        <div class="row">
+            <button class="save"><i class="fa-solid fa-check"></i> Lưu</button>
+            ${isNew ? '' : '<button class="del"><i class="fa-solid fa-trash"></i> Xoá</button>'}
+        </div>`;
+    document.body.appendChild(box);
+    const ta = box.querySelector('textarea');
+    ta.focus();
+    setTimeout(() => {
+        document.addEventListener('pointerdown', function outside(e){
+            if (box.contains(e.target)) return;
+            document.removeEventListener('pointerdown', outside);
+            if (document.body.contains(box)) box.remove();
+        });
+    }, 0);
+    box.querySelector('.save').onclick = () => {
+        const text = ta.value.trim();
+        box.remove();
+        if (!text) return;
+        const data = pageData(page);
+        const idx = data.notes.findIndex((n) => n.id === note.id);
+        const saved = { id: note.id, t: Date.now(), x: note.x, y: note.y, color: note.color, text };
+        if (idx >= 0) data.notes[idx] = saved; else data.notes.push(saved);
+        updateOrderForPage(page);
+        saveAnnotStore();
+        rerenderPage(page);
+    };
+    const delBtn = box.querySelector('.del');
+    if (delBtn) delBtn.onclick = () => { box.remove(); removeAnnotItem(page, note.id); };
+}
+
+function undoAnnot(){
+    const ids = annotOrder[currentPage] || [];
+    const lastId = ids.pop();
+    if (!lastId) return;
+    removeAnnotItem(currentPage, lastId);
+}
+
+function clearPageAnnot(){
+    if (!confirm(`Xoá toàn bộ ghi chú trên trang ${currentPage}?`)) return;
+    delete annotStore[currentPage];
+    saveAnnotStore();
+    rerenderPage(currentPage);
+}
+
 // ---------- Nạp tài liệu ----------
 async function boot(){
     try{ const z = parseInt(localStorage.getItem('sng-doc-zoom'), 10); if (Number.isFinite(z) && ZOOM_STEPS[z]) zoomIdx = z; }catch(e){}
@@ -237,6 +603,7 @@ async function boot(){
         showState('<i class="fa-solid fa-circle-exclamation"></i>Thiếu tài liệu cần xem.');
         return;
     }
+    loadAnnotStore();
 
     let { data: { session } } = await sb.auth.getSession();
     // Làm mới session từ server để nhận ngay quyền Pro vừa được cấp, không dựa vào bản cache cũ
@@ -314,6 +681,7 @@ function renderPages(total){
         const slot = document.createElement('div');
         slot.className = 'page-slot';
         slot.dataset.page = p;
+        slot.dataset.ratio = ratio;
         slot.style.aspectRatio = `1 / ${ratio}`;
         slot.innerHTML = `<div class="ph"><i class="fa-solid fa-spinner fa-spin"></i>Trang ${p}</div>`;
         wrap.appendChild(slot);
@@ -402,10 +770,13 @@ async function loadPage(slot){
         img.decoding = 'async';
         img.draggable = false;
         img.onload = () => {
+            const ratio = img.naturalHeight / img.naturalWidth;
+            slot.dataset.ratio = ratio;
             slot.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
             slot.innerHTML = '';
             slot.appendChild(img);
             slot.insertAdjacentHTML('beforeend', watermarkHtml() + `<div class="page-num">${page}</div>`);
+            mountAnnotLayer(slot, page, ratio);
         };
         img.onerror = () => {
             slot.innerHTML = `<div class="ph"><i class="fa-solid fa-triangle-exclamation"></i>Lỗi hiển thị trang ${page}</div>`;

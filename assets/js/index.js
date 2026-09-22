@@ -830,6 +830,8 @@ const toast = document.getElementById('toast');
                     else iconEl.style.display = 'none';
                 }
                 applyTextOrHide(textEl, sp, 'badgeText');
+                // Không có chữ -> chỉ còn icon: thêm class để CSS canh giữa dạng viên tròn thay vì pill lệch.
+                badgeAlt.classList.toggle('icon-only', textEl.style.display === 'none');
                 // Huy hiệu trống cả icon lẫn chữ -> ẩn hẳn
                 if (iconEl.style.display === 'none' && textEl.style.display === 'none') badgeAlt.style.display = 'none';
                 else badgeAlt.style.display = '';

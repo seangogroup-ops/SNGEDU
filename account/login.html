@@ -184,6 +184,14 @@
     .switch-row a{ color:var(--brand); text-decoration:none; font-weight:700; cursor:pointer; }
     .switch-row a:hover{ text-decoration:underline; }
 
+    .hd-btn{
+        display:inline-flex; align-items:center; gap:6px; margin-top:10px;
+        padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:var(--bg);
+        color:var(--brand); font-size:.78rem; font-weight:700; cursor:pointer; font-family:inherit;
+        transition:all .2s ease;
+    }
+    .hd-btn:hover{ background:var(--brand-bg); border-color:var(--brand); }
+
     .msg{ margin-top:14px; font-size:.83rem; padding:10px 12px; border-radius:10px; display:none; align-items:center; gap:8px; font-weight:600; }
     .msg.err{ display:flex; background:var(--red-bg); color:var(--red); }
     .msg.ok{ display:flex; background:var(--green-bg); color:var(--green); }
@@ -196,6 +204,48 @@
     }
 
     .hidden{ display:none !important; }
+
+    /* ============ MODAL: Hướng dẫn xác nhận email (hiện sau khi đăng ký) ============ */
+    .verify-guide-overlay{
+        position:fixed; inset:0; background:rgba(12,14,24,.6); z-index:2400;
+        display:flex; align-items:center; justify-content:center; padding:20px;
+        backdrop-filter:blur(3px); animation:vgFade .22s ease;
+    }
+    .verify-guide-overlay.hidden{ display:none; }
+    @keyframes vgFade{ from{ opacity:0; } to{ opacity:1; } }
+    @keyframes vgPop{ from{ opacity:0; transform:translateY(10px) scale(.96); } to{ opacity:1; transform:translateY(0) scale(1); } }
+    .verify-guide-modal{
+        background:var(--card); border-radius:22px; max-width:480px; width:100%;
+        max-height:88vh; overflow-y:auto; padding:26px 22px 22px; position:relative;
+        box-shadow:0 30px 80px -20px rgba(20,22,45,.45), 0 0 0 1px rgba(20,22,45,.04);
+        text-align:center; animation:vgPop .28s cubic-bezier(.2,.9,.3,1.2);
+    }
+    .verify-guide-close{
+        position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%;
+        border:1px solid var(--line); background:var(--bg); color:var(--ink-mute);
+        cursor:pointer; font-size:.85rem; display:flex; align-items:center; justify-content:center;
+        transition:all .24s ease; z-index:2;
+    }
+    .verify-guide-close:hover{ color:#fff; background:#dc2626; border-color:#dc2626; transform:rotate(90deg); }
+    .verify-guide-icon{
+        width:56px; height:56px; border-radius:50%; margin:2px auto 12px;
+        background:linear-gradient(135deg, var(--brand), #8b7cf6); color:#fff; font-size:1.3rem;
+        display:flex; align-items:center; justify-content:center;
+        box-shadow:0 10px 26px -8px rgba(79,107,255,.55);
+    }
+    .verify-guide-title{ font-size:1.1rem; font-weight:800; color:var(--ink); margin-bottom:6px; letter-spacing:-.2px; }
+    .verify-guide-msg{ color:var(--ink-soft); font-size:.86rem; line-height:1.6; margin-bottom:16px; }
+    .verify-guide-img{ width:100%; border-radius:14px; border:1px solid var(--line); display:block; margin-bottom:16px; }
+    .verify-guide-actions{ display:flex; flex-direction:column; gap:9px; }
+    .verify-guide-actions button{
+        padding:13px 16px; border-radius:13px; font-weight:700; font-size:.87rem;
+        cursor:pointer; border:1px solid transparent; transition:all .24s ease; font-family:inherit;
+    }
+    .verify-guide-ok-btn{
+        background:linear-gradient(135deg, var(--brand), #6c7fff); color:#fff;
+        box-shadow:0 10px 22px -8px rgba(79,107,255,.5);
+    }
+    .verify-guide-ok-btn:hover{ filter:brightness(1.06); transform:translateY(-1px); }
 
     @media (max-width: 860px){
         .brand-panel{ display:none; }
@@ -336,6 +386,7 @@
 
                 <button class="btn-primary" id="registerBtn" onclick="doRegister()">Đăng ký</button>
                 <div class="msg" id="registerMsg"></div>
+                <div style="text-align:center;"><button type="button" class="hd-btn" onclick="openVerifyGuide()"><i class="fa-solid fa-circle-question"></i> Không thấy email? Xem hướng dẫn</button></div>
 
                 <div class="switch-row">Đã có tài khoản? <a onclick="showView('login')">Đăng nhập</a></div>
             </div>
@@ -360,7 +411,6 @@
                 <!-- Bước 2: nhập mã + mật khẩu mới -->
                 <div id="forgotStep2" class="hidden">
                     <p class="sub">Mã xác nhận đã được gửi tới <b id="forgotEmailShown" style="color:var(--ink);">—</b>. Nhập mã và mật khẩu mới bên dưới.</p>
-                    <div class="spam-hint" id="forgotSpamHint"><i class="fa-solid fa-triangle-exclamation"></i><span id="forgotSpamHintText">Không thấy email? Kiểm tra thêm mục Thư rác / Spam — mã có thể bị lọc vào đó. Nếu thấy, hãy đánh dấu "Không phải thư rác" để lần sau nhận email vào hộp thư chính.</span></div>
 
                     <label>Mã xác nhận (6 số)</label>
                     <input id="resetCode" type="text" inputmode="numeric" maxlength="6" placeholder="••••••" style="letter-spacing:6px; font-weight:700; text-align:center;">
@@ -379,6 +429,7 @@
 
                     <button class="btn-primary" id="verifyCodeBtn" onclick="doVerifyResetCode()">Đặt lại mật khẩu</button>
                     <div class="msg" id="forgotStep2Msg"></div>
+                    <div style="text-align:center;"><button type="button" class="hd-btn" onclick="openVerifyGuide()"><i class="fa-solid fa-circle-question"></i> Không thấy mã? Xem hướng dẫn</button></div>
 
                     <div class="switch-row"><a id="resendCodeLink" onclick="doSendResetCode(true)">Gửi lại mã</a> · <a onclick="showView('login')">Huỷ, quay lại đăng nhập</a></div>
                 </div>
@@ -395,6 +446,20 @@
         </div>
     </div>
 
+</div>
+
+<!-- MODAL: Hướng dẫn xác nhận email — hiện sau khi đăng ký thành công -->
+<div id="verifyGuideOverlay" class="verify-guide-overlay hidden" onclick="if(event.target===this) closeVerifyGuide()">
+    <div class="verify-guide-modal">
+        <button class="verify-guide-close" onclick="closeVerifyGuide()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="verify-guide-icon"><i class="fa-solid fa-envelope-circle-check"></i></div>
+        <div class="verify-guide-title">Kiểm tra email của bạn</div>
+        <div class="verify-guide-msg">Chúng tôi đã gửi email đến hộp thư của bạn. Nếu không thấy trong <b>Hộp thư đến</b>, hãy làm theo hướng dẫn bên dưới để tìm trong mục <b>Thư rác</b>.</div>
+        <img class="verify-guide-img" src="../assets/img/huong-dan-xac-nhan-email.jpg" alt="Hướng dẫn xác nhận email SNG EDU: mở Thư rác, tìm email từ SNG EDU, bấm Xác nhận email">
+        <div class="verify-guide-actions">
+            <button class="verify-guide-ok-btn" onclick="closeVerifyGuide()">Đã hiểu</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -515,11 +580,13 @@ async function doSendResetCode(isResend){
         if (isResend){
             showMsg('forgotStep2Msg', '<i class="fa-solid fa-circle-check"></i> Đã gửi lại mã mới.', 'ok');
             startResendCooldown(60);
+            openVerifyGuide();
         } else {
             document.getElementById('forgotEmailShown').textContent = email;
             document.getElementById('forgotStep1').classList.add('hidden');
             document.getElementById('forgotStep2').classList.remove('hidden');
             startResendCooldown(60);
+            openVerifyGuide();
         }
     }catch(e){
         showMsg(isResend ? 'forgotStep2Msg' : 'forgotStep1Msg', e.message, 'err');
@@ -619,8 +686,15 @@ async function doRegister(){
     } else {
         btn.disabled = false; btn.textContent = 'Đăng ký';
         showMsg('registerMsg', `<i class="fa-solid fa-circle-check"></i> ${REGISTER_SUCCESS_TEXT}`, 'ok');
-        document.getElementById('registerMsg').insertAdjacentHTML('afterend', `<div class="spam-hint"><i class="fa-solid fa-triangle-exclamation"></i><span>${REGISTER_SPAM_HINT_TEXT}</span></div>`);
+        openVerifyGuide();
     }
+}
+
+function openVerifyGuide(){
+    document.getElementById('verifyGuideOverlay').classList.remove('hidden');
+}
+function closeVerifyGuide(){
+    document.getElementById('verifyGuideOverlay').classList.add('hidden');
 }
 
 async function doLogout(){

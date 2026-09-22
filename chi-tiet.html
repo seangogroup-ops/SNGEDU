@@ -370,7 +370,15 @@ async function loadPage(){
         return;
     }
 
-    if (TYPE === 'doc') await loadDocItem(); else await loadProductItem();
+    // Bọc trong try/catch: nếu có lỗi JS bất ngờ trong lúc dựng giao diện, hiện thông báo lỗi
+    // kèm nút thử lại thay vì để trang treo mãi ở "Đang tải..." (khách sẽ tưởng mạng chậm).
+    try{
+        if (TYPE === 'doc') await loadDocItem(); else await loadProductItem();
+    }catch(e){
+        console.error(e);
+        showState(`<i class="fa-solid fa-triangle-exclamation"></i>Có lỗi khi tải ${TYPE === 'doc' ? 'tài liệu' : 'sản phẩm'} này.<br>
+            <a href="javascript:void(0)" onclick="loadPage()">Thử lại</a> · <a href="${backFallback}">Quay lại danh sách</a>`, true);
+    }
 }
 
 // ==================== SẢN PHẨM ====================
@@ -526,7 +534,7 @@ function renderProductDetail(){
         : price > 0
             ? { lbl:'Trạng thái', val:'Trả phí', icon:'fa-lock', bg:'var(--amber-bg)', fg:'var(--amber)' }
             : { lbl:'Trạng thái', val:'Miễn phí / Giới thiệu', icon:'fa-unlock', bg:'var(--green-bg)', fg:'var(--green)' });
-    specs.push({ lbl:'Giá', val: isVip ? 'Gói Pro' : (priceLabel || 'Miễn phí'), icon:'fa-tag', bg:'var(--brand-bg)', fg:'var(--brand)' });
+    specs.push({ lbl:'Giá', val: priceLabel || 'Miễn phí', icon:'fa-tag', bg:'var(--brand-bg)', fg:'var(--brand)' });
     specs.push({ lbl:'Danh mục', val: item.category || 'Chưa phân loại', icon:'fa-layer-group', bg:'var(--purple-bg)', fg:'var(--purple)' });
     specs.push({ lbl:'Định dạng', val: item.format || 'Kỹ thuật số', icon:'fa-file', bg:'var(--blue-bg)', fg:'var(--blue)' });
 

@@ -14,9 +14,10 @@
   --ink:#0f1117;
   --ink2:#3d4154;
   --ink3:#7a7f96;
-  --paper:#f7f8fc;
+  --paper:#f6f7fd;
   --white:#ffffff;
   --primary:#3b5bdb;
+  --primary-dk:#2f4ac9;
   --primary-soft:#eef2ff;
   --primary-mid:#748ffc;
   --green:#2f9e44;
@@ -32,7 +33,8 @@
   --radius:14px;
   --radius-sm:8px;
 }
-html{ transition:background 0.38s ease; }
+html{ transition:background 0.38s ease; overflow-x:hidden; }
+body{ overflow-x:hidden; width:100%; }
 body, .hdr, .bottom-nav{ transition:background 0.38s ease, border-color 0.38s ease, color 0.38s ease; }
 
 body{
@@ -56,8 +58,10 @@ body{
 .hdr-inner{
   width:100%;max-width:900px;margin:0 auto;padding:0 20px;
   display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-width:0;
 }
-.hdr-left{display:flex;align-items:center;gap:10px}
+.hdr-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;overflow:hidden}
+.hdr-left>div:last-child{min-width:0;overflow:hidden}
 .logo-badge{
   width:34px;height:34px;border-radius:10px;
   background:var(--primary);
@@ -65,8 +69,8 @@ body{
   flex-shrink:0;
 }
 .logo-badge svg{color:#fff}
-.hdr-title{font-size:15px;font-weight:700;color:var(--ink);line-height:1.2}
-.hdr-sub{font-size:11px;font-weight:500;color:var(--ink3);letter-spacing:.3px;margin-top:1px}
+.hdr-title{font-size:15px;font-weight:700;color:var(--ink);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr-sub{font-size:11px;font-weight:500;color:var(--ink3);letter-spacing:.3px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .timer-pill{
   display:flex;align-items:center;gap:7px;
@@ -78,8 +82,10 @@ body{
   transition:border-color 0.31s,color 0.31s;
 }
 .timer-pill.urgent{border-color:var(--red);color:var(--red)}
+.timer-pill.done{border-color:var(--border);color:var(--ink3);background:var(--paper)}
 .timer-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.4s ease infinite}
 .timer-pill.urgent .timer-dot{background:var(--red)}
+.timer-pill.done .timer-dot{background:var(--ink3);animation:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
 .submit-btn{
@@ -91,7 +97,8 @@ body{
   box-shadow:0 2px 8px rgba(59,91,219,.35);
   transition:all 0.24s;white-space:nowrap;
 }
-.submit-btn:hover{background:#2f4ac9;transform:translateY(-1px);box-shadow:0 4px 14px rgba(59,91,219,.4)}
+.submit-btn:hover{background:var(--primary-dk);transform:translateY(-1px);box-shadow:0 4px 14px rgba(59,91,219,.4)}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
 
 /* ── PROGRESS STRIP ──────────────────────── */
 .prog-strip{height:3px;background:var(--border);display:flex;gap:1px}
@@ -159,6 +166,7 @@ body{
 .q-text{
   font-size:17px;font-weight:600;
   line-height:1.7;color:var(--ink);
+  word-break:break-word;
 }
 
 /* ── OPTIONS ─────────────────────────────── */
@@ -181,7 +189,8 @@ body{
 .opt:not(.locked):hover .opt-label{
   background:var(--primary);color:#fff;border-color:var(--primary);
 }
-.opt.locked{cursor:default;pointer-events:none}
+.opt:not(.locked):active{transform:scale(.985)}
+.opt.locked{cursor:default}
 
 .opt-label{
   width:32px;height:32px;border-radius:50%;
@@ -194,7 +203,7 @@ body{
   transition:all 0.23s;
   background:var(--white);
 }
-.opt-txt{font-size:15px;color:var(--ink);line-height:1.5;font-weight:500}
+.opt-txt{font-size:15px;color:var(--ink);line-height:1.5;font-weight:500;word-break:break-word;min-width:0}
 
 /* Pending (selected, not yet revealed) */
 .opt.pending{border-color:var(--primary);background:var(--primary-soft)}
@@ -231,7 +240,7 @@ body{
 .explain.correct .explain-tag{color:var(--green)}
 .explain.wrong .explain-tag{color:var(--red)}
 .explain.hint .explain-tag{color:var(--amber)}
-.explain-body{font-size:14px;color:var(--ink2);line-height:1.65}
+.explain-body{font-size:14px;color:var(--ink2);line-height:1.65;word-break:break-word}
 
 /* ── BOTTOM NAV ─────────────────────────── */
 .bottom-nav{
@@ -445,7 +454,7 @@ body{
 .ral-badge.ng{background:var(--red-soft);color:var(--red)}
 .ral-badge.skip{background:var(--amber-soft);color:var(--amber)}
 .ral-badge.hint{background:var(--amber-soft);color:var(--amber)}
-.ral-question{font-size:14px;font-weight:600;color:var(--ink);line-height:1.6;margin-bottom:12px}
+.ral-question{font-size:14px;font-weight:600;color:var(--ink);line-height:1.6;margin-bottom:12px;word-break:break-word}
 .ral-opts{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
 .ral-opt{
   display:flex;align-items:center;gap:10px;
@@ -580,7 +589,7 @@ body{
         <span class="timer-dot" id="timer-dot"></span>
         <span id="timer-txt">60:00</span>
       </div>
-      <button class="submit-btn" onclick="openConfirm()">
+      <button class="submit-btn" id="submitBtn" data-action="submit">
         <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span>Nộp bài</span>
       </button>
@@ -602,18 +611,18 @@ body{
 <div id="main-content"></div>
 
 <!-- HINT FAB -->
-<button class="fab-hint hidden" id="fab-hint" onclick="showHint()">
+<button class="fab-hint hidden" id="fab-hint" data-action="show-hint">
   <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5"/><path d="M12 16v-4m0-4h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
   💡 Xem đáp án
 </button>
 
 <!-- DRAWER -->
-<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawerOutside(event)">
+<div class="drawer-overlay" id="drawer-overlay">
   <div class="drawer">
     <div class="drawer-handle"></div>
     <div class="drawer-title">Danh sách câu hỏi</div>
     <div class="drawer-grid" id="drawer-grid"></div>
-    <button class="drawer-close" onclick="closeDrawer()">Đóng</button>
+    <button class="drawer-close" data-action="close-drawer">Đóng</button>
   </div>
 </div>
 
@@ -624,8 +633,8 @@ body{
     <div class="confirm-title">Nộp bài?</div>
     <div class="confirm-desc" id="confirm-desc">Bạn chắc chắn muốn nộp bài không?</div>
     <div class="confirm-actions">
-      <button class="confirm-cancel" onclick="closeConfirm()">Làm tiếp</button>
-      <button class="confirm-ok" onclick="doSubmit()">Nộp bài</button>
+      <button class="confirm-cancel" data-action="close-confirm">Làm tiếp</button>
+      <button class="confirm-ok" data-action="do-submit">Nộp bài</button>
     </div>
   </div>
 </div>
@@ -776,14 +785,22 @@ const timerPill = document.getElementById('timer-pill');
 let timerInterval = null;
 function startTimer(){
   if (timerInterval) return; // tránh khởi động 2 lần
+  timerPill.classList.remove('done');
   timerInterval = setInterval(() => {
-    if (totalSec <= 0) { clearInterval(timerInterval); finishQuiz(); return; }
+    if (totalSec <= 0) { stopTimer(); finishQuiz(); return; }
     totalSec--;
     const m = String(Math.floor(totalSec / 60)).padStart(2, '0');
     const s = String(totalSec % 60).padStart(2, '0');
     timerEl.textContent = m + ':' + s;
     if (totalSec < 300) timerPill.classList.add('urgent');
   }, 1000);
+}
+// Dừng hẳn đồng hồ đếm ngược — BẮT BUỘC gọi khi nộp bài / hết giờ,
+// nếu không đồng hồ vẫn chạy ngầm dù bài đã nộp xong (lỗi cũ).
+function stopTimer(){
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  timerPill.classList.remove('urgent');
+  timerPill.classList.add('done');
 }
 
 // ── HELPERS ──
@@ -817,7 +834,7 @@ function renderNav() {
     else if (s === 'ok') cls += ' ok';
     else if (s === 'ng') cls += ' ng';
     else if (s === 'hint' || s === 'none' && ans[i] === 'skip') cls += ' skip';
-    return `<div class="${cls}" onclick="goTo(${i})">${i + 1}</div>`;
+    return `<div class="${cls}" data-action="goto" data-idx="${i}">${i + 1}</div>`;
   }).join('');
   // Scroll active into view
   setTimeout(() => {
@@ -864,8 +881,7 @@ function renderQ() {
     } else if (isChosen && i === choice && !isRevealed) {
       cls += ' pending';
     }
-    const click = !locked ? `onclick="pick(${i})"` : '';
-    return `<div class="${cls}" ${click}>
+    return `<div class="${cls}" data-action="pick" data-idx="${i}">
       <div class="opt-label">${LABELS[i]}</div>
       <div class="opt-txt">${o}</div>
     </div>`;
@@ -907,14 +923,14 @@ function renderQ() {
       </div>
     </div>
     <div class="bottom-nav">
-      <button class="btn-round btn-prev" onclick="prev()" ${cur === 0 ? 'disabled' : ''}>
+      <button class="btn-round btn-prev" data-action="prev" ${cur === 0 ? 'disabled' : ''}>
         <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
-      <div class="nav-info" onclick="openDrawer()">
+      <div class="nav-info" data-action="open-drawer">
         <span class="nav-info-label">Tiến độ</span>
         <span class="nav-info-count">${cur + 1} / ${Q.length}</span>
       </div>
-      <button class="btn-round btn-next" onclick="next()">
+      <button class="btn-round btn-next" data-action="next">
         <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>`;
@@ -975,7 +991,7 @@ function renderSum() {
         <div class="sum-tile c-pct"><div class="sum-tile-num">${pct}%</div><div class="sum-tile-lbl">Điểm số</div></div>
       </div>
       <div class="sum-actions">
-        <button class="sum-action-btn btn-primary-full" onclick="restart()">Làm lại từ đầu</button>
+        <button class="sum-action-btn btn-primary-full" data-action="restart">Làm lại từ đầu</button>
       </div>
       <div class="ral-section">
         <div class="ral-title">📋 Đáp án chi tiết</div>
@@ -1029,6 +1045,12 @@ function showHint() {
 }
 
 function finishQuiz() {
+  if (showSum) return; // tránh nộp bài nhiều lần
+  // Đồng hồ PHẢI dừng ngay khi nộp bài — trước đây bị thiếu nên vẫn chạy ngầm sau khi nộp.
+  stopTimer();
+  const submitBtn = document.getElementById('submitBtn');
+  if (submitBtn) submitBtn.disabled = true;
+
   // Reveal all answers — pending choices get revealed and scored properly
   ans = ans.map(a => {
     if (a === null) return 'unanswered';
@@ -1053,7 +1075,11 @@ function restart() {
   ans = new Array(Q.length).fill(null);
   cur = 0; showSum = false;
   totalSec = 60 * 60;
+  timerEl.textContent = '60:00';
+  const submitBtn = document.getElementById('submitBtn');
+  if (submitBtn) submitBtn.disabled = false;
   renderQ();
+  startTimer();
 }
 
 function review() {
@@ -1070,15 +1096,12 @@ function openDrawer() {
     else if (s === 'ok') cls += ' ok';
     else if (s === 'ng') cls += ' ng';
     else if (s === 'hint' || ans[i] === 'skip') cls += ' skip';
-    return `<div class="${cls}" onclick="goTo(${i})">${i + 1}</div>`;
+    return `<div class="${cls}" data-action="goto" data-idx="${i}">${i + 1}</div>`;
   }).join('');
   document.getElementById('drawer-overlay').classList.add('open');
 }
 function closeDrawer() {
   document.getElementById('drawer-overlay').classList.remove('open');
-}
-function closeDrawerOutside(e) {
-  if (e.target === document.getElementById('drawer-overlay')) closeDrawer();
 }
 
 // ── CONFIRM ──
@@ -1099,6 +1122,38 @@ function doSubmit() {
   closeConfirm();
   finishQuiz();
 }
+
+// ── XỬ LÝ CLICK TẬP TRUNG (event delegation) ──
+// Trước đây mỗi lựa chọn/nút gắn onclick="..." riêng lẻ ngay trong HTML sinh động;
+// khi nội dung được vẽ lại liên tục (mỗi lần renderQ/renderSum) có trường hợp click
+// vào đáp án không "ăn". Gắn DUY NHẤT 1 listener ở document, luôn hoạt động bất kể
+// nội dung bên trong bị thay mới bao nhiêu lần — sửa dứt điểm lỗi chọn đáp án bị lag/mất.
+document.addEventListener('click', function (e) {
+  // Bấm ra ngoài khung "Danh sách câu hỏi" để đóng lại
+  if (e.target && e.target.id === 'drawer-overlay') { closeDrawer(); return; }
+
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  const idx = el.dataset.idx !== undefined ? parseInt(el.dataset.idx, 10) : null;
+
+  switch (action) {
+    case 'pick':
+      if (!el.classList.contains('locked')) pick(idx);
+      break;
+    case 'prev': prev(); break;
+    case 'next': next(); break;
+    case 'goto': goTo(idx); break;
+    case 'open-drawer': openDrawer(); break;
+    case 'close-drawer': closeDrawer(); break;
+    case 'restart': restart(); break;
+    case 'review': review(); break;
+    case 'show-hint': showHint(); break;
+    case 'submit': openConfirm(); break;
+    case 'close-confirm': closeConfirm(); break;
+    case 'do-submit': doSubmit(); break;
+  }
+});
 
 // ── INIT ──
 document.getElementById('hdrActions').style.display = 'none';

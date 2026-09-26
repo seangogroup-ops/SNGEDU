@@ -751,7 +751,7 @@ const toast = document.getElementById('toast');
         // Phòng khi mạng chậm/treo lâu -> vẫn hiện chữ mặc định ra sau 2.5s, không để trắng mãi
         const safetyTimer = setTimeout(reveal, 2500);
         try{
-            const { data, error } = await sb.from('site_settings').select('*').eq('key', 'home_hero').single();
+            const { data, error } = await sb.from('site_settings').select('payload').eq('key', 'home_hero').single();
             if (error || !data || !data.payload) return; // chưa cấu hình -> giữ nội dung tĩnh mặc định
             const hero = data.payload;
             if (hero.pageTitle) document.title = hero.pageTitle;
@@ -770,7 +770,7 @@ const toast = document.getElementById('toast');
     // Cho phép admin đổi bộ màu gradient của toàn site mà không cần sửa code, quản lý ở trang admin > Giao diện.
     async function loadThemeSettings(){
         try{
-            const { data, error } = await sb.from('site_settings').select('*').eq('key', 'site_theme').single();
+            const { data, error } = await sb.from('site_settings').select('payload').eq('key', 'site_theme').single();
             if (error || !data || !data.payload) return; // chưa cấu hình -> giữ bộ màu mặc định trong CSS
             const t = data.payload;
             const root = document.documentElement.style;
@@ -1782,7 +1782,7 @@ const toast = document.getElementById('toast');
         const banner = document.getElementById('promoBanner');
         if (!banner) return;
         try{
-            const { data, error } = await sb.from('site_settings').select('*').eq('key', 'promo_banner').single();
+            const { data, error } = await sb.from('site_settings').select('payload, updated_at').eq('key', 'promo_banner').single();
             const payload = (!error && data && data.payload) ? data.payload : null;
 
             if (promoCountdownTimer){ clearInterval(promoCountdownTimer); promoCountdownTimer = null; }
@@ -1863,7 +1863,7 @@ const toast = document.getElementById('toast');
         const overlay = document.getElementById('announcePopupOverlay');
         if (!overlay) return;
         try{
-            const { data, error } = await sb.from('site_settings').select('*').eq('key', 'announcement_popup').single();
+            const { data, error } = await sb.from('site_settings').select('payload, updated_at').eq('key', 'announcement_popup').single();
             const payload = (!error && data && data.payload) ? data.payload : null;
 
             if (!payload || !payload.enabled || !(payload.message || '').trim()){ overlay.classList.add('hidden'); return; }
@@ -1902,7 +1902,7 @@ const toast = document.getElementById('toast');
     // Tải danh sách tính năng do admin cấu hình (trang admin > Cài đặt > "Tính năng gói Pro") — nếu chưa cấu hình thì dùng mặc định ở trên.
     async function loadProUpgradeFeaturesConfig(){
         try{
-            const { data, error } = await sb.from('site_settings').select('*').eq('key', 'pro_features').single();
+            const { data, error } = await sb.from('site_settings').select('payload').eq('key', 'pro_features').single();
             const items = (!error && data && data.payload && Array.isArray(data.payload.items)) ? data.payload.items : null;
             if (items && items.length) PRO_UPGRADE_FEATURES = items;
         }catch(e){ /* giữ nguyên danh sách mặc định nếu lỗi mạng/chưa có bảng */ }

@@ -280,7 +280,7 @@ function showState(html, isError){
 async function loadFooterSettings(){
     const el = document.getElementById('siteFooter');
     try{
-        const { data, error } = await sb.from('site_settings').select('*').eq('key', 'site_footer').single();
+        const { data, error } = await sb.from('site_settings').select('payload').eq('key', 'site_footer').single();
         if (error || !data || !data.payload || !data.payload.text){ if (el) el.textContent = ''; return; }
         if (el) el.textContent = data.payload.text;
     }catch(e){ if (el) el.textContent = ''; }
@@ -289,7 +289,7 @@ async function loadFooterSettings(){
 // ---------------- Nội dung trang: đọc từ site_settings 'admin_contact' — cấu hình trong Admin > Cài đặt chung ----------------
 async function loadAdminContactPage(){
     try{
-        const { data, error } = await sb.from('site_settings').select('*').eq('key', 'admin_contact').single();
+        const { data, error } = await sb.from('site_settings').select('payload').eq('key', 'admin_contact').single();
         const payload = (!error && data && data.payload) ? data.payload : null;
 
         if (!payload || !(payload.name || '').trim()){

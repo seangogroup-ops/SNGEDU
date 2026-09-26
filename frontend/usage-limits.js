@@ -31,7 +31,7 @@ const SNG_USAGE = (function () {
     async function fetchLimits() {
         if (cachedLimits) return cachedLimits;
         try {
-            const { data, error } = await sb.from('site_settings').select('*').eq('key', 'usage_limits').single();
+            const { data, error } = await sb.from('site_settings').select('payload').eq('key', 'usage_limits').single();
             if (error || !data || !data.payload) {
                 cachedLimits = { ...DEFAULT_LIMITS };
             } else {

@@ -881,13 +881,30 @@ const toast = document.getElementById('toast');
     loadFooterSettings();
 
     // ---------------- TÀI LIỆU / CÔNG CỤ / SẢN PHẨM — nội dung động, quản lý ở trang admin (site_settings) ----------------
-    async function fetchSiteSettingPayload(key, fallback){
-        try{
-            const { data, error } = await sb.from('site_settings').select('*').eq('key', key).single();
-            if (error || !data || !data.payload) return fallback;
-            return data.payload;
-        }catch(e){ return fallback; }
+    // Cache theo từng "key" trong phạm vi 1 lượt tải trang (SPA — index.html không reload
+    // giữa các tab). TRƯỚC ĐÂY hàm này gọi thẳng Supabase mỗi lần được gọi, mà cùng 1 key
+    // (doc_content, product_content...) lại được gọi ở NHIỀU chỗ khác nhau trong cùng 1 lần
+    // vào trang (renderDocContent, tìm kiếm, khởi tạo tab...) -> tải lặp lại y hệt 1 payload
+    // JSON lớn 3-4 lần mỗi lượt truy cập, chính là nguyên nhân Cached Egress tăng rất nhanh.
+    // Cache theo Promise (không phải theo giá trị) để nếu nhiều nơi gọi gần như cùng lúc,
+    // trước khi request đầu tiên kịp trả lời, chúng vẫn dùng chung 1 request đang chạy.
+    const _siteSettingCache = {};
+    function fetchSiteSettingPayload(key, fallback){
+        if (_siteSettingCache[key]) return _siteSettingCache[key];
+        const p = (async () => {
+            try{
+                const { data, error } = await sb.from('site_settings').select('payload').eq('key', key).single();
+                if (error || !data || !data.payload) return fallback;
+                return data.payload;
+            }catch(e){ return fallback; }
+        })();
+        _siteSettingCache[key] = p;
+        return p;
     }
+    // Xoá cache của 1 key khi biết chắc nội dung vừa đổi (ví dụ sau khi mua hàng thành công
+    // và server có thể trả dữ liệu khác cho lần render kế tiếp) -> lần gọi renderXxxContent()
+    // tiếp theo sẽ tải lại bản mới nhất thay vì dùng mãi bản cache cũ trong suốt phiên.
+    function invalidateSiteSettingCache(key){ delete _siteSettingCache[key]; }
 
     const DEFAULT_DOC_CONTENT = { free: [], paid: [] };
     const DEFAULT_TOOL_CONTENT = { items: [

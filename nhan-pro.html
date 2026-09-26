@@ -264,7 +264,7 @@ function showState(html, isError){
 async function loadFooterSettings(){
     const el = document.getElementById('siteFooter');
     try{
-        const { data, error } = await sb.from('site_settings').select('*').eq('key', 'site_footer').single();
+        const { data, error } = await sb.from('site_settings').select('payload').eq('key', 'site_footer').single();
         if (error || !data || !data.payload || !data.payload.text){ if (el) el.textContent = ''; return; }
         if (el) el.textContent = data.payload.text;
     }catch(e){ if (el) el.textContent = ''; }
@@ -304,7 +304,7 @@ function epCardHtml(item, idx){
 
 async function loadEarnProPage(){
     try{
-        const { data, error } = await sb.from('site_settings').select('*').eq('key', 'earn_pro_content').single();
+        const { data, error } = await sb.from('site_settings').select('payload').eq('key', 'earn_pro_content').single();
         const payload = (!error && data && data.payload) ? data.payload : DEFAULT_EARN_PRO_CONTENT;
 
         const items = Array.isArray(payload.items) ? payload.items.filter(it => it && !it.hidden) : [];

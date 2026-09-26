@@ -333,7 +333,7 @@ function showState(html, isError){
 async function loadFooterSettings(){
     const el = document.getElementById('siteFooter');
     try{
-        const { data, error } = await sb.from('site_settings').select('*').eq('key', 'site_footer').single();
+        const { data, error } = await sb.from('site_settings').select('payload').eq('key', 'site_footer').single();
         if (error || !data || !data.payload || !data.payload.text){
             if (el) el.textContent = ''; // chưa cấu hình ở admin -> để trống, không dùng chữ mặc định
             return;
